@@ -1,0 +1,36 @@
+{
+  "name": "fsh-ihsus",
+  "version": "0.0.1",
+  "description": "Ichthymorphic Helper Systematically Undoes Sushi (FSH Decompiler)",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "test": "jest --maxWorkers=4 --coverage"
+  },
+  "bin": {
+    "ihsus": "dist/app.js"
+  },
+  "types": "dist/app.d.ts",
+  "files": [
+    "dist/**/*.{js,json,d.ts}"
+  ],
+  "author": "",
+  "contributors": [
+    "Mint Thompson <mathompson@mitre.org>"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^25.1.4",
+    "@types/node": "^12.12.34",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "jest": "^25.2.4",
+    "jest-extended": "^0.11.5",
+    "prettier": "^2.0.2",
+    "ts-jest": "^25.3.0",
+    "ts-node": "^8.8.1",
+    "typescript": "^3.8.3"
+  }
+}
