@@ -1,0 +1,9 @@
+image: 'node:12'
+
+before_script:
+  - npm install
+  - which node
+
+test_suite:
+  script:
+    - npm test
