@@ -5,5 +5,7 @@ before_script:
   - which node
 
 test_suite:
+  tags:
+    - gofsh
   script:
     - npm test
