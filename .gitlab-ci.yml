@@ -1,9 +1,8 @@
 image: 'node:12'
 
 before_script:
-  - echo ${CI_JOB_TOKEN}
   - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.mitre.org/mathompson/ihsus.git
-  # - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.mitre.org/mathompson/ihsus.git”.insteadOf git@gitlab.mitre.org:mathompson/ihsus.git
+  - cd ihsus
   - npm install
   - which node
 
