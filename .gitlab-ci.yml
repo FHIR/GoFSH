@@ -1,0 +1,11 @@
+image: 'node:12'
+
+before_script:
+  - npm install
+  - which node
+
+test_suite:
+  tags:
+    - gofsh
+  script:
+    - npm test
