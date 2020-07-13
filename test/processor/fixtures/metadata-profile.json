@@ -1,0 +1,12 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "MyProfile",
+  "id": "my-profile",
+  "title": "My New Profile",
+  "description": "This is my new Profile. Thank you.",
+  "snapshot": {
+    "element": []
+  }
+}

@@ -5,7 +5,10 @@
   "main": "dist/app.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "test": "jest --maxWorkers=4 --coverage"
+    "check": "npm run test && npm run lint && npm run prettier",
+    "test": "jest --maxWorkers=4 --coverage",
+    "lint": "tsc && eslint \"**/*.{js,ts}\"",
+    "prettier": "prettier --check \"**/*.{js,ts}\""
   },
   "bin": {
     "ihsus": "dist/app.js"
@@ -20,6 +23,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/fs-extra": "^9.0.1",
     "@types/jest": "^25.1.4",
     "@types/node": "^12.12.34",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
@@ -34,6 +38,8 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "commander": "^5.1.0",
+    "fs-extra": "^9.0.1",
     "fsh-sushi": "^0.13.2"
   }
 }
