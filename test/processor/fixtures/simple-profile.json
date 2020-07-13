@@ -1,0 +1,9 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Resource",
+  "name": "SimpleProfile",
+  "snapshot": {
+    "element": []
+  }
+}
