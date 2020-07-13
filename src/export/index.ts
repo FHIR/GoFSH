@@ -1,1 +1,2 @@
-// export classes are responsible for writing FSH objects to output files
+// export classes are responsible for converting FSH objects to FSH text
+export * from './ProfileExporter';
