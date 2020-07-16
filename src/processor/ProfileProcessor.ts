@@ -1,18 +1,11 @@
 import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
 import { Profile } from 'fsh-sushi/dist/fshtypes';
+import { AbstractSDProcessor } from './StructureDefinitionProcessor';
 
-export class ProfileProcessor {
+export class ProfileProcessor extends AbstractSDProcessor {
   process(input: StructureDefinition): Profile {
     const profile = new Profile(input.name);
-    if (input.id) {
-      profile.id = input.id;
-    }
-    if (input.title) {
-      profile.title = input.title;
-    }
-    if (input.description) {
-      profile.description = input.description;
-    }
+    super.extractKeywords(input, profile);
     return profile;
   }
 }

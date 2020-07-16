@@ -1,0 +1,12 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "complex-type",
+  "type": "Extension",
+  "name": "MyExtension",
+  "id": "my-extension",
+  "title": "My New Extension",
+  "description": "This is my new Extension. Thank you.",
+  "snapshot": {
+    "element": []
+  }
+}

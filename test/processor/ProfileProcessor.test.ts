@@ -2,6 +2,7 @@ import path from 'path';
 import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
 import { FHIRDefinitions, loadFromPath } from 'fsh-sushi/dist/fhirdefs';
 import { ProfileProcessor } from '../../src/processor';
+import { Profile } from 'fsh-sushi/dist/fshtypes';
 
 describe('ProfileProcessor', () => {
   let processor: ProfileProcessor;
@@ -16,6 +17,7 @@ describe('ProfileProcessor', () => {
   it('should convert the simplest Profile', () => {
     const input = StructureDefinition.fromJSON(defs.fishForFHIR('SimpleProfile'));
     const result = processor.process(input);
+    expect(result).toBeInstanceOf(Profile);
     expect(result.name).toBe('SimpleProfile');
   });
 
@@ -23,6 +25,7 @@ describe('ProfileProcessor', () => {
     // simple metadata fields are Id, Title, and Description
     const input = StructureDefinition.fromJSON(defs.fishForFHIR('MyProfile'));
     const result = processor.process(input);
+    expect(result).toBeInstanceOf(Profile);
     expect(result.name).toBe('MyProfile');
     expect(result.id).toBe('my-profile');
     expect(result.title).toBe('My New Profile');
