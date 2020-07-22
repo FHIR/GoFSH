@@ -7,6 +7,7 @@ import { AbstractSDExporter } from './AbstractSDExporter';
 export class ExtensionExporter extends AbstractSDExporter {
   export(input: Extension): string {
     const resultLines = this.exportKeywords(input);
+    resultLines.push(...this.exportRules(input));
     return resultLines.join(EOL);
   }
 }
