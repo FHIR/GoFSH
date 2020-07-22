@@ -45,6 +45,6 @@
   "dependencies": {
     "commander": "^5.1.0",
     "fs-extra": "^9.0.1",
-    "fsh-sushi": "^0.13.2"
+    "fsh-sushi": "^0.14.0"
   }
 }

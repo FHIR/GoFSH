@@ -5,6 +5,7 @@ import { AbstractSDExporter } from './AbstractSDExporter';
 export class ProfileExporter extends AbstractSDExporter {
   export(input: Profile): string {
     const resultLines = this.exportKeywords(input);
+    resultLines.push(...this.exportRules(input));
     return resultLines.join(EOL);
   }
 }
