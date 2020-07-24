@@ -1,0 +1,84 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "ObservationWithFlag",
+  "snapshot": {
+    "element": []
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.status",
+        "path": "Observation.status",
+        "mustSupport": true
+      },
+      {
+        "id": "Observation.category",
+        "path": "Observation.category",
+        "isSummary": true
+      },
+      {
+        "id": "Observation.code",
+        "path": "Observation.code",
+        "isModifier": true
+      },
+      {
+        "id": "Observation.focus",
+        "path": "Observation.focus",
+        "extension": [
+          {
+            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode" : "normative"
+          }
+        ]       
+      },
+      {
+        "id": "Observation.encounter",
+        "path": "Observation.encounter",
+        "extension": [
+          {
+            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode" : "trial-use"
+          }
+        ]      
+      },
+      {
+        "id": "Observation.issued",
+        "path": "Observation.issued",
+        "extension": [
+          {
+            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode" : "draft"
+          }
+        ]
+      },
+      {
+        "id": "Observation.performer",
+        "path": "Observation.performer",
+        "extension": [
+          {
+            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode" : "normative"
+          },
+          {
+            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode" : "draft"
+          }
+        ]
+        
+      },
+      {
+        "id": "Observation.value[x]",
+        "path": "Observation.value[x]",
+        "min": 1
+      },
+      {
+        "id": "Observation.note",
+        "path": "Observation.note",
+        "mustSupport": true,
+        "isSummary": true
+      }
+    ]
+  }
+}
