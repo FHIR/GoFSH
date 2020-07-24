@@ -8,7 +8,7 @@ export class FixedValueRuleExtractor {
     // these are on one-type elements, so if our SD has value[x],
     // this element might be something like valueString
     const matchingKey = Object.keys(input).find(
-      key => key in ElementDefinition && (key.startsWith('fixed') || key.startsWith('pattern'))
+      key => key.startsWith('fixed') || key.startsWith('pattern')
     );
     if (matchingKey) {
       const matchingValue = input[matchingKey as keyof ElementDefinition];
