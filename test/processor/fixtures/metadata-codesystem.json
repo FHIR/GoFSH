@@ -1,0 +1,7 @@
+{
+  "resourceType": "CodeSystem",
+  "name": "MyCodeSystem",
+  "id": "my-code-system",
+  "title": "My Code System",
+  "description": "This is my simple code system with metadata"
+}
