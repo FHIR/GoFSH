@@ -1,0 +1,38 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "FixedValueObservation",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.valueInteger",
+        "fixedInteger": 0
+      },
+      {
+        "id": "Observation.component.valueInteger",
+        "patternInteger": 8
+      },
+      {
+        "id": "Observation.effectiveInstant",
+        "fixedInstant": "2020-07-24T9:31:23.745-04:00"
+      },
+      {
+        "id": "Observation.note.text",
+        "patternString": "This is the note text"
+      },
+      {
+        "id": "Observation.valueBoolean",
+        "fixedBoolean": true
+      },
+      {
+        "id": "Observation.component.valueBoolean",
+        "patternBoolean": false
+      },
+      {
+        "id": "Observation.valueString",
+        "isSummary": true
+      }
+    ]
+  }
+}
