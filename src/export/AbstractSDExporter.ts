@@ -1,5 +1,5 @@
 import { Profile, Extension } from 'fsh-sushi/dist/fshtypes';
-import { CardRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { CardRule, FlagRule } from 'fsh-sushi/dist/fshtypes/rules';
 
 export class AbstractSDExporter {
   exportKeywords(input: Profile | Extension): string[] {
@@ -26,6 +26,15 @@ export class AbstractSDExporter {
     for (const rule of input.rules) {
       if (rule instanceof CardRule) {
         resultLines.push(`* ${rule.path} ${rule.min ?? ''}..${rule.max ?? ''}`);
+      } else if (rule instanceof FlagRule) {
+        const flags = [];
+        if (rule.mustSupport) flags.push('MS');
+        if (rule.modifier) flags.push('?!');
+        if (rule.summary) flags.push('SU');
+        if (rule.draft) flags.push('D');
+        else if (rule.trialUse) flags.push('TU');
+        else if (rule.normative) flags.push('N');
+        resultLines.push(`* ${rule.path} ${flags.join(' ')}`);
       }
     }
     return resultLines;
