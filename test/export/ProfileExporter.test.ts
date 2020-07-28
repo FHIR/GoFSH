@@ -1,6 +1,6 @@
 import { ProfileExporter } from '../../src/export';
 import { Profile } from 'fsh-sushi/dist/fshtypes';
-import { CardRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { CardRule, FlagRule } from 'fsh-sushi/dist/fshtypes/rules';
 import { EOL } from 'os';
 
 describe('ProfileExporter', () => {
@@ -104,6 +104,127 @@ describe('ProfileExporter', () => {
         'Parent: Patient',
         '* name 2..8',
         '* contact ..5'
+      ].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+  });
+  describe('#flagRule', () => {
+    let profile: Profile;
+
+    beforeEach(() => {
+      profile = new Profile('MyPatient');
+      profile.parent = 'Patient';
+      profile.id = null;
+    });
+
+    it('should export a profile with a FlagRule with mustSupport', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.mustSupport = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name MS'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule with isModifier', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.modifier = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name ?!'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule with isSummary', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.summary = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name SU'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule with trialUse', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.trialUse = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name TU'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule with normative', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.normative = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name N'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule with draft', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.draft = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name D'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule with multiple valid flags', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.mustSupport = true;
+      flagRule.summary = true;
+      flagRule.trialUse = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name MS SU TU'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule and apply draft status over trialUse and normative', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.draft = true;
+      flagRule.trialUse = true;
+      flagRule.normative = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name D'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with a FlagRule and apply trialUse status over normative', () => {
+      const flagRule = new FlagRule('name');
+      flagRule.trialUse = true;
+      flagRule.normative = true;
+      profile.rules.push(flagRule);
+
+      const expectedResult = ['Profile: MyPatient', 'Parent: Patient', '* name TU'].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with multiple FlagRules', () => {
+      const flagRule1 = new FlagRule('name');
+      flagRule1.mustSupport = true;
+      const flagRule2 = new FlagRule('telecom');
+      flagRule2.mustSupport = true;
+      profile.rules.push(flagRule1, flagRule2);
+
+      const expectedResult = [
+        'Profile: MyPatient',
+        'Parent: Patient',
+        '* name MS',
+        '* telecom MS'
       ].join(EOL);
       const result = exporter.export(profile);
       expect(result).toBe(expectedResult);
