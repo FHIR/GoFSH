@@ -2,3 +2,4 @@
 // they should be given both a reference to the original element, and a clone that is dismantled as rules are extracted
 export * from './CardRuleExtractor';
 export * from './FixedValueRuleExtractor';
+export * from './FlagRuleExtractor';
