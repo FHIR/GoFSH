@@ -1,5 +1,6 @@
 import { ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
 import { FixedValueRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { getPath } from '../utils';
 
 export class FixedValueRuleExtractor {
   process(input: ElementDefinition): FixedValueRule | null {
@@ -13,7 +14,7 @@ export class FixedValueRuleExtractor {
     if (matchingKey) {
       const matchingValue = input[matchingKey as keyof ElementDefinition];
       if (isPrimitiveValue(matchingValue)) {
-        const fixedValueRule = new FixedValueRule(input.path.slice(input.path.indexOf('.') + 1));
+        const fixedValueRule = new FixedValueRule(getPath(input));
         fixedValueRule.fixedValue = matchingValue;
         if (matchingKey.startsWith('fixed')) {
           fixedValueRule.exactly = true;
