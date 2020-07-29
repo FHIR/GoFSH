@@ -1,24 +1,37 @@
-import { Profile, Extension, Instance, FshValueSet, FshCodeSystem } from 'fsh-sushi/dist/fshtypes';
+import {
+  ExportableExtension,
+  ExportableProfile,
+  ExportableInstance,
+  ExportableValueSet,
+  ExportableCodeSystem
+} from '../exportable';
 
 export class Package {
-  public readonly profiles: Profile[] = [];
-  public readonly extensions: Extension[] = [];
-  public readonly instances: Instance[] = [];
-  public readonly valueSets: FshValueSet[] = [];
-  public readonly codeSystems: FshCodeSystem[] = [];
+  public readonly profiles: ExportableProfile[] = [];
+  public readonly extensions: ExportableExtension[] = [];
+  public readonly instances: ExportableInstance[] = [];
+  public readonly valueSets: ExportableValueSet[] = [];
+  public readonly codeSystems: ExportableCodeSystem[] = [];
 
   constructor() {}
 
-  add(resource: Profile | Extension | Instance | FshValueSet | FshCodeSystem) {
-    if (resource instanceof Profile) {
+  add(
+    resource:
+      | ExportableProfile
+      | ExportableExtension
+      | ExportableInstance
+      | ExportableValueSet
+      | ExportableCodeSystem
+  ) {
+    if (resource instanceof ExportableProfile) {
       this.profiles.push(resource);
-    } else if (resource instanceof Extension) {
+    } else if (resource instanceof ExportableExtension) {
       this.extensions.push(resource);
-    } else if (resource instanceof Instance) {
+    } else if (resource instanceof ExportableInstance) {
       this.instances.push(resource);
-    } else if (resource instanceof FshValueSet) {
+    } else if (resource instanceof ExportableValueSet) {
       this.valueSets.push(resource);
-    } else if (resource instanceof FshCodeSystem) {
+    } else if (resource instanceof ExportableCodeSystem) {
       this.codeSystems.push(resource);
     }
   }

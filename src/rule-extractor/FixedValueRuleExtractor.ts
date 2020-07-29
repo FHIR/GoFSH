@@ -1,9 +1,9 @@
 import { ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
-import { FixedValueRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { ExportableFixedValueRule } from '../exportable';
 import { getPath } from '../utils';
 
 export class FixedValueRuleExtractor {
-  process(input: ElementDefinition): FixedValueRule | null {
+  process(input: ElementDefinition): ExportableFixedValueRule | null {
     // check for fixedSomething or patternSomething
     // pattern and fixed are mutually exclusive
     // these are on one-type elements, so if our SD has value[x],
@@ -14,7 +14,7 @@ export class FixedValueRuleExtractor {
     if (matchingKey) {
       const matchingValue = input[matchingKey as keyof ElementDefinition];
       if (isPrimitiveValue(matchingValue)) {
-        const fixedValueRule = new FixedValueRule(getPath(input));
+        const fixedValueRule = new ExportableFixedValueRule(getPath(input));
         fixedValueRule.fixedValue = matchingValue;
         if (matchingKey.startsWith('fixed')) {
           fixedValueRule.exactly = true;

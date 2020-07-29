@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
 import { ProfileProcessor } from '../../src/processor';
-import { Profile } from 'fsh-sushi/dist/fshtypes';
+import { ExportableProfile } from '../../src/exportable';
 
 describe('ProfileProcessor', () => {
   let processor: ProfileProcessor;
@@ -16,7 +16,7 @@ describe('ProfileProcessor', () => {
       JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-profile.json'), 'utf-8'))
     );
     const result = processor.process(input);
-    expect(result).toBeInstanceOf(Profile);
+    expect(result).toBeInstanceOf(ExportableProfile);
     expect(result.name).toBe('SimpleProfile');
   });
 
@@ -28,7 +28,7 @@ describe('ProfileProcessor', () => {
       )
     );
     const result = processor.process(input);
-    expect(result).toBeInstanceOf(Profile);
+    expect(result).toBeInstanceOf(ExportableProfile);
     expect(result.name).toBe('MyProfile');
     expect(result.id).toBe('my-profile');
     expect(result.title).toBe('My New Profile');
