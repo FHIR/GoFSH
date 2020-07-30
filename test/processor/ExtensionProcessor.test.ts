@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
 import { ExtensionProcessor } from '../../src/processor';
-import { Extension } from 'fsh-sushi/dist/fshtypes';
+import { ExportableExtension } from '../../src/exportable';
 
 describe('ExtensiomProcessor', () => {
   let processor: ExtensionProcessor;
@@ -18,7 +18,7 @@ describe('ExtensiomProcessor', () => {
       )
     );
     const result = processor.process(input);
-    expect(result).toBeInstanceOf(Extension);
+    expect(result).toBeInstanceOf(ExportableExtension);
     expect(result.name).toBe('SimpleExtension');
   });
 
@@ -30,7 +30,7 @@ describe('ExtensiomProcessor', () => {
       )
     );
     const result = processor.process(input);
-    expect(result).toBeInstanceOf(Extension);
+    expect(result).toBeInstanceOf(ExportableExtension);
     expect(result.name).toBe('MyExtension');
     expect(result.id).toBe('my-extension');
     expect(result.title).toBe('My New Extension');

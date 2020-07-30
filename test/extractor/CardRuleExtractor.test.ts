@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
 import { CardRuleExtractor } from '../../src/rule-extractor';
-import { CardRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { ExportableCardRule } from '../../src/exportable';
 
 describe('CardRuleExtractor', () => {
   let extractor: CardRuleExtractor;
@@ -18,26 +18,26 @@ describe('CardRuleExtractor', () => {
   it('should extract a card rule with a min and a max', () => {
     const element = ElementDefinition.fromJSON(looseSD.differential.element[0]);
     const cardRule = extractor.process(element);
-    const expectedRule = new CardRule('note');
+    const expectedRule = new ExportableCardRule('note');
     expectedRule.min = 1;
     expectedRule.max = '7';
-    expect(cardRule).toEqual<CardRule>(expectedRule);
+    expect(cardRule).toEqual<ExportableCardRule>(expectedRule);
   });
 
   it('should extract a card rule with only a min', () => {
     const element = ElementDefinition.fromJSON(looseSD.differential.element[2]);
     const cardRule = extractor.process(element);
-    const expectedRule = new CardRule('component');
+    const expectedRule = new ExportableCardRule('component');
     expectedRule.min = 3;
-    expect(cardRule).toEqual<CardRule>(expectedRule);
+    expect(cardRule).toEqual<ExportableCardRule>(expectedRule);
   });
 
   it('should extract a card rule with only a max', () => {
     const element = ElementDefinition.fromJSON(looseSD.differential.element[3]);
     const cardRule = extractor.process(element);
-    const expectedRule = new CardRule('category');
+    const expectedRule = new ExportableCardRule('category');
     expectedRule.max = '8';
-    expect(cardRule).toEqual<CardRule>(expectedRule);
+    expect(cardRule).toEqual<ExportableCardRule>(expectedRule);
   });
 
   it('should return a null when the element has no cardinality information', () => {

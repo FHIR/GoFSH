@@ -1,30 +1,19 @@
 import { EOL } from 'os';
 import { Package } from '../processor';
-import { ProfileExporter } from './ProfileExporter';
-import { ExtensionExporter } from './ExtensionExporter';
-import { CodeSystemExporter } from './CodeSystemExporter';
 
 export class FSHExporter {
-  private profileExporter: ProfileExporter;
-  private extensionExporter: ExtensionExporter;
-  private codeSystemExporter: CodeSystemExporter;
-
-  constructor(public readonly fshPackage: Package) {
-    this.profileExporter = new ProfileExporter();
-    this.extensionExporter = new ExtensionExporter();
-    this.codeSystemExporter = new CodeSystemExporter();
-  }
+  constructor(public readonly fshPackage: Package) {}
 
   export(): string {
     const results: string[] = [];
     for (const profile of this.fshPackage.profiles) {
-      results.push(this.profileExporter.export(profile));
+      results.push(profile.toFSH());
     }
     for (const extension of this.fshPackage.extensions) {
-      results.push(this.extensionExporter.export(extension));
+      results.push(extension.toFSH());
     }
     for (const codeSystem of this.fshPackage.codeSystems) {
-      results.push(this.codeSystemExporter.export(codeSystem));
+      results.push(codeSystem.toFSH());
     }
 
     return results.join(`${EOL}${EOL}`);

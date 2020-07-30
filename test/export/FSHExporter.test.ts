@@ -1,12 +1,7 @@
 import { EOL } from 'os';
-import {
-  FSHExporter,
-  ProfileExporter,
-  ExtensionExporter,
-  CodeSystemExporter
-} from '../../src/export';
+import { FSHExporter } from '../../src/export';
 import { Package } from '../../src/processor';
-import { Profile, Extension, FshCodeSystem } from 'fsh-sushi/dist/fshtypes';
+import { ExportableProfile, ExportableExtension, ExportableCodeSystem } from '../../src/exportable';
 
 describe('FSHExporter', () => {
   let exporter: FSHExporter;
@@ -16,9 +11,9 @@ describe('FSHExporter', () => {
   let codeSystemSpy: jest.SpyInstance;
 
   beforeAll(() => {
-    profileSpy = jest.spyOn(ProfileExporter.prototype, 'export');
-    extensionSpy = jest.spyOn(ExtensionExporter.prototype, 'export');
-    codeSystemSpy = jest.spyOn(CodeSystemExporter.prototype, 'export');
+    profileSpy = jest.spyOn(ExportableProfile.prototype, 'toFSH');
+    extensionSpy = jest.spyOn(ExportableExtension.prototype, 'toFSH');
+    codeSystemSpy = jest.spyOn(ExportableCodeSystem.prototype, 'toFSH');
   });
 
   beforeEach(() => {
@@ -29,32 +24,50 @@ describe('FSHExporter', () => {
     codeSystemSpy.mockReset();
   });
 
-  it('should try to export a Profile with the ProfileExporter', () => {
-    myPackage.add(new Profile('SomeProfile'));
+  it('should try to export a Profile', () => {
+    myPackage.add(new ExportableProfile('SomeProfile'));
     exporter.export();
     expect(profileSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should try to export an Extension with the ExtensionExporter', () => {
-    myPackage.add(new Extension('SomeExtension'));
+  it('should try to export an Extension', () => {
+    myPackage.add(new ExportableExtension('SomeExtension'));
     exporter.export();
     expect(extensionSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should try to export a CodeSystem with the CodeSystemExporter', () => {
-    myPackage.add(new FshCodeSystem('SomeCodeSystem'));
+    myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
     exporter.export();
     expect(codeSystemSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should separate each exported result with one blank line', () => {
-    profileSpy.mockImplementation((profile: Profile) => profile.name);
-    extensionSpy.mockImplementation((extension: Extension) => extension.name);
-    myPackage.add(new Profile('FirstProfile'));
-    myPackage.add(new Extension('FirstExtension'));
-    myPackage.add(new Profile('SecondProfile'));
+    profileSpy.mockRestore();
+    extensionSpy.mockRestore();
+    codeSystemSpy.mockRestore();
+
+    myPackage.add(new ExportableProfile('SomeProfile'));
+    myPackage.add(new ExportableExtension('SomeExtension'));
+    myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
 
     const result = exporter.export();
-    expect(result).toBe(['FirstProfile', 'SecondProfile', 'FirstExtension'].join(`${EOL}${EOL}`));
+    expect(result).toBe(
+      [
+        'Profile: SomeProfile',
+        EOL,
+        'Id: SomeProfile',
+        EOL,
+        EOL,
+        'Extension: SomeExtension',
+        EOL,
+        'Id: SomeExtension',
+        EOL,
+        EOL,
+        'CodeSystem: SomeCodeSystem',
+        EOL,
+        'Id: SomeCodeSystem'
+      ].join('')
+    );
   });
 });

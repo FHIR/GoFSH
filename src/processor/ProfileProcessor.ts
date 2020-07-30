@@ -1,10 +1,10 @@
 import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
-import { Profile } from 'fsh-sushi/dist/fshtypes';
 import { AbstractSDProcessor } from './StructureDefinitionProcessor';
+import { ExportableProfile } from '../exportable';
 
 export class ProfileProcessor extends AbstractSDProcessor {
-  process(input: StructureDefinition): Profile {
-    const profile = new Profile(input.name);
+  process(input: StructureDefinition): ExportableProfile {
+    const profile = new ExportableProfile(input.name);
     super.extractKeywords(input, profile);
     return profile;
   }

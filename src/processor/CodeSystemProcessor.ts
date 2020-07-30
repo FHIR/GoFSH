@@ -1,8 +1,8 @@
 import { CodeSystem } from 'fsh-sushi/dist/fhirtypes';
-import { FshCodeSystem } from 'fsh-sushi/dist/fshtypes';
+import { ExportableCodeSystem } from '../exportable';
 
 export class CodeSystemProcessor {
-  extractKeywords(input: CodeSystem, target: FshCodeSystem): void {
+  extractKeywords(input: CodeSystem, target: ExportableCodeSystem): void {
     if (input.id) {
       target.id = input.id;
     }
@@ -14,8 +14,8 @@ export class CodeSystemProcessor {
     }
   }
 
-  process(input: CodeSystem): FshCodeSystem {
-    const codeSystem = new FshCodeSystem(input.name);
+  process(input: CodeSystem): ExportableCodeSystem {
+    const codeSystem = new ExportableCodeSystem(input.name);
     this.extractKeywords(input, codeSystem);
     return codeSystem;
   }
