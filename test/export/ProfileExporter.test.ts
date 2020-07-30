@@ -1,6 +1,6 @@
 import { ProfileExporter } from '../../src/export';
 import { Profile } from 'fsh-sushi/dist/fshtypes';
-import { CardRule, FlagRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { CardRule, FlagRule, ValueSetRule } from 'fsh-sushi/dist/fshtypes/rules';
 import { EOL } from 'os';
 
 describe('ProfileExporter', () => {
@@ -225,6 +225,51 @@ describe('ProfileExporter', () => {
         'Parent: Patient',
         '* name MS',
         '* telecom MS'
+      ].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+  });
+
+  describe('#valueSetRule', () => {
+    let profile: Profile;
+
+    beforeEach(() => {
+      profile = new Profile('MyObservation');
+      profile.parent = 'Observation';
+      profile.id = null;
+    });
+
+    it('should export a profile with a ValueSetRule', () => {
+      const valueSetRule = new ValueSetRule('valueCodeableConcept');
+      valueSetRule.valueSet = 'http://example.org/ValueSet/Foo';
+      valueSetRule.strength = 'required';
+      profile.rules.push(valueSetRule);
+
+      const expectedResult = [
+        'Profile: MyObservation',
+        'Parent: Observation',
+        '* valueCodeableConcept from http://example.org/ValueSet/Foo (required)'
+      ].join(EOL);
+      const result = exporter.export(profile);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should export a profile with multiple ValueSetRules', () => {
+      const valueSetRule1 = new ValueSetRule('valueCodeableConcept');
+      valueSetRule1.valueSet = 'http://example.org/ValueSet/Foo';
+      valueSetRule1.strength = 'required';
+
+      const valueSetRule2 = new ValueSetRule('component.valueCodeableConcept');
+      valueSetRule2.valueSet = 'http://example.org/ValueSet/Bar';
+      valueSetRule2.strength = 'example';
+      profile.rules.push(valueSetRule1, valueSetRule2);
+
+      const expectedResult = [
+        'Profile: MyObservation',
+        'Parent: Observation',
+        '* valueCodeableConcept from http://example.org/ValueSet/Foo (required)',
+        '* component.valueCodeableConcept from http://example.org/ValueSet/Bar (example)'
       ].join(EOL);
       const result = exporter.export(profile);
       expect(result).toBe(expectedResult);
