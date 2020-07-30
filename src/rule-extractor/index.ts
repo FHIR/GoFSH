@@ -3,3 +3,4 @@
 export * from './CardRuleExtractor';
 export * from './FixedValueRuleExtractor';
 export * from './FlagRuleExtractor';
+export * from './ValueSetRuleExtractor';
