@@ -1,5 +1,6 @@
 import { Profile, Extension } from 'fsh-sushi/dist/fshtypes';
 import { CardRule, FlagRule, ValueSetRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshifyString } from '../utils';
 
 export class AbstractSDExporter {
   exportKeywords(input: Profile | Extension): string[] {
@@ -41,14 +42,4 @@ export class AbstractSDExporter {
     }
     return resultLines;
   }
-}
-
-// Adds expected backslash-escapes to a string to make it a FSH string
-function fshifyString(input: string): string {
-  return input
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t');
 }

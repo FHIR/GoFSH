@@ -2,3 +2,4 @@
 export * from './FSHExporter';
 export * from './ProfileExporter';
 export * from './ExtensionExporter';
+export * from './CodeSystemExporter';

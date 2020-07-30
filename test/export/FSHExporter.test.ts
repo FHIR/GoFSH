@@ -1,17 +1,24 @@
 import { EOL } from 'os';
-import { FSHExporter, ProfileExporter, ExtensionExporter } from '../../src/export';
+import {
+  FSHExporter,
+  ProfileExporter,
+  ExtensionExporter,
+  CodeSystemExporter
+} from '../../src/export';
 import { Package } from '../../src/processor';
-import { Profile, Extension } from 'fsh-sushi/dist/fshtypes';
+import { Profile, Extension, FshCodeSystem } from 'fsh-sushi/dist/fshtypes';
 
 describe('FSHExporter', () => {
   let exporter: FSHExporter;
   let myPackage: Package;
   let profileSpy: jest.SpyInstance;
   let extensionSpy: jest.SpyInstance;
+  let codeSystemSpy: jest.SpyInstance;
 
   beforeAll(() => {
     profileSpy = jest.spyOn(ProfileExporter.prototype, 'export');
     extensionSpy = jest.spyOn(ExtensionExporter.prototype, 'export');
+    codeSystemSpy = jest.spyOn(CodeSystemExporter.prototype, 'export');
   });
 
   beforeEach(() => {
@@ -19,6 +26,7 @@ describe('FSHExporter', () => {
     exporter = new FSHExporter(myPackage);
     profileSpy.mockReset();
     extensionSpy.mockReset();
+    codeSystemSpy.mockReset();
   });
 
   it('should try to export a Profile with the ProfileExporter', () => {
@@ -31,6 +39,12 @@ describe('FSHExporter', () => {
     myPackage.add(new Extension('SomeExtension'));
     exporter.export();
     expect(extensionSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should try to export a CodeSystem with the CodeSystemExporter', () => {
+    myPackage.add(new FshCodeSystem('SomeCodeSystem'));
+    exporter.export();
+    expect(codeSystemSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should separate each exported result with one blank line', () => {
