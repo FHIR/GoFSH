@@ -1,0 +1,33 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "ObservationWithBinding",
+  "snapshot": {
+    "element": []
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.valueCodeableConcept",
+        "path": "Observation.valueCodeableConcept",
+        "binding": {
+          "valueSet": "http://example.org/ValueSet/Foo",
+          "strength": "required" 
+        }
+      },
+      {
+        "id": "Observation.component.valueCodeableConcept",
+        "path": "Observation.component.valueCodeableConcept",
+        "binding": {
+          "strength": "example"
+        }
+      },
+      {
+        "id": "Observation.component.dataAbsentReason",
+        "path": "Observation.component.dataAbsentReason",
+        "min": 1
+      }
+    ]
+  }
+}
