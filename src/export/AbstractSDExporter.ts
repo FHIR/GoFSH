@@ -1,5 +1,5 @@
 import { Profile, Extension } from 'fsh-sushi/dist/fshtypes';
-import { CardRule, FlagRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { CardRule, FlagRule, ValueSetRule } from 'fsh-sushi/dist/fshtypes/rules';
 
 export class AbstractSDExporter {
   exportKeywords(input: Profile | Extension): string[] {
@@ -35,6 +35,8 @@ export class AbstractSDExporter {
         else if (rule.trialUse) flags.push('TU');
         else if (rule.normative) flags.push('N');
         resultLines.push(`* ${rule.path} ${flags.join(' ')}`);
+      } else if (rule instanceof ValueSetRule) {
+        resultLines.push(`* ${rule.path} from ${rule.valueSet} (${rule.strength})`);
       }
     }
     return resultLines;
