@@ -1,9 +1,9 @@
 import { EOL } from 'os';
-import { Extension } from 'fsh-sushi/dist/fshtypes';
+import { fshtypes } from 'fsh-sushi';
 import { Exportable, ExportableSdRule } from '.';
 import { metadataToFSH } from './common';
 
-export class ExportableExtension extends Extension implements Exportable {
+export class ExportableExtension extends fshtypes.Extension implements Exportable {
   rules: ExportableSdRule[];
 
   constructor(name: string) {

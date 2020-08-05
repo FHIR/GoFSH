@@ -1,7 +1,7 @@
-import { CardRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
-export class ExportableCardRule extends CardRule implements ExportableRule {
+export class ExportableCardRule extends fshrules.CardRule implements ExportableRule {
   constructor(path: string) {
     super(path);
   }

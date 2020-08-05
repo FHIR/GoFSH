@@ -1,7 +1,7 @@
-import { FlagRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
-export class ExportableFlagRule extends FlagRule implements ExportableRule {
+export class ExportableFlagRule extends fshrules.FlagRule implements ExportableRule {
   constructor(path: string) {
     super(path);
   }

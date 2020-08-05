@@ -1,9 +1,9 @@
-import { ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
+import { fhirtypes } from 'fsh-sushi';
 import { ExportableCardRule } from '../exportable';
 import { getPath } from '../utils';
 
 export class CardRuleExtractor {
-  process(input: ElementDefinition): ExportableCardRule | null {
+  static process(input: fhirtypes.ElementDefinition): ExportableCardRule | null {
     if (input.min || input.max) {
       const cardRule = new ExportableCardRule(getPath(input));
       if (input.min != null) {

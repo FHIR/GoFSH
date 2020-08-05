@@ -1,0 +1,18 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "complex-type",
+  "type": "Extension",
+  "name": "MyExtension",
+  "id": "my-extension",
+  "title": "My New Extension",
+  "description": "This is my new Extension. Thank you.",
+  "differential": {
+    "element": [
+      {
+        "id": "Extension.url",
+        "path": "Extension.url",
+        "fixedUri": "https://go.fsh/StructureDefinition/my-extension"
+      }
+    ]
+  }
+}

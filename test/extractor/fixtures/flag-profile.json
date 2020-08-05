@@ -3,9 +3,6 @@
   "kind": "resource",
   "type": "Observation",
   "name": "ObservationWithFlag",
-  "snapshot": {
-    "element": []
-  },
   "differential": {
     "element": [
       {
@@ -28,28 +25,28 @@
         "path": "Observation.focus",
         "extension": [
           {
-            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
-            "valueCode" : "normative"
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "normative"
           }
-        ]       
+        ]
       },
       {
         "id": "Observation.encounter",
         "path": "Observation.encounter",
         "extension": [
           {
-            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
-            "valueCode" : "trial-use"
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "trial-use"
           }
-        ]      
+        ]
       },
       {
         "id": "Observation.issued",
         "path": "Observation.issued",
         "extension": [
           {
-            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
-            "valueCode" : "draft"
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "draft"
           }
         ]
       },
@@ -58,15 +55,14 @@
         "path": "Observation.performer",
         "extension": [
           {
-            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
-            "valueCode" : "normative"
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "normative"
           },
           {
-            "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
-            "valueCode" : "draft"
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "draft"
           }
         ]
-        
       },
       {
         "id": "Observation.value[x]",

@@ -1,4 +1,4 @@
-import { FshValueSet } from 'fsh-sushi/dist/fshtypes';
+import { fshtypes } from 'fsh-sushi';
 import {
   Exportable,
   ExportableCaretValueRule,
@@ -6,7 +6,7 @@ import {
   ExportableValueSetComponentRule
 } from '.';
 
-export class ExportableValueSet extends FshValueSet implements Exportable {
+export class ExportableValueSet extends fshtypes.FshValueSet implements Exportable {
   rules: (ExportableValueSetComponentRule | ExportableCaretValueRule | ExportableInsertRule)[];
 
   constructor(name: string) {

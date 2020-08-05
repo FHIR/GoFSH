@@ -1,8 +1,8 @@
-import { ConceptRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshrules } from 'fsh-sushi';
 import { fshifyString } from './common';
 import { ExportableRule } from '.';
 
-export class ExportableConceptRule extends ConceptRule implements ExportableRule {
+export class ExportableConceptRule extends fshrules.ConceptRule implements ExportableRule {
   constructor(code: string, display?: string, definition?: string) {
     super(code, display, definition);
   }
