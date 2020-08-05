@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import temp from 'temp';
 
+import { loggerSpy } from '../helpers/loggerSpy';
 import { getInputDir, ensureOutputDir, getResources, writeFSH } from '../../src/utils/Processing';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { Package } from '../../src/processor';
@@ -23,12 +24,14 @@ describe('Processing', () => {
     it('should use the current directory as a default when no directory is provided', () => {
       const result = getInputDir(undefined);
       expect(result).toBe('.');
+      expect(loggerSpy.getLastMessage('info')).toBe('Using input directory: .');
     });
 
     it('should use the provided directory when one is given', () => {
       const input = path.join(tempRoot, 'my-fhir');
       const result = getInputDir(input);
       expect(result).toBe(input);
+      expect(loggerSpy.getLastMessage('info')).toBe(`Using input directory: ${input}`);
     });
   });
 

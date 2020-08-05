@@ -41,7 +41,13 @@ async function app() {
   logger.info(`Starting goFSH ${getVersion()}`);
 
   inDir = getInputDir(inDir);
-  const outDir = ensureOutputDir(program.out);
+  let outDir: string;
+  try {
+    outDir = ensureOutputDir(program.out);
+  } catch (err) {
+    logger.error(`Could not use output directory: ${err.message}`);
+    process.exit(1);
+  }
 
   const resources = getResources(inDir);
   writeFSH(resources, outDir);

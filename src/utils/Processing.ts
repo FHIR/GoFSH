@@ -11,7 +11,9 @@ export function getInputDir(input = '.'): string {
 }
 
 export function ensureOutputDir(output = path.join('.', 'fsh')): string {
-  fs.ensureDirSync(output);
+  try {
+    fs.ensureDirSync(output);
+  } catch (err) {}
   logger.info(`Using output directory: ${output}`);
   return output;
 }
