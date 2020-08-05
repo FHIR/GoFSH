@@ -1,0 +1,16 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "MyObservation",
+  "id": "my-profile",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.note",
+        "path": "Observation.note",
+        "max": "7"
+      }
+    ]
+  }
+}

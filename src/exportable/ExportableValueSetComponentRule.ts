@@ -1,7 +1,7 @@
-import { ValueSetComponentRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
-export class ExportableValueSetComponentRule extends ValueSetComponentRule
+export class ExportableValueSetComponentRule extends fshrules.ValueSetComponentRule
   implements ExportableRule {
   constructor(inclusion: boolean) {
     super(inclusion);

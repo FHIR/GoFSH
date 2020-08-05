@@ -3,9 +3,6 @@
   "kind": "resource",
   "type": "Observation",
   "name": "ObservationWithBinding",
-  "snapshot": {
-    "element": []
-  },
   "differential": {
     "element": [
       {
@@ -13,7 +10,7 @@
         "path": "Observation.valueCodeableConcept",
         "binding": {
           "valueSet": "http://example.org/ValueSet/Foo",
-          "strength": "required" 
+          "strength": "required"
         }
       },
       {

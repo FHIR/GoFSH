@@ -1,9 +1,9 @@
-import { ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
+import { fhirtypes } from 'fsh-sushi';
 import { ExportableFlagRule } from '../exportable';
 import { getPath } from '../utils';
 
 export class FlagRuleExtractor {
-  process(input: ElementDefinition): ExportableFlagRule | null {
+  static process(input: fhirtypes.ElementDefinition): ExportableFlagRule | null {
     const standardStatus = input.extension?.find(
       ext =>
         ext.url === 'http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status'

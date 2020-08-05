@@ -1,30 +1,23 @@
 import fs from 'fs-extra';
 import { ProfileProcessor } from './ProfileProcessor';
 import { ExtensionProcessor } from './ExtensionProcessor';
-import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
+import { CodeSystemProcessor } from './CodeSystemProcessor';
 
 export class FHIRProcessor {
-  private profileProcessor: ProfileProcessor;
-  private extensionProcessor: ExtensionProcessor;
-  public readonly structureDefinitions: StructureDefinition[] = [];
-
-  constructor() {
-    this.profileProcessor = new ProfileProcessor();
-    this.extensionProcessor = new ExtensionProcessor();
-  }
-
+  public readonly structureDefinitions: any[] = [];
   process(inputPath: string) {
     const rawContent = JSON.parse(fs.readFileSync(inputPath, 'utf-8'));
 
     if (rawContent['resourceType'] === 'StructureDefinition') {
       // Profiles and Extensions are both made from StructureDefinitions
-      const sd = StructureDefinition.fromJSON(rawContent);
-      this.structureDefinitions.push(sd);
-      if (sd.type === 'Extension') {
-        return this.extensionProcessor.process(sd);
+      this.structureDefinitions.push(rawContent);
+      if (rawContent.type === 'Extension') {
+        return ExtensionProcessor.process(rawContent);
       } else {
-        return this.profileProcessor.process(sd);
+        return ProfileProcessor.process(rawContent);
       }
+    } else if (rawContent['resourceType'] === 'CodeSystem') {
+      return CodeSystemProcessor.process(rawContent);
     }
   }
 }

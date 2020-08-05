@@ -3,9 +3,6 @@
   "kind": "resource",
   "type": "Observation",
   "name": "ObservationWithCard",
-  "snapshot": {
-    "element": []
-  },
   "differential": {
     "element": [
       {
