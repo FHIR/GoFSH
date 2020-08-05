@@ -6,6 +6,7 @@ import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
 export class FHIRProcessor {
   private profileProcessor: ProfileProcessor;
   private extensionProcessor: ExtensionProcessor;
+  public readonly structureDefinitions: StructureDefinition[] = [];
 
   constructor() {
     this.profileProcessor = new ProfileProcessor();
@@ -18,6 +19,7 @@ export class FHIRProcessor {
     if (rawContent['resourceType'] === 'StructureDefinition') {
       // Profiles and Extensions are both made from StructureDefinitions
       const sd = StructureDefinition.fromJSON(rawContent);
+      this.structureDefinitions.push(sd);
       if (sd.type === 'Extension') {
         return this.extensionProcessor.process(sd);
       } else {

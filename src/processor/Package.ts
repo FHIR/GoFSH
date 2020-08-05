@@ -5,6 +5,7 @@ import {
   ExportableValueSet,
   ExportableCodeSystem
 } from '../exportable';
+import { FHIRProcessor } from './FHIRProcessor';
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
@@ -33,6 +34,19 @@ export class Package {
       this.valueSets.push(resource);
     } else if (resource instanceof ExportableCodeSystem) {
       this.codeSystems.push(resource);
+    }
+  }
+
+  // TODO: if more optimization steps are added, break them into separate functions.
+  optimize(processor: FHIRProcessor) {
+    // optimization step: resolving parents on Profiles
+    for (const profile of this.profiles) {
+      if (profile.parent) {
+        const parentSd = processor.structureDefinitions.find(sd => sd.url === profile.parent);
+        if (parentSd?.name) {
+          profile.parent = parentSd.name;
+        }
+      }
     }
   }
 }

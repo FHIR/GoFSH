@@ -34,4 +34,15 @@ describe('ProfileProcessor', () => {
     expect(result.title).toBe('My New Profile');
     expect(result.description).toBe('This is my new Profile. Thank you.');
   });
+
+  it('should convert a profile that has a baseDefinition', () => {
+    // the baseDefinition field defines a Profile's Parent
+    const input = StructureDefinition.fromJSON(
+      JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'big-profile.json'), 'utf-8'))
+    );
+    const result = processor.process(input);
+    expect(result).toBeInstanceOf(ExportableProfile);
+    expect(result.name).toBe('BigProfile');
+    expect(result.parent).toBe('https://demo.org/StructureDefinition/SmallProfile');
+  });
 });
