@@ -24,6 +24,7 @@ export function getResources(inDir: string) {
       console.log(ex);
     }
   });
+  resources.optimize(processor);
   return resources;
 }
 

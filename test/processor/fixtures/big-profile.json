@@ -1,0 +1,11 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Resource",
+  "name": "BigProfile",
+  "url": "https://demo.org/StructureDefinition/BigProfile",
+  "baseDefinition": "https://demo.org/StructureDefinition/SmallProfile",
+  "snapshot": {
+    "element": []
+  }
+}

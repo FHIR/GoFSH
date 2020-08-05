@@ -13,6 +13,9 @@ export abstract class AbstractSDProcessor {
     if (input.description) {
       target.description = input.description;
     }
+    if (input.baseDefinition) {
+      target.parent = input.baseDefinition;
+    }
   }
 }
 
@@ -21,4 +24,5 @@ interface ConstrainableEntity {
   id: string;
   title?: string;
   description?: string;
+  parent?: string;
 }
