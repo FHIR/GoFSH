@@ -47,7 +47,7 @@
     "chalk": "^4.1.0",
     "commander": "^5.1.0",
     "fs-extra": "^9.0.1",
-    "fsh-sushi": "^0.14.0",
+    "fsh-sushi": "^0.15.1",
     "temp": "^0.9.1",
     "winston": "^3.3.3"
   }

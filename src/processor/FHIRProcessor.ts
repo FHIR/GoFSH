@@ -1,7 +1,8 @@
 import fs from 'fs-extra';
+import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
 import { ProfileProcessor } from './ProfileProcessor';
 import { ExtensionProcessor } from './ExtensionProcessor';
-import { StructureDefinition } from 'fsh-sushi/dist/fhirtypes';
+import { logger } from '../utils';
 
 export class FHIRProcessor {
   private profileProcessor: ProfileProcessor;
@@ -21,8 +22,10 @@ export class FHIRProcessor {
       const sd = StructureDefinition.fromJSON(rawContent);
       this.structureDefinitions.push(sd);
       if (sd.type === 'Extension') {
+        logger.debug(`Processing contents of ${inputPath} as Extension.`);
         return this.extensionProcessor.process(sd);
       } else {
+        logger.debug(`Processing contents of ${inputPath} as Profile.`);
         return this.profileProcessor.process(sd);
       }
     }
