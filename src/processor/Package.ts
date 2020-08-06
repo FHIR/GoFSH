@@ -6,7 +6,7 @@ import {
   ExportableCodeSystem
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
-import { logger } from 'fsh-sushi/dist/utils';
+import { logger } from '../utils';
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];

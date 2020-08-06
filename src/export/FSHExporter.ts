@@ -1,6 +1,6 @@
 import { EOL } from 'os';
 import { Package } from '../processor';
-import { logger } from 'fsh-sushi/dist/utils';
+import { logger } from '../utils';
 
 export class FSHExporter {
   constructor(public readonly fshPackage: Package) {}

@@ -6,6 +6,7 @@ import program from 'commander';
 
 import { getInputDir, ensureOutputDir, getResources, writeFSH } from './utils/Processing';
 import { logger, stats } from './utils';
+import { Package } from './processor';
 
 const FSH_VERSION = '0.13.x';
 
@@ -48,8 +49,13 @@ async function app() {
     logger.error(`Could not use output directory: ${err.message}`);
     process.exit(1);
   }
-
-  const resources = getResources(inDir);
+  let resources: Package;
+  try {
+    resources = getResources(inDir);
+  } catch (err) {
+    logger.error(`Could not use input directory: ${err.message}`);
+    process.exit(1);
+  }
   writeFSH(resources, outDir);
 
   logger.debug(`Errors: ${stats.numError}`);
