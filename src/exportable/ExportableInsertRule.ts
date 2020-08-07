@@ -1,7 +1,7 @@
-import { InsertRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
-export class ExportableInsertRule extends InsertRule implements ExportableRule {
+export class ExportableInsertRule extends fshrules.InsertRule implements ExportableRule {
   constructor() {
     super();
   }

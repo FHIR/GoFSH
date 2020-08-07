@@ -1,7 +1,7 @@
-import { ContainsRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
-export class ExportableContainsRule extends ContainsRule implements ExportableRule {
+export class ExportableContainsRule extends fshrules.ContainsRule implements ExportableRule {
   constructor(path: string) {
     super(path);
   }

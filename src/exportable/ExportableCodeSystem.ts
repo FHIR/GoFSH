@@ -1,5 +1,5 @@
 import { EOL } from 'os';
-import { FshCodeSystem } from 'fsh-sushi/dist/fshtypes';
+import { fshtypes } from 'fsh-sushi';
 import { metadataToFSH } from './common';
 import {
   Exportable,
@@ -8,7 +8,7 @@ import {
   ExportableConceptRule
 } from '.';
 
-export class ExportableCodeSystem extends FshCodeSystem implements Exportable {
+export class ExportableCodeSystem extends fshtypes.FshCodeSystem implements Exportable {
   rules: (ExportableConceptRule | ExportableCaretValueRule | ExportableInsertRule)[];
 
   constructor(name: string) {

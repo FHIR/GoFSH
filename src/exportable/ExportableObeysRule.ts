@@ -1,7 +1,7 @@
-import { ObeysRule } from 'fsh-sushi/dist/fshtypes/rules';
+import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
-export class ExportableObeysRule extends ObeysRule implements ExportableRule {
+export class ExportableObeysRule extends fshrules.ObeysRule implements ExportableRule {
   constructor(path: string) {
     super(path);
   }

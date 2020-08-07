@@ -1,6 +1,5 @@
 {
   "resourceType": "StructureDefinition",
   "kind": "complex-type",
-  "type": "Extension",
-  "name": "SimpleExtension"
+  "type": "Extension"
 }
