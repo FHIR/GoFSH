@@ -6,7 +6,11 @@ export class ExportableCardRule extends fshrules.CardRule implements ExportableR
     super(path);
   }
 
+  cardToString(): string {
+    return `${this.min ?? ''}..${this.max ?? ''}`;
+  }
+
   toFSH(): string {
-    return `* ${this.path} ${this.min ?? ''}..${this.max ?? ''}`;
+    return `* ${this.path} ${this.cardToString()}`;
   }
 }
