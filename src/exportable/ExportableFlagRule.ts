@@ -18,7 +18,11 @@ export class ExportableFlagRule extends fshrules.FlagRule implements ExportableR
     return flags;
   }
 
+  flagsToString(): string {
+    return this.flags.join(' ');
+  }
+
   toFSH(): string {
-    return `* ${this.path} ${this.flags.join(' ')}`;
+    return `* ${this.path} ${this.flagsToString()}`;
   }
 }
