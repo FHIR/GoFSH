@@ -45,10 +45,12 @@
   },
   "dependencies": {
     "@types/lodash": "^4.14.158",
+    "@types/valid-url": "^1.0.3",
     "commander": "^5.1.0",
     "fs-extra": "^9.0.1",
     "fsh-sushi": "^0.15.1",
     "lodash": "^4.17.19",
-    "temp": "^0.9.1"
+    "temp": "^0.9.1",
+    "valid-url": "^1.0.9"
   }
 }
