@@ -39,7 +39,7 @@ async function app() {
     logger.level = 'debug';
   }
 
-  logger.info(`Starting goFSH ${getVersion()}`);
+  logger.info(`Starting ${getVersion()}`);
 
   inDir = getInputDir(inDir);
   let outDir: string;
@@ -58,9 +58,8 @@ async function app() {
   }
   writeFSH(resources, outDir);
 
-  logger.debug(`Errors: ${stats.numError}`);
-  logger.debug(`Warnings: ${stats.numWarn}`);
-  logger.debug(`Info: ${stats.numInfo}`);
+  logger.info(`Errors: ${stats.numError}`);
+  logger.info(`Warnings: ${stats.numWarn}`);
   logger.info('Thank you for using goFSH.');
 
   process.exit(0);

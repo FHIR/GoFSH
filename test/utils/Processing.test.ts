@@ -49,6 +49,7 @@ describe('Processing', () => {
     it('should use a directory named fsh as a default when no directory is provided', () => {
       const result = ensureOutputDir(undefined);
       expect(result).toBe('fsh');
+      expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
     });
 
     it('should use the provided directory when one is given', () => {
@@ -56,6 +57,7 @@ describe('Processing', () => {
       const result = ensureOutputDir(output);
       expect(result).toBe(output);
       expect(fs.existsSync(result)).toBeTruthy();
+      expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
     });
   });
 
