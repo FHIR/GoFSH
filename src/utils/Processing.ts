@@ -2,14 +2,19 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Package, FHIRProcessor } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
+import { logger } from './GoFSHLogger';
 
 export function getInputDir(input = '.'): string {
   // default to current directory
+  logger.info(`Using input directory: ${input}`);
   return input;
 }
 
 export function ensureOutputDir(output = path.join('.', 'fsh')): string {
-  fs.ensureDirSync(output);
+  try {
+    fs.ensureDirSync(output);
+  } catch (err) {}
+  logger.info(`Using output directory: ${output}`);
   return output;
 }
 
@@ -17,11 +22,12 @@ export function getResources(inDir: string) {
   const resources = new Package();
   const processor = new FHIRProcessor();
   const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
+  logger.info(`Found ${files.length} JSON files.`);
   files.forEach(file => {
     try {
       resources.add(processor.process(file));
     } catch (ex) {
-      console.log(ex);
+      logger.error(`Could not process ${file}: ${ex.message}`);
     }
   });
   resources.optimize(processor);
@@ -32,7 +38,7 @@ export function writeFSH(resources: Package, outDir: string) {
   const exporter = new FSHExporter(resources);
   const outputPath = path.join(outDir, 'resources.fsh');
   fs.writeFileSync(outputPath, exporter.export());
-  console.log(`Wrote fsh to ${outputPath}.`);
+  logger.info(`Wrote fsh to ${outputPath}.`);
 }
 
 // thanks, peturv

@@ -5,11 +5,13 @@ import fs from 'fs-extra';
 import program from 'commander';
 
 import { getInputDir, ensureOutputDir, getResources, writeFSH } from './utils/Processing';
+import { logger, stats } from './utils';
+import { Package } from './processor';
 
 const FSH_VERSION = '0.13.x';
 
 app().catch(e => {
-  console.log(`Unexpected error: ${e.message}`);
+  logger.error(`Unexpected error: ${e.message}`);
   process.exit(1);
 });
 
@@ -19,10 +21,13 @@ async function app() {
     .name('goFSH')
     .usage('[path-to-fhir-resources] [options]')
     .option('-o, --out <out>', 'the path to the output folder')
+    .option('-d, --debug', 'output extra debugging information')
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
-      console.log('Help text goes here!');
+      console.log('goFSH is used to convert JSON FHIR resources');
+      console.log('to FSH. This makes it easier to start');
+      console.log('using FSH to author FHIR resources.');
     })
     .arguments('[path-to-fsh-defs]')
     .action(function (pathToFhirResources) {
@@ -30,13 +35,32 @@ async function app() {
     })
     .parse(process.argv);
 
-  inDir = getInputDir(inDir);
-  const outDir = ensureOutputDir(program.out);
+  if (program.debug) {
+    logger.level = 'debug';
+  }
 
-  const resources = getResources(inDir);
+  logger.info(`Starting ${getVersion()}`);
+
+  inDir = getInputDir(inDir);
+  let outDir: string;
+  try {
+    outDir = ensureOutputDir(program.out);
+  } catch (err) {
+    logger.error(`Could not use output directory: ${err.message}`);
+    process.exit(1);
+  }
+  let resources: Package;
+  try {
+    resources = getResources(inDir);
+  } catch (err) {
+    logger.error(`Could not use input directory: ${err.message}`);
+    process.exit(1);
+  }
   writeFSH(resources, outDir);
 
-  console.log('Thank you for using goFSH.');
+  logger.info(`Errors: ${stats.numError}`);
+  logger.info(`Warnings: ${stats.numWarn}`);
+  logger.info('Thank you for using goFSH.');
 
   process.exit(0);
 }

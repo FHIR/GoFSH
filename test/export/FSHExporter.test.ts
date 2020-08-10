@@ -2,6 +2,7 @@ import { EOL } from 'os';
 import { FSHExporter } from '../../src/export';
 import { Package } from '../../src/processor';
 import { ExportableProfile, ExportableExtension, ExportableCodeSystem } from '../../src/exportable';
+import { loggerSpy } from '../helpers/loggerSpy';
 
 describe('FSHExporter', () => {
   let exporter: FSHExporter;
@@ -40,6 +41,16 @@ describe('FSHExporter', () => {
     myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
     exporter.export();
     expect(codeSystemSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should log info messages with the number of exported entities', () => {
+    myPackage.add(new ExportableProfile('FirstProfile'));
+    myPackage.add(new ExportableProfile('SecondProfile'));
+    myPackage.add(new ExportableCodeSystem('OnlyCodeSystem'));
+    exporter.export();
+    expect(loggerSpy.getMessageAtIndex(-3, 'info')).toBe('Exported 2 Profiles.');
+    expect(loggerSpy.getMessageAtIndex(-2, 'info')).toBe('Exported 0 Extensions.');
+    expect(loggerSpy.getMessageAtIndex(-1, 'info')).toBe('Exported 1 CodeSystem.');
   });
 
   it('should separate each exported result with one blank line', () => {
