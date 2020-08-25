@@ -5,7 +5,9 @@ import {
   CardRuleExtractor,
   FixedValueRuleExtractor,
   FlagRuleExtractor,
-  ValueSetRuleExtractor
+  ValueSetRuleExtractor,
+  ContainsRuleExtractor,
+  OnlyRuleExtractor
 } from '../rule-extractor';
 
 export abstract class AbstractSDProcessor {
@@ -30,12 +32,22 @@ export abstract class AbstractSDProcessor {
     const newRules: ExportableSdRule[] = [];
     for (const rawElement of input?.differential?.element ?? []) {
       const element = fhirtypes.ElementDefinition.fromJSON(rawElement, false);
-      newRules.push(
-        CardRuleExtractor.process(element),
-        FixedValueRuleExtractor.process(element),
-        FlagRuleExtractor.process(element),
-        ValueSetRuleExtractor.process(element)
-      );
+      if (element.sliceName) {
+        newRules.push(
+          ContainsRuleExtractor.process(element),
+          OnlyRuleExtractor.process(element),
+          FixedValueRuleExtractor.process(element),
+          ValueSetRuleExtractor.process(element)
+        );
+      } else {
+        newRules.push(
+          CardRuleExtractor.process(element),
+          OnlyRuleExtractor.process(element),
+          FixedValueRuleExtractor.process(element),
+          FlagRuleExtractor.process(element),
+          ValueSetRuleExtractor.process(element)
+        );
+      }
     }
     target.rules = compact(newRules);
   }

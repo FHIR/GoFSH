@@ -5,3 +5,4 @@ export * from './FixedValueRuleExtractor';
 export * from './FlagRuleExtractor';
 export * from './ValueSetRuleExtractor';
 export * from './OnlyRuleExtractor';
+export * from './ContainsRuleExtractor';

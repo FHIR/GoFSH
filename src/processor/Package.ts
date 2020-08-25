@@ -39,6 +39,8 @@ export class Package {
   }
 
   // TODO: if more optimization steps are added, break them into separate functions.
+  // TODO: Optimization step: combine CardRule and FlagRule
+  // TODO: Optimization step: combine ContainsRule and OnlyRule for contained item with one type
   optimize(processor: FHIRProcessor) {
     // optimization step: resolving parents on Profiles
     logger.debug('Optimizing profiles...');
