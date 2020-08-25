@@ -3,10 +3,14 @@ import {
   ExportableProfile,
   ExportableInstance,
   ExportableValueSet,
-  ExportableCodeSystem
+  ExportableCodeSystem,
+  ExportableFlagRule,
+  ExportableCardRule,
+  ExportableCombinedCardFlagRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
+import { pullAt } from 'lodash';
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
@@ -42,8 +46,12 @@ export class Package {
   // TODO: Optimization step: combine CardRule and FlagRule
   // TODO: Optimization step: combine ContainsRule and OnlyRule for contained item with one type
   optimize(processor: FHIRProcessor) {
-    // optimization step: resolving parents on Profiles
-    logger.debug('Optimizing profiles...');
+    logger.debug('Optimizing FSH definitions...');
+    this.resolveProfileParents(processor);
+    this.combineCardAndFlagRules();
+  }
+
+  private resolveProfileParents(processor: FHIRProcessor): void {
     for (const profile of this.profiles) {
       if (profile.parent) {
         const parentSd = processor.structureDefinitions.find(sd => sd.url === profile.parent);
@@ -52,5 +60,27 @@ export class Package {
         }
       }
     }
+  }
+
+  private combineCardAndFlagRules(): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToRemove: number[] = [];
+      sd.rules.forEach((rule, i) => {
+        if (rule instanceof ExportableCardRule) {
+          const flagRuleIdx = sd.rules.findIndex(
+            other => other.path === rule.path && other instanceof ExportableFlagRule
+          );
+          if (flagRuleIdx >= 0) {
+            sd.rules[i] = new ExportableCombinedCardFlagRule(
+              rule.path,
+              rule,
+              sd.rules[flagRuleIdx] as ExportableFlagRule
+            );
+            rulesToRemove.push(flagRuleIdx);
+          }
+        }
+      });
+      pullAt(sd.rules, rulesToRemove);
+    });
   }
 }

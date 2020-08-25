@@ -1,6 +1,7 @@
 import {
   ExportableCardRule,
   ExportableCaretValueRule,
+  ExportableCombinedCardFlagRule,
   ExportableContainsRule,
   ExportableFixedValueRule,
   ExportableFlagRule,
@@ -13,6 +14,7 @@ import {
 export type ExportableSdRule =
   | ExportableCardRule
   | ExportableCaretValueRule
+  | ExportableCombinedCardFlagRule
   | ExportableContainsRule
   | ExportableFixedValueRule
   | ExportableFlagRule
