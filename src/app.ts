@@ -3,8 +3,15 @@
 import path from 'path';
 import fs from 'fs-extra';
 import program from 'commander';
+import { fhirdefs, utils } from 'fsh-sushi';
 
-import { getInputDir, ensureOutputDir, getResources, writeFSH } from './utils/Processing';
+import {
+  ensureOutputDir,
+  getInputDir,
+  getResources,
+  loadExternalDependencies,
+  writeFSH
+} from './utils/Processing';
 import { logger, stats } from './utils';
 import { Package } from './processor';
 
@@ -21,7 +28,14 @@ async function app() {
     .name('goFSH')
     .usage('[path-to-fhir-resources] [options]')
     .option('-o, --out <out>', 'the path to the output folder')
-    .option('-d, --debug', 'output extra debugging information')
+    .option(
+      '-l, --log-level <level>',
+      'specify the level of log messages: error, warn, info (default), debug'
+    )
+    .option(
+      '-d, --dependency <dependency...>',
+      'specify dependencies to be loaded using format dependencyId@version (FHIR R4 included by default)'
+    )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -35,11 +49,19 @@ async function app() {
     })
     .parse(process.argv);
 
-  if (program.debug) {
-    logger.level = 'debug';
+  // Set the log level. If no level specified, loggers default to info
+  const { logLevel } = program;
+  if (logLevel === 'debug' || logLevel === 'warn' || logLevel === 'error') {
+    logger.level = logLevel; // GoFSH logger
+    utils.logger.level = logLevel; // SUSHI logger
   }
 
   logger.info(`Starting ${getVersion()}`);
+
+  // Load dependencies
+  const defs = new fhirdefs.FHIRDefinitions();
+  const dependencies = program.dependency;
+  const dependencyDefs = loadExternalDependencies(defs, dependencies);
 
   inDir = getInputDir(inDir);
   let outDir: string;
@@ -49,6 +71,9 @@ async function app() {
     logger.error(`Could not use output directory: ${err.message}`);
     process.exit(1);
   }
+
+  await Promise.all(dependencyDefs);
+
   let resources: Package;
   try {
     resources = getResources(inDir);
@@ -56,6 +81,7 @@ async function app() {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);
   }
+
   writeFSH(resources, outDir);
 
   logger.info(`Errors: ${stats.numError}`);

@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { fhirdefs } from 'fsh-sushi';
 import { Package, FHIRProcessor } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { logger } from './GoFSHLogger';
@@ -49,4 +50,38 @@ function getFilesRecursive(dir: string): string[] {
   } else {
     return [dir];
   }
+}
+
+export function loadExternalDependencies(
+  defs: fhirdefs.FHIRDefinitions,
+  dependencies: string[] = []
+): Promise<fhirdefs.FHIRDefinitions | void>[] {
+  // Automatically include FHIR R4
+  if (!dependencies.includes('hl7.fhir.r4.core@4.0.1')) {
+    dependencies.push('hl7.fhir.r4.core@4.0.1');
+  }
+
+  // Load dependencies
+  const dependencyDefs: Promise<fhirdefs.FHIRDefinitions | void>[] = [];
+  for (const dep of dependencies) {
+    const [packageId, version] = dep.split('@');
+    if (version == null) {
+      logger.error(
+        `Failed to load ${packageId}: No version specified. To specify the version use ` +
+          `the format ${packageId}@current`
+      );
+      continue;
+    }
+    dependencyDefs.push(
+      fhirdefs
+        .loadDependency(packageId, version, defs)
+        .then(def => {
+          return def;
+        })
+        .catch(e => {
+          logger.error(`Failed to load ${dep}: ${e.message}`);
+        })
+    );
+  }
+  return dependencyDefs;
 }
