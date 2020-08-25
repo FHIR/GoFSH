@@ -5,9 +5,12 @@ import {
   ExportableExtension,
   ExportableInstance,
   ExportableValueSet,
-  ExportableCodeSystem
+  ExportableCodeSystem,
+  ExportableCardRule,
+  ExportableFlagRule
 } from '../../src/exportable';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
+import { ExportableCombinedCardFlagRule } from '../../src/exportable/ExportableCombinedCardFlagRule';
 
 describe('Package', () => {
   describe('#add', () => {
@@ -73,6 +76,37 @@ describe('Package', () => {
       myPackage.add(profile);
       myPackage.optimize(processor);
       expect(profile.parent).toBe('https://demo.org/StructureDefinition/MediumProfile');
+    });
+
+    it('should combine a card rule and flag rule having the same path', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const cardRule = new ExportableCardRule('code');
+      cardRule.min = 1;
+      const flagRule = new ExportableFlagRule('code');
+      flagRule.mustSupport = true;
+      flagRule.summary = true;
+      profile.rules = [cardRule, flagRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      const cardFlagRule = new ExportableCombinedCardFlagRule('code', cardRule, flagRule);
+      expect(profile.rules).toEqual([cardFlagRule]);
+    });
+
+    it('should not combine a card rule and flag rule having different paths', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const cardRule = new ExportableCardRule('code');
+      cardRule.min = 1;
+      const flagRule = new ExportableFlagRule('value[x]');
+      flagRule.mustSupport = true;
+      flagRule.summary = true;
+      profile.rules = [cardRule, flagRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toEqual([cardRule, flagRule]);
     });
   });
 });

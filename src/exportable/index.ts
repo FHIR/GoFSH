@@ -2,6 +2,7 @@ export * from './Exportable';
 export * from './ExportableCardRule';
 export * from './ExportableCaretValueRule';
 export * from './ExportableCodeSystem';
+export * from './ExportableCombinedCardFlagRule';
 export * from './ExportableConceptRule';
 export * from './ExportableContainsRule';
 export * from './ExportableExtension';
