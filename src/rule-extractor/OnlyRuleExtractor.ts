@@ -3,7 +3,7 @@ import { ExportableOnlyRule } from '../exportable';
 import { getPath } from '../utils';
 
 export class OnlyRuleExtractor {
-  process(input: fhirtypes.ElementDefinition): ExportableOnlyRule | null {
+  static process(input: fhirtypes.ElementDefinition): ExportableOnlyRule | null {
     if (!input.type) {
       return null;
     }

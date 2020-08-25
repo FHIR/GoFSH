@@ -1,0 +1,95 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "ObservationWithContains",
+  "abstract": false,
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+  "status": "active",
+  "url": "http://hl7.org/fhir/us/mcode/StructureDefinition/EggObservation",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.extension",
+        "path": "Observation.extension",
+        "slicing": {
+          "discriminator": [
+            {
+              "type": "value",
+              "path": "url"
+            }
+          ],
+          "ordered": false,
+          "rules": "open"
+        },
+        "min": 3
+      },
+      {
+        "id": "Observation.extension:Oranges",
+        "path": "Observation.extension",
+        "sliceName": "Oranges",
+        "min": 1,
+        "max": "4"
+      },
+      {
+        "id": "Observation.extension:Oranges.url",
+        "path": "Observation.extension.url",
+        "fixedUri": "Oranges"
+      },
+      {
+        "id": "Observation.extension:Apples",
+        "path": "Observation.extension",
+        "sliceName": "Apples",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true
+      },
+      {
+        "id": "Observation.extension:Apples.url",
+        "path": "Observation.extension.url",
+        "fixedUri": "Apples"
+      },
+      {
+        "id": "Observation.extension:Bananas",
+        "path": "Observation.extension",
+        "sliceName": "Bananas",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://example.org/StructureDefinition/Bananas",
+              "http://example.org/StructureDefinition/NoBananas"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "Observation.extension:Pears",
+        "path": "Observation.extension",
+        "sliceName": "Pears",
+        "min": 2,
+        "max": "2",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": ["http://example.org/StructureDefinition/Pears"]
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "normative"
+          }
+        ]
+      },
+      {
+        "id": "Observation.extension:Rutabega",
+        "path": "Observation.extension",
+        "sliceName": "Rutabega"
+      }
+    ]
+  }
+}
