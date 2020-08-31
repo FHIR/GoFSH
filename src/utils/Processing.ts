@@ -19,9 +19,9 @@ export function ensureOutputDir(output = path.join('.', 'fsh')): string {
   return output;
 }
 
-export function getResources(inDir: string) {
+export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
   const resources = new Package();
-  const processor = new FHIRProcessor();
+  const processor = new FHIRProcessor(defs);
   const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
   logger.info(`Found ${files.length} JSON files.`);
   files.forEach(file => {

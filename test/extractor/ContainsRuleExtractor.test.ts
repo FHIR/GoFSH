@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirtypes } from 'fsh-sushi';
 import { ContainsRuleExtractor } from '../../src/rule-extractor';
+import { ProcessableElementDefinition } from '../../src/processor';
 import {
   ExportableContainsRule,
   ExportableCardRule,
@@ -18,7 +18,7 @@ describe('ContainsRuleExtractor', () => {
   });
 
   it('should extract a ContainsRule with cardinality', () => {
-    const element = fhirtypes.ElementDefinition.fromJSON(looseSD.differential.element[1]);
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
     const containsRule = ContainsRuleExtractor.process(element);
     const expectedRule = new ExportableContainsRule('extension');
     expectedRule.items.push({
@@ -29,10 +29,11 @@ describe('ContainsRuleExtractor', () => {
     cardRule.max = '4';
     expectedRule.cardRules.push(cardRule);
     expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
+    expect(element.processedPaths).toEqual(['min', 'max', 'sliceName']);
   });
 
   it('should extract a ContainsRule with cardinality and flags', () => {
-    const element = fhirtypes.ElementDefinition.fromJSON(looseSD.differential.element[3]);
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
     const containsRule = ContainsRuleExtractor.process(element);
     const expectedRule = new ExportableContainsRule('extension');
     expectedRule.items.push({
@@ -46,12 +47,14 @@ describe('ContainsRuleExtractor', () => {
     flagRule.mustSupport = true;
     expectedRule.flagRules.push(flagRule);
     expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
+    expect(element.processedPaths).toEqual(['min', 'max', 'mustSupport', 'sliceName']);
   });
 
   it('should not extract a ContainsRule when no cardinality is on the element', () => {
-    const element = fhirtypes.ElementDefinition.fromJSON(looseSD.differential.element[7]);
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[7]);
     const containsRule = ContainsRuleExtractor.process(element);
     expect(containsRule).toBeNull();
+    expect(element.processedPaths).toEqual([]);
   });
 
   it.todo('should extract a ContainsRule with cardinality and a name');

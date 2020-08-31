@@ -42,17 +42,22 @@
             "targetProfile": [
               "http://hl7.org/fhir/StructureDefinition/Observation",
               "http://hl7.org/fhir/StructureDefinition/MolecularSequence"
-            ]
+            ],
+            "aggregation": "contained"
           }
         ]
       },
       {
-        "id": "Observation.derivedFrom",
-        "path": "Observation.derivedFrom",
+        "id": "Observation.extension:foo.value[x]",
+        "path": "Observation.extension:foo.value[x]",
         "type": [
           {
+            "code": "string"
+          },
+          {
             "code": "Reference",
-            "profile": ["http://hl7.org/fhir/StructureDefinition/ProfileOfReference"]
+            "profile": ["http://hl7.org/fhir/StructureDefinition/ProfileOfReference"],
+            "versioning": "either"
           }
         ]
       },

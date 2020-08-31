@@ -76,7 +76,7 @@ async function app() {
 
   let resources: Package;
   try {
-    resources = getResources(inDir);
+    resources = getResources(inDir, defs);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);

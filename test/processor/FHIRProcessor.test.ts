@@ -13,7 +13,7 @@ describe('FHIRProcessor', () => {
   let codeSystemSpy: jest.SpyInstance;
 
   beforeAll(() => {
-    processor = new FHIRProcessor();
+    processor = new FHIRProcessor(undefined);
     profileSpy = jest.spyOn(ProfileProcessor, 'process');
     extensionSpy = jest.spyOn(ExtensionProcessor, 'process');
     codeSystemSpy = jest.spyOn(CodeSystemProcessor, 'process');
