@@ -1,9 +1,10 @@
 import { fhirtypes } from 'fsh-sushi';
+import { ProcessableElementDefinition } from '../processor';
 import { ExportableFixedValueRule } from '../exportable';
 import { getPath } from '../utils';
 
 export class FixedValueRuleExtractor {
-  static process(input: fhirtypes.ElementDefinition): ExportableFixedValueRule | null {
+  static process(input: ProcessableElementDefinition): ExportableFixedValueRule | null {
     // check for fixedSomething or patternSomething
     // pattern and fixed are mutually exclusive
     // these are on one-type elements, so if our SD has value[x],
@@ -19,8 +20,10 @@ export class FixedValueRuleExtractor {
         if (matchingKey.startsWith('fixed')) {
           fixedValueRule.exactly = true;
         }
+        input.processedPaths.push(matchingKey);
         return fixedValueRule;
       }
+      // TODO: Add logic for complex values and adding complex paths to processedPaths
     }
     return null;
   }

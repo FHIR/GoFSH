@@ -7,9 +7,11 @@
   "differential": {
     "element": [
       {
-        "id": "Observation.note",
-        "path": "Observation.note",
-        "max": "7"
+        "id": "Observation.valueString",
+        "path": "Observation.valueString",
+        "min": 1,
+        "patternString": "foo",
+        "short": "bar"
       }
     ]
   }

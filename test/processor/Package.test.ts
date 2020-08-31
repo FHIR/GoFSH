@@ -55,7 +55,7 @@ describe('Package', () => {
     let processor: FHIRProcessor;
 
     beforeAll(() => {
-      processor = new FHIRProcessor();
+      processor = new FHIRProcessor(undefined);
       // add a StructureDefinition to the processor
       processor.process(path.join(__dirname, 'fixtures', 'small-profile.json'));
     });

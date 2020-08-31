@@ -1,5 +1,8 @@
-import { fhirtypes } from 'fsh-sushi/';
-import { getPath } from '../../src/utils';
+import path from 'path';
+import { fhirtypes, fhirdefs } from 'fsh-sushi';
+import { getFSHValue, getPath, getPathValuePairs } from '../../src/utils';
+import { ProcessableElementDefinition } from '../../src/processor';
+import { FshCode } from 'fsh-sushi/dist/fshtypes';
 
 describe('element', () => {
   describe('#getPath', () => {
@@ -66,6 +69,80 @@ describe('element', () => {
       expect(getPath(new fhirtypes.ElementDefinition('Observation.value[x]:valueString.id'))).toBe(
         'valueString.id'
       );
+    });
+  });
+  describe('#getPathValuePairs', () => {
+    it('should not change a top-level path', () => {
+      expect(getPathValuePairs({ test: 'foo' })).toEqual({ test: 'foo' });
+    });
+
+    it('should ignore undefind keys', () => {
+      expect(getPathValuePairs({ test1: 'foo', test2: undefined, test3: false })).toEqual({
+        test1: 'foo',
+        test3: false
+      });
+    });
+
+    it('should join a nested value with "."', () => {
+      expect(getPathValuePairs({ test: { ing: 'foo' } })).toEqual({ 'test.ing': 'foo' });
+    });
+
+    it('should convert array indices to bracket notation for a top-level array', () => {
+      expect(getPathValuePairs({ test: ['foo', 'bar'] })).toEqual({
+        'test[0]': 'foo',
+        'test[1]': 'bar'
+      });
+    });
+
+    it('should convert array indices to bracket notation for a nested array', () => {
+      expect(getPathValuePairs({ test: { ing: ['foo', 'bar'] } })).toEqual({
+        'test.ing[0]': 'foo',
+        'test.ing[1]': 'bar'
+      });
+    });
+
+    it('should convert array indices to bracket notation for a nested array with children', () => {
+      expect(getPathValuePairs({ test: { ing: [{ stuff: 'foo' }, { stuff: 'bar' }] } })).toEqual({
+        'test.ing[0].stuff': 'foo',
+        'test.ing[1].stuff': 'bar'
+      });
+    });
+  });
+  describe('#getFSHValue', () => {
+    let defs: fhirdefs.FHIRDefinitions;
+
+    beforeAll(() => {
+      defs = new fhirdefs.FHIRDefinitions();
+      fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    });
+
+    it('should convert a code value into a FSHCode', () => {
+      const value = getFSHValue(
+        'type[0].aggregation[0]',
+        'contained',
+        new ProcessableElementDefinition(),
+        defs
+      );
+      expect(value).toEqual(new FshCode('contained'));
+    });
+
+    it('should FSHify a string', () => {
+      const value = getFSHValue(
+        'short',
+        'This is a "string"',
+        new ProcessableElementDefinition(),
+        defs
+      );
+      expect(value).toEqual('This is a \\"string\\"');
+    });
+    it('should leave a non-code value as is', () => {
+      const value = getFSHValue(
+        'type[0].profile[0]',
+        'http://foo.com/bar',
+        new ProcessableElementDefinition(),
+        defs
+      );
+      expect(value).toEqual('http://foo.com/bar');
     });
   });
 });

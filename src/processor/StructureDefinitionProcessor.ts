@@ -1,14 +1,16 @@
 import compact from 'lodash/compact';
-import { fhirtypes } from 'fsh-sushi';
+import { fhirdefs } from 'fsh-sushi';
 import { ExportableSdRule } from '../exportable';
 import {
   CardRuleExtractor,
+  CaretValueRuleExtractor,
   FixedValueRuleExtractor,
   FlagRuleExtractor,
   ValueSetRuleExtractor,
   ContainsRuleExtractor,
   OnlyRuleExtractor
 } from '../rule-extractor';
+import { ProcessableElementDefinition } from '.';
 
 export abstract class AbstractSDProcessor {
   static extractKeywords(input: ProcessableStructureDefinition, target: ConstrainableEntity): void {
@@ -28,10 +30,14 @@ export abstract class AbstractSDProcessor {
     }
   }
 
-  static extractRules(input: ProcessableStructureDefinition, target: ConstrainableEntity): void {
+  static extractRules(
+    input: ProcessableStructureDefinition,
+    target: ConstrainableEntity,
+    fhir: fhirdefs.FHIRDefinitions
+  ): void {
     const newRules: ExportableSdRule[] = [];
     for (const rawElement of input?.differential?.element ?? []) {
-      const element = fhirtypes.ElementDefinition.fromJSON(rawElement, false);
+      const element = ProcessableElementDefinition.fromJSON(rawElement, false);
       if (element.sliceName) {
         newRules.push(
           ContainsRuleExtractor.process(element),
@@ -48,8 +54,11 @@ export abstract class AbstractSDProcessor {
           ValueSetRuleExtractor.process(element)
         );
       }
+      // NOTE: CaretValueExtractor can only run once other Extractors have finished, since
+      // it will convert any remaining fields to CaretValueRules
+      newRules.push(...CaretValueRuleExtractor.process(element, fhir));
+      target.rules = compact(newRules);
     }
-    target.rules = compact(newRules);
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {

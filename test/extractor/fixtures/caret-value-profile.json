@@ -1,0 +1,86 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "ObservationWithCaret",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.identifier",
+        "path": "Observation.identifier",
+        "short": "foo"
+      },
+      {
+        "id": "Observation.basedOn",
+        "path": "Observation.basedOn",
+        "short": "foo",
+        "definition": "bar"
+      },
+      {
+        "id": "Observation.partOf",
+        "path": "Observation.partOf",
+        "base": {
+          "path": "foo"
+        }
+      },
+      {
+        "id": "Observation.status",
+        "path": "Observation.status",
+        "base": {
+          "path": "foo",
+          "min": 0
+        },
+        "slicing": {
+          "discriminator": {
+            "type": "value"
+          }
+        }
+      },
+      {
+        "id": "Observation.category",
+        "path": "Observation.category",
+        "alias": ["foo", "bar"]
+      },
+      {
+        "id": "Observation.code",
+        "path": "Observation.code",
+        "code": [
+          {
+            "system": "http://foo.com"
+          },
+          {
+            "version": "1.2.3"
+          }
+        ]
+      },
+      {
+        "id": "Observation.subject",
+        "path": "Observation.subject"
+      },
+      {
+        "id": "Observation.focus",
+        "path": "Observation.focus",
+        "short": "foo",
+        "min": 0,
+        "type": [
+          {
+            "code": "bar"
+          },
+          {
+            "code": "baz",
+            "targetProfile": [
+              "profile1",
+              "profile2"
+            ],
+            "versioning": "specific"
+          }
+        ]
+      },
+      {
+        "id": "Observation.dataAbsentReason.coding.code",
+        "path": "Observation.dataAbsentReason.coding.code",
+        "fixedCode": "foo"
+      }
+    ]
+  }
+}

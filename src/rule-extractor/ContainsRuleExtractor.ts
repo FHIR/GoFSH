@@ -1,11 +1,11 @@
-import { fhirtypes } from 'fsh-sushi';
 import { ExportableContainsRule } from '../exportable';
 import { getPath } from '../utils';
+import { ProcessableElementDefinition } from '../processor';
 import { CardRuleExtractor } from './CardRuleExtractor';
 import { FlagRuleExtractor } from './FlagRuleExtractor';
 
 export class ContainsRuleExtractor {
-  static process(input: fhirtypes.ElementDefinition): ExportableContainsRule {
+  static process(input: ProcessableElementDefinition): ExportableContainsRule {
     // The path for the rule should not include the slice for the contained element,
     // but should include previous slices.
     const elementPath = getPath(input);
@@ -26,6 +26,7 @@ export class ContainsRuleExtractor {
     if (flagRule) {
       containsRule.flagRules.push(flagRule);
     }
+    input.processedPaths.push('sliceName');
     return containsRule;
   }
 }
