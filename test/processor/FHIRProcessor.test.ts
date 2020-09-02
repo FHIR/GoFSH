@@ -5,6 +5,8 @@ import {
   FHIRProcessor,
   CodeSystemProcessor
 } from '../../src/processor';
+import '../helpers/loggerSpy'; // suppresses console logging
+import { fhirdefs } from 'fsh-sushi';
 
 describe('FHIRProcessor', () => {
   let processor: FHIRProcessor;
@@ -13,7 +15,7 @@ describe('FHIRProcessor', () => {
   let codeSystemSpy: jest.SpyInstance;
 
   beforeAll(() => {
-    processor = new FHIRProcessor(undefined);
+    processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
     profileSpy = jest.spyOn(ProfileProcessor, 'process');
     extensionSpy = jest.spyOn(ExtensionProcessor, 'process');
     codeSystemSpy = jest.spyOn(CodeSystemProcessor, 'process');

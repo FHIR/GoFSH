@@ -37,6 +37,9 @@ export abstract class AbstractSDProcessor {
     fhir: fhirdefs.FHIRDefinitions
   ): void {
     const newRules: ExportableSdRule[] = [];
+    // First extract the top-level caret rules from the StructureDefinition
+    newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fhir));
+    // Then extract rules based on the differential elements
     for (const rawElement of input?.differential?.element ?? []) {
       const element = ProcessableElementDefinition.fromJSON(rawElement, false);
       if (element.sliceName && getAncestorElement(element.id, input, fhir) == null) {
@@ -55,8 +58,8 @@ export abstract class AbstractSDProcessor {
           ValueSetRuleExtractor.process(element)
         );
       }
-      // NOTE: CaretValueExtractor can only run once other Extractors have finished, since
-      // it will convert any remaining fields to CaretValueRules
+      // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
+      // since it will convert any remaining fields to CaretValueRules
       newRules.push(...CaretValueRuleExtractor.process(element, fhir));
       target.rules = compact(newRules);
     }

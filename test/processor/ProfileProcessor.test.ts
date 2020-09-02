@@ -8,6 +8,7 @@ import {
   ExportableFixedValueRule,
   ExportableProfile
 } from '../../src/exportable';
+import '../helpers/loggerSpy'; // suppresses console logging
 import { fhirdefs } from 'fsh-sushi';
 
 describe('ProfileProcessor', () => {
