@@ -4,6 +4,7 @@ import { ProfileProcessor } from '../../src/processor';
 import {
   ExportableCardRule,
   ExportableCaretValueRule,
+  ExportableContainsRule,
   ExportableFixedValueRule,
   ExportableProfile
 } from '../../src/exportable';
@@ -65,6 +66,31 @@ describe('ProfileProcessor', () => {
       expect(result.rules).toContainEqual<ExportableCardRule>(cardRule);
       expect(result.rules).toContainEqual<ExportableFixedValueRule>(fixedValueRule);
       expect(result.rules).toContainEqual<ExportableCaretValueRule>(caretRule);
+    });
+
+    it('should convert a Profile with a new slice', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'new-slice-profile.json'), 'utf-8')
+      );
+      const result = ProfileProcessor.process(input, defs);
+      const containsRule = new ExportableContainsRule('category');
+      containsRule.items = [{ name: 'Foo' }];
+      const cardRule = new ExportableCardRule('category[Foo]');
+      cardRule.min = 1;
+      cardRule.max = '*';
+      containsRule.cardRules.push(cardRule);
+      expect(result.rules).toEqual([containsRule]);
+    });
+
+    it('should convert a Profile with an existing slice', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'existing-slice-profile.json'), 'utf-8')
+      );
+      const result = ProfileProcessor.process(input, defs);
+      const cardRule = new ExportableCardRule('category[VSCat]');
+      cardRule.min = 1;
+      cardRule.max = '1';
+      expect(result.rules).toEqual([cardRule]);
     });
   });
 

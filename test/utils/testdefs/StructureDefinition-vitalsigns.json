@@ -1,0 +1,346 @@
+{
+  "resourceType" : "StructureDefinition",
+  "id" : "vitalsigns",
+  "text" : {
+    "status" : "generated",
+    "div" : "<div xmlns=\"http://www.w3.org/1999/xhtml\">to do</div>"
+  },
+  "extension" : [{
+    "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-summary",
+    "valueMarkdown" : "\"#### Complete Summary of the Mandatory Requirements\n\n1.  One status in `Observation.status`which has a [required](http://build.fhir.org/terminologies.html#extensible) binding to:\n    -    [ObservationStatus] value set.\n1.  A category in `Observation.category` which must have:\n    -   a fixed `Observation.category.coding.system`=\"http://terminology.hl7.org/CodeSystem/observation-category\"\n    -   a fixed `Observation.category.coding.code`= \"vital-signs\"\n\n1.  A code in `Observation.code`\n    -   a fixed `Observation.code.coding.system`= \"http://loinc.org\"\"\n    -   a LOINC code in `Observation.code.coding.code` which has an [extensible](http://build.fhir.org/terminologies.html#extensible) binding to:\n         -   [Vital Signs] value set.\n                \n1.  One patient in `Observation.subject`\n1.  A date and time in `effectiveDateTime` or `effectivePeriod`\n1.  Either one `Observation.value[x]` or, if there is no value, one code in `Observation.DataAbsentReason`\n    -   if a vital sign measure then:\n        -  One numeric value in Observation.valueQuantity.value\n        - a fixed Observation.valueQuantity.system=\"http://unitsofmeasure.org\"\n        - a UCUM unit code in Observation.valueQuantity.code which has an required binding to the [Vital Signs Units] value set.\n    -   Observation.DataAbsentReason is bound to [Observation Value\n        Absent Reason] value set.\n\n1.  When using a panel code to group component observations (Note: See\n    the comments regarding blood pressure in the table above), one or\n    more `Observation.component.code` each of which must have:\n    -   a fixed\n        `Observation.component.code.coding.system` =\"\"http://loinc.org\"\"\n         -   a LOINC code in `Observation.code.coding.code` which has an [extensible] binding to:\n             -   [Vital Signs Units] value set.\n\n1.  Either one `Observation.component.valueQuantity` or, if there is\n    no value, one code in `Observation.component.DataAbsentReason`\n    -   Observation.component.DataAbsentReason is bound to [Observation\n        Value Absent Reason] value set.\n\n1.  When using a panel code to group observations, one or more reference\n    to Vitals Signs Observations in `Observation.related.target`\n    -   a fixed `Observation.related.type`= \"has-member\"\"\n\n [Vital Signs]: valueset-observation-vitalsignresult.html\n  [Vital Signs Units]: valueset-ucum-vitals-common.html\n  [extensible]: terminologies.html#extensible\n  [ObservationStatus]: valueset-observation-status.html\n [Observation Value Absent Reason]: valueset-data-absent-reason.html\n[required]: terminologies.html#required\""
+  },
+  {
+    "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm",
+    "valueInteger" : 5
+  },
+  {
+    "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg",
+    "valueCode" : "oo"
+  },
+  {
+    "url" : "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+    "valueCode" : "trial-use"
+  }],
+  "url" : "http://hl7.org/fhir/StructureDefinition/vitalsigns",
+  "version" : "4.0.1",
+  "name" : "observation-vitalsigns",
+  "title" : "Vital Signs Profile",
+  "status" : "draft",
+  "experimental" : false,
+  "date" : "2016-03-25",
+  "publisher" : "Health Level Seven International (Orders and Observations Workgroup)",
+  "contact" : [{
+    "telecom" : [{
+      "system" : "url",
+      "value" : "http://www.hl7.org/Special/committees/orders/index.cfm Orders and Observations"
+    }]
+  }],
+  "description" : "FHIR Vital Signs Profile",
+  "fhirVersion" : "4.0.1",
+  "mapping" : [{
+    "identity" : "workflow",
+    "uri" : "http://hl7.org/fhir/workflow",
+    "name" : "Workflow Pattern"
+  },
+  {
+    "identity" : "sct-concept",
+    "uri" : "http://snomed.info/conceptdomain",
+    "name" : "SNOMED CT Concept Domain Binding"
+  },
+  {
+    "identity" : "v2",
+    "uri" : "http://hl7.org/v2",
+    "name" : "HL7 v2 Mapping"
+  },
+  {
+    "identity" : "rim",
+    "uri" : "http://hl7.org/v3",
+    "name" : "RIM Mapping"
+  },
+  {
+    "identity" : "w5",
+    "uri" : "http://hl7.org/fhir/fivews",
+    "name" : "FiveWs Pattern Mapping"
+  },
+  {
+    "identity" : "sct-attr",
+    "uri" : "http://snomed.org/attributebinding",
+    "name" : "SNOMED CT Attribute Binding"
+  }],
+  "kind" : "resource",
+  "abstract" : false,
+  "type" : "Observation",
+  "baseDefinition" : "http://hl7.org/fhir/StructureDefinition/Observation",
+  "derivation" : "constraint",
+  "differential" : {
+    "element" : [{
+      "id" : "Observation",
+      "path" : "Observation",
+      "short" : "FHIR Vital Signs Profile",
+      "definition" : "The FHIR Vitals Signs profile sets minimum expectations for the Observation Resource to record, search and fetch the vital signs associated with a patient.",
+      "alias" : ["Vital Signs",
+      "Measurement",
+      "Results",
+      "Tests"],
+      "min" : 0,
+      "max" : "*",
+      "constraint" : [{
+        "key" : "vs-2",
+        "severity" : "error",
+        "human" : "If there is no component or hasMember element then either a value[x] or a data absent reason must be present.",
+        "expression" : "(component.empty() and hasMember.empty()) implies (dataAbsentReason.exists() or value.exists())",
+        "xpath" : "f:component or f:memberOF or f:*[starts-with(local-name(.), 'value')] or f:dataAbsentReason"
+      }]
+    },
+    {
+      "id" : "Observation.status",
+      "path" : "Observation.status",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "code"
+      }],
+      "mustSupport" : true,
+      "binding" : {
+        "extension" : [{
+          "url" : "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+          "valueString" : "Status"
+        }],
+        "strength" : "required",
+        "valueSet" : "http://hl7.org/fhir/ValueSet/observation-status|4.0.1"
+      }
+    },
+    {
+      "id" : "Observation.category",
+      "path" : "Observation.category",
+      "slicing" : {
+        "discriminator" : [{
+          "type" : "value",
+          "path" : "coding.code"
+        },
+        {
+          "type" : "value",
+          "path" : "coding.system"
+        }],
+        "ordered" : false,
+        "rules" : "open"
+      },
+      "min" : 1,
+      "max" : "*",
+      "type" : [{
+        "code" : "CodeableConcept"
+      }],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.category:VSCat",
+      "path" : "Observation.category",
+      "sliceName" : "VSCat",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "CodeableConcept"
+      }],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.category:VSCat.coding",
+      "path" : "Observation.category.coding",
+      "min" : 1,
+      "max" : "*",
+      "type" : [{
+        "code" : "Coding"
+      }],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.category:VSCat.coding.system",
+      "path" : "Observation.category.coding.system",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "uri"
+      }],
+      "fixedUri" : "http://terminology.hl7.org/CodeSystem/observation-category",
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.category:VSCat.coding.code",
+      "path" : "Observation.category.coding.code",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "code"
+      }],
+      "fixedCode" : "vital-signs",
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.code",
+      "path" : "Observation.code",
+      "short" : "Coded Responses from C-CDA Vital Sign Results",
+      "definition" : "Coded Responses from C-CDA Vital Sign Results.",
+      "requirements" : "5. SHALL contain exactly one [1..1] code, where the @code SHOULD be selected from ValueSet HITSP Vital Sign Result Type 2.16.840.1.113883.3.88.12.80.62 DYNAMIC (CONF:7301).",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "CodeableConcept"
+      }],
+      "mustSupport" : true,
+      "binding" : {
+        "extension" : [{
+          "url" : "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+          "valueString" : "VitalSigns"
+        }],
+        "strength" : "extensible",
+        "description" : "This identifies the vital sign result type.",
+        "valueSet" : "http://hl7.org/fhir/ValueSet/observation-vitalsignresult"
+      }
+    },
+    {
+      "id" : "Observation.subject",
+      "path" : "Observation.subject",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "Reference",
+        "targetProfile" : ["http://hl7.org/fhir/StructureDefinition/Patient"]
+      }],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.effective[x]",
+      "path" : "Observation.effective[x]",
+      "short" : "Often just a dateTime for Vital Signs",
+      "definition" : "Often just a dateTime for Vital Signs.",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "dateTime"
+      },
+      {
+        "code" : "Period"
+      }],
+      "condition" : ["vs-1"],
+      "constraint" : [{
+        "key" : "vs-1",
+        "severity" : "error",
+        "human" : "if Observation.effective[x] is dateTime and has a value then that value shall be precise to the day",
+        "expression" : "($this as dateTime).toString().length() >= 8",
+        "xpath" : "f:effectiveDateTime[matches(@value, '^\\d{4}-\\d{2}-\\d{2}')]"
+      }],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.value[x]",
+      "path" : "Observation.value[x]",
+      "short" : "Vital Signs value are recorded using the Quantity data type. For supporting observations such as Cuff size could use other datatypes such as CodeableConcept.",
+      "definition" : "Vital Signs value are recorded using the Quantity data type. For supporting observations such as Cuff size could use other datatypes such as CodeableConcept.",
+      "requirements" : "9. SHALL contain exactly one [1..1] value with @xsi:type=\"PQ\" (CONF:7305).",
+      "min" : 0,
+      "max" : "1",
+      "condition" : ["vs-2"],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.dataAbsentReason",
+      "path" : "Observation.dataAbsentReason",
+      "min" : 0,
+      "max" : "1",
+      "type" : [{
+        "code" : "CodeableConcept"
+      }],
+      "condition" : ["vs-2"],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.hasMember",
+      "path" : "Observation.hasMember",
+      "short" : "Used when reporting vital signs panel components",
+      "definition" : "Used when reporting vital signs panel components.",
+      "type" : [{
+        "code" : "Reference",
+        "targetProfile" : ["http://hl7.org/fhir/StructureDefinition/QuestionnaireResponse",
+        "http://hl7.org/fhir/StructureDefinition/MolecularSequence",
+        "http://hl7.org/fhir/StructureDefinition/vitalsigns"]
+      }]
+    },
+    {
+      "id" : "Observation.derivedFrom",
+      "path" : "Observation.derivedFrom",
+      "type" : [{
+        "code" : "Reference",
+        "targetProfile" : ["http://hl7.org/fhir/StructureDefinition/DocumentReference",
+        "http://hl7.org/fhir/StructureDefinition/ImagingStudy",
+        "http://hl7.org/fhir/StructureDefinition/Media",
+        "http://hl7.org/fhir/StructureDefinition/QuestionnaireResponse",
+        "http://hl7.org/fhir/StructureDefinition/MolecularSequence",
+        "http://hl7.org/fhir/StructureDefinition/vitalsigns"]
+      }]
+    },
+    {
+      "id" : "Observation.component",
+      "path" : "Observation.component",
+      "short" : "Used when reporting systolic and diastolic blood pressure.",
+      "definition" : "Used when reporting systolic and diastolic blood pressure.",
+      "constraint" : [{
+        "key" : "vs-3",
+        "severity" : "error",
+        "human" : "If there is no a value a data absent reason must be present",
+        "expression" : "value.exists() or dataAbsentReason.exists()",
+        "xpath" : "f:*[starts-with(local-name(.), 'value')] or f:dataAbsentReason"
+      }],
+      "mustSupport" : true
+    },
+    {
+      "id" : "Observation.component.code",
+      "path" : "Observation.component.code",
+      "min" : 1,
+      "max" : "1",
+      "type" : [{
+        "code" : "CodeableConcept"
+      }],
+      "mustSupport" : true,
+      "binding" : {
+        "extension" : [{
+          "url" : "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+          "valueString" : "VitalSigns"
+        }],
+        "strength" : "extensible",
+        "description" : "This identifies the vital sign result type.",
+        "valueSet" : "http://hl7.org/fhir/ValueSet/observation-vitalsignresult"
+      }
+    },
+    {
+      "id" : "Observation.component.value[x]",
+      "path" : "Observation.component.value[x]",
+      "short" : "Vital Sign Value recorded with UCUM",
+      "definition" : "Vital Sign Value recorded with UCUM.",
+      "requirements" : "9. SHALL contain exactly one [1..1] value with @xsi:type=\"PQ\" (CONF:7305).",
+      "min" : 0,
+      "max" : "1",
+      "condition" : ["vs-3"],
+      "mustSupport" : true,
+      "binding" : {
+        "extension" : [{
+          "url" : "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+          "valueString" : "VitalSignsUnits"
+        }],
+        "strength" : "required",
+        "description" : "Common UCUM units for recording Vital Signs.",
+        "valueSet" : "http://hl7.org/fhir/ValueSet/ucum-vitals-common|4.0.1"
+      }
+    },
+    {
+      "id" : "Observation.component.dataAbsentReason",
+      "path" : "Observation.component.dataAbsentReason",
+      "min" : 0,
+      "max" : "1",
+      "type" : [{
+        "code" : "CodeableConcept"
+      }],
+      "condition" : ["vs-3"],
+      "mustSupport" : true
+    }]
+  }
+}

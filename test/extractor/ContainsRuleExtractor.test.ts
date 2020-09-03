@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { fhirdefs } from 'fsh-sushi';
 import { ContainsRuleExtractor } from '../../src/rule-extractor';
 import { ProcessableElementDefinition } from '../../src/processor';
 import {
@@ -10,16 +11,19 @@ import {
 
 describe('ContainsRuleExtractor', () => {
   let looseSD: any;
+  let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'contains-profile.json'), 'utf-8').trim()
     );
+    defs = new fhirdefs.FHIRDefinitions();
+    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
   });
 
   it('should extract a ContainsRule with cardinality', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-    const containsRule = ContainsRuleExtractor.process(element);
+    const containsRule = ContainsRuleExtractor.process(element, looseSD, defs);
     const expectedRule = new ExportableContainsRule('extension');
     expectedRule.items.push({
       name: 'Oranges'
@@ -34,7 +38,7 @@ describe('ContainsRuleExtractor', () => {
 
   it('should extract a ContainsRule with cardinality and flags', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
-    const containsRule = ContainsRuleExtractor.process(element);
+    const containsRule = ContainsRuleExtractor.process(element, looseSD, defs);
     const expectedRule = new ExportableContainsRule('extension');
     expectedRule.items.push({
       name: 'Apples'
@@ -50,11 +54,21 @@ describe('ContainsRuleExtractor', () => {
     expect(element.processedPaths).toEqual(['min', 'max', 'mustSupport', 'sliceName']);
   });
 
-  it('should not extract a ContainsRule when no cardinality is on the element', () => {
+  it('should inherit cardinality on a ContainsRule from the element being sliced', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[7]);
-    const containsRule = ContainsRuleExtractor.process(element);
-    expect(containsRule).toBeNull();
-    expect(element.processedPaths).toEqual([]);
+    const containsRule = ContainsRuleExtractor.process(element, looseSD, defs);
+    const expectedRule = new ExportableContainsRule('extension');
+    expectedRule.items.push({ name: 'Rutabega' });
+    const cardRule = new ExportableCardRule('extension[Rutabega]');
+    cardRule.min = 3;
+    cardRule.max = '*';
+    expectedRule.cardRules.push(cardRule);
+    expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
+  });
+
+  it('should return null when no cardinality information can be found', () => {
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[8]);
+    expect(ContainsRuleExtractor.process(element, looseSD, defs)).toBeNull();
   });
 
   it.todo('should extract a ContainsRule with cardinality and a name');

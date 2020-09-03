@@ -1,0 +1,17 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "MyObservation",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/vitalsigns",
+  "id": "my-profile",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.category:Foo",
+        "path": "Observation.category",
+        "sliceName": "Foo"
+      }
+    ]
+  }
+}

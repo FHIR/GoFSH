@@ -1,7 +1,7 @@
 import { flatten } from 'flat';
 import { fhirdefs, fhirtypes, fshtypes } from 'fsh-sushi';
 import { fshifyString } from '../exportable/common';
-import { ProcessableElementDefinition } from '../processor';
+import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 
 // This function depends on the id of an element to construct the path.
 // Per the specification https://www.hl7.org/fhir/elementdefinition.html#id, we should
@@ -60,4 +60,39 @@ export function getFSHValue(
     return new fshtypes.FshCode(value.toString());
   }
   return typeof value === 'string' ? fshifyString(value) : value;
+}
+
+export function getAncestorElement(
+  id: string,
+  structDef: ProcessableStructureDefinition,
+  fhir: fhirdefs.FHIRDefinitions
+): any {
+  let element: any;
+  let currentStructDef = fhir.fishForFHIR(structDef.baseDefinition);
+  while (currentStructDef && !element) {
+    element =
+      currentStructDef.snapshot?.element.find((el: any) => el.id === id) ??
+      currentStructDef.differential?.element.find((el: any) => el.id === id);
+    currentStructDef = fhir.fishForFHIR(currentStructDef.baseDefinition);
+  }
+  return element ?? null;
+}
+
+export function getCardinality(
+  id: string,
+  structDef: ProcessableStructureDefinition,
+  fhir: fhirdefs.FHIRDefinitions
+): { min: number; max: string } {
+  let min: number;
+  let max: string;
+  let currentStructDef = structDef;
+  while (currentStructDef && (min == null || max == null)) {
+    const element =
+      currentStructDef.snapshot?.element.find((el: any) => el.id === id) ??
+      currentStructDef.differential?.element.find((el: any) => el.id === id);
+    min = min ?? element?.min;
+    max = max ?? element?.max;
+    currentStructDef = fhir.fishForFHIR(currentStructDef.baseDefinition);
+  }
+  return min != null && max != null ? { min, max } : null;
 }
