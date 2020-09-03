@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { fhirdefs } from 'fsh-sushi';
 import { ExtensionProcessor } from '../../src/processor';
 import { ExportableExtension } from '../../src/exportable';
+import '../helpers/loggerSpy'; // suppresses console logging
 
 describe('ExtensionProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;

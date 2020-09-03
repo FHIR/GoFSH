@@ -11,6 +11,8 @@ import {
 } from '../../src/exportable';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { ExportableCombinedCardFlagRule } from '../../src/exportable/ExportableCombinedCardFlagRule';
+import '../helpers/loggerSpy'; // suppresses console logging
+import { fhirdefs } from 'fsh-sushi';
 
 describe('Package', () => {
   describe('#add', () => {
@@ -55,7 +57,7 @@ describe('Package', () => {
     let processor: FHIRProcessor;
 
     beforeAll(() => {
-      processor = new FHIRProcessor(undefined);
+      processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
       // add a StructureDefinition to the processor
       processor.process(path.join(__dirname, 'fixtures', 'small-profile.json'));
     });
