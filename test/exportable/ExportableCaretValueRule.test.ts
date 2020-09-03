@@ -2,14 +2,6 @@ import { fhirtypes, fshtypes } from 'fsh-sushi';
 import { ExportableCaretValueRule } from '../../src/exportable';
 
 describe('ExportableCaretValueRule', () => {
-  it('should export a caret rule fixing a url', () => {
-    const rule = new ExportableCaretValueRule('');
-    rule.caretPath = 'url';
-    rule.value = 'http://foo.org';
-
-    expect(rule.toFSH()).toBe('* ^url = http://foo.org');
-  });
-
   it('should export a caret rule fixing a string', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'short';
