@@ -1,4 +1,3 @@
-import { isUri } from 'valid-url';
 import { fhirtypes, fshrules, fshtypes } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
@@ -22,11 +21,7 @@ export class ExportableCaretValueRule extends fshrules.CaretValueRule implements
     } else if (typeof this.value === 'boolean' || typeof this.value === 'number') {
       fixedValue = this.value;
     } else if (typeof this.value === 'string') {
-      if (isUri(this.value)) {
-        fixedValue = this.value;
-      } else {
-        fixedValue = `"${this.value}"`;
-      }
+      fixedValue = `"${this.value}"`;
     }
     return `* ${this.path !== '' ? this.path + ' ' : ''}^${this.caretPath} = ${fixedValue}`;
   }
