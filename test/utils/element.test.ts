@@ -1,10 +1,24 @@
 import path from 'path';
 import { fhirtypes, fhirdefs } from 'fsh-sushi';
-import { getFSHValue, getPath, getPathValuePairs } from '../../src/utils';
-import { ProcessableElementDefinition } from '../../src/processor';
+import {
+  getFSHValue,
+  getPath,
+  getPathValuePairs,
+  getCardinality,
+  getAncestorElement
+} from '../../src/utils';
+import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 import { FshCode } from 'fsh-sushi/dist/fshtypes';
+import { cloneDeep } from 'lodash';
 
 describe('element', () => {
+  let defs: fhirdefs.FHIRDefinitions;
+
+  beforeAll(() => {
+    defs = new fhirdefs.FHIRDefinitions();
+    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+  });
+
   describe('#getPath', () => {
     // Basic paths
     it('should get the path for an element', () => {
@@ -71,6 +85,7 @@ describe('element', () => {
       );
     });
   });
+
   describe('#getPathValuePairs', () => {
     it('should not change a top-level path', () => {
       expect(getPathValuePairs({ test: 'foo' })).toEqual({ test: 'foo' });
@@ -108,14 +123,8 @@ describe('element', () => {
       });
     });
   });
+
   describe('#getFSHValue', () => {
-    let defs: fhirdefs.FHIRDefinitions;
-
-    beforeAll(() => {
-      defs = new fhirdefs.FHIRDefinitions();
-      fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
-    });
-
     it('should convert a code value into a FSHCode', () => {
       const value = getFSHValue(
         'type[0].aggregation[0]',
@@ -143,6 +152,101 @@ describe('element', () => {
         defs
       );
       expect(value).toEqual('http://foo.com/bar');
+    });
+  });
+
+  describe('#getAncestorElement', () => {
+    let vitalsJson: any;
+    let vitals: ProcessableStructureDefinition;
+
+    beforeAll(() => {
+      vitalsJson = defs.fishForFHIR('vitalsigns');
+    });
+
+    beforeEach(() => {
+      vitals = cloneDeep(vitalsJson);
+    });
+
+    it('should find an element from the snapshot of the parent', () => {
+      const status = getAncestorElement('Observation.status', vitals, defs);
+      expect(status.id).toBe('Observation.status');
+    });
+
+    it('should find an element from the differential of the parent', () => {
+      const vitalChild = {
+        name: 'vitalchild',
+        resourceType: 'Observation',
+        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/vitalsigns'
+      };
+      const vsCat = getAncestorElement('Observation.category:VSCat', vitalChild, defs);
+      expect(vsCat.id).toBe('Observation.category:VSCat');
+    });
+
+    it('should find an element from a grandparent', () => {
+      const vitalChild = {
+        name: 'vitalchild',
+        resourceType: 'Observation',
+        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/vitalsigns',
+        url: 'http://hl7.org/StructureDefinition/vitalchild'
+      };
+      const vsCat = getAncestorElement('Observation.identifier', vitalChild, defs);
+      expect(vsCat.id).toBe('Observation.identifier');
+    });
+
+    it('should return null when no element is found', () => {
+      expect(getAncestorElement('Observation.foo', vitals, defs)).toBeNull();
+    });
+  });
+
+  describe('#getCardinality', () => {
+    let observationJson: any;
+    let vitalsJson: any;
+    let observation: ProcessableStructureDefinition;
+    let vitals: ProcessableStructureDefinition;
+
+    beforeAll(() => {
+      observationJson = defs.fishForFHIR('Observation');
+      vitalsJson = defs.fishForFHIR('vitalsigns');
+    });
+
+    beforeEach(() => {
+      observation = cloneDeep(observationJson);
+      vitals = cloneDeep(vitalsJson);
+    });
+
+    it('should get the cardinality from the current snapshot', () => {
+      const card = getCardinality('Observation.status', observation, defs);
+      expect(card).toEqual({ min: 1, max: '1' });
+    });
+
+    it('should get the cardinality from the current differential', () => {
+      const card = getCardinality('Observation.category:VSCat', vitals, defs);
+      expect(card).toEqual({ min: 1, max: '1' });
+    });
+
+    it('should get the cardinality from the parent', () => {
+      const card = getCardinality('Observation.identifier', vitals, defs);
+      expect(card).toEqual({ min: 0, max: '*' });
+    });
+
+    it('should prefer cardinality on the child StructureDefinition', () => {
+      const identifier = new ProcessableElementDefinition('Observation.identifier');
+      identifier.min = 2;
+      vitals.differential.element.push(identifier);
+      const card = getCardinality('Observation.identifier', vitals, defs);
+      // min from the child is preferred, max from the parent is used
+      expect(card).toEqual({ min: 2, max: '*' });
+    });
+
+    it('should return null when an element cannot be found', () => {
+      expect(getCardinality('Observation.foo', vitals, defs)).toBeNull();
+    });
+
+    it('should return null when not all cardinality info can be found', () => {
+      const foo = new ProcessableElementDefinition('Observation.foo');
+      foo.min = 2;
+      vitals.differential.element.push(foo);
+      expect(getCardinality('Observation.foo', vitals, defs)).toBeNull();
     });
   });
 });

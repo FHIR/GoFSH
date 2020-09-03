@@ -11,6 +11,7 @@ import {
   OnlyRuleExtractor
 } from '../rule-extractor';
 import { ProcessableElementDefinition } from '.';
+import { getAncestorElement } from '../utils';
 
 export abstract class AbstractSDProcessor {
   static extractKeywords(input: ProcessableStructureDefinition, target: ConstrainableEntity): void {
@@ -38,9 +39,9 @@ export abstract class AbstractSDProcessor {
     const newRules: ExportableSdRule[] = [];
     for (const rawElement of input?.differential?.element ?? []) {
       const element = ProcessableElementDefinition.fromJSON(rawElement, false);
-      if (element.sliceName) {
+      if (element.sliceName && getAncestorElement(element.id, input, fhir) == null) {
         newRules.push(
-          ContainsRuleExtractor.process(element),
+          ContainsRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
           FixedValueRuleExtractor.process(element),
           ValueSetRuleExtractor.process(element)
@@ -66,7 +67,7 @@ export abstract class AbstractSDProcessor {
   }
 }
 
-interface ProcessableStructureDefinition {
+export interface ProcessableStructureDefinition {
   name: string;
   resourceType: string;
   id?: string;
@@ -74,6 +75,9 @@ interface ProcessableStructureDefinition {
   description?: string;
   baseDefinition?: string;
   differential?: {
+    element: any[];
+  };
+  snapshot?: {
     element: any[];
   };
 }

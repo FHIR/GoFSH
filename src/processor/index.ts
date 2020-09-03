@@ -5,3 +5,4 @@ export * from './ProfileProcessor';
 export * from './ExtensionProcessor';
 export * from './CodeSystemProcessor';
 export * from './ProcessableElementDefinition';
+export * from './StructureDefinitionProcessor';

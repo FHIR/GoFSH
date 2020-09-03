@@ -73,6 +73,7 @@ async function app() {
   }
 
   await Promise.all(dependencyDefs);
+  fhirdefs.loadFromPath(inDir, '', defs);
 
   let resources: Package;
   try {

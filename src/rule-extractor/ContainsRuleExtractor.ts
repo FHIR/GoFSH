@@ -1,11 +1,16 @@
-import { ExportableContainsRule } from '../exportable';
-import { getPath } from '../utils';
-import { ProcessableElementDefinition } from '../processor';
+import { fhirdefs } from 'fsh-sushi';
+import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
+import { ExportableCardRule, ExportableContainsRule } from '../exportable';
+import { getPath, getCardinality } from '../utils';
 import { CardRuleExtractor } from './CardRuleExtractor';
 import { FlagRuleExtractor } from './FlagRuleExtractor';
 
 export class ContainsRuleExtractor {
-  static process(input: ProcessableElementDefinition): ExportableContainsRule {
+  static process(
+    input: ProcessableElementDefinition,
+    structDef: ProcessableStructureDefinition,
+    fhir: fhirdefs.FHIRDefinitions
+  ): ExportableContainsRule {
     // The path for the rule should not include the slice for the contained element,
     // but should include previous slices.
     const elementPath = getPath(input);
@@ -19,7 +24,16 @@ export class ContainsRuleExtractor {
     if (cardRule) {
       containsRule.cardRules.push(cardRule);
     } else {
-      return null;
+      const slicedElementId = input.id.slice(0, input.id.lastIndexOf(':'));
+      const card = getCardinality(slicedElementId, structDef, fhir);
+      if (card) {
+        const cardRule = new ExportableCardRule(elementPath);
+        cardRule.min = card.min;
+        cardRule.max = card.max;
+        containsRule.cardRules.push(cardRule);
+      } else {
+        return null;
+      }
     }
     // FlagRule is optional
     const flagRule = FlagRuleExtractor.process(input);
