@@ -19,7 +19,7 @@
       },
       {
         "id": "Observation.note.text",
-        "patternString": "This is the note text"
+        "patternString": "This is the \"note\" text.\nThere are two lines."
       },
       {
         "id": "Observation.valueBoolean",
@@ -28,6 +28,11 @@
       {
         "id": "Observation.component.valueBoolean",
         "patternBoolean": false
+      },
+      {
+        "id": "Observation.status",
+        "path": "Observation.status",
+        "patternCode": "final"
       },
       {
         "id": "Observation.valueString",

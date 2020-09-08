@@ -1,0 +1,78 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "FixedValueObservation",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.code",
+        "path": "Observation.code",
+        "patternCodeableConcept": {
+          "coding": [
+            {
+              "code": "12343",
+              "system": "http://example.com/codes",
+              "display": "something\nhere"
+            }
+          ]
+        }
+      },
+      {
+        "id": "Observation.valueQuantity",
+        "path": "Observation.valueQuantity",
+        "patternQuantity": {
+          "value": 1.21,
+          "code": "GW",
+          "system": "http://unitsofmeasure.org"
+        }
+      },
+      {
+        "id": "Observation.valueRatio",
+        "path": "Observation.valueRatio",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Ratio"
+          }
+        ],
+        "patternRatio": {
+          "numerator": {
+            "value": 5,
+            "code": "cm",
+            "system": "http://unitsofmeasure.org"
+          },
+          "denominator": {
+            "value": 1,
+            "code": "s",
+            "system": "http://unitsofmeasure.org"
+          }
+        }
+      },
+      {
+        "id": "Observation.subject",
+        "path": "Observation.subject",
+        "patternReference": {
+          "reference": "http://example.com/PaulBunyan",
+          "display": "Paul Bunyan\t(real)"
+        }
+      },
+      {
+        "id": "Observation.note",
+        "path": "Observation.note",
+        "patternAnnotation": {
+          "text": "We were out in the woods that day."
+        }
+      },
+      {
+        "id": "Observation.dataAbsentReason.coding",
+        "path": "Observation.dataAbsentReason.coding",
+        "patternCoding": {
+          "code": "DNE",
+          "system": "http://example.com/codes"
+        }
+      }
+    ]
+  }
+}
