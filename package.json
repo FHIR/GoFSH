@@ -1,7 +1,7 @@
 {
-  "name": "fsh-ihsus",
-  "version": "0.0.1",
-  "description": "Ichthymorphic Helper Systematically Undoes Sushi (FSH Decompiler)",
+  "name": "gofsh",
+  "version": "0.1.0",
+  "description": "GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON/XML to FSH.",
   "main": "dist/app.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
@@ -12,17 +12,21 @@
     "lint": "tsc && eslint \"**/*.{js,ts}\"",
     "lint:fix": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix",
     "prettier": "prettier --check \"**/*.{js,ts}\"",
-    "prettier:fix": "prettier --write \"**/*.{js,ts}\""
+    "prettier:fix": "prettier --write \"**/*.{js,ts}\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run check"
   },
   "bin": {
-    "ihsus": "dist/app.js"
+    "gofsh": "dist/app.js"
   },
   "types": "dist/app.d.ts",
   "files": [
     "dist/**/*.{js,json,d.ts}"
   ],
-  "author": "",
   "contributors": [
+    "Julia Afeltra <jafeltra@mitre.org>",
+    "Nick Freiter <nfreiter@mitre.org>",
+    "Chris Moesel <cmoesel@mitre.org>",
     "Mint Thompson <mathompson@mitre.org>"
   ],
   "license": "Apache-2.0",
