@@ -1,7 +1,7 @@
 {
   "name": "gofsh",
   "version": "0.1.0",
-  "description": "GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON/XML to FSH.",
+  "description": "GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON to FSH.",
   "main": "dist/app.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
