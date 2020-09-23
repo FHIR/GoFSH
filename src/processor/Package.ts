@@ -4,6 +4,7 @@ import {
   ExportableInstance,
   ExportableValueSet,
   ExportableCodeSystem,
+  ExportableConfiguration,
   ExportableFlagRule,
   ExportableCardRule,
   ExportableCombinedCardFlagRule
@@ -18,6 +19,7 @@ export class Package {
   public readonly instances: ExportableInstance[] = [];
   public readonly valueSets: ExportableValueSet[] = [];
   public readonly codeSystems: ExportableCodeSystem[] = [];
+  public configuration: ExportableConfiguration;
 
   constructor() {}
 
@@ -28,6 +30,7 @@ export class Package {
       | ExportableInstance
       | ExportableValueSet
       | ExportableCodeSystem
+      | ExportableConfiguration
   ) {
     if (resource instanceof ExportableProfile) {
       this.profiles.push(resource);
@@ -39,11 +42,20 @@ export class Package {
       this.valueSets.push(resource);
     } else if (resource instanceof ExportableCodeSystem) {
       this.codeSystems.push(resource);
+    } else if (resource instanceof ExportableConfiguration) {
+      if (this.configuration) {
+        logger.warning(
+          `Multiple implementation guide resources found in input folder. Skipping implementation guide with ${
+            resource.config.id ? `id ${resource.config.id}` : 'unknown id'
+          }.`
+        );
+      } else {
+        this.configuration = resource;
+      }
     }
   }
 
   // TODO: if more optimization steps are added, break them into separate functions.
-  // TODO: Optimization step: combine CardRule and FlagRule
   // TODO: Optimization step: combine ContainsRule and OnlyRule for contained item with one type
   optimize(processor: FHIRProcessor) {
     logger.debug('Optimizing FSH definitions...');
