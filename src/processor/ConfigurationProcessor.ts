@@ -1,10 +1,10 @@
 import { fshtypes } from 'fsh-sushi';
 import { ExportableConfiguration } from '../exportable';
-import { logger } from 'fsh-sushi/dist/utils';
+import { logger } from '../utils/GoFSHLogger';
 
 export class ConfigurationProcessor {
   static process(input: any): ExportableConfiguration {
-    // canonical and fhirVersion are the minimal required properties for configuration
+    // canonical and fhirVersion are the minimal required configuration properties for configuration
     // canonical is inferred from the url property
     const missingProperties: string[] = [];
     if (!input.url) {
@@ -22,12 +22,14 @@ export class ConfigurationProcessor {
       return;
     }
     const config: fshtypes.Configuration = {
-      canonical: input.url?.replace(/\/ImplementationGuide.*/, ''),
+      canonical: input.url.replace(/\/ImplementationGuide.*/, ''),
       fhirVersion: input.fhirVersion
     };
-    if (input.id) {
-      config.id = input.id;
-    }
+    // id, name, status, and version are the optional configuration properties.
+    config.id = input.id;
+    config.name = input.name;
+    config.status = input.status;
+    config.version = input.version;
     return new ExportableConfiguration(config);
   }
 }
