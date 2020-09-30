@@ -1,0 +1,47 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "ConstrainedObservation",
+  "snapshot": {
+    "element": []
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "Observation",
+        "path": "Observation",
+        "constraint": [
+          {
+            "key": "zig-1",
+            "severity": "warning",
+            "human": "This is a constraint on the root element."
+          }
+        ]
+      },
+      {
+        "id": "Observation.category",
+        "path": "Observation.category",
+        "constraint": [
+          {
+            "key": "zig-2",
+            "severity": "error",
+            "human": "This constraint has an expression.",
+            "expression": "category.exists()"
+          },
+          {
+            "key": "zig-3",
+            "severity": "warning",
+            "human": "This constraint has an xpath.",
+            "xpath": "f:category"
+          }
+        ]
+      },
+      {
+        "id": "Observation.issued",
+        "path": "Observation.issued",
+        "min": 1
+      }
+    ]
+  }
+}

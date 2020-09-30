@@ -1,10 +1,11 @@
 import { EOL } from 'os';
 import { fshtypes } from 'fsh-sushi';
-import { Exportable, ExportableSdRule } from '.';
+import { Exportable, ExportableSdRule, ExportableInvariant } from '.';
 import { metadataToFSH } from './common';
 
 export class ExportableProfile extends fshtypes.Profile implements Exportable {
   rules: ExportableSdRule[];
+  invariants: ExportableInvariant[];
 
   constructor(name: string) {
     super(name);

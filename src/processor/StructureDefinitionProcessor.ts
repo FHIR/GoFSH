@@ -1,6 +1,6 @@
 import compact from 'lodash/compact';
 import { fhirdefs } from 'fsh-sushi';
-import { ExportableSdRule } from '../exportable';
+import { ExportableSdRule, ExportableInvariant } from '../exportable';
 import {
   CardRuleExtractor,
   CaretValueRuleExtractor,
@@ -8,7 +8,8 @@ import {
   FlagRuleExtractor,
   ValueSetRuleExtractor,
   ContainsRuleExtractor,
-  OnlyRuleExtractor
+  OnlyRuleExtractor,
+  ObeysRuleExtractor
 } from '../rule-extractor';
 import { ProcessableElementDefinition } from '.';
 import { getAncestorElement } from '../utils';
@@ -37,6 +38,7 @@ export abstract class AbstractSDProcessor {
     fhir: fhirdefs.FHIRDefinitions
   ): void {
     const newRules: ExportableSdRule[] = [];
+    const newInvariants: ExportableInvariant[] = [];
     // First extract the top-level caret rules from the StructureDefinition
     newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fhir));
     // Then extract rules based on the differential elements
@@ -58,11 +60,16 @@ export abstract class AbstractSDProcessor {
           ValueSetRuleExtractor.process(element)
         );
       }
+      const { obeysRule, invariants } = ObeysRuleExtractor.process(element);
+      newRules.push(obeysRule);
+      newInvariants.push(...invariants);
+
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
       // since it will convert any remaining fields to CaretValueRules
       newRules.push(...CaretValueRuleExtractor.process(element, fhir));
-      target.rules = compact(newRules);
     }
+    target.rules = compact(newRules);
+    target.invariants = compact(newInvariants);
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {
@@ -92,4 +99,5 @@ interface ConstrainableEntity {
   description?: string;
   rules?: ExportableSdRule[];
   parent?: string;
+  invariants?: ExportableInvariant[];
 }

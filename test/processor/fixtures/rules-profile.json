@@ -12,6 +12,17 @@
         "min": 1,
         "patternString": "foo",
         "short": "bar"
+      },
+      {
+        "id": "Observation.note",
+        "path": "Observation.note",
+        "constraint": [
+          {
+            "key": "myo-1",
+            "severity": "warning",
+            "human": "SHALL include the weather."
+          }
+        ]
       }
     ]
   }

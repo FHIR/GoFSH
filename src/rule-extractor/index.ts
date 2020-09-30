@@ -7,3 +7,4 @@ export * from './ValueSetRuleExtractor';
 export * from './OnlyRuleExtractor';
 export * from './CaretValueRuleExtractor';
 export * from './ContainsRuleExtractor';
+export * from './ObeysRuleExtractor';
