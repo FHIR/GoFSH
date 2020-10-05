@@ -192,7 +192,7 @@ describe('Package', () => {
       slicingType.value = new fshtypes.FshCode('value');
       const slicingPath = new ExportableCaretValueRule('value[x]');
       slicingPath.caretPath = 'slicing.discriminator[0].path';
-      slicingPath.value = 'Observation.code';
+      slicingPath.value = 'id';
       const slicingOrdered = new ExportableCaretValueRule('value[x]');
       slicingOrdered.caretPath = 'slicing.ordered';
       slicingOrdered.value = true;
@@ -204,6 +204,31 @@ describe('Package', () => {
       myPackage.add(profile);
       myPackage.optimize(processor);
       expect(profile.rules).toHaveLength(4);
+    });
+
+    it('should not remove caret value rules on a choice element that apply some but not all of the standard choice slicing', () => {
+      const profile = new ExportableProfile('SlicedProfile');
+      profile.parent = 'Observation';
+      const slicingType = new ExportableCaretValueRule('value[x]');
+      slicingType.caretPath = 'slicing.discriminator[0].type';
+      slicingType.value = new fshtypes.FshCode('value');
+      const slicingPath = new ExportableCaretValueRule('value[x]');
+      slicingPath.caretPath = 'slicing.discriminator[0].path';
+      slicingPath.value = 'id';
+      const slicingOrdered = new ExportableCaretValueRule('value[x]');
+      slicingOrdered.caretPath = 'slicing.ordered';
+      slicingOrdered.value = false;
+      const slicingRules = new ExportableCaretValueRule('value[x]');
+      slicingRules.caretPath = 'slicing.rules';
+      slicingRules.value = new fshtypes.FshCode('open');
+
+      const fixedValueRule = new ExportableFixedValueRule('valueString');
+      fixedValueRule.fixedValue = 'Make a choice';
+      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, fixedValueRule);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5);
     });
   });
 });

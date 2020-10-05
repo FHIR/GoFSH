@@ -11,7 +11,7 @@ import {
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
-import { pullAt } from 'lodash';
+import { pullAt, groupBy, values, flatten } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
 
 export class Package {
@@ -89,9 +89,10 @@ export class Package {
 
   // Choice elements have a standard set of slicing rules applied to them by SUSHI.
   // Therefore, it is not necessary to define that slicing using FSH when one of the choices exists.
+  // If the full set of four default rules exists for the same element, remove those rules.
   private suppressChoiceSlicingRules(): void {
     [...this.profiles, ...this.extensions].forEach(sd => {
-      const rulesToRemove: number[] = [];
+      const rulesToMaybeRemove: number[] = [];
       sd.rules.forEach((rule, i, allRules) => {
         if (rule instanceof ExportableCaretValueRule && rule.path.endsWith('[x]')) {
           const pathStart = rule.path.replace(/\[x\]$/, '');
@@ -110,10 +111,16 @@ export class Package {
               otherRule => otherRule.path != rule.path && otherRule.path.startsWith(pathStart)
             )
           ) {
-            rulesToRemove.push(i);
+            rulesToMaybeRemove.push(i);
           }
         }
       });
+      // if four rules to maybe remove have the same path, then that's a full set of defaults, and they are removed
+      const rulesToRemove = flatten(
+        values(groupBy(rulesToMaybeRemove, i => sd.rules[i].path)).filter(
+          ruleGroup => ruleGroup.length === 4
+        )
+      );
       pullAt(sd.rules, rulesToRemove);
     });
   }
