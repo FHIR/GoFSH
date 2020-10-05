@@ -7,7 +7,9 @@ import {
   ExportableValueSet,
   ExportableCodeSystem,
   ExportableCardRule,
-  ExportableFlagRule
+  ExportableFlagRule,
+  ExportableContainsRule,
+  ExportableOnlyRule
 } from '../../src/exportable';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { ExportableCombinedCardFlagRule } from '../../src/exportable/ExportableCombinedCardFlagRule';
@@ -109,6 +111,103 @@ describe('Package', () => {
       myPackage.add(profile);
       myPackage.optimize(processor);
       expect(profile.rules).toEqual([cardRule, flagRule]);
+    });
+
+    // constructNamedExtensionContainsRules
+    it('should construct a named extension contains rule from a contains rule and an only rule', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const onlyRule = new ExportableOnlyRule('extension[foo]');
+      onlyRule.types.push({ type: 'http://example.org/StructureDefinition/foo-extension' });
+      profile.rules = [containsRule, onlyRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      const namedContainsRule = new ExportableContainsRule('extension');
+      namedContainsRule.items.push({
+        name: 'foo',
+        type: 'http://example.org/StructureDefinition/foo-extension'
+      });
+      expect(profile.rules).toEqual([namedContainsRule]);
+    });
+
+    it('should construct a named extension contains rule from a contains rule with multiple items with only rules', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      containsRule.items.push({ name: 'bar' });
+      const onlyRule1 = new ExportableOnlyRule('extension[foo]');
+      onlyRule1.types.push({ type: 'http://example.org/StructureDefinition/foo-extension' });
+      const onlyRule2 = new ExportableOnlyRule('extension[bar]');
+      onlyRule2.types.push({ type: 'http://example.org/StructureDefinition/bar-extension' });
+      profile.rules = [containsRule, onlyRule1, onlyRule2];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      const namedContainsRule = new ExportableContainsRule('extension');
+      namedContainsRule.items.push({
+        name: 'foo',
+        type: 'http://example.org/StructureDefinition/foo-extension'
+      });
+      namedContainsRule.items.push({
+        name: 'bar',
+        type: 'http://example.org/StructureDefinition/bar-extension'
+      });
+      expect(profile.rules).toEqual([namedContainsRule]);
+    });
+
+    it('should not construct a named extension contains rule from a contains rule alone', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const flagRule = new ExportableFlagRule('extension[foo]');
+      flagRule.mustSupport = true;
+      profile.rules = [containsRule, flagRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      // rules should be unchanged
+      expect(profile.rules).toEqual([containsRule, flagRule]);
+    });
+
+    it('should not construct a named extension contains rule from a contains rule with a multi-type only rule', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const onlyRule = new ExportableOnlyRule('extension[foo]');
+      onlyRule.types.push(
+        { type: 'http://example.org/StructureDefinition/foo-profile-1' },
+        { type: 'http://example.org/StructureDefinition/foo-profile-2' }
+      );
+      profile.rules = [containsRule, onlyRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      // nothing should change
+      expect(profile.rules).toEqual([containsRule, onlyRule]);
+    });
+
+    it('should not construct a named extension contains rule from a contains rule not on an extension', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const containsRule = new ExportableContainsRule('component');
+      containsRule.items.push({ name: 'foo' });
+      const onlyRule = new ExportableOnlyRule('component[foo]');
+      onlyRule.types.push(
+        { type: 'http://example.org/StructureDefinition/foo-profile-1' },
+        { type: 'http://example.org/StructureDefinition/foo-profile-2' }
+      );
+      profile.rules = [containsRule, onlyRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      // nothing should change
+      expect(profile.rules).toEqual([containsRule, onlyRule]);
     });
   });
 });

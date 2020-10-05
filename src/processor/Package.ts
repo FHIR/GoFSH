@@ -6,7 +6,9 @@ import {
   ExportableCodeSystem,
   ExportableFlagRule,
   ExportableCardRule,
-  ExportableCombinedCardFlagRule
+  ExportableCombinedCardFlagRule,
+  ExportableContainsRule,
+  ExportableOnlyRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
@@ -49,6 +51,7 @@ export class Package {
     logger.debug('Optimizing FSH definitions...');
     this.resolveProfileParents(processor);
     this.combineCardAndFlagRules();
+    this.constructNamedExtensionContainsRules();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -78,6 +81,28 @@ export class Package {
             );
             rulesToRemove.push(flagRuleIdx);
           }
+        }
+      });
+      pullAt(sd.rules, rulesToRemove);
+    });
+  }
+
+  private constructNamedExtensionContainsRules(): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToRemove: number[] = [];
+      sd.rules.forEach(rule => {
+        if (rule instanceof ExportableContainsRule && rule.path.endsWith('extension')) {
+          rule.items.forEach(item => {
+            const onlyRuleIdx = sd.rules.findIndex(
+              other =>
+                other.path === `${rule.path}[${item.name}]` && other instanceof ExportableOnlyRule
+            );
+            const onlyRule = sd.rules[onlyRuleIdx] as ExportableOnlyRule;
+            if (onlyRule && onlyRule.types.length == 1) {
+              item.type = onlyRule.types[0].type;
+              rulesToRemove.push(onlyRuleIdx);
+            }
+          });
         }
       });
       pullAt(sd.rules, rulesToRemove);
