@@ -6,11 +6,13 @@ import {
   ExportableCodeSystem,
   ExportableFlagRule,
   ExportableCardRule,
-  ExportableCombinedCardFlagRule
+  ExportableCombinedCardFlagRule,
+  ExportableCaretValueRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
-import { pullAt } from 'lodash';
+import { fshtypes } from 'fsh-sushi';
+import { isEqual, pullAt } from 'lodash';
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
@@ -42,13 +44,12 @@ export class Package {
     }
   }
 
-  // TODO: if more optimization steps are added, break them into separate functions.
-  // TODO: Optimization step: combine CardRule and FlagRule
   // TODO: Optimization step: combine ContainsRule and OnlyRule for contained item with one type
   optimize(processor: FHIRProcessor) {
     logger.debug('Optimizing FSH definitions...');
     this.resolveProfileParents(processor);
     this.combineCardAndFlagRules();
+    this.removeDefaultExtensionContextRules();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -81,6 +82,39 @@ export class Package {
         }
       });
       pullAt(sd.rules, rulesToRemove);
+    });
+  }
+
+  // If an extension only has a single context, and it is the default context, suppress it.
+  private removeDefaultExtensionContextRules(): void {
+    this.extensions.forEach(sd => {
+      const numContexts = sd.rules.filter(
+        r =>
+          r instanceof ExportableCaretValueRule &&
+          r.path === '' &&
+          /^context\[\d+]\.type$/.test(r.caretPath)
+      ).length;
+      if (numContexts === 1) {
+        // * ^context[0].type = #element
+        const typeRuleIdx = sd.rules.findIndex(
+          r =>
+            r instanceof ExportableCaretValueRule &&
+            r.path === '' &&
+            r.caretPath === 'context[0].type' &&
+            isEqual((r as ExportableCaretValueRule).value, new fshtypes.FshCode('element'))
+        );
+        // * ^context[0].expression = "Element"
+        const expressionRuleIdx = sd.rules.findIndex(
+          r =>
+            r instanceof ExportableCaretValueRule &&
+            r.path === '' &&
+            r.caretPath === 'context[0].expression' &&
+            isEqual(r.value, 'Element')
+        );
+        if (typeRuleIdx !== -1 && expressionRuleIdx !== -1) {
+          pullAt(sd.rules, [typeRuleIdx, expressionRuleIdx]);
+        }
+      }
     });
   }
 }

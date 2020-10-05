@@ -7,12 +7,14 @@ import {
   ExportableValueSet,
   ExportableCodeSystem,
   ExportableCardRule,
-  ExportableFlagRule
+  ExportableFlagRule,
+  ExportableCaretValueRule
 } from '../../src/exportable';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { ExportableCombinedCardFlagRule } from '../../src/exportable/ExportableCombinedCardFlagRule';
 import '../helpers/loggerSpy'; // suppresses console logging
-import { fhirdefs } from 'fsh-sushi';
+import { fhirdefs, fshtypes } from 'fsh-sushi';
+const { FshCode } = fshtypes;
 
 describe('Package', () => {
   describe('#add', () => {
@@ -109,6 +111,88 @@ describe('Package', () => {
       myPackage.add(profile);
       myPackage.optimize(processor);
       expect(profile.rules).toEqual([cardRule, flagRule]);
+    });
+
+    it('should remove default context from extensions', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      extension.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(0);
+    });
+
+    it('should not remove non-default context from extensions (different type)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('fhirpath');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      extension.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(2);
+    });
+
+    it('should not remove non-default context from extensions (different expression)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'BackboneElement';
+      extension.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(2);
+    });
+
+    it('should not remove default context from extensions when there is more than one context', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      const typeRule2 = new ExportableCaretValueRule('');
+      typeRule2.caretPath = 'context[1].type';
+      typeRule2.value = new FshCode('element');
+      const expressionRule2 = new ExportableCaretValueRule('');
+      expressionRule2.caretPath = 'context[1].expression';
+      expressionRule2.value = 'CodeSystem';
+      extension.rules = [typeRule, expressionRule, typeRule2, expressionRule2];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(4);
+    });
+
+    it('should remove default context from profiles', () => {
+      // Technically, I don't think having context on a profile is allowed, but check just in case
+      const profile = new ExportableProfile('ExtraProfile');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      profile.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(2);
     });
   });
 });
