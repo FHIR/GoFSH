@@ -1,3 +1,4 @@
+import { isUri } from 'valid-url';
 import {
   ExportableExtension,
   ExportableProfile,
@@ -98,7 +99,11 @@ export class Package {
                 other.path === `${rule.path}[${item.name}]` && other instanceof ExportableOnlyRule
             );
             const onlyRule = sd.rules[onlyRuleIdx] as ExportableOnlyRule;
-            if (onlyRule && onlyRule.types.length == 1) {
+            if (
+              onlyRule &&
+              onlyRule.types.length == 1 &&
+              isUri(onlyRule.types[0].type.split('|')[0])
+            ) {
               item.type = onlyRule.types[0].type;
               rulesToRemove.push(onlyRuleIdx);
             }

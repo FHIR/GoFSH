@@ -133,6 +133,25 @@ describe('Package', () => {
       expect(profile.rules).toEqual([namedContainsRule]);
     });
 
+    it('should construct a named extension contains rule from a contains rule and an only rule with version', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const onlyRule = new ExportableOnlyRule('extension[foo]');
+      onlyRule.types.push({ type: 'http://example.org/StructureDefinition/foo-extension|1.2.3' });
+      profile.rules = [containsRule, onlyRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      const namedContainsRule = new ExportableContainsRule('extension');
+      namedContainsRule.items.push({
+        name: 'foo',
+        type: 'http://example.org/StructureDefinition/foo-extension|1.2.3'
+      });
+      expect(profile.rules).toEqual([namedContainsRule]);
+    });
+
     it('should construct a named extension contains rule from a contains rule with multiple items with only rules', () => {
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
@@ -202,6 +221,21 @@ describe('Package', () => {
         { type: 'http://example.org/StructureDefinition/foo-profile-1' },
         { type: 'http://example.org/StructureDefinition/foo-profile-2' }
       );
+      profile.rules = [containsRule, onlyRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      // nothing should change
+      expect(profile.rules).toEqual([containsRule, onlyRule]);
+    });
+
+    it('should not construct a named extension contains rule from a contains rule with an only rule without a uri', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const onlyRule = new ExportableOnlyRule('extension[foo]');
+      onlyRule.types.push({ type: 'Extension' });
       profile.rules = [containsRule, onlyRule];
       const myPackage = new Package();
       myPackage.add(profile);
