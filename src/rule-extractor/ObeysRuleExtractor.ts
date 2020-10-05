@@ -1,41 +1,30 @@
-import { fshtypes } from 'fsh-sushi';
 import { ProcessableElementDefinition } from '../processor';
-import { ExportableObeysRule, ExportableInvariant } from '../exportable';
+import { ExportableObeysRule } from '../exportable';
 import { getPath } from '../utils';
 
 export class ObeysRuleExtractor {
-  static process(
-    input: ProcessableElementDefinition
-  ): { obeysRule: ExportableObeysRule; invariants: ExportableInvariant[] } {
-    const invariants: ExportableInvariant[] = [];
+  static process(input: ProcessableElementDefinition): ExportableObeysRule {
+    const invariantKeys: string[] = [];
     if (input.constraint?.length > 0) {
       input.constraint.forEach((constraint, i) => {
-        // required: key, human, severity
-        const invariant = new ExportableInvariant(constraint.key);
-        invariant.description = constraint.human;
-        invariant.severity = new fshtypes.FshCode(constraint.severity);
+        invariantKeys.push(constraint.key);
+        // The ObeysRule only contains the key, but these other attributes
+        // will be handled by the InvariantProcessor. So, they should not be
+        // used for CaretValueRules.
         input.processedPaths.push(
           `constraint[${i}].key`,
           `constraint[${i}].human`,
-          `constraint[${i}].severity`
+          `constraint[${i}].severity`,
+          `constraint[${i}].expression`,
+          `constraint[${i}].xpath`
         );
-        // optional: expression, xpath
-        if (constraint.expression) {
-          invariant.expression = constraint.expression;
-          input.processedPaths.push(`constraint[${i}].expression`);
-        }
-        if (constraint.xpath) {
-          invariant.xpath = constraint.xpath;
-          input.processedPaths.push(`constraint[${i}].xpath`);
-        }
-        invariants.push(invariant);
       });
     }
-    if (invariants.length) {
+    if (invariantKeys.length) {
       const obeysRule = new ExportableObeysRule(getPath(input));
-      obeysRule.keys = invariants.map(inv => inv.name);
-      return { obeysRule, invariants };
+      obeysRule.keys = invariantKeys;
+      return obeysRule;
     }
-    return { obeysRule: null, invariants };
+    return null;
   }
 }

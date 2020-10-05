@@ -1,0 +1,42 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "MyObservation",
+  "id": "my-profile",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.note",
+        "path": "Observation.note",
+        "constraint": [
+          {
+            "key": "myo-1",
+            "severity": "warning",
+            "human": "SHALL include the weather.",
+            "expression": "note.weather.exists()"
+          }
+        ]
+      },
+      {
+        "id": "Observation.method",
+        "path": "Observation.method",
+        "constraint": [
+          {
+            "key": "myo-2",
+            "severity": "error",
+            "human": "SHALL use a safe method.",
+            "xpath": "f:method/safe"
+          },
+          {
+            "key": "myo-3",
+            "severity": "error",
+            "human": "SHALL include the method inventor.",
+            "expression": "method.inventor.exists()",
+            "xpath": "f:method/inventor"
+          }
+        ]
+      }
+    ]
+  }
+}

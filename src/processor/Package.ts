@@ -4,13 +4,14 @@ import {
   ExportableInstance,
   ExportableValueSet,
   ExportableCodeSystem,
+  ExportableInvariant,
   ExportableFlagRule,
   ExportableCardRule,
   ExportableCombinedCardFlagRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
-import { pullAt } from 'lodash';
+import { pullAt, isEqual } from 'lodash';
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
@@ -18,6 +19,7 @@ export class Package {
   public readonly instances: ExportableInstance[] = [];
   public readonly valueSets: ExportableValueSet[] = [];
   public readonly codeSystems: ExportableCodeSystem[] = [];
+  public readonly invariants: ExportableInvariant[] = [];
 
   constructor() {}
 
@@ -28,6 +30,7 @@ export class Package {
       | ExportableInstance
       | ExportableValueSet
       | ExportableCodeSystem
+      | ExportableInvariant
   ) {
     if (resource instanceof ExportableProfile) {
       this.profiles.push(resource);
@@ -39,6 +42,21 @@ export class Package {
       this.valueSets.push(resource);
     } else if (resource instanceof ExportableCodeSystem) {
       this.codeSystems.push(resource);
+    } else if (resource instanceof ExportableInvariant) {
+      // An invariant may be used in more than one place, but should only be added to the package once.
+      const matchingInvariant = this.invariants.find(
+        existingInvariant => existingInvariant.name === resource.name
+      );
+      if (matchingInvariant) {
+        // If two invariants have the same name, they should be equal.
+        if (!isEqual(matchingInvariant, resource)) {
+          logger.error(
+            `Cannot add invariant: different invariant with name ${resource.name} already found.`
+          );
+        }
+      } else {
+        this.invariants.push(resource);
+      }
     }
   }
 

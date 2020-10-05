@@ -7,11 +7,10 @@ import {
   ExportableContainsRule,
   ExportableFixedValueRule,
   ExportableProfile,
-  ExportableObeysRule,
-  ExportableInvariant
+  ExportableObeysRule
 } from '../../src/exportable';
 import '../helpers/loggerSpy'; // suppresses console logging
-import { fhirdefs, fshtypes } from 'fsh-sushi';
+import { fhirdefs } from 'fsh-sushi';
 
 describe('ProfileProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
@@ -67,17 +66,12 @@ describe('ProfileProcessor', () => {
       caretRule.value = 'bar';
       const obeysRule = new ExportableObeysRule('note');
       obeysRule.keys = ['myo-1'];
-      const invariant = new ExportableInvariant('myo-1');
-      invariant.severity = new fshtypes.FshCode('warning');
-      invariant.description = 'SHALL include the weather.';
 
       expect(result.rules.length).toBe(4);
       expect(result.rules).toContainEqual<ExportableCardRule>(cardRule);
       expect(result.rules).toContainEqual<ExportableFixedValueRule>(fixedValueRule);
       expect(result.rules).toContainEqual<ExportableCaretValueRule>(caretRule);
       expect(result.rules).toContainEqual<ExportableObeysRule>(obeysRule);
-      expect(result.invariants.length).toBe(1);
-      expect(result.invariants).toContainEqual<ExportableInvariant>(invariant);
     });
 
     it('should convert a Profile with a new slice', () => {

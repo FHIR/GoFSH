@@ -1,6 +1,6 @@
 import compact from 'lodash/compact';
 import { fhirdefs } from 'fsh-sushi';
-import { ExportableSdRule, ExportableInvariant } from '../exportable';
+import { ExportableSdRule } from '../exportable';
 import {
   CardRuleExtractor,
   CaretValueRuleExtractor,
@@ -38,7 +38,6 @@ export abstract class AbstractSDProcessor {
     fhir: fhirdefs.FHIRDefinitions
   ): void {
     const newRules: ExportableSdRule[] = [];
-    const newInvariants: ExportableInvariant[] = [];
     // First extract the top-level caret rules from the StructureDefinition
     newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fhir));
     // Then extract rules based on the differential elements
@@ -49,7 +48,8 @@ export abstract class AbstractSDProcessor {
           ContainsRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
           FixedValueRuleExtractor.process(element),
-          ValueSetRuleExtractor.process(element)
+          ValueSetRuleExtractor.process(element),
+          ObeysRuleExtractor.process(element)
         );
       } else {
         newRules.push(
@@ -57,19 +57,15 @@ export abstract class AbstractSDProcessor {
           OnlyRuleExtractor.process(element),
           FixedValueRuleExtractor.process(element),
           FlagRuleExtractor.process(element),
-          ValueSetRuleExtractor.process(element)
+          ValueSetRuleExtractor.process(element),
+          ObeysRuleExtractor.process(element)
         );
       }
-      const { obeysRule, invariants } = ObeysRuleExtractor.process(element);
-      newRules.push(obeysRule);
-      newInvariants.push(...invariants);
-
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
       // since it will convert any remaining fields to CaretValueRules
       newRules.push(...CaretValueRuleExtractor.process(element, fhir));
     }
     target.rules = compact(newRules);
-    target.invariants = compact(newInvariants);
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {
@@ -99,5 +95,4 @@ interface ConstrainableEntity {
   description?: string;
   rules?: ExportableSdRule[];
   parent?: string;
-  invariants?: ExportableInvariant[];
 }
