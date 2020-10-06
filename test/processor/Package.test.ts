@@ -179,7 +179,7 @@ describe('Package', () => {
       expect(extension.rules).toHaveLength(4);
     });
 
-    it('should remove default context from profiles', () => {
+    it('should not remove default context from profiles', () => {
       // Technically, I don't think having context on a profile is allowed, but check just in case
       const profile = new ExportableProfile('ExtraProfile');
       const typeRule = new ExportableCaretValueRule('');

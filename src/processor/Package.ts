@@ -101,7 +101,7 @@ export class Package {
             r instanceof ExportableCaretValueRule &&
             r.path === '' &&
             r.caretPath === 'context[0].type' &&
-            isEqual((r as ExportableCaretValueRule).value, new fshtypes.FshCode('element'))
+            isEqual(r.value, new fshtypes.FshCode('element'))
         );
         // * ^context[0].expression = "Element"
         const expressionRuleIdx = sd.rules.findIndex(
