@@ -585,7 +585,7 @@ describe('Package', () => {
       expect(profile.rules).toEqual([extRule, valueRule]);
     });
 
-    it('should not remove extension 0..0 rules from Extensions when there are value[x] rules', () => {
+    it('should not remove extension 0..0 rules from Profiles when there are value[x] rules', () => {
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
       const valueRule = new ExportableOnlyRule('value[x]');
