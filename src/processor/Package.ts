@@ -1,4 +1,3 @@
-import { isUri } from 'valid-url';
 import {
   ExportableExtension,
   ExportableProfile,
@@ -99,11 +98,11 @@ export class Package {
                 other.path === `${rule.path}[${item.name}]` && other instanceof ExportableOnlyRule
             );
             const onlyRule = sd.rules[onlyRuleIdx] as ExportableOnlyRule;
-            if (
-              onlyRule &&
-              onlyRule.types.length == 1 &&
-              isUri(onlyRule.types[0].type.split('|')[0])
-            ) {
+            // Explicitly ignore "Extension" since some IGs (ex: USCore) add a type constraint to Extension
+            // on the differential unnecessarily. Using the "named" syntax with "Extension" causes errors in SUSHI.
+            // As long as the type is not "Extension", we assume it is a profile of Extension, and we can therefore
+            // use the "named" syntax.
+            if (onlyRule && onlyRule.types.length === 1 && onlyRule.types[0].type !== 'Extension') {
               item.type = onlyRule.types[0].type;
               rulesToRemove.push(onlyRuleIdx);
             }

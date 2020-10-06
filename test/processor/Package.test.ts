@@ -229,7 +229,7 @@ describe('Package', () => {
       expect(profile.rules).toEqual([containsRule, onlyRule]);
     });
 
-    it('should not construct a named extension contains rule from a contains rule with an only rule without a uri', () => {
+    it('should not construct a named extension contains rule from a contains rule with an only rule on Extension', () => {
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
       const containsRule = new ExportableContainsRule('extension');
