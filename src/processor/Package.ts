@@ -48,10 +48,8 @@ export class Package {
       this.codeSystems.push(resource);
     } else if (resource instanceof ExportableConfiguration) {
       if (this.configuration) {
-        logger.warning(
-          `Multiple implementation guide resources found in input folder. Skipping implementation guide with ${
-            resource.config.id ? `id ${resource.config.id}` : 'unknown id'
-          }.`
+        logger.warn(
+          `Multiple implementation guide resources found in input folder. Skipping implementation guide with canonical ${resource.config.canonical}`
         );
       } else {
         this.configuration = resource;

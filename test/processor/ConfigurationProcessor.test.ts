@@ -26,7 +26,7 @@ describe('ConfigurationProcessor', () => {
     );
   });
 
-  it('should not create a Configuration with a fhirVersion', () => {
+  it('should not create a Configuration without a fhirVersion', () => {
     const input = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
     );
