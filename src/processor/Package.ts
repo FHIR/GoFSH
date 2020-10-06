@@ -14,8 +14,9 @@ import {
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
-import { pullAt, groupBy, values, flatten } from 'lodash';
+import { pullAt, groupBy, values, flatten, isEqual } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
+const { FshCode } = fshtypes;
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
@@ -57,7 +58,6 @@ export class Package {
     }
   }
 
-  // TODO: if more optimization steps are added, break them into separate functions.
   // TODO: Optimization step: combine ContainsRule and OnlyRule for contained item with one type
   optimize(processor: FHIRProcessor) {
     logger.debug('Optimizing FSH definitions...');
@@ -65,6 +65,7 @@ export class Package {
     this.combineCardAndFlagRules();
     this.constructNamedExtensionContainsRules();
     this.suppressChoiceSlicingRules();
+    this.removeDefaultExtensionContextRules();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -125,6 +126,7 @@ export class Package {
       pullAt(sd.rules, rulesToRemove);
     });
   }
+
   // Choice elements have a standard set of slicing rules applied to them by SUSHI.
   // Therefore, it is not necessary to define that slicing using FSH when one of the choices exists.
   // If the full set of four default rules exists for the same element, remove those rules.
@@ -161,6 +163,34 @@ export class Package {
         )
       );
       pullAt(sd.rules, rulesToRemove);
+    });
+  }
+
+  // If an extension only has a single context, and it is the default context, suppress it.
+  private removeDefaultExtensionContextRules(): void {
+    // * ^context[0].type = #element
+    const DEFAULT_TYPE = new ExportableCaretValueRule('');
+    DEFAULT_TYPE.caretPath = 'context[0].type';
+    DEFAULT_TYPE.value = new FshCode('element');
+    // * ^context[0].expression = "Element"
+    const DEFAULT_EXPRESSION = new ExportableCaretValueRule('');
+    DEFAULT_EXPRESSION.caretPath = 'context[0].expression';
+    DEFAULT_EXPRESSION.value = 'Element';
+    // Loop through extensions looking for the default context type (and removing it)
+    this.extensions.forEach(sd => {
+      const numContexts = sd.rules.filter(
+        r =>
+          r instanceof ExportableCaretValueRule &&
+          r.path === '' &&
+          /^context\[\d+]\.type$/.test(r.caretPath)
+      ).length;
+      if (numContexts === 1) {
+        const typeRuleIdx = sd.rules.findIndex(r => isEqual(r, DEFAULT_TYPE));
+        const expressionRuleIdx = sd.rules.findIndex(r => isEqual(r, DEFAULT_EXPRESSION));
+        if (typeRuleIdx !== -1 && expressionRuleIdx !== -1) {
+          pullAt(sd.rules, [typeRuleIdx, expressionRuleIdx]);
+        }
+      }
     });
   }
 }

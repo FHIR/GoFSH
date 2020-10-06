@@ -18,6 +18,7 @@ import {
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { ExportableCombinedCardFlagRule } from '../../src/exportable/ExportableCombinedCardFlagRule';
 import { loggerSpy } from '../helpers/loggerSpy';
+const { FshCode } = fshtypes;
 
 describe('Package', () => {
   describe('#add', () => {
@@ -279,7 +280,7 @@ describe('Package', () => {
       profile.parent = 'Observation';
       const slicingType = new ExportableCaretValueRule('value[x]');
       slicingType.caretPath = 'slicing.discriminator[0].type';
-      slicingType.value = new fshtypes.FshCode('type');
+      slicingType.value = new FshCode('type');
       const slicingPath = new ExportableCaretValueRule('value[x]');
       slicingPath.caretPath = 'slicing.discriminator[0].path';
       slicingPath.value = '$this';
@@ -288,7 +289,7 @@ describe('Package', () => {
       slicingOrdered.value = false;
       const slicingRules = new ExportableCaretValueRule('value[x]');
       slicingRules.caretPath = 'slicing.rules';
-      slicingRules.value = new fshtypes.FshCode('open');
+      slicingRules.value = new FshCode('open');
 
       const fixedValueRule = new ExportableFixedValueRule('valueString');
       fixedValueRule.fixedValue = 'Make a choice';
@@ -305,7 +306,7 @@ describe('Package', () => {
       profile.parent = 'Observation';
       const slicingType = new ExportableCaretValueRule('value[x]');
       slicingType.caretPath = 'slicing.discriminator[0].type';
-      slicingType.value = new fshtypes.FshCode('type');
+      slicingType.value = new FshCode('type');
       const slicingPath = new ExportableCaretValueRule('value[x]');
       slicingPath.caretPath = 'slicing.discriminator[0].path';
       slicingPath.value = '$this';
@@ -314,7 +315,7 @@ describe('Package', () => {
       slicingOrdered.value = false;
       const slicingRules = new ExportableCaretValueRule('value[x]');
       slicingRules.caretPath = 'slicing.rules';
-      slicingRules.value = new fshtypes.FshCode('open');
+      slicingRules.value = new FshCode('open');
       const fixedValueRule = new ExportableFixedValueRule('value[x].id');
       fixedValueRule.fixedValue = 'special-id';
 
@@ -330,7 +331,7 @@ describe('Package', () => {
       profile.parent = 'Observation';
       const slicingType = new ExportableCaretValueRule('note');
       slicingType.caretPath = 'slicing.discriminator[0].type';
-      slicingType.value = new fshtypes.FshCode('type');
+      slicingType.value = new FshCode('type');
       const slicingPath = new ExportableCaretValueRule('note');
       slicingPath.caretPath = 'slicing.discriminator[0].path';
       slicingPath.value = '$this';
@@ -339,7 +340,7 @@ describe('Package', () => {
       slicingOrdered.value = false;
       const slicingRules = new ExportableCaretValueRule('note');
       slicingRules.caretPath = 'slicing.rules';
-      slicingRules.value = new fshtypes.FshCode('open');
+      slicingRules.value = new FshCode('open');
       profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules);
       const myPackage = new Package();
       myPackage.add(profile);
@@ -352,7 +353,7 @@ describe('Package', () => {
       profile.parent = 'Observation';
       const slicingType = new ExportableCaretValueRule('value[x]');
       slicingType.caretPath = 'slicing.discriminator[0].type';
-      slicingType.value = new fshtypes.FshCode('value');
+      slicingType.value = new FshCode('value');
       const slicingPath = new ExportableCaretValueRule('value[x]');
       slicingPath.caretPath = 'slicing.discriminator[0].path';
       slicingPath.value = 'id';
@@ -361,7 +362,7 @@ describe('Package', () => {
       slicingOrdered.value = true;
       const slicingRules = new ExportableCaretValueRule('value[x]');
       slicingRules.caretPath = 'slicing.rules';
-      slicingRules.value = new fshtypes.FshCode('closed');
+      slicingRules.value = new FshCode('closed');
       profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules);
       const myPackage = new Package();
       myPackage.add(profile);
@@ -374,7 +375,7 @@ describe('Package', () => {
       profile.parent = 'Observation';
       const slicingType = new ExportableCaretValueRule('value[x]');
       slicingType.caretPath = 'slicing.discriminator[0].type';
-      slicingType.value = new fshtypes.FshCode('value');
+      slicingType.value = new FshCode('value');
       const slicingPath = new ExportableCaretValueRule('value[x]');
       slicingPath.caretPath = 'slicing.discriminator[0].path';
       slicingPath.value = 'id';
@@ -383,7 +384,7 @@ describe('Package', () => {
       slicingOrdered.value = false;
       const slicingRules = new ExportableCaretValueRule('value[x]');
       slicingRules.caretPath = 'slicing.rules';
-      slicingRules.value = new fshtypes.FshCode('open');
+      slicingRules.value = new FshCode('open');
 
       const fixedValueRule = new ExportableFixedValueRule('valueString');
       fixedValueRule.fixedValue = 'Make a choice';
@@ -392,6 +393,88 @@ describe('Package', () => {
       myPackage.add(profile);
       myPackage.optimize(processor);
       expect(profile.rules).toHaveLength(5);
+    });
+
+    it('should remove default context from extensions', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      extension.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(0);
+    });
+
+    it('should not remove non-default context from extensions (different type)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('fhirpath');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      extension.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(2);
+    });
+
+    it('should not remove non-default context from extensions (different expression)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'BackboneElement';
+      extension.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(2);
+    });
+
+    it('should not remove default context from extensions when there is more than one context', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      const typeRule2 = new ExportableCaretValueRule('');
+      typeRule2.caretPath = 'context[1].type';
+      typeRule2.value = new FshCode('element');
+      const expressionRule2 = new ExportableCaretValueRule('');
+      expressionRule2.caretPath = 'context[1].expression';
+      expressionRule2.value = 'CodeSystem';
+      extension.rules = [typeRule, expressionRule, typeRule2, expressionRule2];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(4);
+    });
+
+    it('should not remove default context from profiles', () => {
+      // Technically, I don't think having context on a profile is allowed, but check just in case
+      const profile = new ExportableProfile('ExtraProfile');
+      const typeRule = new ExportableCaretValueRule('');
+      typeRule.caretPath = 'context[0].type';
+      typeRule.value = new FshCode('element');
+      const expressionRule = new ExportableCaretValueRule('');
+      expressionRule.caretPath = 'context[0].expression';
+      expressionRule.value = 'Element';
+      profile.rules = [typeRule, expressionRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(2);
     });
   });
 });
