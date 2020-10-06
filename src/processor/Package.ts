@@ -7,12 +7,14 @@ import {
   ExportableFlagRule,
   ExportableCardRule,
   ExportableCombinedCardFlagRule,
+  ExportableContainsRule,
+  ExportableOnlyRule,
   ExportableCaretValueRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
+import { pullAt, groupBy, values, flatten, isEqual } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
-import { isEqual, pullAt } from 'lodash';
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
@@ -49,6 +51,8 @@ export class Package {
     logger.debug('Optimizing FSH definitions...');
     this.resolveProfileParents(processor);
     this.combineCardAndFlagRules();
+    this.constructNamedExtensionContainsRules();
+    this.suppressChoiceSlicingRules();
     this.removeDefaultExtensionContextRules();
   }
 
@@ -81,6 +85,71 @@ export class Package {
           }
         }
       });
+      pullAt(sd.rules, rulesToRemove);
+    });
+  }
+
+  private constructNamedExtensionContainsRules(): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToRemove: number[] = [];
+      sd.rules.forEach(rule => {
+        if (rule instanceof ExportableContainsRule && rule.path.endsWith('extension')) {
+          rule.items.forEach(item => {
+            const onlyRuleIdx = sd.rules.findIndex(
+              other =>
+                other.path === `${rule.path}[${item.name}]` && other instanceof ExportableOnlyRule
+            );
+            const onlyRule = sd.rules[onlyRuleIdx] as ExportableOnlyRule;
+            // Explicitly ignore "Extension" since some IGs (ex: USCore) add a type constraint to Extension
+            // on the differential unnecessarily. Using the "named" syntax with "Extension" causes errors in SUSHI.
+            // As long as the type is not "Extension", we assume it is a profile of Extension, and we can therefore
+            // use the "named" syntax.
+            if (onlyRule?.types.length === 1 && onlyRule?.types[0].type !== 'Extension') {
+              item.type = onlyRule.types[0].type;
+              rulesToRemove.push(onlyRuleIdx);
+            }
+          });
+        }
+      });
+      pullAt(sd.rules, rulesToRemove);
+    });
+  }
+
+  // Choice elements have a standard set of slicing rules applied to them by SUSHI.
+  // Therefore, it is not necessary to define that slicing using FSH when one of the choices exists.
+  // If the full set of four default rules exists for the same element, remove those rules.
+  private suppressChoiceSlicingRules(): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToMaybeRemove: number[] = [];
+      sd.rules.forEach((rule, i, allRules) => {
+        if (rule instanceof ExportableCaretValueRule && rule.path.endsWith('[x]')) {
+          const pathStart = rule.path.replace(/\[x\]$/, '');
+          // check the four relevant caret paths and their default values, and
+          // check if one of the choices exists
+          if (
+            ((rule.caretPath === 'slicing.discriminator[0].type' &&
+              rule.value instanceof fshtypes.FshCode &&
+              rule.value.code === 'type') ||
+              (rule.caretPath === 'slicing.discriminator[0].path' && rule.value === '$this') ||
+              (rule.caretPath === 'slicing.ordered' && rule.value === false) ||
+              (rule.caretPath === 'slicing.rules' &&
+                rule.value instanceof fshtypes.FshCode &&
+                rule.value.code === 'open')) &&
+            allRules.some(
+              otherRule =>
+                !otherRule.path.startsWith(rule.path) && otherRule.path.startsWith(pathStart)
+            )
+          ) {
+            rulesToMaybeRemove.push(i);
+          }
+        }
+      });
+      // if four rules to maybe remove have the same path, then that's a full set of defaults, and they are removed
+      const rulesToRemove = flatten(
+        values(groupBy(rulesToMaybeRemove, i => sd.rules[i].path)).filter(
+          ruleGroup => ruleGroup.length === 4
+        )
+      );
       pullAt(sd.rules, rulesToRemove);
     });
   }
