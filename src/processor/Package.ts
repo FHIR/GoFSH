@@ -102,7 +102,7 @@ export class Package {
             // on the differential unnecessarily. Using the "named" syntax with "Extension" causes errors in SUSHI.
             // As long as the type is not "Extension", we assume it is a profile of Extension, and we can therefore
             // use the "named" syntax.
-            if (onlyRule && onlyRule.types.length === 1 && onlyRule.types[0].type !== 'Extension') {
+            if (onlyRule?.types.length === 1 && onlyRule?.types[0].type !== 'Extension') {
               item.type = onlyRule.types[0].type;
               rulesToRemove.push(onlyRuleIdx);
             }
