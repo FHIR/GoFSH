@@ -154,12 +154,14 @@ describe('Package', () => {
       const slicingRules = new ExportableCaretValueRule('value[x]');
       slicingRules.caretPath = 'slicing.rules';
       slicingRules.value = new fshtypes.FshCode('open');
+      const fixedValueRule = new ExportableFixedValueRule('value[x].id');
+      fixedValueRule.fixedValue = 'special-id';
 
-      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules);
+      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, fixedValueRule);
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.optimize(processor);
-      expect(profile.rules).toHaveLength(4);
+      expect(profile.rules).toHaveLength(5);
     });
 
     it('should not remove caret value rules that define slicing on a non-choice element', () => {

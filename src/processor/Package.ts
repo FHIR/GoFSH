@@ -108,7 +108,8 @@ export class Package {
                 rule.value instanceof fshtypes.FshCode &&
                 rule.value.code === 'open')) &&
             allRules.some(
-              otherRule => otherRule.path != rule.path && otherRule.path.startsWith(pathStart)
+              otherRule =>
+                !otherRule.path.startsWith(rule.path) && otherRule.path.startsWith(pathStart)
             )
           ) {
             rulesToMaybeRemove.push(i);
