@@ -15,6 +15,7 @@ import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
 import { pullAt, groupBy, values, flatten, isEqual } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
+const { FshCode } = fshtypes;
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
@@ -156,6 +157,15 @@ export class Package {
 
   // If an extension only has a single context, and it is the default context, suppress it.
   private removeDefaultExtensionContextRules(): void {
+    // * ^context[0].type = #element
+    const DEFAULT_TYPE = new ExportableCaretValueRule('');
+    DEFAULT_TYPE.caretPath = 'context[0].type';
+    DEFAULT_TYPE.value = new FshCode('element');
+    // * ^context[0].expression = "Element"
+    const DEFAULT_EXPRESSION = new ExportableCaretValueRule('');
+    DEFAULT_EXPRESSION.caretPath = 'context[0].expression';
+    DEFAULT_EXPRESSION.value = 'Element';
+    // Loop through extensions looking for the default context type (and removing it)
     this.extensions.forEach(sd => {
       const numContexts = sd.rules.filter(
         r =>
@@ -164,22 +174,8 @@ export class Package {
           /^context\[\d+]\.type$/.test(r.caretPath)
       ).length;
       if (numContexts === 1) {
-        // * ^context[0].type = #element
-        const typeRuleIdx = sd.rules.findIndex(
-          r =>
-            r instanceof ExportableCaretValueRule &&
-            r.path === '' &&
-            r.caretPath === 'context[0].type' &&
-            isEqual(r.value, new fshtypes.FshCode('element'))
-        );
-        // * ^context[0].expression = "Element"
-        const expressionRuleIdx = sd.rules.findIndex(
-          r =>
-            r instanceof ExportableCaretValueRule &&
-            r.path === '' &&
-            r.caretPath === 'context[0].expression' &&
-            isEqual(r.value, 'Element')
-        );
+        const typeRuleIdx = sd.rules.findIndex(r => isEqual(r, DEFAULT_TYPE));
+        const expressionRuleIdx = sd.rules.findIndex(r => isEqual(r, DEFAULT_EXPRESSION));
         if (typeRuleIdx !== -1 && expressionRuleIdx !== -1) {
           pullAt(sd.rules, [typeRuleIdx, expressionRuleIdx]);
         }
