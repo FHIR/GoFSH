@@ -4,6 +4,7 @@ import { logger } from '../utils';
 import { ProfileProcessor } from './ProfileProcessor';
 import { ExtensionProcessor } from './ExtensionProcessor';
 import { CodeSystemProcessor } from './CodeSystemProcessor';
+import { ConfigurationProcessor } from './ConfigurationProcessor';
 
 export class FHIRProcessor {
   public readonly structureDefinitions: any[] = [];
@@ -29,6 +30,8 @@ export class FHIRProcessor {
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       logger.debug(`Processing contents of ${inputPath} as CodeSystem.`);
       return CodeSystemProcessor.process(rawContent);
+    } else if (rawContent['resourceType'] === 'ImplementationGuide') {
+      return ConfigurationProcessor.process(rawContent);
     }
   }
 }

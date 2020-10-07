@@ -1,0 +1,9 @@
+{
+  "resourceType": "ImplementationGuide",
+  "url": "http://example.org/tests/ImplementationGuide/bigger.ig",
+  "fhirVersion": ["4.0.1"],
+  "id": "bigger.ig",
+  "name": "BiggerImplementationGuideForTesting",
+  "status": "active",
+  "version": "0.12"
+}

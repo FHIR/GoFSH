@@ -4,6 +4,7 @@ import {
   ExportableInstance,
   ExportableValueSet,
   ExportableCodeSystem,
+  ExportableConfiguration,
   ExportableFlagRule,
   ExportableCardRule,
   ExportableCombinedCardFlagRule,
@@ -23,6 +24,7 @@ export class Package {
   public readonly instances: ExportableInstance[] = [];
   public readonly valueSets: ExportableValueSet[] = [];
   public readonly codeSystems: ExportableCodeSystem[] = [];
+  public configuration: ExportableConfiguration;
 
   constructor() {}
 
@@ -33,6 +35,7 @@ export class Package {
       | ExportableInstance
       | ExportableValueSet
       | ExportableCodeSystem
+      | ExportableConfiguration
   ) {
     if (resource instanceof ExportableProfile) {
       this.profiles.push(resource);
@@ -44,6 +47,14 @@ export class Package {
       this.valueSets.push(resource);
     } else if (resource instanceof ExportableCodeSystem) {
       this.codeSystems.push(resource);
+    } else if (resource instanceof ExportableConfiguration) {
+      if (this.configuration) {
+        logger.warn(
+          `Multiple implementation guide resources found in input folder. Skipping implementation guide with canonical ${resource.config.canonical}`
+        );
+      } else {
+        this.configuration = resource;
+      }
     }
   }
 
