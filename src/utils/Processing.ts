@@ -42,6 +42,11 @@ export function writeFSH(resources: Package, outDir: string) {
   const outputPath = path.join(outDir, 'resources.fsh');
   fs.writeFileSync(outputPath, exporter.export());
   logger.info(`Wrote fsh to ${outputPath}.`);
+  if (resources.configuration) {
+    const configPath = path.join(outDir, 'config.yaml');
+    fs.writeFileSync(configPath, resources.configuration.toFSH());
+    logger.info(`Wrote config to ${configPath}.`);
+  }
 }
 
 // thanks, peturv

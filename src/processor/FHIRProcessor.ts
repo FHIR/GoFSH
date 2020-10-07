@@ -4,10 +4,12 @@ import { logger } from '../utils';
 import { ProfileProcessor } from './ProfileProcessor';
 import { ExtensionProcessor } from './ExtensionProcessor';
 import { CodeSystemProcessor } from './CodeSystemProcessor';
+import { ConfigurationProcessor } from './ConfigurationProcessor';
 import {
   ExportableProfile,
   ExportableExtension,
   ExportableCodeSystem,
+  ExportableConfiguration,
   ExportableInvariant
 } from '../exportable';
 
@@ -21,7 +23,13 @@ export class FHIRProcessor {
 
   process(
     inputPath: string
-  ): (ExportableProfile | ExportableExtension | ExportableCodeSystem | ExportableInvariant)[] {
+  ): (
+    | ExportableProfile
+    | ExportableExtension
+    | ExportableCodeSystem
+    | ExportableConfiguration
+    | ExportableInvariant
+  )[] {
     const rawContent = JSON.parse(fs.readFileSync(inputPath, 'utf-8'));
 
     if (rawContent['resourceType'] === 'StructureDefinition') {
@@ -38,6 +46,8 @@ export class FHIRProcessor {
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       logger.debug(`Processing contents of ${inputPath} as CodeSystem.`);
       return [CodeSystemProcessor.process(rawContent)];
+    } else if (rawContent['resourceType'] === 'ImplementationGuide') {
+      return [ConfigurationProcessor.process(rawContent)];
     } else {
       return [];
     }

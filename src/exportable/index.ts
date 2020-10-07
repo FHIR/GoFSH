@@ -4,6 +4,7 @@ export * from './ExportableCaretValueRule';
 export * from './ExportableCodeSystem';
 export * from './ExportableCombinedCardFlagRule';
 export * from './ExportableConceptRule';
+export * from './ExportableConfiguration';
 export * from './ExportableContainsRule';
 export * from './ExportableExtension';
 export * from './ExportableFixedValueRule';
