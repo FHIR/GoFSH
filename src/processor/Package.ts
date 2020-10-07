@@ -10,7 +10,8 @@ import {
   ExportableCombinedCardFlagRule,
   ExportableContainsRule,
   ExportableOnlyRule,
-  ExportableCaretValueRule
+  ExportableCaretValueRule,
+  ExportableFixedValueRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
@@ -67,6 +68,7 @@ export class Package {
     this.suppressChoiceSlicingRules();
     this.removeDefaultExtensionContextRules();
     this.removeImpliedZeroToZeroCardRules();
+    this.suppressUrlAssignmentOnExtensions();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -227,5 +229,45 @@ export class Package {
       });
       pullAt(sd.rules, rulesToRemove);
     });
+  }
+
+  private suppressUrlAssignmentOnExtensions(): void {
+    // Loop over all profiles and extensions, removing assignment rules on inline extensions
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToRemove: number[] = [];
+      sd.rules.forEach(rule => {
+        if (rule instanceof ExportableContainsRule && rule.path.endsWith('extension')) {
+          rule.items.forEach(item => {
+            const assignmentRuleIdx = sd.rules.findIndex(
+              other =>
+                other.path === `${rule.path}[${item.name}].url` &&
+                other instanceof ExportableFixedValueRule &&
+                other.fixedValue === item.name
+            );
+            if (assignmentRuleIdx >= 0) {
+              rulesToRemove.push(assignmentRuleIdx);
+            }
+          });
+        }
+      });
+      pullAt(sd.rules, rulesToRemove);
+    });
+    // We must know the configuration to determine if a rule fixing "url" matches the url that SUSHI will assume
+    if (this.configuration?.config?.canonical) {
+      this.extensions.forEach(extension => {
+        const rulesToRemove: number[] = [];
+        extension.rules.forEach((rule, i) => {
+          if (
+            rule instanceof ExportableFixedValueRule &&
+            rule.path === 'url' &&
+            rule.fixedValue ===
+              `${this.configuration.config.canonical}/StructureDefinition/${extension.id}`
+          ) {
+            rulesToRemove.push(i);
+          }
+        });
+        pullAt(extension.rules, rulesToRemove);
+      });
+    }
   }
 }
