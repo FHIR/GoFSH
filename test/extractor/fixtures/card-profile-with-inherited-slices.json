@@ -1,0 +1,23 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "ObservationWithCardAndSlices",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/bp",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.component",
+        "path": "Observation.component",
+        "min": 3
+      },
+      {
+        "id": "Observation.component:CarbostolicBP",
+        "path": "Observation.component",
+        "sliceName" : "SomeotherastolicBP",
+        "min": 1,
+        "max": "1"
+      }
+    ]
+  }
+}
