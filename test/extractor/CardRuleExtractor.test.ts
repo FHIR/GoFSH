@@ -68,7 +68,7 @@ describe('CardRuleExtractor', () => {
       expect(element.processedPaths).toEqual([]);
     });
 
-    it('should return a null when there is only a min and it matches the sum of mins of the slices', () => {
+    it('should return a null when there is only a min, and there are card-constrained slices, and min matches the sum of mins of all the slices', () => {
       const element = ProcessableElementDefinition.fromJSON(
         looseSDWithSlices.differential.element[0]
       );
@@ -89,7 +89,7 @@ describe('CardRuleExtractor', () => {
       expect(element.processedPaths).toEqual(['min']);
     });
 
-    it('should return a null when there is only a min and it matches the sum of mins of the slices and the slicing is only in snapshot', () => {
+    it('should return a null when there is only a min, and there are card-constrained slices, and min matches the sum of mins of the all the slices (and the slicing is only in snapshot)', () => {
       // Modify the fixture so the slicing is only in the snapshot (representing the case where it is inherited)
       const clonedSD = cloneDeep(looseSDWithSlices);
       delete clonedSD.differential.element[0].slicing;
@@ -99,7 +99,22 @@ describe('CardRuleExtractor', () => {
       expect(element.processedPaths).toEqual(['min']);
     });
 
-    it('should return a null when there is only a min and it matches the sum of mins of the slices and the slicing and slices are only in snapshot', () => {
+    it('should return a card rule with min even if it matches the sum of mins of the slices when there are no card-constrained slices in the snapshot', () => {
+      // Modify the fixture so the slicing and slices are only in the snapshot (representing the case where they are inherited)
+      const clonedSD = cloneDeep(looseSDWithSlices);
+      delete clonedSD.differential.element[0].slicing;
+      delete clonedSD.differential.element[1].min;
+      delete clonedSD.differential.element[1].max;
+      delete clonedSD.differential.element[2];
+      const element = ProcessableElementDefinition.fromJSON(clonedSD.differential.element[0]);
+      const cardRule = CardRuleExtractor.process(element, clonedSD, defs);
+      const expectedRule = new ExportableCardRule('component');
+      expectedRule.min = 3;
+      expect(cardRule).toEqual<ExportableCardRule>(expectedRule);
+      expect(element.processedPaths).toEqual(['min']);
+    });
+
+    it('should return a card rule with min even if it matches the sum of mins of the slices when there are no slices in the snapshot', () => {
       // Modify the fixture so the slicing and slices are only in the snapshot (representing the case where they are inherited)
       const clonedSD = cloneDeep(looseSDWithSlices);
       delete clonedSD.differential.element[0].slicing;
@@ -107,7 +122,9 @@ describe('CardRuleExtractor', () => {
       delete clonedSD.differential.element[2];
       const element = ProcessableElementDefinition.fromJSON(clonedSD.differential.element[0]);
       const cardRule = CardRuleExtractor.process(element, clonedSD, defs);
-      expect(cardRule).toBeNull();
+      const expectedRule = new ExportableCardRule('component');
+      expectedRule.min = 3;
+      expect(cardRule).toEqual<ExportableCardRule>(expectedRule);
       expect(element.processedPaths).toEqual(['min']);
     });
 
@@ -124,7 +141,7 @@ describe('CardRuleExtractor', () => {
       expect(element.processedPaths).toEqual(['min']);
     });
 
-    it('should return a null when there is only a min and it matches the sum of mins of the inherited slices w/ no snapshot', () => {
+    it('should return a null when there is only a min, and there are card-constrained slices, and min matches the sum of mins of all slices (w/ no snapshot)', () => {
       // Modify the fixture so the slicing is only in the snapshot (representing the case where it is inherited)
       const element = ProcessableElementDefinition.fromJSON(
         looseSDWithInheritedSlices.differential.element[0]

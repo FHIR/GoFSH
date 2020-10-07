@@ -20,12 +20,19 @@ export class CardRuleExtractor {
         cardRule.max = input.max;
         input.processedPaths.push('max');
       }
-      // If this is a sliced element, and the min matches the sum of its slice's mins,
-      // then don't output it -- because SUSHI will automatically apply this min value.
+      // SUSHI will automatically create a card rule if all of the following is true:
+      // - this is a sliced element
+      // - there is a cardinality rule on at least one of the slices
+      // - the min on this element matches the sum of the mins on all slices
+      // If we reach this condition, don't output a card min since SUSHI will do it.
       // Technically this is an optimization, but the optimizations don't have access to
       // the full SD, and we need the full SD to get the sum of all slices (including
       // inherited slices)
-      if (removeInferredSlicedMin && isSliced(input, structDef, fhir)) {
+      if (
+        removeInferredSlicedMin &&
+        hasSlicesWithConstrainedCards(input, structDef) &&
+        isSliced(input, structDef, fhir)
+      ) {
         const sumOfMins = getSumOfSliceMins(input, structDef, fhir);
         if (sumOfMins === input.min) {
           if (cardRule.max == null) {
@@ -41,6 +48,19 @@ export class CardRuleExtractor {
       return null;
     }
   }
+}
+
+function hasSlicesWithConstrainedCards(
+  input: ProcessableElementDefinition,
+  structDef: ProcessableStructureDefinition
+): boolean {
+  return structDef?.differential?.element?.some(
+    el =>
+      el.path == input.path &&
+      el.id != input.id &&
+      el.sliceName != null &&
+      (el.min != null || el.max != null)
+  );
 }
 
 function isSliced(
