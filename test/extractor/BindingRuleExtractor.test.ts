@@ -1,39 +1,39 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { fshrules } from 'fsh-sushi';
-import { ValueSetRuleExtractor } from '../../src/rule-extractor';
+import { BindingRuleExtractor } from '../../src/rule-extractor';
 import { ProcessableElementDefinition } from '../../src/processor';
 
-describe('ValueSetRuleExtractor', () => {
+describe('BindingRuleExtractor', () => {
   let looseSD: any;
 
   beforeAll(() => {
     looseSD = JSON.parse(
-      fs.readFileSync(path.join(__dirname, 'fixtures', 'valueSet-profile.json'), 'utf-8').trim()
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'binding-profile.json'), 'utf-8').trim()
     );
   });
 
-  it('should extract a valueSet rule with a valueSet and a strength', () => {
+  it('should extract a BindingRule with a valueSet and a strength', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
-    const valueSetRule = ValueSetRuleExtractor.process(element);
-    const expectedRule = new fshrules.ValueSetRule('valueCodeableConcept');
+    const bindingRule = BindingRuleExtractor.process(element);
+    const expectedRule = new fshrules.BindingRule('valueCodeableConcept');
     expectedRule.valueSet = 'http://example.org/ValueSet/Foo';
     expectedRule.strength = 'required';
-    expect(valueSetRule).toEqual<fshrules.ValueSetRule>(expectedRule);
+    expect(bindingRule).toEqual<fshrules.BindingRule>(expectedRule);
     expect(element.processedPaths).toEqual(['binding.valueSet', 'binding.strength']);
   });
 
   it('should return null when the element has a strength and no valueSet', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-    const valueSetRule = ValueSetRuleExtractor.process(element);
-    expect(valueSetRule).toBeNull();
+    const bindingRule = BindingRuleExtractor.process(element);
+    expect(bindingRule).toBeNull();
     expect(element.processedPaths).toEqual([]);
   });
 
   it('should return null when the element has no binding', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-    const valueSetRule = ValueSetRuleExtractor.process(element);
-    expect(valueSetRule).toBeNull();
+    const bindingRule = BindingRuleExtractor.process(element);
+    expect(bindingRule).toBeNull();
     expect(element.processedPaths).toEqual([]);
   });
 });

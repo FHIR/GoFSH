@@ -2,7 +2,7 @@
   "resourceType": "StructureDefinition",
   "kind": "resource",
   "type": "Observation",
-  "name": "FixedValueObservation",
+  "name": "AssignedValueObservation",
   "differential": {
     "element": [
       {

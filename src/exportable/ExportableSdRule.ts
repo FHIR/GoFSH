@@ -3,11 +3,11 @@ import {
   ExportableCaretValueRule,
   ExportableCombinedCardFlagRule,
   ExportableContainsRule,
-  ExportableFixedValueRule,
+  ExportableAssignmentRule,
   ExportableFlagRule,
   ExportableObeysRule,
   ExportableOnlyRule,
-  ExportableValueSetRule,
+  ExportableBindingRule,
   ExportableInsertRule
 } from '.';
 
@@ -16,9 +16,9 @@ export type ExportableSdRule =
   | ExportableCaretValueRule
   | ExportableCombinedCardFlagRule
   | ExportableContainsRule
-  | ExportableFixedValueRule
+  | ExportableAssignmentRule
   | ExportableFlagRule
   | ExportableObeysRule
   | ExportableOnlyRule
-  | ExportableValueSetRule
+  | ExportableBindingRule
   | ExportableInsertRule;

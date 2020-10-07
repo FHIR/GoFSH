@@ -5,7 +5,7 @@ import {
   ExportableCardRule,
   ExportableCaretValueRule,
   ExportableContainsRule,
-  ExportableFixedValueRule,
+  ExportableAssignmentRule,
   ExportableProfile
 } from '../../src/exportable';
 import '../helpers/loggerSpy'; // suppresses console logging
@@ -58,14 +58,14 @@ describe('ProfileProcessor', () => {
       const result = ProfileProcessor.process(input, defs);
       const cardRule = new ExportableCardRule('valueString');
       cardRule.min = 1;
-      const fixedValueRule = new ExportableFixedValueRule('valueString');
-      fixedValueRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('valueString');
+      assignmentRule.value = 'foo';
       const caretRule = new ExportableCaretValueRule('valueString');
       caretRule.caretPath = 'short';
       caretRule.value = 'bar';
       expect(result.rules.length).toBe(3);
       expect(result.rules).toContainEqual<ExportableCardRule>(cardRule);
-      expect(result.rules).toContainEqual<ExportableFixedValueRule>(fixedValueRule);
+      expect(result.rules).toContainEqual<ExportableAssignmentRule>(assignmentRule);
       expect(result.rules).toContainEqual<ExportableCaretValueRule>(caretRule);
     });
 
