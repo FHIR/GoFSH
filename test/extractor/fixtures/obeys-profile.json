@@ -34,6 +34,13 @@
             "severity": "warning",
             "human": "This constraint has an xpath.",
             "xpath": "f:category"
+          },
+          {
+            "key": "zig-4",
+            "severity": "warning",
+            "human": "This constraint has an expression and an xpath.",
+            "expression": "category.double.exists()",
+            "xpath": "f:category/double"
           }
         ]
       },

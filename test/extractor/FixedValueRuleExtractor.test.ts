@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { fhirtypes, fshtypes } from 'fsh-sushi';
-import { FixedValueRuleExtractor } from '../../src/rule-extractor';
+import { FixedValueRuleExtractor } from '../../src/extractor';
 import { ExportableFixedValueRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 

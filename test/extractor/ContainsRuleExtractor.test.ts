@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { fhirdefs } from 'fsh-sushi';
-import { ContainsRuleExtractor } from '../../src/rule-extractor';
+import { ContainsRuleExtractor } from '../../src/extractor';
 import { ProcessableElementDefinition } from '../../src/processor';
 import {
   ExportableContainsRule,

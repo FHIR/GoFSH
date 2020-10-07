@@ -3,8 +3,7 @@ import {
   ProfileProcessor,
   ExtensionProcessor,
   FHIRProcessor,
-  CodeSystemProcessor,
-  InvariantProcessor
+  CodeSystemProcessor
 } from '../../src/processor';
 import '../helpers/loggerSpy'; // suppresses console logging
 import { fhirdefs } from 'fsh-sushi';
@@ -14,33 +13,28 @@ describe('FHIRProcessor', () => {
   let profileSpy: jest.SpyInstance;
   let extensionSpy: jest.SpyInstance;
   let codeSystemSpy: jest.SpyInstance;
-  let invariantSpy: jest.SpyInstance;
 
   beforeAll(() => {
     processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
     profileSpy = jest.spyOn(ProfileProcessor, 'process');
     extensionSpy = jest.spyOn(ExtensionProcessor, 'process');
     codeSystemSpy = jest.spyOn(CodeSystemProcessor, 'process');
-    invariantSpy = jest.spyOn(InvariantProcessor, 'process');
   });
 
   beforeEach(() => {
     profileSpy.mockClear();
     extensionSpy.mockClear();
     codeSystemSpy.mockClear();
-    invariantSpy.mockClear();
   });
 
-  it('should try to process a Profile with the ProfileProcessor and InvariantProcessor', () => {
+  it('should try to process a Profile with the ProfileProcessor', () => {
     processor.process(path.join(__dirname, 'fixtures', 'simple-profile.json'));
     expect(profileSpy).toHaveBeenCalledTimes(1);
-    expect(invariantSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should try to process an Extension with the ExtensionProcessor and InvariantProcessor', () => {
+  it('should try to process an Extension with the ExtensionProcessor', () => {
     processor.process(path.join(__dirname, 'fixtures', 'simple-extension.json'));
     expect(extensionSpy).toHaveBeenCalledTimes(1);
-    expect(invariantSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should try to process a CodeSystem with the CodeSystemProcessor', () => {

@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { ProcessableElementDefinition } from '../../src/processor';
-import { ObeysRuleExtractor } from '../../src/rule-extractor';
+import { ObeysRuleExtractor } from '../../src/extractor';
 import { ExportableObeysRule } from '../../src/exportable';
 
 describe('ObeysRuleExtractor', () => {
@@ -32,10 +32,10 @@ describe('ObeysRuleExtractor', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
     const obeysRule = ObeysRuleExtractor.process(element);
     const expectedRule = new ExportableObeysRule('category');
-    expectedRule.keys = ['zig-2', 'zig-3'];
+    expectedRule.keys = ['zig-2', 'zig-3', 'zig-4'];
 
     expect(obeysRule).toEqual<ExportableObeysRule>(expectedRule);
-    expect(element.processedPaths).toHaveLength(10);
+    expect(element.processedPaths).toHaveLength(15);
     expect(element.processedPaths).toContainEqual('constraint[0].key');
     expect(element.processedPaths).toContainEqual('constraint[0].human');
     expect(element.processedPaths).toContainEqual('constraint[0].severity');
@@ -46,6 +46,11 @@ describe('ObeysRuleExtractor', () => {
     expect(element.processedPaths).toContainEqual('constraint[1].severity');
     expect(element.processedPaths).toContainEqual('constraint[1].expression');
     expect(element.processedPaths).toContainEqual('constraint[1].xpath');
+    expect(element.processedPaths).toContainEqual('constraint[2].key');
+    expect(element.processedPaths).toContainEqual('constraint[2].human');
+    expect(element.processedPaths).toContainEqual('constraint[2].severity');
+    expect(element.processedPaths).toContainEqual('constraint[2].expression');
+    expect(element.processedPaths).toContainEqual('constraint[2].xpath');
   });
 
   it('should not extract an obeys rule nor invariants on an element with no constraints', () => {

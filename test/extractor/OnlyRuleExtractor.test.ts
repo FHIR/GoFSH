@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { OnlyRuleExtractor } from '../../src/rule-extractor';
+import { OnlyRuleExtractor } from '../../src/extractor';
 import { ExportableOnlyRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 

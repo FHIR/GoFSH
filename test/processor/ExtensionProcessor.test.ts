@@ -18,9 +18,10 @@ describe('ExtensionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-extension.json'), 'utf-8')
       );
+      const expectedExtension = new ExportableExtension('SimpleExtension');
       const result = ExtensionProcessor.process(input, defs);
-      expect(result).toBeInstanceOf(ExportableExtension);
-      expect(result.name).toBe('SimpleExtension');
+
+      expect(result).toContainEqual<ExportableExtension>(expectedExtension);
     });
 
     it('should convert an Extension with simple metadata', () => {
@@ -28,12 +29,13 @@ describe('ExtensionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'metadata-extension.json'), 'utf-8')
       );
+      const expectedExtension = new ExportableExtension('MyExtension');
+      expectedExtension.id = 'my-extension';
+      expectedExtension.title = 'My New Extension';
+      expectedExtension.description = 'This is my new Extension. Thank you.';
       const result = ExtensionProcessor.process(input, defs);
-      expect(result).toBeInstanceOf(ExportableExtension);
-      expect(result.name).toBe('MyExtension');
-      expect(result.id).toBe('my-extension');
-      expect(result.title).toBe('My New Extension');
-      expect(result.description).toBe('This is my new Extension. Thank you.');
+
+      expect(result).toContainEqual<ExportableExtension>(expectedExtension);
     });
 
     it('should not convert an Extension without a name', () => {
@@ -41,7 +43,7 @@ describe('ExtensionProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-extension.json'), 'utf-8')
       );
       const result = ExtensionProcessor.process(input, defs);
-      expect(result).toBeUndefined();
+      expect(result).toHaveLength(0);
     });
   });
 
@@ -51,7 +53,10 @@ describe('ExtensionProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-extension.json'), 'utf-8')
       );
       const result = ExtensionProcessor.process(input, defs);
-      expect(result.rules.length).toBe(1);
+      const extension = result.find(
+        resource => resource instanceof ExportableExtension
+      ) as ExportableExtension;
+      expect(extension.rules.length).toBe(1);
     });
   });
 });

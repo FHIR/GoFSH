@@ -4,7 +4,6 @@ import { logger } from '../utils';
 import { ProfileProcessor } from './ProfileProcessor';
 import { ExtensionProcessor } from './ExtensionProcessor';
 import { CodeSystemProcessor } from './CodeSystemProcessor';
-import { InvariantProcessor } from './InvariantProcessor';
 import {
   ExportableProfile,
   ExportableExtension,
@@ -31,20 +30,16 @@ export class FHIRProcessor {
       this.structureDefinitions.push(rawContent);
       if (rawContent.type === 'Extension') {
         logger.debug(`Processing contents of ${inputPath} as Extension.`);
-        const extension = ExtensionProcessor.process(rawContent, this.fhir);
-        if (extension) {
-          return [extension, ...InvariantProcessor.process(rawContent)];
-        }
+        return ExtensionProcessor.process(rawContent, this.fhir);
       } else {
         logger.debug(`Processing contents of ${inputPath} as Profile.`);
-        const profile = ProfileProcessor.process(rawContent, this.fhir);
-        if (profile) {
-          return [profile, ...InvariantProcessor.process(rawContent)];
-        }
+        return ProfileProcessor.process(rawContent, this.fhir);
       }
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       logger.debug(`Processing contents of ${inputPath} as CodeSystem.`);
       return [CodeSystemProcessor.process(rawContent)];
+    } else {
+      return [];
     }
   }
 }

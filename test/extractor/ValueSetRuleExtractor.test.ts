@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { fshrules } from 'fsh-sushi';
-import { ValueSetRuleExtractor } from '../../src/rule-extractor';
+import { ValueSetRuleExtractor } from '../../src/extractor';
 import { ProcessableElementDefinition } from '../../src/processor';
 
 describe('ValueSetRuleExtractor', () => {

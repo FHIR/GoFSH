@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { FlagRuleExtractor } from '../../src/rule-extractor';
+import { FlagRuleExtractor } from '../../src/extractor';
 import { ExportableFlagRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 

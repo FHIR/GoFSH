@@ -8,3 +8,6 @@ export * from './OnlyRuleExtractor';
 export * from './CaretValueRuleExtractor';
 export * from './ContainsRuleExtractor';
 export * from './ObeysRuleExtractor';
+
+// non-rule extractors
+export * from './InvariantExtractor';

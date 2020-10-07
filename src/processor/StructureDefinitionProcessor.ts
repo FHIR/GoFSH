@@ -1,6 +1,6 @@
 import compact from 'lodash/compact';
 import { fhirdefs } from 'fsh-sushi';
-import { ExportableSdRule } from '../exportable';
+import { ExportableSdRule, ExportableInvariant } from '../exportable';
 import {
   CardRuleExtractor,
   CaretValueRuleExtractor,
@@ -9,8 +9,9 @@ import {
   ValueSetRuleExtractor,
   ContainsRuleExtractor,
   OnlyRuleExtractor,
-  ObeysRuleExtractor
-} from '../rule-extractor';
+  ObeysRuleExtractor,
+  InvariantExtractor
+} from '../extractor';
 import { ProcessableElementDefinition } from '.';
 import { getAncestorElement } from '../utils';
 
@@ -66,6 +67,15 @@ export abstract class AbstractSDProcessor {
       newRules.push(...CaretValueRuleExtractor.process(element, fhir));
     }
     target.rules = compact(newRules);
+  }
+
+  static extractInvariants(input: ProcessableStructureDefinition): ExportableInvariant[] {
+    const invariants: ExportableInvariant[] = [];
+    for (const rawElement of input?.differential?.element ?? []) {
+      const element = ProcessableElementDefinition.fromJSON(rawElement, false);
+      invariants.push(...InvariantExtractor.process(element));
+    }
+    return invariants;
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {
