@@ -69,6 +69,7 @@ export class Package {
     this.removeDefaultExtensionContextRules();
     this.removeImpliedZeroToZeroCardRules();
     this.suppressUrlAssignmentOnExtensions();
+    this.removeDefaultSlicingRules();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -271,5 +272,60 @@ export class Package {
         pullAt(extension.rules, rulesToRemove);
       });
     }
+  }
+
+  private removeDefaultSlicingRules(): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToMaybeRemove: number[] = [];
+      sd.rules.forEach((rule, i, allRules) => {
+        if (
+          rule instanceof ExportableCaretValueRule &&
+          (rule.path.endsWith('extension') || rule.path.endsWith('modifierExtension'))
+        ) {
+          const hasSlicingDiscriminatorTypeRule =
+            rule.caretPath === 'slicing.discriminator[0].type' &&
+            rule.value instanceof FshCode &&
+            rule.value.code === 'value';
+          const hasSlicingDiscriminatorPathRule =
+            rule.caretPath === 'slicing.discriminator[0].path' && rule.value === 'url';
+          const hasSlicingOrderedRule =
+            rule.caretPath === 'slicing.ordered' && rule.value === false;
+          const hasSlicingRulesRule =
+            rule.caretPath === 'slicing.rules' &&
+            rule.value instanceof FshCode &&
+            rule.value.code === 'open';
+          const hasContainsRule = allRules.some(
+            otherRule => otherRule instanceof ExportableContainsRule && otherRule.path === rule.path
+          );
+          const hasOneSlicingDiscriminatorRule = !allRules.some(
+            otherRule =>
+              otherRule instanceof ExportableCaretValueRule &&
+              otherRule.caretPath !== 'slicing.discriminator[0].type' &&
+              otherRule.caretPath !== 'slicing.discriminator[0].path' &&
+              otherRule.caretPath.startsWith('slicing.discriminator[')
+          );
+          if (
+            // One of the four default rules
+            (hasSlicingDiscriminatorTypeRule ||
+              hasSlicingDiscriminatorPathRule ||
+              hasSlicingOrderedRule ||
+              hasSlicingRulesRule) &&
+            // Some contains rule at the same path
+            hasContainsRule &&
+            // No other slicing.discriminator rules
+            hasOneSlicingDiscriminatorRule
+          ) {
+            rulesToMaybeRemove.push(i);
+          }
+        }
+      });
+      // If four rules to maybe remove have the same path, then that's a full set of defaults, and they are removed
+      const rulesToRemove = flatten(
+        values(groupBy(rulesToMaybeRemove, i => sd.rules[i].path)).filter(
+          ruleGroup => ruleGroup.length === 4
+        )
+      );
+      pullAt(sd.rules, rulesToRemove);
+    });
   }
 }
