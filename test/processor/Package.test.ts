@@ -1092,5 +1092,76 @@ describe('Package', () => {
       expect(extension.rules).toHaveLength(1); // Default slicing rules removed, only contains rule
       expect(extension.rules[0]).toBeInstanceOf(ExportableContainsRule);
     });
+
+    it('should remove date caret rules if date appears to be set by IG publisher', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const dateCaretRule = new ExportableCaretValueRule('');
+      dateCaretRule.caretPath = 'date';
+      dateCaretRule.value = '2020-03-24T22:19:43+00:00';
+      profile.rules = [dateCaretRule];
+      extension.rules = [dateCaretRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(extension.rules).toHaveLength(0); // date CaretValueRule removed
+    });
+
+    it('should not remove date caret rules if date appears to be set by IG publisher (different dates)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const dateCaretRule1 = new ExportableCaretValueRule('');
+      dateCaretRule1.caretPath = 'date';
+      dateCaretRule1.value = '2020-12-01T04:12:06+00:00'; // different from date2
+      const dateCaretRule2 = new ExportableCaretValueRule('');
+      dateCaretRule2.caretPath = 'date';
+      dateCaretRule2.value = '2020-03-24T22:19:43+00:00'; // different from date1
+      profile.rules = [dateCaretRule1];
+      extension.rules = [dateCaretRule2];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // date CaretValueRule is not removed
+      expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
+    });
+
+    it('should not remove date caret rules if date appears to be set by IG publisher (no time)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const dateCaretRule = new ExportableCaretValueRule('');
+      dateCaretRule.caretPath = 'date';
+      dateCaretRule.value = '2020-03-24'; // No time specified (FHIR does not allow a time without a timezone)
+      profile.rules = [dateCaretRule];
+      extension.rules = [dateCaretRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // date CaretValueRule is not removed
+      expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
+    });
+
+    it('should not remove date caret rules if date appears to be set by IG publisher (different time zone)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const dateCaretRule = new ExportableCaretValueRule('');
+      dateCaretRule.caretPath = 'date';
+      dateCaretRule.value = '2020-03-24T22:19:43+04:00'; // Different timezone, not GMT
+      profile.rules = [dateCaretRule];
+      extension.rules = [dateCaretRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // date CaretValueRule is not removed
+      expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
+    });
   });
 });

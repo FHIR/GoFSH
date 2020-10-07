@@ -70,6 +70,7 @@ export class Package {
     this.removeImpliedZeroToZeroCardRules();
     this.suppressUrlAssignmentOnExtensions();
     this.removeDefaultSlicingRules();
+    this.removeDateRules();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -329,5 +330,39 @@ export class Package {
       );
       pullAt(sd.rules, rulesToRemove);
     });
+  }
+
+  private removeDateRules(): void {
+    let allDatesMatch = true;
+    let date: string;
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      for (const rule of sd.rules) {
+        if (!allDatesMatch) break; // If any date hasn't matched the others, stop looking at other rules
+        if (rule instanceof ExportableCaretValueRule && rule.caretPath === 'date') {
+          const dateValue = rule.value as string; // If the rule assigns a date, the value will be a string.
+          if (!date) date = dateValue; // Set the date to match
+          if (date !== rule.value) {
+            allDatesMatch = false;
+          }
+        }
+      }
+    });
+
+    // If all dates are the same, are defined to the second, and are in GMT,
+    // we can assume they were set by the IG Publisher and can be safely removed.
+    const dateTimeRegex = /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$/;
+    const dateTimeMatch = date?.match(dateTimeRegex);
+    const usesGMT = dateTimeMatch?.[12] === '+00:00'; // dateTimeMatch[12] will hold timezone info if present
+    if (allDatesMatch && usesGMT) {
+      [...this.profiles, ...this.extensions].forEach(sd => {
+        const rulesToRemove: number[] = [];
+        sd.rules.forEach((rule, i) => {
+          if (rule instanceof ExportableCaretValueRule && rule.caretPath === 'date') {
+            rulesToRemove.push(i);
+          }
+        });
+        pullAt(sd.rules, rulesToRemove);
+      });
+    }
   }
 }
