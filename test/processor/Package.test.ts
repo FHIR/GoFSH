@@ -641,6 +641,19 @@ describe('Package', () => {
       expect(extension.rules).toEqual([containsRule]);
     });
 
+    it('should remove URL assignment rules on inline extensions on a modifierExtension', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const containsRule = new ExportableContainsRule('modifierExtension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableFixedValueRule('modifierExtension[foo].url');
+      assignmentRule.fixedValue = 'foo';
+      extension.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([containsRule]);
+    });
+
     it('should remove URL assignment rules on inline extensions on a profile', () => {
       const profile = new ExportableProfile('MyProfile');
       const containsRule = new ExportableContainsRule('extension');

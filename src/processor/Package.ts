@@ -233,15 +233,17 @@ export class Package {
 
   private suppressUrlAssignmentOnExtensions(): void {
     // Loop over all profiles and extensions, removing assignment rules on inline extensions
+    // NOTE: Inline extensions on a profile are allowed by SUSHI, but they are technically not
+    // valid FHIR and the IG Publisher does not like this
     [...this.profiles, ...this.extensions].forEach(sd => {
       const rulesToRemove: number[] = [];
       sd.rules.forEach(rule => {
-        if (rule instanceof ExportableContainsRule && rule.path.endsWith('extension')) {
+        if (rule instanceof ExportableContainsRule && /(modifierE|e)xtension$/.test(rule.path)) {
           rule.items.forEach(item => {
             const assignmentRuleIdx = sd.rules.findIndex(
               other =>
-                other.path === `${rule.path}[${item.name}].url` &&
                 other instanceof ExportableFixedValueRule &&
+                other.path === `${rule.path}[${item.name}].url` &&
                 other.fixedValue === item.name
             );
             if (assignmentRuleIdx >= 0) {
