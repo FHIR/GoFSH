@@ -929,6 +929,51 @@ describe('Package', () => {
       expect(profile.rules).toHaveLength(7); // No rules removed
     });
 
+    it('should remove default slicing from profiles when additional discriminators present on other paths', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const defaultDiscriminatorTypeRule = new ExportableCaretValueRule('extension');
+      defaultDiscriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      defaultDiscriminatorTypeRule.value = new FshCode('value');
+      const defaultDiscriminatorPathRule = new ExportableCaretValueRule('extension');
+      defaultDiscriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      defaultDiscriminatorPathRule.value = 'url';
+      const otherDiscriminatorTypeRuleA = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorTypeRuleA.caretPath = 'slicing.discriminator[0].type';
+      otherDiscriminatorTypeRuleA.value = new FshCode('profile');
+      const otherDiscriminatorPathRuleA = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorPathRuleA.caretPath = 'slicing.discriminator[0].path';
+      otherDiscriminatorPathRuleA.value = 'system';
+      const otherDiscriminatorTypeRuleB = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorTypeRuleB.caretPath = 'slicing.discriminator[1].type';
+      otherDiscriminatorTypeRuleB.value = new FshCode('profile');
+      const otherDiscriminatorPathRuleB = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorPathRuleB.caretPath = 'slicing.discriminator[1].path';
+      otherDiscriminatorPathRuleB.value = 'system';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        defaultDiscriminatorTypeRule,
+        defaultDiscriminatorPathRule,
+        otherDiscriminatorTypeRuleA,
+        otherDiscriminatorPathRuleA,
+        otherDiscriminatorTypeRuleB,
+        otherDiscriminatorPathRuleB,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5); // Default rules on extension removed, rules on status.extension not removed
+    });
+
     it('should not remove default slicing from profiles if any default is missing', () => {
       const profile = new ExportableProfile('ProfileWithSlice');
       const discriminatorTypeRule = new ExportableCaretValueRule('extension');
