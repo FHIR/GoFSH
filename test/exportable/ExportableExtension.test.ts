@@ -24,10 +24,28 @@ describe('ExportableExtension', () => {
 
     const expectedResult = [
       'Extension: MyExtension',
-      // NOTE: Since parent is Extension, it is ommitted from FSH
+      // NOTE: Since parent is Extension, it is omitted from FSH
       'Id: my-extension',
       'Title: "My Extension"',
       'Description: "My extension is not very extensive."'
+    ].join(EOL);
+    const result = input.toFSH();
+    expect(result).toBe(expectedResult);
+  });
+
+  it('should export an extension with additional metadata without extension url as Parent', () => {
+    const input = new ExportableExtension('MyExtension');
+    input.parent = 'http://hl7.org/fhir/StructureDefinition/Extension'; // baseDefinition of Extension StructureDefinition
+    input.id = 'my-extension';
+    input.title = 'My Extension';
+    input.description = 'This extension will not have the Extension URL as the parent.';
+
+    const expectedResult = [
+      'Extension: MyExtension',
+      // NOTE: Since parent is Extension baseDefinition, it is omitted from FSH
+      'Id: my-extension',
+      'Title: "My Extension"',
+      'Description: "This extension will not have the Extension URL as the parent."'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);
