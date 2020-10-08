@@ -674,13 +674,13 @@ describe('Package', () => {
       const profile = new ExportableProfile('MyProfile');
       const containsRule = new ExportableContainsRule('extension');
       containsRule.items.push({ name: 'foo' });
-      const assignmentRule = new ExportableFlagRule('extension[foo].url');
-      assignmentRule.mustSupport = true;
-      profile.rules = [containsRule, assignmentRule];
+      const flagRule = new ExportableFlagRule('extension[foo].url');
+      flagRule.mustSupport = true;
+      profile.rules = [containsRule, flagRule];
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.optimize(processor);
-      expect(profile.rules).toEqual([containsRule, assignmentRule]);
+      expect(profile.rules).toEqual([containsRule, flagRule]);
     });
 
     it('should remove a URL assignment rule on an extension only when that URL matches the canonical', () => {
