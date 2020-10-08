@@ -335,13 +335,17 @@ export class Package {
   private removeDateRules(): void {
     let allDatesMatch = true;
     let date: string;
-    [...this.profiles, ...this.extensions].forEach(sd => {
+    [...this.profiles, ...this.extensions, ...this.valueSets, ...this.codeSystems].forEach(sd => {
       for (const rule of sd.rules) {
         if (!allDatesMatch) break; // If any date hasn't matched the others, stop looking at other rules
-        if (rule instanceof ExportableCaretValueRule && rule.caretPath === 'date') {
+        if (
+          rule instanceof ExportableCaretValueRule &&
+          rule.caretPath === 'date' &&
+          rule.path === ''
+        ) {
           const dateValue = rule.value as string; // If the rule assigns a date, the value will be a string.
           if (!date) date = dateValue; // Set the date to match
-          if (date !== rule.value) {
+          if (date !== dateValue) {
             allDatesMatch = false;
           }
         }
@@ -354,14 +358,35 @@ export class Package {
     const dateTimeMatch = date?.match(dateTimeRegex);
     const usesGMT = dateTimeMatch?.[12] === '+00:00'; // dateTimeMatch[12] will hold timezone info if present
     if (allDatesMatch && usesGMT) {
+      const DEFAULT_DATE = new ExportableCaretValueRule('');
+      DEFAULT_DATE.caretPath = 'date';
+      DEFAULT_DATE.value = date;
       [...this.profiles, ...this.extensions].forEach(sd => {
         const rulesToRemove: number[] = [];
         sd.rules.forEach((rule, i) => {
-          if (rule instanceof ExportableCaretValueRule && rule.caretPath === 'date') {
+          if (isEqual(rule, DEFAULT_DATE)) {
             rulesToRemove.push(i);
           }
         });
         pullAt(sd.rules, rulesToRemove);
+      });
+      this.valueSets.forEach(vs => {
+        const rulesToRemove: number[] = [];
+        vs.rules.forEach((rule, i) => {
+          if (isEqual(rule, DEFAULT_DATE)) {
+            rulesToRemove.push(i);
+          }
+        });
+        pullAt(vs.rules, rulesToRemove);
+      });
+      this.codeSystems.forEach(cs => {
+        const rulesToRemove: number[] = [];
+        cs.rules.forEach((rule, i) => {
+          if (isEqual(rule, DEFAULT_DATE)) {
+            rulesToRemove.push(i);
+          }
+        });
+        pullAt(cs.rules, rulesToRemove);
       });
     }
   }

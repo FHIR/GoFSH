@@ -1097,17 +1097,25 @@ describe('Package', () => {
       const extension = new ExportableExtension('ExtraExtension');
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
+      const valueSet = new ExportableValueSet('ExtraValueSet');
+      const codeSystem = new ExportableCodeSystem('ExtraCodeSystem');
       const dateCaretRule = new ExportableCaretValueRule('');
       dateCaretRule.caretPath = 'date';
       dateCaretRule.value = '2020-03-24T22:19:43+00:00';
       profile.rules = [dateCaretRule];
       extension.rules = [dateCaretRule];
+      valueSet.rules = [dateCaretRule];
+      codeSystem.rules = [dateCaretRule];
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.add(extension);
+      myPackage.add(valueSet);
+      myPackage.add(codeSystem);
       myPackage.optimize(processor);
       expect(profile.rules).toHaveLength(0); // date CaretValueRule removed
       expect(extension.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(valueSet.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(codeSystem.rules).toHaveLength(0); // date CaretValueRule removed
     });
 
     it('should not remove date caret rules if date appears to be set by IG publisher (different dates)', () => {
