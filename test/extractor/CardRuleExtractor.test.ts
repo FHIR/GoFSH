@@ -99,7 +99,7 @@ describe('CardRuleExtractor', () => {
       expect(element.processedPaths).toEqual(['min']);
     });
 
-    it('should return a card rule with min even if it matches the sum of mins of the slices when there are no card-constrained slices in the snapshot', () => {
+    it('should return a card rule with min even if it matches the sum of mins of the slices when there are no card-constrained slices in the differential', () => {
       // Modify the fixture so the slicing and slices are only in the snapshot (representing the case where they are inherited)
       const clonedSD = cloneDeep(looseSDWithSlices);
       delete clonedSD.differential.element[0].slicing;
@@ -114,7 +114,7 @@ describe('CardRuleExtractor', () => {
       expect(element.processedPaths).toEqual(['min']);
     });
 
-    it('should return a card rule with min even if it matches the sum of mins of the slices when there are no slices in the snapshot', () => {
+    it('should return a card rule with min even if it matches the sum of mins of the slices when there are no slices in the differential', () => {
       // Modify the fixture so the slicing and slices are only in the snapshot (representing the case where they are inherited)
       const clonedSD = cloneDeep(looseSDWithSlices);
       delete clonedSD.differential.element[0].slicing;
