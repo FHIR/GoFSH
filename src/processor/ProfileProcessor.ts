@@ -1,6 +1,7 @@
 import { fhirdefs } from 'fsh-sushi';
 import { AbstractSDProcessor } from './StructureDefinitionProcessor';
 import { ExportableProfile, ExportableInvariant } from '../exportable';
+import { ProcessableElementDefinition } from '.';
 
 export class ProfileProcessor extends AbstractSDProcessor {
   static process(
@@ -9,9 +10,13 @@ export class ProfileProcessor extends AbstractSDProcessor {
   ): [ExportableProfile, ...ExportableInvariant[]] | [] {
     if (ProfileProcessor.isProcessableStructureDefinition(input)) {
       const profile = new ExportableProfile(input.name);
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
       ProfileProcessor.extractKeywords(input, profile);
-      ProfileProcessor.extractRules(input, profile, fhir);
-      const invariants = ProfileProcessor.extractInvariants(input);
+      const invariants = ProfileProcessor.extractInvariants(elements);
+      ProfileProcessor.extractRules(input, elements, profile, fhir);
       return [profile, ...invariants];
     }
     return [];

@@ -24,6 +24,9 @@ describe('InvariantExtractor', () => {
 
     expect(invariants).toHaveLength(1);
     expect(invariants).toContainEqual(rootInvariant);
+    expect(element.processedPaths).toContain('constraint[0].key');
+    expect(element.processedPaths).toContain('constraint[0].severity');
+    expect(element.processedPaths).toContain('constraint[0].human');
   });
 
   it('should extract invariants from an element with multiple constraints', () => {
@@ -47,11 +50,25 @@ describe('InvariantExtractor', () => {
     expect(invariants).toContainEqual(expressionInvariant);
     expect(invariants).toContainEqual(xpathInvariant);
     expect(invariants).toContainEqual(bothInvariant);
+    expect(element.processedPaths).toContain('constraint[0].key');
+    expect(element.processedPaths).toContain('constraint[0].severity');
+    expect(element.processedPaths).toContain('constraint[0].human');
+    expect(element.processedPaths).toContain('constraint[0].expression');
+    expect(element.processedPaths).toContain('constraint[1].key');
+    expect(element.processedPaths).toContain('constraint[1].severity');
+    expect(element.processedPaths).toContain('constraint[1].human');
+    expect(element.processedPaths).toContain('constraint[1].xpath');
+    expect(element.processedPaths).toContain('constraint[2].key');
+    expect(element.processedPaths).toContain('constraint[2].severity');
+    expect(element.processedPaths).toContain('constraint[2].human');
+    expect(element.processedPaths).toContain('constraint[2].expression');
+    expect(element.processedPaths).toContain('constraint[2].xpath');
   });
 
   it('should extract no invariants from an element with no constraints', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
     const invariants = InvariantExtractor.process(element);
     expect(invariants).toHaveLength(0);
+    expect(element.processedPaths).toHaveLength(0);
   });
 });

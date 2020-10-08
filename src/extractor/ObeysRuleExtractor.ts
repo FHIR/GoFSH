@@ -8,16 +8,7 @@ export class ObeysRuleExtractor {
     if (input.constraint?.length > 0) {
       input.constraint.forEach((constraint, i) => {
         invariantKeys.push(constraint.key);
-        // The ObeysRule only contains the key, but these other attributes
-        // will be handled by the InvariantExtractor. So, they should not be
-        // used for CaretValueRules.
-        input.processedPaths.push(
-          `constraint[${i}].key`,
-          `constraint[${i}].human`,
-          `constraint[${i}].severity`,
-          `constraint[${i}].expression`,
-          `constraint[${i}].xpath`
-        );
+        input.processedPaths.push(`constraint[${i}].key`);
       });
     }
     if (invariantKeys.length) {
