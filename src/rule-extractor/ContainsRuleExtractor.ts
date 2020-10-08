@@ -20,7 +20,7 @@ export class ContainsRuleExtractor {
       name: input.sliceName
     });
     // CardRule is required, so if it isn't present, we don't get a ContainsRule
-    const cardRule = CardRuleExtractor.process(input);
+    const cardRule = CardRuleExtractor.process(input, structDef, fhir, false);
     if (cardRule) {
       containsRule.cardRules.push(cardRule);
     } else {
