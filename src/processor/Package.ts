@@ -335,9 +335,13 @@ export class Package {
   private removeDateRules(): void {
     let allDatesMatch = true;
     let date: string;
-    [...this.profiles, ...this.extensions, ...this.valueSets, ...this.codeSystems].forEach(sd => {
-      for (const rule of sd.rules) {
-        if (!allDatesMatch) break; // If any date hasn't matched the others, stop looking at other rules
+    for (const resource of [
+      ...this.profiles,
+      ...this.extensions,
+      ...this.valueSets,
+      ...this.codeSystems
+    ]) {
+      for (const rule of resource.rules) {
         if (
           rule instanceof ExportableCaretValueRule &&
           rule.caretPath === 'date' &&
@@ -347,46 +351,36 @@ export class Package {
           if (!date) date = dateValue; // Set the date to match
           if (date !== dateValue) {
             allDatesMatch = false;
+            return; // If any date hasn't matched the others, we don't want to remove any rules.
           }
         }
       }
-    });
+    }
+
+    // If there are no date CaretValueRules found, just return.
+    if (date == null) {
+      return;
+    }
 
     // If all dates are the same, are defined to the second, and are in GMT,
     // we can assume they were set by the IG Publisher and can be safely removed.
+    // Make sure the value matches one allowed by the dateTime type in FHIR.
+    // See: http://hl7.org/fhir/R4/datatypes.html#dateTime
     const dateTimeRegex = /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$/;
-    const dateTimeMatch = date?.match(dateTimeRegex);
-    const usesGMT = dateTimeMatch?.[12] === '+00:00'; // dateTimeMatch[12] will hold timezone info if present
+    const dateTimeMatch = date.match(dateTimeRegex);
+    const usesGMT = dateTimeMatch ? date.endsWith('+00:00') : false; // If it is a valid FHIR dateTime, check that it uses GMT time zone
     if (allDatesMatch && usesGMT) {
       const DEFAULT_DATE = new ExportableCaretValueRule('');
       DEFAULT_DATE.caretPath = 'date';
       DEFAULT_DATE.value = date;
       [...this.profiles, ...this.extensions].forEach(sd => {
-        const rulesToRemove: number[] = [];
-        sd.rules.forEach((rule, i) => {
-          if (isEqual(rule, DEFAULT_DATE)) {
-            rulesToRemove.push(i);
-          }
-        });
-        pullAt(sd.rules, rulesToRemove);
+        sd.rules = sd.rules.filter(rule => !isEqual(rule, DEFAULT_DATE));
       });
       this.valueSets.forEach(vs => {
-        const rulesToRemove: number[] = [];
-        vs.rules.forEach((rule, i) => {
-          if (isEqual(rule, DEFAULT_DATE)) {
-            rulesToRemove.push(i);
-          }
-        });
-        pullAt(vs.rules, rulesToRemove);
+        vs.rules = vs.rules.filter(rule => !isEqual(rule, DEFAULT_DATE));
       });
       this.codeSystems.forEach(cs => {
-        const rulesToRemove: number[] = [];
-        cs.rules.forEach((rule, i) => {
-          if (isEqual(rule, DEFAULT_DATE)) {
-            rulesToRemove.push(i);
-          }
-        });
-        pullAt(cs.rules, rulesToRemove);
+        cs.rules = cs.rules.filter(rule => !isEqual(rule, DEFAULT_DATE));
       });
     }
   }

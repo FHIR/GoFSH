@@ -1118,7 +1118,7 @@ describe('Package', () => {
       expect(codeSystem.rules).toHaveLength(0); // date CaretValueRule removed
     });
 
-    it('should not remove date caret rules if date appears to be set by IG publisher (different dates)', () => {
+    it('should not remove date caret rules if date appears to not be set by IG publisher (different dates)', () => {
       const extension = new ExportableExtension('ExtraExtension');
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
@@ -1138,7 +1138,7 @@ describe('Package', () => {
       expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
     });
 
-    it('should not remove date caret rules if date appears to be set by IG publisher (no time)', () => {
+    it('should not remove date caret rules if date appears to not be set by IG publisher (no time)', () => {
       const extension = new ExportableExtension('ExtraExtension');
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
@@ -1155,7 +1155,7 @@ describe('Package', () => {
       expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
     });
 
-    it('should not remove date caret rules if date appears to be set by IG publisher (different time zone)', () => {
+    it('should not remove date caret rules if date appears to not be set by IG publisher (different time zone)', () => {
       const extension = new ExportableExtension('ExtraExtension');
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
