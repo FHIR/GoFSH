@@ -627,6 +627,7 @@ describe('Package', () => {
       myPackage.optimize(processor);
       expect(profile.rules).toEqual([valueRule, extRule]);
     });
+
     // suppressUrlAssignmentOnExtensions
     it('should remove URL assignment rules on inline extensions on an extension', () => {
       const extension = new ExportableExtension('MyExtension');
@@ -655,6 +656,8 @@ describe('Package', () => {
     });
 
     it('should remove URL assignment rules on inline extensions on a profile', () => {
+      // Note that inline extensions on a profile are poor form, SUSHI allows it, but it is not valid
+      // FHIR and the IG Publisher will get mad
       const profile = new ExportableProfile('MyProfile');
       const containsRule = new ExportableContainsRule('extension');
       containsRule.items.push({ name: 'foo' });
