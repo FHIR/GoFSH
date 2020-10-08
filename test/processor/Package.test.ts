@@ -627,5 +627,101 @@ describe('Package', () => {
       myPackage.optimize(processor);
       expect(profile.rules).toEqual([valueRule, extRule]);
     });
+
+    // suppressUrlAssignmentOnExtensions
+    it('should remove URL assignment rules on inline extensions on an extension', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
+      assignmentRule.fixedValue = 'foo';
+      extension.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([containsRule]);
+    });
+
+    it('should remove URL assignment rules on inline extensions on a modifierExtension', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const containsRule = new ExportableContainsRule('modifierExtension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableFixedValueRule('modifierExtension[foo].url');
+      assignmentRule.fixedValue = 'foo';
+      extension.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([containsRule]);
+    });
+
+    it('should remove URL assignment rules on inline extensions on a profile', () => {
+      // Note that inline extensions on a profile are poor form, SUSHI allows it, but it is not valid
+      // FHIR and the IG Publisher will get mad
+      const profile = new ExportableProfile('MyProfile');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
+      assignmentRule.fixedValue = 'foo';
+      profile.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toEqual([containsRule]);
+    });
+
+    it('should not remove other URL rules on inline extensions on a profile', () => {
+      const profile = new ExportableProfile('MyProfile');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const flagRule = new ExportableFlagRule('extension[foo].url');
+      flagRule.mustSupport = true;
+      profile.rules = [containsRule, flagRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toEqual([containsRule, flagRule]);
+    });
+
+    it('should remove a URL assignment rule on an extension only when that URL matches the canonical', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const assignmentRule = new ExportableFixedValueRule('url');
+      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      extension.rules = [assignmentRule];
+      const myPackage = new Package();
+      myPackage.configuration = new ExportableConfiguration({
+        fhirVersion: ['4.0.1'],
+        canonical: 'http://example.org'
+      });
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([]);
+    });
+
+    it('should not remove a URL assignment rule on an extension when that URL does not match the canonical', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const assignmentRule = new ExportableFixedValueRule('url');
+      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      extension.rules = [assignmentRule];
+      const myPackage = new Package();
+      myPackage.configuration = new ExportableConfiguration({
+        fhirVersion: ['4.0.1'],
+        canonical: 'http://other-canonical.org'
+      });
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([assignmentRule]);
+    });
+
+    it('should not remove a URL assignment rule on an extension if there is no configuration', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const assignmentRule = new ExportableFixedValueRule('url');
+      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      extension.rules = [assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([assignmentRule]);
+    });
   });
 });
