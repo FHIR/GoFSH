@@ -374,9 +374,13 @@ export class Package {
       const DEFAULT_DATE = new ExportableCaretValueRule('');
       DEFAULT_DATE.caretPath = 'date';
       DEFAULT_DATE.value = date;
-      [...this.profiles, ...this.extensions, ...this.valueSets, ...this.codeSystems].forEach(resource => {
-        (resource.rules as ExportableRule[]) = (resource.rules as ExportableRule[]).filter(rule => !isEqual(rule, DEFAULT_DATE));
-      });
+      [...this.profiles, ...this.extensions, ...this.valueSets, ...this.codeSystems].forEach(
+        resource => {
+          (resource.rules as ExportableRule[]) = (resource.rules as ExportableRule[]).filter(
+            rule => !isEqual(rule, DEFAULT_DATE)
+          );
+        }
+      );
     }
   }
 }
