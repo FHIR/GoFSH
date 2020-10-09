@@ -11,7 +11,8 @@ import {
   ExportableContainsRule,
   ExportableOnlyRule,
   ExportableCaretValueRule,
-  ExportableFixedValueRule
+  ExportableFixedValueRule,
+  ExportableRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
@@ -368,19 +369,13 @@ export class Package {
     // See: http://hl7.org/fhir/R4/datatypes.html#dateTime
     const dateTimeRegex = /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$/;
     const dateTimeMatch = date.match(dateTimeRegex);
-    const usesGMT = dateTimeMatch ? date.endsWith('+00:00') : false; // If it is a valid FHIR dateTime, check that it uses GMT time zone
+    const usesGMT = dateTimeMatch && date.endsWith('+00:00'); // If it is a valid FHIR dateTime, check that it uses GMT time zone
     if (allDatesMatch && usesGMT) {
       const DEFAULT_DATE = new ExportableCaretValueRule('');
       DEFAULT_DATE.caretPath = 'date';
       DEFAULT_DATE.value = date;
-      [...this.profiles, ...this.extensions].forEach(sd => {
-        sd.rules = sd.rules.filter(rule => !isEqual(rule, DEFAULT_DATE));
-      });
-      this.valueSets.forEach(vs => {
-        vs.rules = vs.rules.filter(rule => !isEqual(rule, DEFAULT_DATE));
-      });
-      this.codeSystems.forEach(cs => {
-        cs.rules = cs.rules.filter(rule => !isEqual(rule, DEFAULT_DATE));
+      [...this.profiles, ...this.extensions, ...this.valueSets, ...this.codeSystems].forEach(resource => {
+        (resource.rules as ExportableRule[]) = (resource.rules as ExportableRule[]).filter(rule => !isEqual(rule, DEFAULT_DATE));
       });
     }
   }
