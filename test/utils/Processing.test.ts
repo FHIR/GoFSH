@@ -53,9 +53,9 @@ describe('Processing', () => {
       temp.cleanupSync();
     });
 
-    it('should use a directory named fsh as a default when no directory is provided', () => {
+    it('should use a directory named gofsh as a default when no directory is provided', () => {
       const result = ensureOutputDir(undefined);
-      expect(result).toBe('fsh');
+      expect(result).toBe('gofsh');
       expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
     });
 
