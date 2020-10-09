@@ -11,7 +11,7 @@ export function getInputDir(input = '.'): string {
   return input;
 }
 
-export function ensureOutputDir(output = path.join('.', 'fsh')): string {
+export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   try {
     fs.ensureDirSync(output);
   } catch (err) {}
