@@ -1,0 +1,62 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "ObservationWithCardAndSlices",
+  "snapshot": {
+    "element": [
+      {
+        "id": "Observation",
+        "path": "Observation"
+      },
+      {
+        "id": "Observation.component",
+        "path": "Observation.component",
+        "slicing": {
+          "discriminator": [ { "type": "value", "path": "code" }],
+          "ordered": false,
+          "rules": "open"
+        },
+        "min": 3
+      },
+      {
+        "id": "Observation.component:foo",
+        "path": "Observation.component",
+        "sliceName" : "foo",
+        "min": 1
+      },
+      {
+        "id": "Observation.component:bar",
+        "path": "Observation.component",
+        "sliceName" : "bar",
+        "min": 2
+      }
+    ]
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.component",
+        "path": "Observation.component",
+        "slicing": {
+          "discriminator": [ { "type": "value", "path": "code" }],
+          "ordered": false,
+          "rules": "open"
+        },
+        "min": 3
+      },
+      {
+        "id": "Observation.component:foo",
+        "path": "Observation.component",
+        "sliceName" : "foo",
+        "min": 1
+      },
+      {
+        "id": "Observation.component:bar",
+        "path": "Observation.component",
+        "sliceName" : "bar",
+        "min": 2
+      }
+    ]
+  }
+}

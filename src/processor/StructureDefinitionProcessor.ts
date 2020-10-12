@@ -51,7 +51,7 @@ export abstract class AbstractSDProcessor {
         );
       } else {
         newRules.push(
-          CardRuleExtractor.process(element),
+          CardRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
           AssignmentRuleExtractor.process(element),
           FlagRuleExtractor.process(element),

@@ -13,7 +13,10 @@ export function metadataToFSH(
     }
   } else if (definition instanceof ExportableExtension) {
     resultLines.push(`Extension: ${definition.name}`);
-    if (definition.parent != 'Extension') {
+    if (
+      definition.parent != 'Extension' &&
+      definition.parent != 'http://hl7.org/fhir/StructureDefinition/Extension'
+    ) {
       resultLines.push(`Parent: ${definition.parent}`);
     }
   } else if (definition instanceof ExportableCodeSystem) {

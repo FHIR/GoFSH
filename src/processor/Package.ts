@@ -10,7 +10,9 @@ import {
   ExportableCombinedCardFlagRule,
   ExportableContainsRule,
   ExportableOnlyRule,
-  ExportableCaretValueRule
+  ExportableCaretValueRule,
+  ExportableFixedValueRule,
+  ExportableRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
@@ -67,6 +69,9 @@ export class Package {
     this.suppressChoiceSlicingRules();
     this.removeDefaultExtensionContextRules();
     this.removeImpliedZeroToZeroCardRules();
+    this.suppressUrlAssignmentOnExtensions();
+    this.removeDefaultSlicingRules();
+    this.removeDateRules();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -227,5 +232,155 @@ export class Package {
       });
       pullAt(sd.rules, rulesToRemove);
     });
+  }
+
+  private suppressUrlAssignmentOnExtensions(): void {
+    // Loop over all profiles and extensions, removing assignment rules on inline extensions
+    // NOTE: Inline extensions on a profile are allowed by SUSHI, but they are technically not
+    // valid FHIR and the IG Publisher does not like this
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToRemove: number[] = [];
+      sd.rules.forEach(rule => {
+        if (rule instanceof ExportableContainsRule && /(modifierE|e)xtension$/.test(rule.path)) {
+          rule.items.forEach(item => {
+            const assignmentRuleIdx = sd.rules.findIndex(
+              other =>
+                other instanceof ExportableFixedValueRule &&
+                other.path === `${rule.path}[${item.name}].url` &&
+                other.fixedValue === item.name
+            );
+            if (assignmentRuleIdx >= 0) {
+              rulesToRemove.push(assignmentRuleIdx);
+            }
+          });
+        }
+      });
+      pullAt(sd.rules, rulesToRemove);
+    });
+    // We must know the configuration to determine if a rule fixing "url" matches the url that SUSHI will assume
+    if (this.configuration?.config?.canonical) {
+      this.extensions.forEach(extension => {
+        const rulesToRemove: number[] = [];
+        extension.rules.forEach((rule, i) => {
+          if (
+            rule instanceof ExportableFixedValueRule &&
+            rule.path === 'url' &&
+            rule.fixedValue ===
+              `${this.configuration.config.canonical}/StructureDefinition/${extension.id}`
+          ) {
+            rulesToRemove.push(i);
+          }
+        });
+        pullAt(extension.rules, rulesToRemove);
+      });
+    }
+  }
+
+  private removeDefaultSlicingRules(): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToMaybeRemove: number[] = [];
+      sd.rules.forEach((rule, i, allRules) => {
+        if (rule instanceof ExportableCaretValueRule && /(modifierE|e)xtension$/.test(rule.path)) {
+          // * path ^slicing.discriminator[0].type = #value
+          const DEFAULT_SLICING_DISCRIMINATOR_TYPE = new ExportableCaretValueRule(rule.path);
+          DEFAULT_SLICING_DISCRIMINATOR_TYPE.caretPath = 'slicing.discriminator[0].type';
+          DEFAULT_SLICING_DISCRIMINATOR_TYPE.value = new FshCode('value');
+          // * path ^slicing.discriminator[0].value = "url"
+          const DEFAULT_SLICING_DISCRIMINATOR_PATH = new ExportableCaretValueRule(rule.path);
+          DEFAULT_SLICING_DISCRIMINATOR_PATH.caretPath = 'slicing.discriminator[0].path';
+          DEFAULT_SLICING_DISCRIMINATOR_PATH.value = 'url';
+          // * path ^slicing.ordered = false
+          const DEFAULT_SLICING_ORDERED = new ExportableCaretValueRule(rule.path);
+          DEFAULT_SLICING_ORDERED.caretPath = 'slicing.ordered';
+          DEFAULT_SLICING_ORDERED.value = false;
+          // * path ^slicing.rules = #open
+          const DEFAULT_SLICING_RULES = new ExportableCaretValueRule(rule.path);
+          DEFAULT_SLICING_RULES.caretPath = 'slicing.rules';
+          DEFAULT_SLICING_RULES.value = new FshCode('open');
+          const hasContainsRule = allRules.some(
+            otherRule => otherRule instanceof ExportableContainsRule && otherRule.path === rule.path
+          );
+          const hasOneSlicingDiscriminatorRule = !allRules.some(
+            otherRule =>
+              otherRule.path === rule.path &&
+              otherRule instanceof ExportableCaretValueRule &&
+              otherRule.caretPath !== 'slicing.discriminator[0].type' &&
+              otherRule.caretPath !== 'slicing.discriminator[0].path' &&
+              otherRule.caretPath.startsWith('slicing.discriminator[')
+          );
+          if (
+            // One of the four default rules
+            (isEqual(rule, DEFAULT_SLICING_DISCRIMINATOR_TYPE) ||
+              isEqual(rule, DEFAULT_SLICING_DISCRIMINATOR_PATH) ||
+              isEqual(rule, DEFAULT_SLICING_ORDERED) ||
+              isEqual(rule, DEFAULT_SLICING_RULES)) &&
+            // Some contains rule at the same path
+            hasContainsRule &&
+            // No other slicing.discriminator rules at the same path
+            hasOneSlicingDiscriminatorRule
+          ) {
+            rulesToMaybeRemove.push(i);
+          }
+        }
+      });
+      // If four rules to maybe remove have the same path, then that's a full set of defaults, and they are removed
+      const rulesToRemove = flatten(
+        values(groupBy(rulesToMaybeRemove, i => sd.rules[i].path)).filter(
+          ruleGroup => ruleGroup.length === 4
+        )
+      );
+      pullAt(sd.rules, rulesToRemove);
+    });
+  }
+
+  private removeDateRules(): void {
+    let allDatesMatch = true;
+    let date: string;
+    for (const resource of [
+      ...this.profiles,
+      ...this.extensions,
+      ...this.valueSets,
+      ...this.codeSystems
+    ]) {
+      for (const rule of resource.rules) {
+        if (
+          rule instanceof ExportableCaretValueRule &&
+          rule.caretPath === 'date' &&
+          rule.path === ''
+        ) {
+          const dateValue = rule.value as string; // If the rule assigns a date, the value will be a string.
+          if (!date) date = dateValue; // Set the date to match
+          if (date !== dateValue) {
+            allDatesMatch = false;
+            return; // If any date hasn't matched the others, we don't want to remove any rules.
+          }
+        }
+      }
+    }
+
+    // If there are no date CaretValueRules found, just return.
+    if (date == null) {
+      return;
+    }
+
+    // If all dates are the same, are defined to the second, and are in GMT,
+    // we can assume they were set by the IG Publisher and can be safely removed.
+    // Make sure the value matches one allowed by the dateTime type in FHIR.
+    // See: http://hl7.org/fhir/R4/datatypes.html#dateTime
+    const dateTimeRegex = /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$/;
+    const dateTimeMatch = date.match(dateTimeRegex);
+    const usesGMT = dateTimeMatch && date.endsWith('+00:00'); // If it is a valid FHIR dateTime, check that it uses GMT time zone
+    if (allDatesMatch && usesGMT) {
+      const DEFAULT_DATE = new ExportableCaretValueRule('');
+      DEFAULT_DATE.caretPath = 'date';
+      DEFAULT_DATE.value = date;
+      [...this.profiles, ...this.extensions, ...this.valueSets, ...this.codeSystems].forEach(
+        resource => {
+          (resource.rules as ExportableRule[]) = (resource.rules as ExportableRule[]).filter(
+            rule => !isEqual(rule, DEFAULT_DATE)
+          );
+        }
+      );
+    }
   }
 }
