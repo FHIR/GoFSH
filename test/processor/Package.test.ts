@@ -664,5 +664,549 @@ describe('Package', () => {
       myPackage.optimize(processor);
       expect(profile.rules).toEqual([valueRule, extRule]);
     });
+
+    // suppressUrlAssignmentOnExtensions
+    it('should remove URL assignment rules on inline extensions on an extension', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
+      assignmentRule.fixedValue = 'foo';
+      extension.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([containsRule]);
+    });
+
+    it('should remove URL assignment rules on inline extensions on a modifierExtension', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const containsRule = new ExportableContainsRule('modifierExtension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableFixedValueRule('modifierExtension[foo].url');
+      assignmentRule.fixedValue = 'foo';
+      extension.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([containsRule]);
+    });
+
+    it('should remove URL assignment rules on inline extensions on a profile', () => {
+      // Note that inline extensions on a profile are poor form, SUSHI allows it, but it is not valid
+      // FHIR and the IG Publisher will get mad
+      const profile = new ExportableProfile('MyProfile');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
+      assignmentRule.fixedValue = 'foo';
+      profile.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toEqual([containsRule]);
+    });
+
+    it('should not remove other URL rules on inline extensions on a profile', () => {
+      const profile = new ExportableProfile('MyProfile');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const flagRule = new ExportableFlagRule('extension[foo].url');
+      flagRule.mustSupport = true;
+      profile.rules = [containsRule, flagRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toEqual([containsRule, flagRule]);
+    });
+
+    it('should remove a URL assignment rule on an extension only when that URL matches the canonical', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const assignmentRule = new ExportableFixedValueRule('url');
+      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      extension.rules = [assignmentRule];
+      const myPackage = new Package();
+      myPackage.configuration = new ExportableConfiguration({
+        fhirVersion: ['4.0.1'],
+        canonical: 'http://example.org'
+      });
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([]);
+    });
+
+    it('should not remove a URL assignment rule on an extension when that URL does not match the canonical', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const assignmentRule = new ExportableFixedValueRule('url');
+      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      extension.rules = [assignmentRule];
+      const myPackage = new Package();
+      myPackage.configuration = new ExportableConfiguration({
+        fhirVersion: ['4.0.1'],
+        canonical: 'http://other-canonical.org'
+      });
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([assignmentRule]);
+    });
+
+    it('should not remove a URL assignment rule on an extension if there is no configuration', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const assignmentRule = new ExportableFixedValueRule('url');
+      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      extension.rules = [assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toEqual([assignmentRule]);
+    });
+
+    it('should remove default slicing rules from profiles', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // Default slicing rules removed, only contains rule
+      expect(profile.rules[0]).toBeInstanceOf(ExportableContainsRule);
+    });
+
+    it('should not remove non-default slicing rules from profiles (different discriminator.type)', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('profile'); // Non-default type
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5); // No rules removed
+    });
+
+    it('should not remove non-default slicing rules from profiles (different discriminator.path)', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'system'; // Non-default path
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5); // No rules removed
+    });
+
+    it('should not remove non-default slicing rules from profiles (different ordered)', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = true; // Non-default ordered
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5); // No rules removed
+    });
+
+    it('should not remove non-default slicing rules from profiles (different rules)', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('closed'); // Non-default rules
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5); // No rules removed
+    });
+
+    it('should not remove default slicing rules from profiles if no contains rule follows', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      // No contains rule
+      profile.rules = [discriminatorTypeRule, discriminatorPathRule, orderedRule, rulesRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(4); // No rules removed
+    });
+
+    it('should not remove default slicing from profiles when additional discriminators present', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const defaultDiscriminatorTypeRule = new ExportableCaretValueRule('extension');
+      defaultDiscriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      defaultDiscriminatorTypeRule.value = new FshCode('value');
+      const defaultDiscriminatorPathRule = new ExportableCaretValueRule('extension');
+      defaultDiscriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      defaultDiscriminatorPathRule.value = 'url';
+      const otherDiscriminatorTypeRule = new ExportableCaretValueRule('extension');
+      otherDiscriminatorTypeRule.caretPath = 'slicing.discriminator[1].type';
+      otherDiscriminatorTypeRule.value = new FshCode('profile');
+      const otherDiscriminatorPathRule = new ExportableCaretValueRule('extension');
+      otherDiscriminatorPathRule.caretPath = 'slicing.discriminator[1].path';
+      otherDiscriminatorPathRule.value = 'system';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        defaultDiscriminatorTypeRule,
+        defaultDiscriminatorPathRule,
+        otherDiscriminatorTypeRule,
+        otherDiscriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(7); // No rules removed
+    });
+
+    it('should remove default slicing from profiles when additional discriminators present on other paths', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const defaultDiscriminatorTypeRule = new ExportableCaretValueRule('extension');
+      defaultDiscriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      defaultDiscriminatorTypeRule.value = new FshCode('value');
+      const defaultDiscriminatorPathRule = new ExportableCaretValueRule('extension');
+      defaultDiscriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      defaultDiscriminatorPathRule.value = 'url';
+      const otherDiscriminatorTypeRuleA = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorTypeRuleA.caretPath = 'slicing.discriminator[0].type';
+      otherDiscriminatorTypeRuleA.value = new FshCode('profile');
+      const otherDiscriminatorPathRuleA = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorPathRuleA.caretPath = 'slicing.discriminator[0].path';
+      otherDiscriminatorPathRuleA.value = 'system';
+      const otherDiscriminatorTypeRuleB = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorTypeRuleB.caretPath = 'slicing.discriminator[1].type';
+      otherDiscriminatorTypeRuleB.value = new FshCode('profile');
+      const otherDiscriminatorPathRuleB = new ExportableCaretValueRule('status.extension');
+      otherDiscriminatorPathRuleB.caretPath = 'slicing.discriminator[1].path';
+      otherDiscriminatorPathRuleB.value = 'system';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        defaultDiscriminatorTypeRule,
+        defaultDiscriminatorPathRule,
+        otherDiscriminatorTypeRuleA,
+        otherDiscriminatorPathRuleA,
+        otherDiscriminatorTypeRuleB,
+        otherDiscriminatorPathRuleB,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5); // Default rules on extension removed, rules on status.extension not removed
+    });
+
+    it('should not remove default slicing from profiles if any default is missing', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('status');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open'); // Default rule on different path
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(5); // No rules removed
+    });
+
+    it('should remove default slicing on modifierExtensions on profiles', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('modifierExtension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('modifierExtension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('modifierExtension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('modifierExtension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('modifierExtension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // Default slicing rules removed, only contains rule
+      expect(profile.rules[0]).toBeInstanceOf(ExportableContainsRule);
+    });
+
+    it('should remove default slicing on any path from profiles', () => {
+      const profile = new ExportableProfile('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('status.extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('status.extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('status.extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('status.extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('status.extension');
+      containsRule.items.push({ name: 'foo' });
+      profile.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // Default slicing rules removed, only contains rule
+      expect(profile.rules[0]).toBeInstanceOf(ExportableContainsRule);
+    });
+
+    it('should remove default slicing from extensions', () => {
+      const extension = new ExportableExtension('ProfileWithSlice');
+      const discriminatorTypeRule = new ExportableCaretValueRule('extension');
+      discriminatorTypeRule.caretPath = 'slicing.discriminator[0].type';
+      discriminatorTypeRule.value = new FshCode('value');
+      const discriminatorPathRule = new ExportableCaretValueRule('extension');
+      discriminatorPathRule.caretPath = 'slicing.discriminator[0].path';
+      discriminatorPathRule.value = 'url';
+      const orderedRule = new ExportableCaretValueRule('extension');
+      orderedRule.caretPath = 'slicing.ordered';
+      orderedRule.value = false;
+      const rulesRule = new ExportableCaretValueRule('extension');
+      rulesRule.caretPath = 'slicing.rules';
+      rulesRule.value = new FshCode('open');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      extension.rules = [
+        discriminatorTypeRule,
+        discriminatorPathRule,
+        orderedRule,
+        rulesRule,
+        containsRule
+      ];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.rules).toHaveLength(1); // Default slicing rules removed, only contains rule
+      expect(extension.rules[0]).toBeInstanceOf(ExportableContainsRule);
+    });
+
+    it('should remove date caret rules if date appears to be set by IG publisher', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const valueSet = new ExportableValueSet('ExtraValueSet');
+      const codeSystem = new ExportableCodeSystem('ExtraCodeSystem');
+      const dateCaretRule = new ExportableCaretValueRule('');
+      dateCaretRule.caretPath = 'date';
+      dateCaretRule.value = '2020-03-24T22:19:43+00:00';
+      profile.rules = [dateCaretRule];
+      extension.rules = [dateCaretRule];
+      valueSet.rules = [dateCaretRule];
+      codeSystem.rules = [dateCaretRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.add(valueSet);
+      myPackage.add(codeSystem);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(extension.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(valueSet.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(codeSystem.rules).toHaveLength(0); // date CaretValueRule removed
+    });
+
+    it('should not remove date caret rules if date appears to not be set by IG publisher (different dates)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const dateCaretRule1 = new ExportableCaretValueRule('');
+      dateCaretRule1.caretPath = 'date';
+      dateCaretRule1.value = '2020-12-01T04:12:06+00:00'; // different from date2
+      const dateCaretRule2 = new ExportableCaretValueRule('');
+      dateCaretRule2.caretPath = 'date';
+      dateCaretRule2.value = '2020-03-24T22:19:43+00:00'; // different from date1
+      profile.rules = [dateCaretRule1];
+      extension.rules = [dateCaretRule2];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // date CaretValueRule is not removed
+      expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
+    });
+
+    it('should not remove date caret rules if date appears to not be set by IG publisher (no time)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const dateCaretRule = new ExportableCaretValueRule('');
+      dateCaretRule.caretPath = 'date';
+      dateCaretRule.value = '2020-03-24'; // No time specified (FHIR does not allow a time without a timezone)
+      profile.rules = [dateCaretRule];
+      extension.rules = [dateCaretRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // date CaretValueRule is not removed
+      expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
+    });
+
+    it('should not remove date caret rules if date appears to not be set by IG publisher (different time zone)', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+      const dateCaretRule = new ExportableCaretValueRule('');
+      dateCaretRule.caretPath = 'date';
+      dateCaretRule.value = '2020-03-24T22:19:43+04:00'; // Different timezone, not GMT
+      profile.rules = [dateCaretRule];
+      extension.rules = [dateCaretRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(profile.rules).toHaveLength(1); // date CaretValueRule is not removed
+      expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
+    });
   });
 });
