@@ -633,8 +633,8 @@ describe('Package', () => {
       const extension = new ExportableExtension('MyExtension');
       const containsRule = new ExportableContainsRule('extension');
       containsRule.items.push({ name: 'foo' });
-      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
-      assignmentRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('extension[foo].url');
+      assignmentRule.value = 'foo';
       extension.rules = [containsRule, assignmentRule];
       const myPackage = new Package();
       myPackage.add(extension);
@@ -646,8 +646,8 @@ describe('Package', () => {
       const extension = new ExportableExtension('MyExtension');
       const containsRule = new ExportableContainsRule('modifierExtension');
       containsRule.items.push({ name: 'foo' });
-      const assignmentRule = new ExportableFixedValueRule('modifierExtension[foo].url');
-      assignmentRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('modifierExtension[foo].url');
+      assignmentRule.value = 'foo';
       extension.rules = [containsRule, assignmentRule];
       const myPackage = new Package();
       myPackage.add(extension);
@@ -661,8 +661,8 @@ describe('Package', () => {
       const profile = new ExportableProfile('MyProfile');
       const containsRule = new ExportableContainsRule('extension');
       containsRule.items.push({ name: 'foo' });
-      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
-      assignmentRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('extension[foo].url');
+      assignmentRule.value = 'foo';
       profile.rules = [containsRule, assignmentRule];
       const myPackage = new Package();
       myPackage.add(profile);
@@ -685,8 +685,8 @@ describe('Package', () => {
 
     it('should remove a URL assignment rule on an extension only when that URL matches the canonical', () => {
       const extension = new ExportableExtension('MyExtension');
-      const assignmentRule = new ExportableFixedValueRule('url');
-      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      const assignmentRule = new ExportableAssignmentRule('url');
+      assignmentRule.value = 'http://example.org/StructureDefinition/MyExtension';
       extension.rules = [assignmentRule];
       const myPackage = new Package();
       myPackage.configuration = new ExportableConfiguration({
@@ -700,8 +700,8 @@ describe('Package', () => {
 
     it('should not remove a URL assignment rule on an extension when that URL does not match the canonical', () => {
       const extension = new ExportableExtension('MyExtension');
-      const assignmentRule = new ExportableFixedValueRule('url');
-      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      const assignmentRule = new ExportableAssignmentRule('url');
+      assignmentRule.value = 'http://example.org/StructureDefinition/MyExtension';
       extension.rules = [assignmentRule];
       const myPackage = new Package();
       myPackage.configuration = new ExportableConfiguration({
@@ -715,8 +715,8 @@ describe('Package', () => {
 
     it('should not remove a URL assignment rule on an extension if there is no configuration', () => {
       const extension = new ExportableExtension('MyExtension');
-      const assignmentRule = new ExportableFixedValueRule('url');
-      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      const assignmentRule = new ExportableAssignmentRule('url');
+      assignmentRule.value = 'http://example.org/StructureDefinition/MyExtension';
       extension.rules = [assignmentRule];
       const myPackage = new Package();
       myPackage.add(extension);
