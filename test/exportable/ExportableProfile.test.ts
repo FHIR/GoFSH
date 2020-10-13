@@ -3,7 +3,7 @@ import {
   ExportableProfile,
   ExportableCardRule,
   ExportableFlagRule,
-  ExportableValueSetRule
+  ExportableBindingRule
 } from '../../src/exportable';
 
 describe('ExportableProfile', () => {
@@ -62,10 +62,10 @@ describe('ExportableProfile', () => {
     flagRule.summary = true;
     input.rules.push(flagRule);
 
-    const valueSetRule = new ExportableValueSetRule('maritalStatus');
-    valueSetRule.valueSet = 'http://example.org/ValueSet/MaritalStatus';
-    valueSetRule.strength = 'required';
-    input.rules.push(valueSetRule);
+    const bindingRule = new ExportableBindingRule('maritalStatus');
+    bindingRule.valueSet = 'http://example.org/ValueSet/MaritalStatus';
+    bindingRule.strength = 'required';
+    input.rules.push(bindingRule);
 
     const expectedResult = [
       'Profile: MyPatient',

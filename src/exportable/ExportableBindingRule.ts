@@ -1,7 +1,7 @@
 import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
-export class ExportableValueSetRule extends fshrules.ValueSetRule implements ExportableRule {
+export class ExportableBindingRule extends fshrules.BindingRule implements ExportableRule {
   constructor(path: string) {
     super(path);
   }
