@@ -1,0 +1,33 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "MyObservation",
+  "id": "my-profile",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.note",
+        "path": "Observation.note",
+        "constraint": [
+          {
+            "key": "myo-1",
+            "severity": "warning",
+            "human": "First appearance of invariant with key myo-1."
+          }
+        ]
+      },
+      {
+        "id": "Observation.method",
+        "path": "Observation.method",
+        "constraint": [
+          {
+            "key": "myo-1",
+            "severity": "warning",
+            "human": "Second appearance of invariant with key myo-1."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -69,10 +69,15 @@ export abstract class AbstractSDProcessor {
     target.rules = compact(newRules);
   }
 
-  static extractInvariants(elements: ProcessableElementDefinition[]): ExportableInvariant[] {
+  static extractInvariants(
+    elements: ProcessableElementDefinition[],
+    existingInvariants: ExportableInvariant[]
+  ): ExportableInvariant[] {
     const invariants: ExportableInvariant[] = [];
     elements.forEach(element => {
-      invariants.push(...InvariantExtractor.process(element));
+      invariants.push(
+        ...InvariantExtractor.process(element, [...existingInvariants, ...invariants])
+      );
     });
     return invariants;
   }

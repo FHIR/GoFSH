@@ -26,7 +26,7 @@ export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
   logger.info(`Found ${files.length} JSON files.`);
   files.forEach(file => {
     try {
-      processor.process(file).forEach(resource => {
+      processor.process(file, resources.invariants).forEach(resource => {
         resources.add(resource);
       });
     } catch (ex) {

@@ -7,8 +7,10 @@ export class ObeysRuleExtractor {
     const invariantKeys: string[] = [];
     if (input.constraint?.length > 0) {
       input.constraint.forEach((constraint, i) => {
-        invariantKeys.push(constraint.key);
-        input.processedPaths.push(`constraint[${i}].key`);
+        // if the element's key was processed, that means an Invariant exists, and we should add an ObeysRule.
+        if (input.processedPaths.includes(`constraint[${i}].key`)) {
+          invariantKeys.push(constraint.key);
+        }
       });
     }
     if (invariantKeys.length) {

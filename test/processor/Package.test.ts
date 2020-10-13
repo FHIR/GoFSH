@@ -67,36 +67,6 @@ describe('Package', () => {
       expect(myPackage.invariants[0]).toBe(myInvariant);
     });
 
-    it('should not add an ExportableInvariant that is already present in the invariants array', () => {
-      const firstInvariant = new ExportableInvariant('inv-2');
-      firstInvariant.description = 'Follow this rule!';
-      const secondInvariant = new ExportableInvariant('inv-2');
-      secondInvariant.description = 'Follow this rule!';
-
-      myPackage.add(firstInvariant);
-      expect(myPackage.invariants).toHaveLength(1);
-      myPackage.add(secondInvariant);
-      expect(myPackage.invariants).toHaveLength(1);
-      expect(loggerSpy.getAllLogs('error')).toHaveLength(0);
-    });
-
-    it('should log an error and not add an ExportableInvariant when a different ExportableInvariant with the same name is in the invariants array', () => {
-      const firstInvariant = new ExportableInvariant('inv-3');
-      firstInvariant.description = 'Follow this rule!';
-      const secondInvariant = new ExportableInvariant('inv-3');
-      secondInvariant.description = 'Do this instead!';
-
-      myPackage.add(firstInvariant);
-      expect(myPackage.invariants).toHaveLength(1);
-      myPackage.add(secondInvariant);
-      expect(myPackage.invariants).toHaveLength(1);
-      expect(myPackage.invariants).toContainEqual(firstInvariant);
-      expect(myPackage.invariants).not.toContainEqual(secondInvariant);
-      expect(loggerSpy.getLastMessage('error')).toMatch(
-        /Cannot add invariant: different invariant with name inv-3 already found/s
-      );
-    });
-
     it('should set the configuration when adding an ExportableConfiguration', () => {
       const myConfiguration = new ExportableConfiguration({
         canonical: 'https://demo.org',

@@ -129,6 +129,35 @@ describe('ProfileProcessor', () => {
       expect(invariants).toHaveLength(1);
       expect(invariants).toContainEqual(weatherInvariant);
     });
+
+    it('should create an invariant for the first instance of a constraint key and caret value rules for other instances of that constraint key', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'reused-invariant-profile.json'), 'utf-8')
+      );
+      const result = ProfileProcessor.process(input, defs);
+      const invariants = result.filter(resource => resource instanceof ExportableInvariant);
+      const profile = result.find(
+        resource => resource instanceof ExportableProfile
+      ) as ExportableProfile;
+      const onlyInvariant = new ExportableInvariant('myo-1');
+      onlyInvariant.description = 'First appearance of invariant with key myo-1.';
+      onlyInvariant.severity = new fshtypes.FshCode('warning');
+      const constraintKey = new ExportableCaretValueRule('method');
+      constraintKey.caretPath = 'constraint[0].key';
+      constraintKey.value = 'myo-1';
+      const constraintSeverity = new ExportableCaretValueRule('method');
+      constraintSeverity.caretPath = 'constraint[0].severity';
+      constraintSeverity.value = new fshtypes.FshCode('warning');
+      const constraintHuman = new ExportableCaretValueRule('method');
+      constraintHuman.caretPath = 'constraint[0].human';
+      constraintHuman.value = 'Second appearance of invariant with key myo-1.';
+
+      expect(invariants).toHaveLength(1);
+      expect(invariants).toContainEqual(onlyInvariant);
+      expect(profile.rules).toContainEqual(constraintKey);
+      expect(profile.rules).toContainEqual(constraintSeverity);
+      expect(profile.rules).toContainEqual(constraintHuman);
+    });
   });
 
   it('should convert a profile that has a baseDefinition', () => {

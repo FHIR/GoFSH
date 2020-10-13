@@ -17,7 +17,7 @@ describe('InvariantExtractor', () => {
 
   it('should extract invariants from an element with one constraint', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
-    const invariants = InvariantExtractor.process(element);
+    const invariants = InvariantExtractor.process(element, []);
     const rootInvariant = new ExportableInvariant('zig-1');
     rootInvariant.severity = new FshCode('warning');
     rootInvariant.description = 'This is a constraint on the root element.';
@@ -31,7 +31,7 @@ describe('InvariantExtractor', () => {
 
   it('should extract invariants from an element with multiple constraints', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-    const invariants = InvariantExtractor.process(element);
+    const invariants = InvariantExtractor.process(element, []);
     const expressionInvariant = new ExportableInvariant('zig-2');
     expressionInvariant.severity = new FshCode('error');
     expressionInvariant.description = 'This constraint has an expression.';
@@ -67,7 +67,28 @@ describe('InvariantExtractor', () => {
 
   it('should extract no invariants from an element with no constraints', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-    const invariants = InvariantExtractor.process(element);
+    const invariants = InvariantExtractor.process(element, []);
+    expect(invariants).toHaveLength(0);
+    expect(element.processedPaths).toHaveLength(0);
+  });
+
+  it('should not extract an invariant and should process paths if an equal invariant already exists', () => {
+    const existingInvariant = new ExportableInvariant('zig-1');
+    existingInvariant.severity = new FshCode('warning');
+    existingInvariant.description = 'This is a constraint on the root element.';
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
+    const invariants = InvariantExtractor.process(element, [existingInvariant]);
+    expect(invariants).toHaveLength(0);
+    expect(element.processedPaths).toHaveLength(3);
+    expect(element.processedPaths).toContainEqual('constraint[0].key');
+    expect(element.processedPaths).toContainEqual('constraint[0].severity');
+    expect(element.processedPaths).toContainEqual('constraint[0].human');
+  });
+
+  it('should not extract an invariant nor process paths if a non-equal invariant with a matching key already exists', () => {
+    const existingInvariant = new ExportableInvariant('zig-1');
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
+    const invariants = InvariantExtractor.process(element, [existingInvariant]);
     expect(invariants).toHaveLength(0);
     expect(element.processedPaths).toHaveLength(0);
   });

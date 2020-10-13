@@ -53,20 +53,7 @@ export class Package {
     } else if (resource instanceof ExportableCodeSystem) {
       this.codeSystems.push(resource);
     } else if (resource instanceof ExportableInvariant) {
-      // An invariant may be used in more than one place, but should only be added to the package once.
-      const matchingInvariant = this.invariants.find(
-        existingInvariant => existingInvariant.name === resource.name
-      );
-      if (matchingInvariant) {
-        // If two invariants have the same name, they should be equal.
-        if (!isEqual(matchingInvariant, resource)) {
-          logger.error(
-            `Cannot add invariant: different invariant with name ${resource.name} already found.`
-          );
-        }
-      } else {
-        this.invariants.push(resource);
-      }
+      this.invariants.push(resource);
     } else if (resource instanceof ExportableConfiguration) {
       if (this.configuration) {
         logger.warn(

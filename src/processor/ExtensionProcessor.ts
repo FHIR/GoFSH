@@ -8,7 +8,8 @@ import { ProcessableElementDefinition } from '.';
 export class ExtensionProcessor extends AbstractSDProcessor {
   static process(
     input: any,
-    fhir: fhirdefs.FHIRDefinitions
+    fhir: fhirdefs.FHIRDefinitions,
+    existingInvariants: ExportableInvariant[] = []
   ): [ExportableExtension, ...ExportableInvariant[]] | [] {
     if (ExtensionProcessor.isProcessableStructureDefinition(input)) {
       const extension = new ExportableExtension(input.name);
@@ -17,7 +18,7 @@ export class ExtensionProcessor extends AbstractSDProcessor {
           return ProcessableElementDefinition.fromJSON(rawElement, false);
         }) ?? [];
       ExtensionProcessor.extractKeywords(input, extension);
-      const invariants = ExtensionProcessor.extractInvariants(elements);
+      const invariants = ExtensionProcessor.extractInvariants(elements, existingInvariants);
       ExtensionProcessor.extractRules(input, elements, extension, fhir);
       return [extension, ...invariants];
     }

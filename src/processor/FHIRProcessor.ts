@@ -22,7 +22,8 @@ export class FHIRProcessor {
   }
 
   process(
-    inputPath: string
+    inputPath: string,
+    existingInvariants: ExportableInvariant[] = []
   ): (
     | ExportableProfile
     | ExportableExtension
@@ -38,10 +39,10 @@ export class FHIRProcessor {
       this.structureDefinitions.push(rawContent);
       if (rawContent.type === 'Extension') {
         logger.debug(`Processing contents of ${inputPath} as Extension.`);
-        return ExtensionProcessor.process(rawContent, this.fhir);
+        return ExtensionProcessor.process(rawContent, this.fhir, existingInvariants);
       } else {
         logger.debug(`Processing contents of ${inputPath} as Profile.`);
-        return ProfileProcessor.process(rawContent, this.fhir);
+        return ProfileProcessor.process(rawContent, this.fhir, existingInvariants);
       }
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       logger.debug(`Processing contents of ${inputPath} as CodeSystem.`);
