@@ -11,6 +11,7 @@ export * from './ExportableFixedValueRule';
 export * from './ExportableFlagRule';
 export * from './ExportableInsertRule';
 export * from './ExportableInstance';
+export * from './ExportableInvariant';
 export * from './ExportableObeysRule';
 export * from './ExportableOnlyRule';
 export * from './ExportableProfile';
