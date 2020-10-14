@@ -4,9 +4,9 @@ import { ExportableSdRule, ExportableInvariant } from '../exportable';
 import {
   CardRuleExtractor,
   CaretValueRuleExtractor,
-  FixedValueRuleExtractor,
+  AssignmentRuleExtractor,
   FlagRuleExtractor,
-  ValueSetRuleExtractor,
+  BindingRuleExtractor,
   ContainsRuleExtractor,
   OnlyRuleExtractor,
   ObeysRuleExtractor,
@@ -48,17 +48,17 @@ export abstract class AbstractSDProcessor {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
-          FixedValueRuleExtractor.process(element),
-          ValueSetRuleExtractor.process(element),
+          AssignmentRuleExtractor.process(element),
+          BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
         );
       } else {
         newRules.push(
           CardRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
-          FixedValueRuleExtractor.process(element),
+          AssignmentRuleExtractor.process(element),
           FlagRuleExtractor.process(element),
-          ValueSetRuleExtractor.process(element),
+          BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
         );
       }

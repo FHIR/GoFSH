@@ -5,10 +5,10 @@ import {
   ExportableCardRule,
   ExportableCaretValueRule,
   ExportableContainsRule,
-  ExportableFixedValueRule,
-  ExportableProfile,
   ExportableObeysRule,
-  ExportableInvariant
+  ExportableInvariant,
+  ExportableAssignmentRule,
+  ExportableProfile
 } from '../../src/exportable';
 import '../helpers/loggerSpy'; // suppresses console logging
 import { fhirdefs, fshtypes } from 'fsh-sushi';
@@ -66,8 +66,8 @@ describe('ProfileProcessor', () => {
       ) as ExportableProfile;
       const cardRule = new ExportableCardRule('valueString');
       cardRule.min = 1;
-      const fixedValueRule = new ExportableFixedValueRule('valueString');
-      fixedValueRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('valueString');
+      assignmentRule.value = 'foo';
       const caretRule = new ExportableCaretValueRule('valueString');
       caretRule.caretPath = 'short';
       caretRule.value = 'bar';
@@ -76,7 +76,7 @@ describe('ProfileProcessor', () => {
 
       expect(profile.rules.length).toBe(4);
       expect(profile.rules).toContainEqual<ExportableCardRule>(cardRule);
-      expect(profile.rules).toContainEqual<ExportableFixedValueRule>(fixedValueRule);
+      expect(profile.rules).toContainEqual<ExportableAssignmentRule>(assignmentRule);
       expect(profile.rules).toContainEqual<ExportableCaretValueRule>(caretRule);
       expect(profile.rules).toContainEqual<ExportableObeysRule>(obeysRule);
     });
