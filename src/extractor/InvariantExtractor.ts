@@ -35,7 +35,9 @@ export class InvariantExtractor {
         // if the new invariant would be an exact match of the existing invariant, mark the paths as
         // processed so an ObeysRule is created and no CaretValueRules are created.
         // if the new invariant has a key match but isn't an exact match, it will be created using CaretValueRules.
-        const matchingKeyInvariant = existingInvariants.find(inv => inv.name === constraint.key);
+        const matchingKeyInvariant = [...existingInvariants, ...invariants].find(
+          inv => inv.name === constraint.key
+        );
         if (matchingKeyInvariant) {
           if (isEqual(matchingKeyInvariant, invariant)) {
             input.processedPaths.push(...constraintPaths);
