@@ -99,8 +99,7 @@ describe('ExportableExtension', () => {
     input.rules.push(flagRule);
 
     const bindingRule = new ExportableBindingRule('value[x]');
-    bindingRule.
-      = 'http://example.org/ValueSet/Foo';
+    bindingRule.valueSet = 'http://example.org/ValueSet/Foo';
     bindingRule.strength = 'required';
     input.rules.push(bindingRule);
 
