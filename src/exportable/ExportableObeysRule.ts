@@ -9,6 +9,6 @@ export class ExportableObeysRule extends fshrules.ObeysRule implements Exportabl
   }
 
   toFSH(): string {
-    return '// Unimplemented: obeys rule';
+    return `* ${this.path === '.' ? '' : `${this.path} `}obeys ${this.keys.join(' and ')}`;
   }
 }

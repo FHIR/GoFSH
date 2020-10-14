@@ -1,8 +1,13 @@
 import { EOL } from 'os';
-import { ExportableProfile, ExportableExtension, ExportableCodeSystem } from '.';
+import {
+  ExportableProfile,
+  ExportableExtension,
+  ExportableCodeSystem,
+  ExportableInvariant
+} from '.';
 
 export function metadataToFSH(
-  definition: ExportableProfile | ExportableExtension | ExportableCodeSystem
+  definition: ExportableProfile | ExportableExtension | ExportableCodeSystem | ExportableInvariant
 ): string {
   const resultLines: string[] = [];
   if (definition instanceof ExportableProfile) {
@@ -21,16 +26,32 @@ export function metadataToFSH(
     }
   } else if (definition instanceof ExportableCodeSystem) {
     resultLines.push(`CodeSystem: ${definition.name}`);
+  } else if (definition instanceof ExportableInvariant) {
+    resultLines.push(`Invariant: ${definition.name}`);
   }
 
-  if (definition.id) {
-    resultLines.push(`Id: ${definition.id}`);
-  }
-  if (definition.title) {
-    resultLines.push(`Title: "${fshifyString(definition.title)}"`);
+  // Invariants do not use the Id and Title keywords
+  if (!(definition instanceof ExportableInvariant)) {
+    if (definition.id) {
+      resultLines.push(`Id: ${definition.id}`);
+    }
+    if (definition.title) {
+      resultLines.push(`Title: "${fshifyString(definition.title)}"`);
+    }
   }
   if (definition.description) {
     resultLines.push(`Description: "${fshifyString(definition.description)}"`);
+  }
+  if (definition instanceof ExportableInvariant) {
+    if (definition.severity) {
+      resultLines.push(`Severity: ${definition.severity}`);
+    }
+    if (definition.expression) {
+      resultLines.push(`Expression: "${fshifyString(definition.expression)}"`);
+    }
+    if (definition.xpath) {
+      resultLines.push(`XPath: "${fshifyString(definition.xpath)}"`);
+    }
   }
   return resultLines.join(EOL);
 }
