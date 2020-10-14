@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { CardRuleExtractor } from '../../src/rule-extractor';
+import { CardRuleExtractor } from '../../src/extractor';
 import { ExportableCardRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { fhirdefs } from 'fsh-sushi';

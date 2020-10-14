@@ -13,6 +13,7 @@ import {
 } from '../../src/utils/Processing';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { Package } from '../../src/processor';
+import { ExportableInvariant } from '../../src/exportable';
 
 describe('Processing', () => {
   temp.track();
@@ -84,10 +85,17 @@ describe('Processing', () => {
       const result = getResources(inDir, undefined);
       expect(result instanceof Package).toBeTruthy();
       expect(processSpy).toHaveBeenCalledTimes(3);
-      expect(processSpy).toHaveBeenCalledWith<[string]>(path.join(inDir, 'simple-profile.json'));
-      expect(processSpy).toHaveBeenCalledWith<[string]>(path.join(inDir, 'other-resource.json'));
-      expect(processSpy).toHaveBeenCalledWith<[string]>(
-        path.join(inDir, 'more-things', 'another-resource.json')
+      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
+        path.join(inDir, 'simple-profile.json'),
+        []
+      );
+      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
+        path.join(inDir, 'other-resource.json'),
+        []
+      );
+      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
+        path.join(inDir, 'more-things', 'another-resource.json'),
+        []
       );
     });
 
@@ -96,7 +104,10 @@ describe('Processing', () => {
       const result = getResources(inDir, undefined);
       expect(result instanceof Package).toBeTruthy();
       expect(processSpy).toHaveBeenCalledTimes(1);
-      expect(processSpy).toHaveBeenCalledWith<[string]>(path.join(inDir));
+      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
+        path.join(inDir),
+        []
+      );
     });
 
     it('should throw an error when the input directory does not exist', () => {

@@ -4,6 +4,7 @@ import {
   ExportableInstance,
   ExportableValueSet,
   ExportableCodeSystem,
+  ExportableInvariant,
   ExportableConfiguration,
   ExportableFlagRule,
   ExportableCardRule,
@@ -26,6 +27,7 @@ export class Package {
   public readonly instances: ExportableInstance[] = [];
   public readonly valueSets: ExportableValueSet[] = [];
   public readonly codeSystems: ExportableCodeSystem[] = [];
+  public readonly invariants: ExportableInvariant[] = [];
   public configuration: ExportableConfiguration;
 
   constructor() {}
@@ -37,6 +39,7 @@ export class Package {
       | ExportableInstance
       | ExportableValueSet
       | ExportableCodeSystem
+      | ExportableInvariant
       | ExportableConfiguration
   ) {
     if (resource instanceof ExportableProfile) {
@@ -49,6 +52,8 @@ export class Package {
       this.valueSets.push(resource);
     } else if (resource instanceof ExportableCodeSystem) {
       this.codeSystems.push(resource);
+    } else if (resource instanceof ExportableInvariant) {
+      this.invariants.push(resource);
     } else if (resource instanceof ExportableConfiguration) {
       if (this.configuration) {
         logger.warn(

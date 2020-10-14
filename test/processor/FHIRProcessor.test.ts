@@ -47,6 +47,7 @@ describe('FHIRProcessor', () => {
       processor.process(path.join(__dirname, 'fixtures', 'wrong-path.json'));
     }).toThrow();
   });
+
   it('should throw an error when the input file is not valid JSON', () => {
     expect(() => {
       processor.process(path.join(__dirname, 'invalid-fixtures', 'invalid-profile.json'));

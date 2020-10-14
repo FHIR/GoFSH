@@ -7,20 +7,24 @@
   "differential": {
     "element": [
       {
-        "id": "Observation.valueString",
-        "path": "Observation.valueString",
-        "min": 1,
-        "patternString": "foo",
-        "short": "bar"
-      },
-      {
         "id": "Observation.note",
         "path": "Observation.note",
         "constraint": [
           {
             "key": "myo-1",
             "severity": "warning",
-            "human": "SHALL include the weather."
+            "human": "First appearance of invariant with key myo-1."
+          }
+        ]
+      },
+      {
+        "id": "Observation.method",
+        "path": "Observation.method",
+        "constraint": [
+          {
+            "key": "myo-1",
+            "severity": "warning",
+            "human": "Second appearance of invariant with key myo-1."
           }
         ]
       }

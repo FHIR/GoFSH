@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { fshrules } from 'fsh-sushi';
-import { BindingRuleExtractor } from '../../src/rule-extractor';
+import { BindingRuleExtractor } from '../../src/extractor';
 import { ProcessableElementDefinition } from '../../src/processor';
 
 describe('BindingRuleExtractor', () => {

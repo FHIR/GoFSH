@@ -8,6 +8,7 @@ import {
   ExportableValueSet,
   ExportableCodeSystem,
   ExportableConfiguration,
+  ExportableInvariant,
   ExportableCardRule,
   ExportableFlagRule,
   ExportableContainsRule,
@@ -58,6 +59,12 @@ describe('Package', () => {
       const myCodeSystem = new ExportableCodeSystem('MyCodeSystem');
       myPackage.add(myCodeSystem);
       expect(myPackage.codeSystems[0]).toBe(myCodeSystem);
+    });
+
+    it('should add an ExportableInvariant to the invariants array', () => {
+      const myInvariant = new ExportableInvariant('inv-1');
+      myPackage.add(myInvariant);
+      expect(myPackage.invariants[0]).toBe(myInvariant);
     });
 
     it('should set the configuration when adding an ExportableConfiguration', () => {

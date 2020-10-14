@@ -1,6 +1,6 @@
 import compact from 'lodash/compact';
 import { fhirdefs } from 'fsh-sushi';
-import { ExportableSdRule } from '../exportable';
+import { ExportableSdRule, ExportableInvariant } from '../exportable';
 import {
   CardRuleExtractor,
   CaretValueRuleExtractor,
@@ -8,8 +8,10 @@ import {
   FlagRuleExtractor,
   BindingRuleExtractor,
   ContainsRuleExtractor,
-  OnlyRuleExtractor
-} from '../rule-extractor';
+  OnlyRuleExtractor,
+  ObeysRuleExtractor,
+  InvariantExtractor
+} from '../extractor';
 import { ProcessableElementDefinition } from '.';
 import { getAncestorElement } from '../utils';
 
@@ -33,6 +35,7 @@ export abstract class AbstractSDProcessor {
 
   static extractRules(
     input: ProcessableStructureDefinition,
+    elements: ProcessableElementDefinition[],
     target: ConstrainableEntity,
     fhir: fhirdefs.FHIRDefinitions
   ): void {
@@ -40,14 +43,14 @@ export abstract class AbstractSDProcessor {
     // First extract the top-level caret rules from the StructureDefinition
     newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fhir));
     // Then extract rules based on the differential elements
-    for (const rawElement of input?.differential?.element ?? []) {
-      const element = ProcessableElementDefinition.fromJSON(rawElement, false);
+    elements.forEach(element => {
       if (element.sliceName && getAncestorElement(element.id, input, fhir) == null) {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
           AssignmentRuleExtractor.process(element),
-          BindingRuleExtractor.process(element)
+          BindingRuleExtractor.process(element),
+          ObeysRuleExtractor.process(element)
         );
       } else {
         newRules.push(
@@ -55,14 +58,28 @@ export abstract class AbstractSDProcessor {
           OnlyRuleExtractor.process(element),
           AssignmentRuleExtractor.process(element),
           FlagRuleExtractor.process(element),
-          BindingRuleExtractor.process(element)
+          BindingRuleExtractor.process(element),
+          ObeysRuleExtractor.process(element)
         );
       }
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
       // since it will convert any remaining fields to CaretValueRules
       newRules.push(...CaretValueRuleExtractor.process(element, fhir));
-      target.rules = compact(newRules);
-    }
+    });
+    target.rules = compact(newRules);
+  }
+
+  static extractInvariants(
+    elements: ProcessableElementDefinition[],
+    existingInvariants: ExportableInvariant[]
+  ): ExportableInvariant[] {
+    const invariants: ExportableInvariant[] = [];
+    elements.forEach(element => {
+      invariants.push(
+        ...InvariantExtractor.process(element, [...existingInvariants, ...invariants])
+      );
+    });
+    return invariants;
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {

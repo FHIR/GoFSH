@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { cloneDeep } from 'lodash';
 import { fhirdefs, fshtypes } from 'fsh-sushi';
-import { CaretValueRuleExtractor } from '../../src/rule-extractor';
+import { CaretValueRuleExtractor } from '../../src/extractor';
 import { ExportableCaretValueRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { loggerSpy } from '../helpers/loggerSpy';
