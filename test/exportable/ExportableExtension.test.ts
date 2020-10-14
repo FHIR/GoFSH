@@ -3,7 +3,8 @@ import {
   ExportableExtension,
   ExportableCardRule,
   ExportableFlagRule,
-  ExportableBindingRule
+  ExportableBindingRule,
+  ExportableObeysRule
 } from '../../src/exportable';
 
 describe('ExportableExtension', () => {
@@ -102,12 +103,17 @@ describe('ExportableExtension', () => {
     bindingRule.strength = 'required';
     input.rules.push(bindingRule);
 
+    const obeysRule = new ExportableObeysRule('.');
+    obeysRule.keys = ['myx-1', 'myx-2'];
+    input.rules.push(obeysRule);
+
     const expectedResult = [
       'Extension: MyExtension',
       'Id: MyExtension',
       '* extension 0..0',
       '* value[x] MS SU',
-      '* value[x] from http://example.org/ValueSet/Foo (required)'
+      '* value[x] from http://example.org/ValueSet/Foo (required)',
+      '* obeys myx-1 and myx-2'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);

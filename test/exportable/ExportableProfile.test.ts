@@ -3,7 +3,8 @@ import {
   ExportableProfile,
   ExportableCardRule,
   ExportableFlagRule,
-  ExportableBindingRule
+  ExportableBindingRule,
+  ExportableObeysRule
 } from '../../src/exportable';
 
 describe('ExportableProfile', () => {
@@ -67,13 +68,18 @@ describe('ExportableProfile', () => {
     bindingRule.strength = 'required';
     input.rules.push(bindingRule);
 
+    const obeysRule = new ExportableObeysRule('contact');
+    obeysRule.keys = ['myp-1'];
+    input.rules.push(obeysRule);
+
     const expectedResult = [
       'Profile: MyPatient',
       'Parent: Patient',
       'Id: MyPatient',
       '* name 2..8',
       '* active MS SU',
-      '* maritalStatus from http://example.org/ValueSet/MaritalStatus (required)'
+      '* maritalStatus from http://example.org/ValueSet/MaritalStatus (required)',
+      '* contact obeys myp-1'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);
