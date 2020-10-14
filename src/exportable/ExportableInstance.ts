@@ -1,8 +1,8 @@
 import { fshtypes } from 'fsh-sushi';
-import { Exportable, ExportableFixedValueRule, ExportableInsertRule } from '.';
+import { Exportable, ExportableAssignmentRule, ExportableInsertRule } from '.';
 
 export class ExportableInstance extends fshtypes.Instance implements Exportable {
-  rules: (ExportableFixedValueRule | ExportableInsertRule)[];
+  rules: (ExportableAssignmentRule | ExportableInsertRule)[];
 
   constructor(name: string) {
     super(name);

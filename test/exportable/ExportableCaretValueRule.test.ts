@@ -2,7 +2,7 @@ import { fhirtypes, fshtypes } from 'fsh-sushi';
 import { ExportableCaretValueRule } from '../../src/exportable';
 
 describe('ExportableCaretValueRule', () => {
-  it('should export a caret rule fixing a string', () => {
+  it('should export a caret rule assigning a string', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'short';
     rule.value = 'Important summary';
@@ -26,7 +26,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* . ^short = "Another important summary."');
   });
 
-  it('should export a caret rule fixing a boolean', () => {
+  it('should export a caret rule assigning a boolean', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'abstract';
     rule.value = false;
@@ -34,7 +34,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* ^abstract = false');
   });
 
-  it('should export a caret rule fixing a number', () => {
+  it('should export a caret rule assigning a number', () => {
     const rule = new ExportableCaretValueRule('component');
     rule.caretPath = 'min';
     rule.value = 1;
@@ -42,7 +42,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* component ^min = 1');
   });
 
-  it('should export a caret rule fixing a FshCanonical', () => {
+  it('should export a caret rule assigning a FshCanonical', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'url';
     rule.value = new fshtypes.FshCanonical('Observation');
@@ -50,7 +50,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* ^url = Canonical(Observation)');
   });
 
-  it('should export a caret rule fixing a FshCanonical with a version', () => {
+  it('should export a caret rule assigning a FshCanonical with a version', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'url';
     rule.value = new fshtypes.FshCanonical('Example');
@@ -59,7 +59,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* ^url = Canonical(Example|1.2.3)');
   });
 
-  it('should export a caret rule fixing a FshCode with just a code', () => {
+  it('should export a caret rule assigning a FshCode with just a code', () => {
     const rule = new ExportableCaretValueRule('component');
     rule.caretPath = 'slicing.rules';
     rule.value = new fshtypes.FshCode('open');
@@ -67,7 +67,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* component ^slicing.rules = #open');
   });
 
-  it('should export a caret rule fixing a FshCode with a code and system', () => {
+  it('should export a caret rule assigning a FshCode with a code and system', () => {
     const rule = new ExportableCaretValueRule('component');
     rule.caretPath = 'slicing.rules';
     rule.value = new fshtypes.FshCode('open', 'http://foo.com');
@@ -75,7 +75,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* component ^slicing.rules = http://foo.com#open');
   });
 
-  it('should export a caret rule fixing a FshCode with a code, system, and display', () => {
+  it('should export a caret rule assigning a FshCode with a code, system, and display', () => {
     const rule = new ExportableCaretValueRule('component');
     rule.caretPath = 'slicing.rules';
     rule.value = new fshtypes.FshCode('open', 'http://foo.com', 'Display Text');
@@ -83,7 +83,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* component ^slicing.rules = http://foo.com#open "Display Text"');
   });
 
-  it('should export a caret rule fixing a FshQuantity', () => {
+  it('should export a caret rule assigning a FshQuantity', () => {
     const rule = new ExportableCaretValueRule('value[x]');
     rule.caretPath = 'maxValueQuantity';
     rule.value = new fshtypes.FshQuantity(15);
@@ -91,7 +91,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* value[x] ^maxValueQuantity = 15');
   });
 
-  it('should export a caret rule fixing a FshQuantity with a unit', () => {
+  it('should export a caret rule assigning a FshQuantity with a unit', () => {
     const rule = new ExportableCaretValueRule('value[x]');
     rule.caretPath = 'maxValueQuantity';
     const mm = new fshtypes.FshCode('mm', 'http://unitsofmeasure.org');
@@ -100,7 +100,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe("* value[x] ^maxValueQuantity = 15 'mm'");
   });
 
-  it('should export a caret rule fixing a FshRatio', () => {
+  it('should export a caret rule assigning a FshRatio', () => {
     const rule = new ExportableCaretValueRule('value[x]');
     rule.caretPath = 'patternRatio';
     const numerator = new fshtypes.FshQuantity(130);
@@ -110,7 +110,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* value[x] ^patternRatio = 130 : 1');
   });
 
-  it('should export a caret rule fixing a FshRatio with units', () => {
+  it('should export a caret rule assigning a FshRatio with units', () => {
     const rule = new ExportableCaretValueRule('value[x]');
     rule.caretPath = 'patternRatio';
     const mg = new fshtypes.FshCode('mg', 'http://unitsofmeasure.org');
@@ -122,7 +122,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe("* value[x] ^patternRatio = 130 'mg' : 1 'dL'");
   });
 
-  it('should export a caret rule fixing a FshReference', () => {
+  it('should export a caret rule assigning a FshReference', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'url';
     rule.value = new fshtypes.FshReference('Example');
@@ -130,7 +130,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* ^url = Reference(Example)');
   });
 
-  it('should export a caret rule fixing a FshReference with display', () => {
+  it('should export a caret rule assigning a FshReference with display', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'url';
     rule.value = new fshtypes.FshReference('Example', 'My Example');
@@ -138,7 +138,7 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* ^url = Reference(Example) "My Example"');
   });
 
-  it('should export a caret rule fixing an InstanceDefinition', () => {
+  it('should export a caret rule assigning an InstanceDefinition', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'contact';
     rule.value = new fhirtypes.InstanceDefinition();
