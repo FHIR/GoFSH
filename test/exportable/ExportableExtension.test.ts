@@ -3,7 +3,7 @@ import {
   ExportableExtension,
   ExportableCardRule,
   ExportableFlagRule,
-  ExportableValueSetRule,
+  ExportableBindingRule,
   ExportableObeysRule
 } from '../../src/exportable';
 
@@ -98,10 +98,11 @@ describe('ExportableExtension', () => {
     flagRule.summary = true;
     input.rules.push(flagRule);
 
-    const valueSetRule = new ExportableValueSetRule('value[x]');
-    valueSetRule.valueSet = 'http://example.org/ValueSet/Foo';
-    valueSetRule.strength = 'required';
-    input.rules.push(valueSetRule);
+    const bindingRule = new ExportableBindingRule('value[x]');
+    bindingRule.
+      = 'http://example.org/ValueSet/Foo';
+    bindingRule.strength = 'required';
+    input.rules.push(bindingRule);
 
     const obeysRule = new ExportableObeysRule('.');
     obeysRule.keys = ['myx-1', 'myx-2'];

@@ -13,8 +13,8 @@ import {
   ExportableContainsRule,
   ExportableOnlyRule,
   ExportableCaretValueRule,
-  ExportableFixedValueRule,
-  ExportableValueSetRule
+  ExportableAssignmentRule,
+  ExportableBindingRule
 } from '../../src/exportable';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { ExportableCombinedCardFlagRule } from '../../src/exportable/ExportableCombinedCardFlagRule';
@@ -292,14 +292,14 @@ describe('Package', () => {
       slicingRules.caretPath = 'slicing.rules';
       slicingRules.value = new FshCode('open');
 
-      const fixedValueRule = new ExportableFixedValueRule('valueString');
-      fixedValueRule.fixedValue = 'Make a choice';
-      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, fixedValueRule);
+      const assignmentRule = new ExportableAssignmentRule('valueString');
+      assignmentRule.value = 'Make a choice';
+      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, assignmentRule);
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.optimize(processor);
       expect(profile.rules).toHaveLength(1);
-      expect(profile.rules).toContain(fixedValueRule);
+      expect(profile.rules).toContain(assignmentRule);
     });
 
     it('should not remove caret value rules on a choice element that apply standard choice slicing if none of the choices exist', () => {
@@ -317,10 +317,10 @@ describe('Package', () => {
       const slicingRules = new ExportableCaretValueRule('value[x]');
       slicingRules.caretPath = 'slicing.rules';
       slicingRules.value = new FshCode('open');
-      const fixedValueRule = new ExportableFixedValueRule('value[x].id');
-      fixedValueRule.fixedValue = 'special-id';
+      const assignmentRule = new ExportableAssignmentRule('value[x].id');
+      assignmentRule.value = 'special-id';
 
-      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, fixedValueRule);
+      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, assignmentRule);
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.optimize(processor);
@@ -387,9 +387,9 @@ describe('Package', () => {
       slicingRules.caretPath = 'slicing.rules';
       slicingRules.value = new FshCode('open');
 
-      const fixedValueRule = new ExportableFixedValueRule('valueString');
-      fixedValueRule.fixedValue = 'Make a choice';
-      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, fixedValueRule);
+      const assignmentRule = new ExportableAssignmentRule('valueString');
+      assignmentRule.value = 'Make a choice';
+      profile.rules.push(slicingType, slicingPath, slicingOrdered, slicingRules, assignmentRule);
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.optimize(processor);
@@ -508,17 +508,17 @@ describe('Package', () => {
 
     it('should remove extension 0..0 rules from Extensions when there are specific value choice rules', () => {
       const extension = new ExportableExtension('ExtraExtension');
-      const valueRule = new ExportableValueSetRule('valueCodeableConcept');
-      valueRule.strength = 'required';
-      valueRule.valueSet = 'http://example.org/FooVS';
+      const bindingRule = new ExportableBindingRule('valueCodeableConcept');
+      bindingRule.strength = 'required';
+      bindingRule.valueSet = 'http://example.org/FooVS';
       const extRule = new ExportableCardRule('extension');
       extRule.min = 0;
       extRule.max = '0';
-      extension.rules = [valueRule, extRule];
+      extension.rules = [bindingRule, extRule];
       const myPackage = new Package();
       myPackage.add(extension);
       myPackage.optimize(processor);
-      expect(extension.rules).toEqual([valueRule]);
+      expect(extension.rules).toEqual([bindingRule]);
     });
 
     it('should remove nested value[x] 0..0 rules from Extensions when there are nested extension rules', () => {
@@ -633,8 +633,8 @@ describe('Package', () => {
       const extension = new ExportableExtension('MyExtension');
       const containsRule = new ExportableContainsRule('extension');
       containsRule.items.push({ name: 'foo' });
-      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
-      assignmentRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('extension[foo].url');
+      assignmentRule.value = 'foo';
       extension.rules = [containsRule, assignmentRule];
       const myPackage = new Package();
       myPackage.add(extension);
@@ -646,8 +646,8 @@ describe('Package', () => {
       const extension = new ExportableExtension('MyExtension');
       const containsRule = new ExportableContainsRule('modifierExtension');
       containsRule.items.push({ name: 'foo' });
-      const assignmentRule = new ExportableFixedValueRule('modifierExtension[foo].url');
-      assignmentRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('modifierExtension[foo].url');
+      assignmentRule.value = 'foo';
       extension.rules = [containsRule, assignmentRule];
       const myPackage = new Package();
       myPackage.add(extension);
@@ -661,8 +661,8 @@ describe('Package', () => {
       const profile = new ExportableProfile('MyProfile');
       const containsRule = new ExportableContainsRule('extension');
       containsRule.items.push({ name: 'foo' });
-      const assignmentRule = new ExportableFixedValueRule('extension[foo].url');
-      assignmentRule.fixedValue = 'foo';
+      const assignmentRule = new ExportableAssignmentRule('extension[foo].url');
+      assignmentRule.value = 'foo';
       profile.rules = [containsRule, assignmentRule];
       const myPackage = new Package();
       myPackage.add(profile);
@@ -685,8 +685,8 @@ describe('Package', () => {
 
     it('should remove a URL assignment rule on an extension only when that URL matches the canonical', () => {
       const extension = new ExportableExtension('MyExtension');
-      const assignmentRule = new ExportableFixedValueRule('url');
-      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      const assignmentRule = new ExportableAssignmentRule('url');
+      assignmentRule.value = 'http://example.org/StructureDefinition/MyExtension';
       extension.rules = [assignmentRule];
       const myPackage = new Package();
       myPackage.configuration = new ExportableConfiguration({
@@ -700,8 +700,8 @@ describe('Package', () => {
 
     it('should not remove a URL assignment rule on an extension when that URL does not match the canonical', () => {
       const extension = new ExportableExtension('MyExtension');
-      const assignmentRule = new ExportableFixedValueRule('url');
-      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      const assignmentRule = new ExportableAssignmentRule('url');
+      assignmentRule.value = 'http://example.org/StructureDefinition/MyExtension';
       extension.rules = [assignmentRule];
       const myPackage = new Package();
       myPackage.configuration = new ExportableConfiguration({
@@ -715,8 +715,8 @@ describe('Package', () => {
 
     it('should not remove a URL assignment rule on an extension if there is no configuration', () => {
       const extension = new ExportableExtension('MyExtension');
-      const assignmentRule = new ExportableFixedValueRule('url');
-      assignmentRule.fixedValue = 'http://example.org/StructureDefinition/MyExtension';
+      const assignmentRule = new ExportableAssignmentRule('url');
+      assignmentRule.value = 'http://example.org/StructureDefinition/MyExtension';
       extension.rules = [assignmentRule];
       const myPackage = new Package();
       myPackage.add(extension);

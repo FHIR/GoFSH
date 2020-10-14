@@ -7,7 +7,7 @@ export class ExportableCaretValueRule extends fshrules.CaretValueRule implements
   }
 
   toFSH(): string {
-    let fixedValue;
+    let value;
     if (
       this.value instanceof fshtypes.FshCanonical ||
       this.value instanceof fshtypes.FshCode ||
@@ -15,14 +15,14 @@ export class ExportableCaretValueRule extends fshrules.CaretValueRule implements
       this.value instanceof fshtypes.FshRatio ||
       this.value instanceof fshtypes.FshReference
     ) {
-      fixedValue = this.value.toString();
+      value = this.value.toString();
     } else if (this.value instanceof fhirtypes.InstanceDefinition) {
-      fixedValue = this.value._instanceMeta.name;
+      value = this.value._instanceMeta.name;
     } else if (typeof this.value === 'boolean' || typeof this.value === 'number') {
-      fixedValue = this.value;
+      value = this.value;
     } else if (typeof this.value === 'string') {
-      fixedValue = `"${this.value}"`;
+      value = `"${this.value}"`;
     }
-    return `* ${this.path !== '' ? this.path + ' ' : ''}^${this.caretPath} = ${fixedValue}`;
+    return `* ${this.path !== '' ? this.path + ' ' : ''}^${this.caretPath} = ${value}`;
   }
 }

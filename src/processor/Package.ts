@@ -11,7 +11,7 @@ import {
   ExportableContainsRule,
   ExportableOnlyRule,
   ExportableCaretValueRule,
-  ExportableFixedValueRule,
+  ExportableAssignmentRule,
   ExportableRule
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
@@ -245,9 +245,9 @@ export class Package {
           rule.items.forEach(item => {
             const assignmentRuleIdx = sd.rules.findIndex(
               other =>
-                other instanceof ExportableFixedValueRule &&
+                other instanceof ExportableAssignmentRule &&
                 other.path === `${rule.path}[${item.name}].url` &&
-                other.fixedValue === item.name
+                other.value === item.name
             );
             if (assignmentRuleIdx >= 0) {
               rulesToRemove.push(assignmentRuleIdx);
@@ -257,15 +257,15 @@ export class Package {
       });
       pullAt(sd.rules, rulesToRemove);
     });
-    // We must know the configuration to determine if a rule fixing "url" matches the url that SUSHI will assume
+    // We must know the configuration to determine if a rule assigning "url" matches the url that SUSHI will assume
     if (this.configuration?.config?.canonical) {
       this.extensions.forEach(extension => {
         const rulesToRemove: number[] = [];
         extension.rules.forEach((rule, i) => {
           if (
-            rule instanceof ExportableFixedValueRule &&
+            rule instanceof ExportableAssignmentRule &&
             rule.path === 'url' &&
-            rule.fixedValue ===
+            rule.value ===
               `${this.configuration.config.canonical}/StructureDefinition/${extension.id}`
           ) {
             rulesToRemove.push(i);

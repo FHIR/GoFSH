@@ -4,9 +4,9 @@ import { ExportableSdRule } from '../exportable';
 import {
   CardRuleExtractor,
   CaretValueRuleExtractor,
-  FixedValueRuleExtractor,
+  AssignmentRuleExtractor,
   FlagRuleExtractor,
-  ValueSetRuleExtractor,
+  BindingRuleExtractor,
   ContainsRuleExtractor,
   OnlyRuleExtractor
 } from '../rule-extractor';
@@ -46,16 +46,16 @@ export abstract class AbstractSDProcessor {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
-          FixedValueRuleExtractor.process(element),
-          ValueSetRuleExtractor.process(element)
+          AssignmentRuleExtractor.process(element),
+          BindingRuleExtractor.process(element)
         );
       } else {
         newRules.push(
           CardRuleExtractor.process(element, input, fhir),
           OnlyRuleExtractor.process(element),
-          FixedValueRuleExtractor.process(element),
+          AssignmentRuleExtractor.process(element),
           FlagRuleExtractor.process(element),
-          ValueSetRuleExtractor.process(element)
+          BindingRuleExtractor.process(element)
         );
       }
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
