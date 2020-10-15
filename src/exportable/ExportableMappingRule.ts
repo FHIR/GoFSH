@@ -1,4 +1,5 @@
 import { fshrules } from 'fsh-sushi';
+import { fshifyString } from '../exportable/common';
 import { ExportableRule } from '.';
 
 export class ExportableMappingRule extends fshrules.MappingRule implements ExportableRule {
@@ -7,9 +8,9 @@ export class ExportableMappingRule extends fshrules.MappingRule implements Expor
   }
 
   toFSH(): string {
-    const path = this.path ? `${this.path} ` : '';
-    const comment = this.comment ? ` "${this.comment}"` : '';
+    const path = this.path ? ` ${this.path}` : '';
+    const comment = this.comment ? ` "${fshifyString(this.comment)}"` : '';
     const language = this.language ? ` ${this.language.toString()}` : '';
-    return `* ${path}-> "${this.map}"${comment}${language}`;
+    return `*${path} -> "${fshifyString(this.map)}"${comment}${language}`;
   }
 }

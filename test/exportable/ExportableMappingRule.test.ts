@@ -42,4 +42,21 @@ describe('ExportableMappingRule', () => {
       '* identifier -> "Patient.otherIdentifier" "This is a comment" #lang'
     );
   });
+
+  it('should export a mapping rule with a map that contains characters that are escaped in FSH', () => {
+    const rule = new ExportableMappingRule('identifier');
+    rule.map = 'Patient.\\somethingFu\nnky';
+
+    expect(rule.toFSH()).toBe('* identifier -> "Patient.\\\\somethingFu\\nnky"');
+  });
+
+  it('should export a mapping rule with a comment that contains characters that are escaped in FSH', () => {
+    const rule = new ExportableMappingRule('identifier');
+    rule.map = 'Patient.otherIdentifier';
+    rule.comment = 'This has a \n newline, which is pretty \\wild.';
+
+    expect(rule.toFSH()).toBe(
+      '* identifier -> "Patient.otherIdentifier" "This has a \\n newline, which is pretty \\\\wild."'
+    );
+  });
 });
