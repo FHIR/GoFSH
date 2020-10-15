@@ -4,6 +4,7 @@ import { fhirdefs } from 'fsh-sushi';
 import { Package, FHIRProcessor } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { logger } from './GoFSHLogger';
+import { ConfigurationExtractor } from '../extractor';
 
 export function getInputDir(input = '.'): string {
   // default to current directory
@@ -33,6 +34,9 @@ export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
       logger.error(`Could not process ${file}: ${ex.message}`);
     }
   });
+  if (!resources.configuration) {
+    resources.add(ConfigurationExtractor.process(resources));
+  }
   resources.optimize(processor);
   return resources;
 }
