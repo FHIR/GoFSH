@@ -3,11 +3,17 @@ import {
   ExportableProfile,
   ExportableExtension,
   ExportableCodeSystem,
-  ExportableInvariant
+  ExportableInvariant,
+  ExportableMapping
 } from '.';
 
 export function metadataToFSH(
-  definition: ExportableProfile | ExportableExtension | ExportableCodeSystem | ExportableInvariant
+  definition:
+    | ExportableProfile
+    | ExportableExtension
+    | ExportableCodeSystem
+    | ExportableInvariant
+    | ExportableMapping
 ): string {
   const resultLines: string[] = [];
   if (definition instanceof ExportableProfile) {
@@ -28,6 +34,8 @@ export function metadataToFSH(
     resultLines.push(`CodeSystem: ${definition.name}`);
   } else if (definition instanceof ExportableInvariant) {
     resultLines.push(`Invariant: ${definition.name}`);
+  } else if (definition instanceof ExportableMapping) {
+    resultLines.push(`Mapping: ${definition.name}`);
   }
 
   // Invariants do not use the Id and Title keywords
@@ -51,6 +59,14 @@ export function metadataToFSH(
     }
     if (definition.xpath) {
       resultLines.push(`XPath: "${fshifyString(definition.xpath)}"`);
+    }
+  }
+  if (definition instanceof ExportableMapping) {
+    if (definition.source) {
+      resultLines.push(`Source: ${definition.source}`);
+    }
+    if (definition.target) {
+      resultLines.push(`Target: ${definition.target}`);
     }
   }
   return resultLines.join(EOL);

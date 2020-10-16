@@ -12,6 +12,8 @@ export * from './ExportableFlagRule';
 export * from './ExportableInsertRule';
 export * from './ExportableInstance';
 export * from './ExportableInvariant';
+export * from './ExportableMapping';
+export * from './ExportableMappingRule';
 export * from './ExportableObeysRule';
 export * from './ExportableOnlyRule';
 export * from './ExportableProfile';
