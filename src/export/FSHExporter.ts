@@ -39,6 +39,14 @@ export class FSHExporter {
         this.fshPackage.invariants.length == 1 ? '' : 's'
       }.`
     );
+    for (const mapping of this.fshPackage.mappings) {
+      results.push(mapping.toFSH());
+    }
+    logger.info(
+      `Exported ${this.fshPackage.mappings.length} Mapping${
+        this.fshPackage.mappings.length == 1 ? '' : 's'
+      }.`
+    );
 
     return results.join(`${EOL}${EOL}`);
   }

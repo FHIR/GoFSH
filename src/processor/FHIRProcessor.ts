@@ -10,7 +10,8 @@ import {
   ExportableExtension,
   ExportableCodeSystem,
   ExportableConfiguration,
-  ExportableInvariant
+  ExportableInvariant,
+  ExportableMapping
 } from '../exportable';
 
 export class FHIRProcessor {
@@ -30,6 +31,7 @@ export class FHIRProcessor {
     | ExportableCodeSystem
     | ExportableConfiguration
     | ExportableInvariant
+    | ExportableMapping
   )[] {
     const rawContent = JSON.parse(fs.readFileSync(inputPath, 'utf-8'));
 

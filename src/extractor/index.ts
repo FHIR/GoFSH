@@ -11,3 +11,4 @@ export * from './ObeysRuleExtractor';
 
 // non-rule extractors
 export * from './InvariantExtractor';
+export * from './MappingExtractor';

@@ -1,6 +1,6 @@
 import compact from 'lodash/compact';
-import { fhirdefs } from 'fsh-sushi';
-import { ExportableSdRule, ExportableInvariant } from '../exportable';
+import { fhirdefs, fhirtypes } from 'fsh-sushi';
+import { ExportableSdRule, ExportableInvariant, ExportableMapping } from '../exportable';
 import {
   CardRuleExtractor,
   CaretValueRuleExtractor,
@@ -10,7 +10,8 @@ import {
   ContainsRuleExtractor,
   OnlyRuleExtractor,
   ObeysRuleExtractor,
-  InvariantExtractor
+  InvariantExtractor,
+  MappingExtractor
 } from '../extractor';
 import { ProcessableElementDefinition } from '.';
 import { getAncestorElement } from '../utils';
@@ -82,6 +83,23 @@ export abstract class AbstractSDProcessor {
     return invariants;
   }
 
+  static extractMappings(
+    elements: ProcessableElementDefinition[],
+    input: ProcessableStructureDefinition
+  ): ExportableMapping[] {
+    const mappings = input.mapping.map(m => {
+      const mapping = new ExportableMapping(m.identity);
+      if (m.name) mapping.title = m.name;
+      if (m.uri) mapping.target = m.uri;
+      if (m.comment) mapping.description = m.comment;
+      return mapping;
+    });
+    elements.forEach(element => {
+      MappingExtractor.process(element, mappings);
+    });
+    return mappings;
+  }
+
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {
     return input.name != null && input.resourceType != null;
   }
@@ -94,6 +112,7 @@ export interface ProcessableStructureDefinition {
   title?: string;
   description?: string;
   baseDefinition?: string;
+  mapping: fhirtypes.StructureDefinitionMapping[];
   differential?: {
     element: any[];
   };
