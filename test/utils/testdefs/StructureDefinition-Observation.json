@@ -34,6 +34,20 @@
   "status" : "active",
   "date" : "2019-11-01T09:29:23+11:00",
   "publisher" : "Health Level Seven International (Orders and Observations)",
+  "context": [
+    {
+      "type": "element",
+      "expression": "Foo"
+    },
+    {
+      "type": "element",
+      "expression": "Bar"
+    },
+    {
+      "type": "element",
+      "expression": "Baz"
+    }
+  ],
   "contact" : [{
     "telecom" : [{
       "system" : "url",
