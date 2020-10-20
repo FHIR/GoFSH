@@ -1217,7 +1217,7 @@ describe('Package', () => {
       expect(profile.rules).toEqual([combinedContainsRule]);
     });
 
-    it('should not combine multiple contains rules which have the differnt paths', () => {
+    it('should not combine multiple contains rules which have the different paths', () => {
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
 
