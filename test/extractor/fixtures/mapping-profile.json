@@ -1,0 +1,74 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "MyObservation",
+  "id": "my-profile",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+  "mapping": [
+    {
+      "identity": "FirstMapping"
+    },
+    {
+      "identity": "SecondMapping",
+      "name": "Second Mapping",
+      "uri": "http://example.org/two",
+      "comment": "This is second"
+    },
+    {
+      "identity": "TopLevelMapping"
+    }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Observation",
+        "path": "Observation",
+        "mapping": [
+          {
+            "identity": "TopLevelMapping",
+            "map": "Observation"
+          }
+        ]
+      },
+      {
+        "id": "Observation.category",
+        "path": "Observation.category",
+        "mapping": [
+          {
+            "identity": "SecondMapping",
+            "map": "Observation.category",
+            "comment": "A comment here",
+            "language": "yes"
+          }
+        ]
+      },
+      {
+        "id": "Observation.focus",
+        "path": "Observation.focus",
+        "mapping": [
+          {
+            "identity": "FirstMapping",
+            "map": "Observation.otherFocus"
+          },
+          {
+            "identity": "SecondMapping",
+            "map": "Observation.focus",
+            "comment": "This is a focused comment",
+            "language": "test"
+          }
+        ]
+      },
+      {
+        "id": "Observation.status",
+        "path": "Observation.status",
+        "mapping": [
+          {
+            "identity": "RogueMapping",
+            "map": "Observation.notReal"
+          }
+        ]
+      }
+    ]
+  }
+}
