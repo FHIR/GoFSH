@@ -62,10 +62,11 @@ describe('FSHExporter', () => {
     myPackage.add(new ExportableProfile('SecondProfile'));
     myPackage.add(new ExportableCodeSystem('OnlyCodeSystem'));
     exporter.export();
-    expect(loggerSpy.getMessageAtIndex(-4, 'info')).toBe('Exported 2 Profiles.');
-    expect(loggerSpy.getMessageAtIndex(-3, 'info')).toBe('Exported 0 Extensions.');
-    expect(loggerSpy.getMessageAtIndex(-2, 'info')).toBe('Exported 1 CodeSystem.');
-    expect(loggerSpy.getMessageAtIndex(-1, 'info')).toBe('Exported 0 Invariants.');
+    expect(loggerSpy.getMessageAtIndex(-5, 'info')).toBe('Exported 2 Profiles.');
+    expect(loggerSpy.getMessageAtIndex(-4, 'info')).toBe('Exported 0 Extensions.');
+    expect(loggerSpy.getMessageAtIndex(-3, 'info')).toBe('Exported 1 CodeSystem.');
+    expect(loggerSpy.getMessageAtIndex(-2, 'info')).toBe('Exported 0 Invariants.');
+    expect(loggerSpy.getMessageAtIndex(-1, 'info')).toBe('Exported 0 Mappings.');
   });
 
   it('should separate each exported result with one blank line', () => {

@@ -8,7 +8,7 @@ export class ProfileProcessor extends AbstractSDProcessor {
     input: any,
     fhir: fhirdefs.FHIRDefinitions,
     existingInvariants: ExportableInvariant[] = []
-  ): (ExportableProfile | ExportableInvariant | ExportableMapping)[] | [] {
+  ): [ExportableProfile, ...(ExportableInvariant | ExportableMapping)[]] | [] {
     if (ProfileProcessor.isProcessableStructureDefinition(input)) {
       const profile = new ExportableProfile(input.name);
       const elements =
@@ -19,7 +19,7 @@ export class ProfileProcessor extends AbstractSDProcessor {
       const invariants = ProfileProcessor.extractInvariants(elements, existingInvariants);
       const mappings = ProfileProcessor.extractMappings(elements, input, fhir);
       ProfileProcessor.extractRules(input, elements, profile, fhir);
-      return [profile, ...invariants, ...mappings];
+      return [profile, ...[...invariants, ...mappings]];
     }
     return [];
   }

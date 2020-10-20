@@ -88,13 +88,14 @@ export abstract class AbstractSDProcessor {
     input: ProcessableStructureDefinition,
     fhir: fhirdefs.FHIRDefinitions
   ): ExportableMapping[] {
-    const mappings = input.mapping.map(m => {
-      const mapping = new ExportableMapping(m.identity);
-      if (m.name) mapping.title = m.name;
-      if (m.uri) mapping.target = m.uri;
-      if (m.comment) mapping.description = m.comment;
-      return mapping;
-    });
+    const mappings =
+      input.mapping?.map(m => {
+        const mapping = new ExportableMapping(m.identity);
+        if (m.name) mapping.title = m.name;
+        if (m.uri) mapping.target = m.uri;
+        if (m.comment) mapping.description = m.comment;
+        return mapping;
+      }) || [];
     elements.forEach(element => {
       MappingExtractor.process(element, mappings);
     });
@@ -124,7 +125,7 @@ export interface ProcessableStructureDefinition {
   title?: string;
   description?: string;
   baseDefinition?: string;
-  mapping: fhirtypes.StructureDefinitionMapping[];
+  mapping?: fhirtypes.StructureDefinitionMapping[];
   differential?: {
     element: any[];
   };
