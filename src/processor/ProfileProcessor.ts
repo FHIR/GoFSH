@@ -17,7 +17,7 @@ export class ProfileProcessor extends AbstractSDProcessor {
         }) ?? [];
       ProfileProcessor.extractKeywords(input, profile);
       const invariants = ProfileProcessor.extractInvariants(elements, existingInvariants);
-      const mappings = ProfileProcessor.extractMappings(elements, input);
+      const mappings = ProfileProcessor.extractMappings(elements, input, fhir);
       ProfileProcessor.extractRules(input, elements, profile, fhir);
       return [profile, ...invariants, ...mappings];
     }

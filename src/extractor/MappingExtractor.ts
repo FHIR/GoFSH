@@ -11,6 +11,7 @@ export class MappingExtractor {
     element.mapping?.forEach((mapping, i) => {
       // Mappings are created at SD, so should always find a match at this point
       const matchingMapping = mappings.find(m => m.name === mapping.identity);
+      if (!matchingMapping) return;
       let path = getPath(element);
       if (path === '.') path = ''; // Root path in mappings is an empty string
       const mappingRule = new ExportableMappingRule(path);

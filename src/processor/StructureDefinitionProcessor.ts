@@ -1,5 +1,5 @@
-import compact from 'lodash/compact';
-import { fhirdefs, fhirtypes } from 'fsh-sushi';
+import { compact, isEqual, differenceWith } from 'lodash';
+import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
 import { ExportableSdRule, ExportableInvariant, ExportableMapping } from '../exportable';
 import {
   CardRuleExtractor,
@@ -85,7 +85,8 @@ export abstract class AbstractSDProcessor {
 
   static extractMappings(
     elements: ProcessableElementDefinition[],
-    input: ProcessableStructureDefinition
+    input: ProcessableStructureDefinition,
+    fhir: fhirdefs.FHIRDefinitions
   ): ExportableMapping[] {
     const mappings = input.mapping.map(m => {
       const mapping = new ExportableMapping(m.identity);
@@ -97,7 +98,18 @@ export abstract class AbstractSDProcessor {
     elements.forEach(element => {
       MappingExtractor.process(element, mappings);
     });
-    return mappings;
+
+    // Filter out mappings on the parent - only include mappings new to the profile
+    const parent = fhir.fishForFHIR(
+      input.baseDefinition,
+      utils.Type.Resource,
+      utils.Type.Type,
+      utils.Type.Profile,
+      utils.Type.Extension
+    );
+    const newItems = differenceWith(input.mapping, parent?.mapping, isEqual);
+    const newMappings = mappings.filter(mapping => newItems.some(i => i.identity === mapping.name));
+    return newMappings;
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {
