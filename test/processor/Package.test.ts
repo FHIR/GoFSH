@@ -9,6 +9,7 @@ import {
   ExportableCodeSystem,
   ExportableConfiguration,
   ExportableInvariant,
+  ExportableMapping,
   ExportableCardRule,
   ExportableFlagRule,
   ExportableContainsRule,
@@ -65,6 +66,12 @@ describe('Package', () => {
       const myInvariant = new ExportableInvariant('inv-1');
       myPackage.add(myInvariant);
       expect(myPackage.invariants[0]).toBe(myInvariant);
+    });
+
+    it('should add an ExportableMapping to the mappings array', () => {
+      const myMapping = new ExportableMapping('MyMapping');
+      myPackage.add(myMapping);
+      expect(myPackage.mappings[0]).toBe(myMapping);
     });
 
     it('should set the configuration when adding an ExportableConfiguration', () => {

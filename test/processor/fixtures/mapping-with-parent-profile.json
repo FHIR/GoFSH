@@ -1,0 +1,110 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "MyObservation",
+  "id": "my-profile",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation",
+  "mapping": [
+    {
+      "identity": "workflow",
+      "uri": "http://hl7.org/fhir/workflow",
+      "name": "Workflow Pattern"
+    },
+    {
+      "identity": "sct-concept",
+      "uri": "http://snomed.info/conceptdomain",
+      "name": "SNOMED CT Concept Domain Binding"
+    },
+    {
+      "identity": "v2",
+      "uri": "http://hl7.org/v2",
+      "name": "HL7 v2 Mapping"
+    },
+    {
+      "identity": "rim",
+      "uri": "http://hl7.org/v3",
+      "name": "RIM Mapping"
+    },
+    {
+      "identity": "w5",
+      "uri": "http://hl7.org/fhir/fivews",
+      "name": "FiveWs Pattern Mapping"
+    },
+    {
+      "identity": "sct-attr",
+      "uri": "http://snomed.org/attributebinding",
+      "name": "SNOMED CT Attribute Binding"
+    },
+    {
+      "identity": "MyMapping",
+      "name": "My Mapping",
+      "uri": "http://example.org/important",
+      "comment": "This is important"
+    }
+  ],
+  "differential": {
+    "element": [
+      {
+        "id": "Observation",
+        "path": "Observation",
+        "mapping": [
+          {
+            "identity": "rim",
+            "map": "Entity. Role, or Act"
+          },
+          {
+            "identity": "workflow",
+            "map": "Event"
+          },
+          {
+            "identity": "sct-concept",
+            "map": "< 363787002 |Observable entity|"
+          },
+          {
+            "identity": "v2",
+            "map": "OBX"
+          },
+          {
+            "identity": "rim",
+            "map": "Observation[classCode=OBS, moodCode=EVN]"
+          },
+          {
+            "identity": "MyMapping",
+            "map": "Observation",
+            "comment": "This is top level",
+            "language": "top"
+          }
+        ]
+      },
+      {
+        "id": "Observation.focus",
+        "path": "Observation.focus",
+        "mapping": [
+          {
+            "identity": "w5",
+            "map": "FiveWs.subject[x]"
+          },
+          {
+            "identity": "v2",
+            "map": "OBX-3"
+          },
+          {
+            "identity": "rim",
+            "map": "participation[typeCode=SBJ]"
+          },
+          {
+            "identity": "w5",
+            "map": "FiveWs.subject"
+          },
+          {
+            "identity": "MyMapping",
+            "map": "Observation.otherFocus",
+            "comment": "This is a focused comment",
+            "language": "test"
+          }
+        ]
+      }
+    ]
+  }
+}

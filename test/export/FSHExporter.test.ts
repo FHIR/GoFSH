@@ -5,7 +5,8 @@ import {
   ExportableProfile,
   ExportableExtension,
   ExportableCodeSystem,
-  ExportableInvariant
+  ExportableInvariant,
+  ExportableMapping
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
 
@@ -16,12 +17,14 @@ describe('FSHExporter', () => {
   let extensionSpy: jest.SpyInstance;
   let codeSystemSpy: jest.SpyInstance;
   let invariantSpy: jest.SpyInstance;
+  let mappingSpy: jest.SpyInstance;
 
   beforeAll(() => {
     profileSpy = jest.spyOn(ExportableProfile.prototype, 'toFSH');
     extensionSpy = jest.spyOn(ExportableExtension.prototype, 'toFSH');
     codeSystemSpy = jest.spyOn(ExportableCodeSystem.prototype, 'toFSH');
     invariantSpy = jest.spyOn(ExportableInvariant.prototype, 'toFSH');
+    mappingSpy = jest.spyOn(ExportableMapping.prototype, 'toFSH');
   });
 
   beforeEach(() => {
@@ -31,6 +34,7 @@ describe('FSHExporter', () => {
     extensionSpy.mockReset();
     codeSystemSpy.mockReset();
     invariantSpy.mockReset();
+    mappingSpy.mockReset();
   });
 
   it('should try to export a Profile', () => {
@@ -55,6 +59,12 @@ describe('FSHExporter', () => {
     myPackage.add(new ExportableInvariant('inv-1'));
     exporter.export();
     expect(invariantSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should try to export a Mapping', () => {
+    myPackage.add(new ExportableMapping('SomeMapping'));
+    exporter.export();
+    expect(mappingSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should log info messages with the number of exported entities', () => {

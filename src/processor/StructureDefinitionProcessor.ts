@@ -91,6 +91,7 @@ export abstract class AbstractSDProcessor {
     const mappings =
       input.mapping?.map(m => {
         const mapping = new ExportableMapping(m.identity);
+        mapping.source = input.name;
         if (m.name) mapping.title = m.name;
         if (m.uri) mapping.target = m.uri;
         if (m.comment) mapping.description = m.comment;

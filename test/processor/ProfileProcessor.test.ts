@@ -8,7 +8,9 @@ import {
   ExportableObeysRule,
   ExportableInvariant,
   ExportableAssignmentRule,
-  ExportableProfile
+  ExportableProfile,
+  ExportableMapping,
+  ExportableMappingRule
 } from '../../src/exportable';
 import '../helpers/loggerSpy'; // suppresses console logging
 import { fhirdefs, fshtypes } from 'fsh-sushi';
@@ -157,6 +159,45 @@ describe('ProfileProcessor', () => {
       expect(profile.rules).toContainEqual(constraintKey);
       expect(profile.rules).toContainEqual(constraintSeverity);
       expect(profile.rules).toContainEqual(constraintHuman);
+    });
+  });
+
+  describe('#extractMappings', () => {
+    it('should convert a profile with a mapping', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-profile.json'), 'utf-8')
+      );
+      const result = ProfileProcessor.process(input, defs);
+      const mappings = result.filter(resource => resource instanceof ExportableMapping);
+      const map = new ExportableMapping('MyMapping');
+      map.source = 'MyObservation';
+      map.target = 'http://example.org/important';
+      map.title = 'My Mapping';
+      map.description = 'This is important';
+      const mapRule1 = new ExportableMappingRule('');
+      mapRule1.map = 'Observation';
+      mapRule1.comment = 'This is top level';
+      mapRule1.language = new fshtypes.FshCode('top');
+      const mapRule2 = new ExportableMappingRule('focus');
+      mapRule2.map = 'Observation.otherFocus';
+      mapRule2.comment = 'This is a focused comment';
+      mapRule2.language = new fshtypes.FshCode('test');
+      map.rules.push(mapRule1, mapRule2);
+
+      expect(mappings).toHaveLength(1);
+      expect(mappings).toContainEqual(map);
+    });
+
+    it('should only create Mappings for mappings that are not on the parent definition', () => {
+      const input = JSON.parse(
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'mapping-with-parent-profile.json'),
+          'utf-8'
+        )
+      );
+      const result = ProfileProcessor.process(input, defs);
+      const mappings = result.filter(resource => resource instanceof ExportableMapping);
+      expect(mappings).toHaveLength(1); // Other mappings from base Observation are not exported
     });
   });
 
