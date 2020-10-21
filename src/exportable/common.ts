@@ -3,6 +3,7 @@ import {
   ExportableProfile,
   ExportableExtension,
   ExportableCodeSystem,
+  ExportableValueSet,
   ExportableInvariant,
   ExportableMapping
 } from '.';
@@ -12,6 +13,7 @@ export function metadataToFSH(
     | ExportableProfile
     | ExportableExtension
     | ExportableCodeSystem
+    | ExportableValueSet
     | ExportableInvariant
     | ExportableMapping
 ): string {
@@ -32,6 +34,8 @@ export function metadataToFSH(
     }
   } else if (definition instanceof ExportableCodeSystem) {
     resultLines.push(`CodeSystem: ${definition.name}`);
+  } else if (definition instanceof ExportableValueSet) {
+    resultLines.push(`ValueSet: ${definition.name}`);
   } else if (definition instanceof ExportableInvariant) {
     resultLines.push(`Invariant: ${definition.name}`);
   } else if (definition instanceof ExportableMapping) {

@@ -30,7 +30,7 @@ describe('ExportableContainsRule', () => {
       { name: 'diastolic', type: 'DiastolicBP' }
     ];
 
-    const expectedFSH = `* component contains SystolicBP named systolic and${EOL}    DiastolicBP named diastolic`;
+    const expectedFSH = `* component contains${EOL}    SystolicBP named systolic and${EOL}    DiastolicBP named diastolic`;
 
     expect(rule.toFSH()).toBe(expectedFSH);
   });
@@ -50,7 +50,7 @@ describe('ExportableContainsRule', () => {
     cardRuleDiastolic.max = '1';
     containsRule.cardRules.push(cardRuleSystolic, cardRuleDiastolic);
 
-    const expectedFSH = `* component contains SystolicBP named systolic 0..1 and${EOL}    DiastolicBP named diastolic 0..1`;
+    const expectedFSH = `* component contains${EOL}    SystolicBP named systolic 0..1 and${EOL}    DiastolicBP named diastolic 0..1`;
 
     expect(containsRule.toFSH()).toBe(expectedFSH);
   });
@@ -78,7 +78,7 @@ describe('ExportableContainsRule', () => {
     flagRuleDiastolic.mustSupport = true;
     containsRule.flagRules.push(flagRuleSystolic, flagRuleDiastolic);
 
-    const expectedFSH = `* component contains SystolicBP named systolic 0..1 MS SU TU and${EOL}    DiastolicBP named diastolic 0..1 MS`;
+    const expectedFSH = `* component contains${EOL}    SystolicBP named systolic 0..1 MS SU TU and${EOL}    DiastolicBP named diastolic 0..1 MS`;
 
     expect(containsRule.toFSH()).toBe(expectedFSH);
   });

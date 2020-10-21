@@ -1,7 +1,12 @@
 import fs from 'fs-extra';
 import { fhirdefs } from 'fsh-sushi';
 import { logger } from '../utils';
-import { StructureDefinitionProcessor, CodeSystemProcessor, ConfigurationProcessor } from '.';
+import {
+  StructureDefinitionProcessor,
+  CodeSystemProcessor,
+  ValueSetProcessor,
+  ConfigurationProcessor
+} from '.';
 import { ExportableConfiguration } from '../exportable';
 import { ConfigurationExtractor } from '../extractor';
 import { Package } from './Package';
@@ -9,6 +14,7 @@ import { Package } from './Package';
 export class FHIRProcessor {
   public readonly structureDefinitions: any[] = [];
   public readonly codeSystems: any[] = [];
+  public readonly valueSets: any[] = [];
   public readonly implementationGuides: any[] = [];
   public readonly fhir: fhirdefs.FHIRDefinitions;
 
@@ -27,6 +33,9 @@ export class FHIRProcessor {
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       this.codeSystems.push(rawContent);
       logger.debug(`Registered contents of ${inputPath} as CodeSystem.`);
+    } else if (rawContent['resourceType'] === 'ValueSet') {
+      this.valueSets.push(rawContent);
+      logger.debug(`Registered contents of ${inputPath} as ValueSet.`);
     } else if (rawContent['resourceType'] === 'ImplementationGuide') {
       this.implementationGuides.push(rawContent);
     }
@@ -55,7 +64,14 @@ export class FHIRProcessor {
       try {
         resources.add(CodeSystemProcessor.process(cs));
       } catch (ex) {
-        logger.error(`Could not process StructureDefinition: ${ex.message}`);
+        logger.error(`Could not process CodeSystem: ${ex.message}`);
+      }
+    });
+    this.valueSets.forEach(vs => {
+      try {
+        resources.add(ValueSetProcessor.process(vs));
+      } catch (ex) {
+        logger.error(`Could not process ValueSet: ${ex.message}`);
       }
     });
   }

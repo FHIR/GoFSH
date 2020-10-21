@@ -3,6 +3,7 @@ import {
   FHIRProcessor,
   CodeSystemProcessor,
   StructureDefinitionProcessor,
+  ValueSetProcessor,
   Package
 } from '../../src/processor';
 import '../helpers/loggerSpy'; // suppresses console logging
@@ -12,16 +13,19 @@ describe('FHIRProcessor', () => {
   let processor: FHIRProcessor;
   let structureDefinitionSpy: jest.SpyInstance;
   let codeSystemSpy: jest.SpyInstance;
+  let valueSetSpy: jest.SpyInstance;
 
   beforeAll(() => {
     structureDefinitionSpy = jest.spyOn(StructureDefinitionProcessor, 'process');
     codeSystemSpy = jest.spyOn(CodeSystemProcessor, 'process');
+    valueSetSpy = jest.spyOn(ValueSetProcessor, 'process');
   });
 
   beforeEach(() => {
     processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
     structureDefinitionSpy.mockClear();
     codeSystemSpy.mockClear();
+    valueSetSpy.mockClear();
   });
 
   it('should try to process a Profile with the StructureDefinitionProcessor', () => {
@@ -40,6 +44,12 @@ describe('FHIRProcessor', () => {
     processor.register(path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
     processor.process(new Package());
     expect(codeSystemSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should try to process a ValueSet with the ValueSetProcessor', () => {
+    processor.register(path.join(__dirname, 'fixtures', 'simple-valueset.json'));
+    processor.process(new Package());
+    expect(valueSetSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should throw an error when the input path does not refer to a file', () => {

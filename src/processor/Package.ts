@@ -77,6 +77,7 @@ export class Package {
     this.suppressUrlAssignmentOnExtensions();
     this.removeDefaultSlicingRules();
     this.removeDateRules();
+    this.combineContainsRules();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -387,5 +388,28 @@ export class Package {
         }
       );
     }
+  }
+
+  private combineContainsRules(): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      const rulesToRemove: number[] = [];
+      sd.rules.forEach((rule, i) => {
+        if (rule instanceof ExportableContainsRule && !rulesToRemove.includes(i)) {
+          sd.rules.forEach((otherRule, otherRuleIdx) => {
+            if (
+              otherRule.path === rule.path &&
+              otherRule instanceof ExportableContainsRule &&
+              otherRuleIdx !== i
+            ) {
+              rulesToRemove.push(otherRuleIdx);
+              rule.items.push(...otherRule.items);
+              rule.cardRules.push(...otherRule.cardRules);
+              rule.flagRules.push(...otherRule.flagRules);
+            }
+          });
+        }
+      });
+      pullAt(sd.rules, rulesToRemove);
+    });
   }
 }
