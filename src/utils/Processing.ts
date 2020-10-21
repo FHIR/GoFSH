@@ -4,7 +4,6 @@ import { fhirdefs } from 'fsh-sushi';
 import { Package, FHIRProcessor } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { logger } from './GoFSHLogger';
-import { ConfigurationExtractor } from '../extractor';
 
 export function getInputDir(input = '.'): string {
   // default to current directory
@@ -27,16 +26,12 @@ export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
   logger.info(`Found ${files.length} JSON files.`);
   files.forEach(file => {
     try {
-      processor.process(file, resources.invariants).forEach(resource => {
-        resources.add(resource);
-      });
+      processor.register(file);
     } catch (ex) {
-      logger.error(`Could not process ${file}: ${ex.message}`);
+      logger.error(`Could not register ${file}: ${ex.message}`);
     }
   });
-  if (!resources.configuration) {
-    resources.add(ConfigurationExtractor.process(resources));
-  }
+  processor.process(resources);
   resources.optimize(processor);
   return resources;
 }

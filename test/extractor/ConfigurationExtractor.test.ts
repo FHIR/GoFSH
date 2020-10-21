@@ -1,72 +1,48 @@
 import { cloneDeep } from 'lodash';
-import { fshtypes } from 'fsh-sushi';
 import { ConfigurationExtractor } from '../../src/extractor';
-import { Package } from '../../src/processor';
-import {
-  ExportableProfile,
-  ExportableCaretValueRule,
-  ExportableExtension,
-  ExportableValueSet,
-  ExportableCodeSystem,
-  ExportableConfiguration
-} from '../../src/exportable';
+import { ExportableCaretValueRule } from '../../src/exportable';
 
 describe('ConfigurationExtractor', () => {
-  let resources: Package;
+  let resources: any[];
 
   beforeAll(() => {
-    resources = new Package();
-    const typicalProfile = new ExportableProfile('TypicalProfile');
-    const profileUrl = new ExportableCaretValueRule('');
-    profileUrl.caretPath = 'url';
-    profileUrl.value = 'http://example.org/our/ig/StructureDefinition/TypicalProfile';
-    typicalProfile.rules.push(profileUrl);
-
-    const typicalExtension = new ExportableExtension('TypicalExtension');
-    const extensionUrl = cloneDeep(profileUrl);
-    extensionUrl.value = 'http://example.org/our/ig/StructureDefinition/TypicalExtension';
-    const extensionStatus = new ExportableCaretValueRule('');
-    extensionStatus.caretPath = 'status';
-    extensionStatus.value = new fshtypes.FshCode('draft');
-    const extensionVersion = new ExportableCaretValueRule('');
-    extensionVersion.caretPath = 'version';
-    extensionVersion.value = '0.8.6';
-    const extensionFhirVersion = new ExportableCaretValueRule('');
-    extensionFhirVersion.caretPath = 'fhirVersion';
-    extensionFhirVersion.value = '4.0.1';
-    typicalExtension.rules.push(extensionUrl, extensionStatus, extensionVersion);
-
-    const typicalValueSet = new ExportableValueSet('TypicalVS');
-    const valueSetUrl = cloneDeep(profileUrl);
-    valueSetUrl.value = 'http://example.org/our/ig/ValueSet/TypicalVS';
-    typicalValueSet.rules.push(
-      valueSetUrl,
-      cloneDeep(extensionStatus),
-      cloneDeep(extensionVersion),
-      cloneDeep(extensionFhirVersion)
-    );
-
-    const typicalCodeSystem = new ExportableCodeSystem('TypicalCodes');
-    const codeSystemUrl = cloneDeep(profileUrl);
-    codeSystemUrl.value = 'http://example.org/our/ig/CodeSystem/TypicalCodes';
-    const codeSystemStatus = cloneDeep(extensionStatus);
-    codeSystemStatus.value = new fshtypes.FshCode('active');
-    typicalCodeSystem.rules.push(
-      codeSystemUrl,
-      codeSystemStatus,
-      cloneDeep(extensionVersion),
-      cloneDeep(extensionFhirVersion)
-    );
-
-    resources.add(typicalProfile);
-    resources.add(typicalExtension);
-    resources.add(typicalValueSet);
-    resources.add(typicalCodeSystem);
+    const typicalProfile = {
+      resourceType: 'StructureDefinition',
+      type: 'Resource',
+      name: 'TypicalProfile',
+      url: 'http://example.org/our/ig/StructureDefinition/TypicalProfile'
+    };
+    const typicalExtension = {
+      resourceType: 'StructureDefinition',
+      type: 'Extension',
+      name: 'TypicalExtension',
+      url: 'http://example.org/our/ig/StructureDefinition/TypicalExtension',
+      status: 'draft',
+      version: '0.8.6',
+      fhirVersion: '4.0.1'
+    };
+    const typicalValueSet = {
+      resourceType: 'ValueSet',
+      name: 'TypicalValueSet',
+      url: 'http://example.org/our/ig/ValueSet/TypicalVS',
+      status: 'draft',
+      version: '0.8.6',
+      fhirVersion: '4.0.1'
+    };
+    const typicalCodeSystem = {
+      resourceType: 'ValueSet',
+      name: 'TypicalValueSet',
+      url: 'http://example.org/our/ig/CodeSystem/TypicalCodes',
+      status: 'active',
+      version: '0.8.6',
+      fhirVersion: '4.0.1'
+    };
+    resources = [typicalProfile, typicalExtension, typicalValueSet, typicalCodeSystem];
   });
 
   describe('#process', () => {
     it('should return a configuration with default canonical and fhirVersion when there are no resources', () => {
-      const emptyResources = new Package();
+      const emptyResources: any[] = [];
       const result = ConfigurationExtractor.process(emptyResources);
       expect(result.config.canonical).toBe('http://sample.org');
       expect(result.config.fhirVersion).toEqual(['4.0.1']);
@@ -89,8 +65,7 @@ describe('ConfigurationExtractor', () => {
 
   describe('#inferCanonical', () => {
     it('should return an empty string when the input contains no resources', () => {
-      const emptyResources = new Package();
-      const result = ConfigurationExtractor.inferCanonical(emptyResources);
+      const result = ConfigurationExtractor.inferCanonical([]);
       expect(result).toBe('');
     });
 
@@ -100,10 +75,10 @@ describe('ConfigurationExtractor', () => {
       const differentRule = new ExportableCaretValueRule('');
       differentRule.caretPath = 'publisher';
       differentRule.value = 'Somebody';
-      noUrlResources.profiles[0].rules[0] = differentRule;
-      noUrlResources.extensions[0].rules[0] = cloneDeep(differentRule);
-      noUrlResources.valueSets[0].rules[0] = cloneDeep(differentRule);
-      noUrlResources.codeSystems[0].rules[0] = cloneDeep(differentRule);
+      delete noUrlResources[0].url;
+      delete noUrlResources[1].url;
+      delete noUrlResources[2].url;
+      delete noUrlResources[3].url;
       const result = ConfigurationExtractor.inferCanonical(noUrlResources);
       expect(result).toBe('');
     });
@@ -115,12 +90,12 @@ describe('ConfigurationExtractor', () => {
 
     it('should use the most frequent url base to determine the canonical when not all resources have the same url base', () => {
       const differentResources = cloneDeep(resources);
-      const differentProfile = new ExportableProfile('DifferentProfile');
-      const differentUrl = new ExportableCaretValueRule('');
-      differentUrl.caretPath = 'url';
-      differentUrl.value = 'http://example.org/different/ig/StructureDefinition/DifferentProfile';
-      differentProfile.rules.push(differentUrl);
-      differentResources.add(differentProfile);
+      differentResources.push({
+        resourceType: 'StructureDefinition',
+        type: 'Resource',
+        name: 'DifferentProfile',
+        url: 'http://example.org/different/ig/StructureDefinition/DifferentProfile'
+      });
       const result = ConfigurationExtractor.inferCanonical(differentResources);
 
       expect(result).toBe('http://example.org/our/ig');
@@ -129,147 +104,126 @@ describe('ConfigurationExtractor', () => {
 
   describe('#inferNameAndId', () => {
     it('should return an empty object when the canonical does not match the standard format', () => {
-      const config = new ExportableConfiguration({
-        canonical: 'http://bad-canonical',
-        fhirVersion: []
-      });
-      const result = ConfigurationExtractor.inferNameAndId(config);
+      const canonical = 'http://bad-canonical';
+      const result = ConfigurationExtractor.inferNameAndId(canonical);
       expect(result).toEqual({});
     });
 
     it('should return a name and id when the canonical has a two-part host and no path', () => {
-      const config = new ExportableConfiguration({
-        canonical: 'https://example.org',
-        fhirVersion: []
-      });
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      let canonical = 'https://example.org';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'Example',
         id: 'example'
       });
 
-      config.config.canonical = 'http://example.org/';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'http://example.org/';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'Example',
         id: 'example'
       });
     });
 
     it('should return a name and id when the canonical has a two-part host and a non-empty path', () => {
-      const config = new ExportableConfiguration({
-        canonical: 'https://example.org/first',
-        fhirVersion: []
-      });
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      let canonical = 'https://example.org/first';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'ExampleFirst',
         id: 'example.first'
       });
 
-      config.config.canonical = 'https://example.org/first/';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://example.org/first/';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'ExampleFirst',
         id: 'example.first'
       });
 
-      config.config.canonical = 'https://example.org/first/second';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://example.org/first/second';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'ExampleFirstSecond',
         id: 'example.first.second'
       });
 
-      config.config.canonical = 'http://example.org/first/second/';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'http://example.org/first/second/';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'ExampleFirstSecond',
         id: 'example.first.second'
       });
     });
 
     it('should return a name and id when the canonical has a three-part host and no path', () => {
-      const config = new ExportableConfiguration({
-        canonical: 'http://www.example.org',
-        fhirVersion: []
-      });
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      let canonical = 'http://www.example.org';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'Example',
         id: 'example'
       });
 
-      config.config.canonical = 'https://www.example.org/';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://www.example.org/';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'Example',
         id: 'example'
       });
 
-      config.config.canonical = 'https://fhir.example.org';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://fhir.example.org';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'FhirExample',
         id: 'fhir.example'
       });
 
-      config.config.canonical = 'http://fhir.example.org/';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'http://fhir.example.org/';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'FhirExample',
         id: 'fhir.example'
       });
     });
 
     it('should return a name and id when the canonical has a three-part host and a non-empty path', () => {
-      const config = new ExportableConfiguration({
-        canonical: 'http://www.example.org/orange/apple',
-        fhirVersion: []
-      });
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      let canonical = 'http://www.example.org/orange/apple';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'ExampleOrangeApple',
         id: 'example.orange.apple'
       });
 
-      config.config.canonical = 'https://www.example.org/orange/apple/banana';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://www.example.org/orange/apple/banana';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'ExampleOrangeAppleBanana',
         id: 'example.orange.apple.banana'
       });
 
-      config.config.canonical = 'https://fhir.example.org/orange/apple/banana';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://fhir.example.org/orange/apple/banana';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'FhirExampleOrangeAppleBanana',
         id: 'fhir.example.orange.apple.banana'
       });
 
-      config.config.canonical = 'http://fhir.example.org/orange/apple/banana/pear';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'http://fhir.example.org/orange/apple/banana/pear';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'FhirExampleOrangeAppleBananaPear',
         id: 'fhir.example.orange.apple.banana.pear'
       });
     });
 
     it('should return a name and id when the canonical has a four or more-part host and no path', () => {
-      const config = new ExportableConfiguration({
-        canonical: 'http://www.crate.fruit.org',
-        fhirVersion: []
-      });
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      let canonical = 'http://www.crate.fruit.org';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'CrateFruit',
         id: 'crate.fruit'
       });
 
-      config.config.canonical = 'https://www.example.co.uk/';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://www.example.co.uk/';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'Example',
         id: 'example'
       });
     });
 
     it('should return a name and id when the canonical has a four or more-part host and a non-empty path', () => {
-      const config = new ExportableConfiguration({
-        canonical: 'http://www.crate.fruit.org/orange/apple',
-        fhirVersion: []
-      });
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      let canonical = 'http://www.crate.fruit.org/orange/apple';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'CrateFruitOrangeApple',
         id: 'crate.fruit.orange.apple'
       });
 
-      config.config.canonical = 'https://www.example.co.uk/orange/apple/banana';
-      expect(ConfigurationExtractor.inferNameAndId(config)).toEqual({
+      canonical = 'https://www.example.co.uk/orange/apple/banana';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'ExampleOrangeAppleBanana',
         id: 'example.orange.apple.banana'
       });
