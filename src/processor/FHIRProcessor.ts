@@ -4,11 +4,13 @@ import { logger } from '../utils';
 import { ProfileProcessor } from './ProfileProcessor';
 import { ExtensionProcessor } from './ExtensionProcessor';
 import { CodeSystemProcessor } from './CodeSystemProcessor';
+import { ValueSetProcessor } from './ValueSetProcessor';
 import { ConfigurationProcessor } from './ConfigurationProcessor';
 import {
   ExportableProfile,
   ExportableExtension,
   ExportableCodeSystem,
+  ExportableValueSet,
   ExportableConfiguration,
   ExportableInvariant
 } from '../exportable';
@@ -28,6 +30,7 @@ export class FHIRProcessor {
     | ExportableProfile
     | ExportableExtension
     | ExportableCodeSystem
+    | ExportableValueSet
     | ExportableConfiguration
     | ExportableInvariant
   )[] {
@@ -47,6 +50,9 @@ export class FHIRProcessor {
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       logger.debug(`Processing contents of ${inputPath} as CodeSystem.`);
       return [CodeSystemProcessor.process(rawContent)];
+    } else if (rawContent['resourceType'] === 'ValueSet') {
+      logger.debug(`Processing contents of ${inputPath} as ValueSet.`);
+      return [ValueSetProcessor.process(rawContent)];
     } else if (rawContent['resourceType'] === 'ImplementationGuide') {
       return [ConfigurationProcessor.process(rawContent)];
     } else {
