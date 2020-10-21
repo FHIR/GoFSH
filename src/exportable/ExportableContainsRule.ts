@@ -30,6 +30,8 @@ export class ExportableContainsRule extends fshrules.ContainsRule implements Exp
       return line;
     });
 
-    return `* ${this.path} contains ${itemsWithAssociatedRules.join(` and${EOL}    `)}`; // New line and indent each
+    return `* ${this.path} contains${
+      itemsWithAssociatedRules.length > 1 ? `${EOL}    ` : ' '
+    }${itemsWithAssociatedRules.join(` and${EOL}    `)}`; // New line and indent each
   }
 }
