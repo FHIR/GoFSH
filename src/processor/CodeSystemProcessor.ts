@@ -1,3 +1,4 @@
+import { capitalize } from 'lodash';
 import { ExportableCodeSystem } from '../exportable';
 
 export class CodeSystemProcessor {
@@ -14,8 +15,11 @@ export class CodeSystemProcessor {
   }
 
   static process(input: any): ExportableCodeSystem {
-    if (input.name) {
-      const codeSystem = new ExportableCodeSystem(input.name);
+    // We need something to call the CodeSystem, so it must have a name or id
+    if (input.name != null || input.id != null) {
+      // Prefer name (which is optional), otherwise create a reasonable name from the id with only allowable characters
+      const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
+      const codeSystem = new ExportableCodeSystem(name);
       CodeSystemProcessor.extractKeywords(input, codeSystem);
       return codeSystem;
     }

@@ -26,11 +26,21 @@ describe('CodeSystemProcessor', () => {
     expect(result.description).toBe('This is my simple code system with metadata');
   });
 
-  it('should not convert a CodeSystem without a name', () => {
+  it('should not convert a CodeSystem without a name or id', () => {
     const input = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-codesystem.json'), 'utf-8')
     );
     const result = CodeSystemProcessor.process(input);
     expect(result).toBeUndefined();
+  });
+
+  it('should convert a ValueSet without a name but with an id', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-codesystem-with-id.json'), 'utf-8')
+    );
+    const result = CodeSystemProcessor.process(input);
+    expect(result).toBeInstanceOf(ExportableCodeSystem);
+    expect(result.name).toBe('MyCodeSystem');
+    expect(result.id).toBe('my.code-system');
   });
 });
