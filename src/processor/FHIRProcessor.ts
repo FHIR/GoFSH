@@ -1,11 +1,17 @@
 import fs from 'fs-extra';
 import { fhirdefs } from 'fsh-sushi';
 import { logger } from '../utils';
-import { StructureDefinitionProcessor, CodeSystemProcessor, ConfigurationProcessor } from '.';
+import {
+  StructureDefinitionProcessor,
+  CodeSystemProcessor,
+  ValueSetProcessor,
+  ConfigurationProcessor
+} from '.';
 import {
   ExportableProfile,
   ExportableExtension,
   ExportableCodeSystem,
+  ExportableValueSet,
   ExportableConfiguration,
   ExportableInvariant
 } from '../exportable';
@@ -25,6 +31,7 @@ export class FHIRProcessor {
     | ExportableProfile
     | ExportableExtension
     | ExportableCodeSystem
+    | ExportableValueSet
     | ExportableConfiguration
     | ExportableInvariant
   )[] {
@@ -39,6 +46,9 @@ export class FHIRProcessor {
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       logger.debug(`Processing contents of ${inputPath} as CodeSystem.`);
       return [CodeSystemProcessor.process(rawContent)];
+    } else if (rawContent['resourceType'] === 'ValueSet') {
+      logger.debug(`Processing contents of ${inputPath} as ValueSet.`);
+      return [ValueSetProcessor.process(rawContent)];
     } else if (rawContent['resourceType'] === 'ImplementationGuide') {
       return [ConfigurationProcessor.process(rawContent)];
     } else {

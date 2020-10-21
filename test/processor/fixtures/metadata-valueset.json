@@ -1,0 +1,7 @@
+{
+  "resourceType": "ValueSet",
+  "name": "MyValueSet",
+  "id": "my-value-set",
+  "title": "My Value Set",
+  "description": "This is my simple value set with metadata"
+}
