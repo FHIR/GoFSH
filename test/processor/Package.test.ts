@@ -112,6 +112,15 @@ describe('Package', () => {
       expect(profile.parent).toBe('SmallProfile');
     });
 
+    it('should replace a profile parent url with the name of a core FHIR resource', () => {
+      const profile = new ExportableProfile('MyObservation');
+      profile.parent = 'http://hl7.org/fhir/StructureDefinition/Observation';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.parent).toBe('Observation');
+    });
+
     it('should not change the profile parent url if the parent is not found', () => {
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'https://demo.org/StructureDefinition/MediumProfile';
@@ -1251,6 +1260,57 @@ describe('Package', () => {
       combinedContainsRule.items.push({ name: 'foo' }, { name: 'bar' });
       combinedContainsRule.cardRules.push(cardRule1, cardRule2);
       expect(profile.rules).toEqual([combinedContainsRule, containsRule3]);
+    });
+
+    // simplifyFHIROnlyRules
+    it('should use the name and not full url for FHIR core resources in only rules', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Patient',
+          isReference: true
+        }
+      ];
+      const onlyValue = new ExportableOnlyRule('extension[something].value[x]');
+      onlyValue.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Device'
+        },
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Medication'
+        },
+        {
+          type: 'http://example.org/fhir/StructureDefinition/CustomComponent'
+        }
+      ];
+
+      profile.rules.push(onlySubject, onlyValue);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+
+      const expectedSubject = new ExportableOnlyRule('subject');
+      expectedSubject.types = [
+        {
+          type: 'Patient',
+          isReference: true
+        }
+      ];
+      const expectedValue = new ExportableOnlyRule('extension[something].value[x]');
+      expectedValue.types = [
+        {
+          type: 'Device'
+        },
+        {
+          type: 'Medication'
+        },
+        {
+          type: 'http://example.org/fhir/StructureDefinition/CustomComponent'
+        }
+      ];
+      expect(profile.rules).toContainEqual(expectedSubject);
+      expect(profile.rules).toContainEqual(expectedValue);
     });
   });
 });
