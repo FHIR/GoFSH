@@ -281,20 +281,5 @@ describe('StructureDefinitionProcessor', () => {
 
       expect(mappings).toHaveLength(1);
     });
-
-    it('should only create Mappings for mappings that are not on the parent definition', () => {
-      const input: ProcessableStructureDefinition = JSON.parse(
-        fs.readFileSync(
-          path.join(__dirname, 'fixtures', 'mapping-with-parent-profile.json'),
-          'utf-8'
-        )
-      );
-      const elements =
-        input.differential?.element?.map(rawElement => {
-          return ProcessableElementDefinition.fromJSON(rawElement, false);
-        }) ?? [];
-      const mappings = StructureDefinitionProcessor.extractMappings(elements, input, defs);
-      expect(mappings).toHaveLength(1); // Other mappings from base Observation are not exported
-    });
   });
 });
