@@ -31,6 +31,14 @@ export class FSHExporter {
         this.fshPackage.codeSystems.length == 1 ? '' : 's'
       }.`
     );
+    for (const valueSet of this.fshPackage.valueSets) {
+      results.push(valueSet.toFSH());
+    }
+    logger.info(
+      `Exported ${this.fshPackage.valueSets.length} ValueSet${
+        this.fshPackage.valueSets.length == 1 ? '' : 's'
+      }.`
+    );
     for (const invariant of this.fshPackage.invariants) {
       results.push(invariant.toFSH());
     }
