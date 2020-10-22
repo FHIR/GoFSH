@@ -83,16 +83,16 @@ export class Package {
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
-    for (const profile of this.profiles) {
-      if (profile.parent) {
+    for (const resource of [...this.profiles, ...this.extensions]) {
+      if (resource.parent) {
         // The parent might be another SD in the processor or a core FHIR resource
-        const parentSd = processor.structureDefinitions.find(sd => sd.url === profile.parent);
+        const parentSd = processor.structureDefinitions.find(sd => sd.url === resource.parent);
         if (parentSd?.name) {
-          profile.parent = parentSd.name;
+          resource.parent = parentSd.name;
         } else {
-          const fhirMatch = profile.parent.match(FHIR_BASE_URL);
+          const fhirMatch = resource.parent.match(FHIR_BASE_URL);
           if (fhirMatch?.[1]) {
-            profile.parent = fhirMatch[1];
+            resource.parent = fhirMatch[1];
           }
         }
       }

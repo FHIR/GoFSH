@@ -99,8 +99,9 @@ describe('Package', () => {
 
     beforeAll(() => {
       processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
-      // add a StructureDefinition to the processor
+      // add some StructureDefinitions to the processor
       processor.process(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      processor.process(path.join(__dirname, 'fixtures', 'small-extension.json'));
     });
 
     it('should replace a profile parent url with the name of the parent', () => {
@@ -112,6 +113,15 @@ describe('Package', () => {
       expect(profile.parent).toBe('SmallProfile');
     });
 
+    it('should replace an extension parent url with the name of the parent', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      extension.parent = 'https://demo.org/StructureDefinition/SmallExtension';
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.parent).toBe('SmallExtension');
+    });
+
     it('should replace a profile parent url with the name of a core FHIR resource', () => {
       const profile = new ExportableProfile('MyObservation');
       profile.parent = 'http://hl7.org/fhir/StructureDefinition/Observation';
@@ -119,6 +129,15 @@ describe('Package', () => {
       myPackage.add(profile);
       myPackage.optimize(processor);
       expect(profile.parent).toBe('Observation');
+    });
+
+    it('should replace an extension parent url with the name of a core FHIR resource', () => {
+      const extension = new ExportableExtension('MyNewExtension');
+      extension.parent = 'http://hl7.org/fhir/StructureDefinition/allergyintolerance-certainty';
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.parent).toBe('allergyintolerance-certainty');
     });
 
     it('should not change the profile parent url if the parent is not found', () => {
