@@ -37,11 +37,11 @@ export class MappingExtractor {
     const inheritedMappings = mappings.filter(mapping =>
       parent?.mapping.some((i: fhirtypes.StructureDefinitionMapping) => i.identity === mapping.name)
     );
-    const changedInheritedMappings: ExportableMapping[] = [];
 
     // For each inherited mapping, look to see if there are any new rules
-    inheritedMappings.forEach(mapping => {
+    const changedInheritedMappings = inheritedMappings.filter(mapping => {
       const changedIndexes: number[] = [];
+      let isNew = false;
       mapping.rules.forEach((rule, i) => {
         const element = fhirtypes.StructureDefinition.fromJSON(parent).findElementByPath(
           rule.path,
@@ -53,13 +53,14 @@ export class MappingExtractor {
           this.processMappingRule(ProcessableElementDefinition.fromJSON(element), m, i)
         );
         if (!elementMappingRules.find(r => isEqual(r, rule))) {
-          changedInheritedMappings.push(mapping);
+          isNew = true;
         } else {
           // Remove inherited rules so we don't include them if the mapping is exported
           changedIndexes.push(i);
         }
       });
       pullAt(mapping.rules, changedIndexes);
+      return isNew;
     });
     return [...newMappings, ...changedInheritedMappings];
   }
