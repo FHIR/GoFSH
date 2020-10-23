@@ -1,0 +1,10 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "complex-type",
+  "type": "Extension",
+  "name": "SmallExtension",
+  "url": "https://demo.org/StructureDefinition/SmallExtension",
+  "snapshot": {
+    "element": []
+  }
+}
