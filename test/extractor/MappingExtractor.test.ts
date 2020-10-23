@@ -87,7 +87,7 @@ describe('MappingExtractor', () => {
     mappingRule.map = 'Observation.notReal';
     unexpectedMapping.rules.push(mappingRule);
 
-    expect(mappings).toHaveLength(4); // Only the three mappings in the SD mapping list are created
+    expect(mappings).toHaveLength(4); // Only the four mappings in the SD mapping list are created
     expect(mappings).not.toContainEqual(unexpectedMapping); // No RogueMapping made
 
     expect(element.processedPaths).toHaveLength(0); // No paths marked as processed on element

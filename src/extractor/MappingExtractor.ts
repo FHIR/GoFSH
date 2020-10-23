@@ -1,5 +1,5 @@
 import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
-import { differenceWith, isEqual, pullAt } from 'lodash';
+import { difference, isEqual, pullAt } from 'lodash';
 import { ExportableMapping, ExportableMappingRule } from '../exportable';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { getPath } from '../utils';
@@ -10,21 +10,21 @@ export class MappingExtractor {
     elements: ProcessableElementDefinition[],
     fhir: fhirdefs.FHIRDefinitions
   ): ExportableMapping[] {
-    const mappings =
-      input.mapping?.map(m => {
-        const mapping = new ExportableMapping(m.identity);
-        mapping.source = input.name;
-        if (m.name) mapping.title = m.name;
-        if (m.uri) mapping.target = m.uri;
-        if (m.comment) mapping.description = m.comment;
-        return mapping;
-      }) ?? [];
+    const mappings = (input.mapping || []).map(m => {
+      const mapping = new ExportableMapping(m.identity);
+      mapping.source = input.name;
+      if (m.name) mapping.title = m.name;
+      if (m.uri) mapping.target = m.uri;
+      if (m.comment) mapping.description = m.comment;
+      return mapping;
+    });
     elements.forEach(element => {
       this.extractRules(element, mappings);
     });
 
     // Filter out mappings on the parent - only include mappings new to the profile
     // or mappings on the base definition with additional mapping rules
+    // TODO: Look for parents from the local package being processed. This requires a MasterFisher.
     const parent = fhir.fishForFHIR(
       input.baseDefinition,
       utils.Type.Resource,
@@ -32,35 +32,33 @@ export class MappingExtractor {
       utils.Type.Profile,
       utils.Type.Extension
     );
-    const newItems = differenceWith(input.mapping, parent?.mapping, isEqual);
-    const newMappings = mappings.filter(mapping => newItems.some(i => i.identity === mapping.name));
-    const inheritedMappings = mappings.filter(mapping =>
-      parent?.mapping.some((i: fhirtypes.StructureDefinitionMapping) => i.identity === mapping.name)
+
+    // If there is no parent found, all the mappings should be exported.
+    if (parent == null) return mappings;
+
+    const parentSD = fhirtypes.StructureDefinition.fromJSON(parent);
+    const inheritedMappings = mappings.filter(m =>
+      parent.mapping.some((pm: fhirtypes.StructureDefinitionMapping) => pm.identity === m.name)
     );
+    const newMappings = difference(mappings, inheritedMappings);
 
     // For each inherited mapping, look to see if there are any new rules
     const changedInheritedMappings = inheritedMappings.filter(mapping => {
       const changedIndexes: number[] = [];
-      let isNew = false;
       mapping.rules.forEach((rule, i) => {
-        const element = fhirtypes.StructureDefinition.fromJSON(parent).findElementByPath(
-          rule.path,
-          fhir
-        );
+        const element = parentSD.findElementByPath(rule.path, fhir);
         // See if any mapping on the element matches the current rule we are looking for
         // If one matches, this is not a new rule. If none match, this is new to the profile.
-        const elementMappingRules = element.mapping?.map((m, i) =>
+        const elementMappingRules = (element?.mapping || [])?.map((m, i) =>
           this.processMappingRule(ProcessableElementDefinition.fromJSON(element), m, i)
         );
-        if (!elementMappingRules.find(r => isEqual(r, rule))) {
-          isNew = true;
-        } else {
+        if (elementMappingRules.find(r => isEqual(r, rule))) {
           // Remove inherited rules so we don't include them if the mapping is exported
           changedIndexes.push(i);
         }
       });
       pullAt(mapping.rules, changedIndexes);
-      return isNew;
+      return mapping.rules.length > 0;
     });
     return [...newMappings, ...changedInheritedMappings];
   }
@@ -69,9 +67,7 @@ export class MappingExtractor {
     element.mapping?.forEach((mapping, i) => {
       // Mappings are created at SD, so should always find a match at this point
       const matchingMapping = mappings.find(m => m.name === mapping.identity);
-      if (!matchingMapping) return;
-      const mappingRule = this.processMappingRule(element, mapping, i);
-      matchingMapping.rules.push(mappingRule);
+      matchingMapping?.rules.push(this.processMappingRule(element, mapping, i));
     });
   }
 
