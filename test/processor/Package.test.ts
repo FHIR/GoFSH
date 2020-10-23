@@ -106,11 +106,11 @@ describe('Package', () => {
 
     it('should replace a profile parent url with the name of the parent', () => {
       const profile = new ExportableProfile('ExtraProfile');
-      profile.parent = 'https://demo.org/StructureDefinition/SmallProfile';
+      profile.parent = 'https://demo.org/StructureDefinition/Patient';
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.optimize(processor);
-      expect(profile.parent).toBe('SmallProfile');
+      expect(profile.parent).toBe('Patient');
     });
 
     it('should replace an extension parent url with the name of the parent', () => {
@@ -138,6 +138,15 @@ describe('Package', () => {
       myPackage.add(extension);
       myPackage.optimize(processor);
       expect(extension.parent).toBe('allergyintolerance-certainty');
+    });
+
+    it('should not replace a parent url with the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
+      const profile = new ExportableProfile('MyPatient');
+      profile.parent = 'http://hl7.org/fhir/StructureDefinition/Patient';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.parent).toBe('http://hl7.org/fhir/StructureDefinition/Patient');
     });
 
     it('should not change the profile parent url if the parent is not found', () => {

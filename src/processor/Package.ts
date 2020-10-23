@@ -92,7 +92,10 @@ export class Package {
         } else {
           const fhirMatch = resource.parent.match(FHIR_BASE_URL);
           if (fhirMatch?.[1]) {
-            resource.parent = fhirMatch[1];
+            // Only change the FHIR url into a name if it won't collide with a local SD
+            if (!processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])) {
+              resource.parent = fhirMatch[1];
+            }
           }
         }
       }
