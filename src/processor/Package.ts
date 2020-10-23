@@ -79,7 +79,7 @@ export class Package {
     this.removeDefaultSlicingRules();
     this.removeDateRules();
     this.combineContainsRules();
-    this.simplifyFHIROnlyRules();
+    this.simplifyOnlyRules(processor);
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -424,14 +424,23 @@ export class Package {
     });
   }
 
-  private simplifyFHIROnlyRules(): void {
+  private simplifyOnlyRules(processor: FHIRProcessor): void {
     [...this.profiles, ...this.extensions].forEach(sd => {
       sd.rules.forEach(rule => {
         if (rule instanceof ExportableOnlyRule) {
           rule.types.forEach(onlyRuleType => {
-            const fhirMatch = onlyRuleType.type.match(FHIR_BASE_URL);
-            if (fhirMatch?.[1]) {
-              onlyRuleType.type = fhirMatch[1];
+            // The type might be another SD in the processor or a core FHIR resource
+            const typeSd = processor.structureDefinitions.find(sd => sd.url === onlyRuleType.type);
+            if (typeSd?.name) {
+              onlyRuleType.type = typeSd.name;
+            } else {
+              const fhirMatch = onlyRuleType.type.match(FHIR_BASE_URL);
+              if (fhirMatch?.[1]) {
+                // Only change the FHIR url into a name if it won't collide with a local SD
+                if (!processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])) {
+                  onlyRuleType.type = fhirMatch[1];
+                }
+              }
             }
           });
         }
