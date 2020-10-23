@@ -91,11 +91,12 @@ export class Package {
           resource.parent = parentSd.name;
         } else {
           const fhirMatch = resource.parent.match(FHIR_BASE_URL);
-          if (fhirMatch?.[1]) {
-            // Only change the FHIR url into a name if it won't collide with a local SD
-            if (!processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])) {
-              resource.parent = fhirMatch[1];
-            }
+          // Only change the FHIR url into a name if it won't collide with a local SD
+          if (
+            fhirMatch?.[1] &&
+            !processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])
+          ) {
+            resource.parent = fhirMatch[1];
           }
         }
       }
@@ -435,11 +436,12 @@ export class Package {
               onlyRuleType.type = typeSd.name;
             } else {
               const fhirMatch = onlyRuleType.type.match(FHIR_BASE_URL);
-              if (fhirMatch?.[1]) {
-                // Only change the FHIR url into a name if it won't collide with a local SD
-                if (!processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])) {
-                  onlyRuleType.type = fhirMatch[1];
-                }
+              // Only change the FHIR url into a name if it won't collide with a local SD
+              if (
+                fhirMatch?.[1] &&
+                !processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])
+              ) {
+                onlyRuleType.type = fhirMatch[1];
               }
             }
           });
