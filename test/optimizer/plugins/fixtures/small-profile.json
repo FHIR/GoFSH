@@ -1,0 +1,10 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Resource",
+  "name": "Patient",
+  "url": "https://demo.org/StructureDefinition/Patient",
+  "snapshot": {
+    "element": []
+  }
+}
