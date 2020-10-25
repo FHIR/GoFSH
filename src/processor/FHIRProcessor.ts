@@ -12,10 +12,10 @@ import { ConfigurationExtractor } from '../extractor';
 import { Package } from './Package';
 
 export class FHIRProcessor {
-  public readonly structureDefinitions: any[] = [];
-  public readonly codeSystems: any[] = [];
-  public readonly valueSets: any[] = [];
-  public readonly implementationGuides: any[] = [];
+  public readonly structureDefinitions: Map<string, any> = new Map();
+  public readonly codeSystems: Map<string, any> = new Map();
+  public readonly valueSets: Map<string, any> = new Map();
+  public readonly implementationGuides: Map<string, any> = new Map();
   public readonly fhir: fhirdefs.FHIRDefinitions;
 
   constructor(fhir: fhirdefs.FHIRDefinitions) {
@@ -28,16 +28,16 @@ export class FHIRProcessor {
     if (rawContent['resourceType'] === 'StructureDefinition') {
       // Profiles and Extensions are both made from StructureDefinitions
       // Invariants may be contained within StructureDefinitions
-      this.structureDefinitions.push(rawContent);
+      this.structureDefinitions.set(inputPath, rawContent);
       logger.debug(`Registered contents of ${inputPath} as StructureDefinition.`);
     } else if (rawContent['resourceType'] === 'CodeSystem') {
-      this.codeSystems.push(rawContent);
+      this.codeSystems.set(inputPath, rawContent);
       logger.debug(`Registered contents of ${inputPath} as CodeSystem.`);
     } else if (rawContent['resourceType'] === 'ValueSet') {
-      this.valueSets.push(rawContent);
+      this.valueSets.set(inputPath, rawContent);
       logger.debug(`Registered contents of ${inputPath} as ValueSet.`);
     } else if (rawContent['resourceType'] === 'ImplementationGuide') {
-      this.implementationGuides.push(rawContent);
+      this.implementationGuides.set(inputPath, rawContent);
     } else {
       logger.warn(`Skipping unsupported resource: ${inputPath}`);
     }
@@ -46,13 +46,16 @@ export class FHIRProcessor {
   process(): Package {
     const resources = new Package();
     let config: ExportableConfiguration;
-    if (this.implementationGuides.length > 0) {
-      config = ConfigurationProcessor.process(this.implementationGuides[0]);
+    if (this.implementationGuides.size > 0) {
+      config = ConfigurationProcessor.process(Array.from(this.implementationGuides.values())[0]);
     } else {
-      config = ConfigurationExtractor.process([...this.structureDefinitions, ...this.codeSystems]);
+      config = ConfigurationExtractor.process([
+        ...Array.from(this.structureDefinitions.values()),
+        ...Array.from(this.codeSystems.values())
+      ]);
     }
     resources.add(config);
-    this.structureDefinitions.forEach(sd => {
+    this.structureDefinitions.forEach((sd, inputPath) => {
       try {
         StructureDefinitionProcessor.process(sd, this.fhir, resources.invariants).forEach(
           resource => {
@@ -60,21 +63,21 @@ export class FHIRProcessor {
           }
         );
       } catch (ex) {
-        logger.error(`Could not process StructureDefinition: ${ex.message}`);
+        logger.error(`Could not process StructureDefinition at ${inputPath}: ${ex.message}`);
       }
     });
-    this.codeSystems.forEach(cs => {
+    this.codeSystems.forEach((cs, inputPath) => {
       try {
         resources.add(CodeSystemProcessor.process(cs));
       } catch (ex) {
-        logger.error(`Could not process CodeSystem: ${ex.message}`);
+        logger.error(`Could not process CodeSystem at ${inputPath}: ${ex.message}`);
       }
     });
-    this.valueSets.forEach(vs => {
+    this.valueSets.forEach((vs, inputPath) => {
       try {
         resources.add(ValueSetProcessor.process(vs));
       } catch (ex) {
-        logger.error(`Could not process ValueSet: ${ex.message}`);
+        logger.error(`Could not process ValueSet at ${inputPath}: ${ex.message}`);
       }
     });
     return resources;

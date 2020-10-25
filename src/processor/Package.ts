@@ -17,7 +17,7 @@ import {
 } from '../exportable';
 import { FHIRProcessor } from './FHIRProcessor';
 import { logger } from '../utils';
-import { pullAt, groupBy, values, flatten, isEqual } from 'lodash';
+import { pullAt, groupBy, values, flatten, isEqual, toArray } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
 const { FshCode } = fshtypes;
 
@@ -83,7 +83,9 @@ export class Package {
   private resolveProfileParents(processor: FHIRProcessor): void {
     for (const profile of this.profiles) {
       if (profile.parent) {
-        const parentSd = processor.structureDefinitions.find(sd => sd.url === profile.parent);
+        const parentSd = toArray(processor.structureDefinitions.values()).find(
+          (sd: any) => sd.url === profile.parent
+        );
         if (parentSd?.name) {
           profile.parent = parentSd.name;
         }
