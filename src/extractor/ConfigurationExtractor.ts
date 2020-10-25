@@ -11,7 +11,8 @@ export class ConfigurationExtractor {
     const fhirVersion = ConfigurationExtractor.inferString(resources, 'fhirVersion') || '4.0.1';
     const config = new ExportableConfiguration({
       canonical: canonical,
-      fhirVersion: [fhirVersion]
+      fhirVersion: [fhirVersion],
+      FSHOnly: true
     });
     // infer name and id using canonical
     Object.assign(config.config, ConfigurationExtractor.inferNameAndId(canonical));

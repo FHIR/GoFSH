@@ -20,7 +20,6 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
 }
 
 export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
-  const resources = new Package();
   const processor = new FHIRProcessor(defs);
   const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
   logger.info(`Found ${files.length} JSON files.`);
@@ -28,10 +27,10 @@ export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
     try {
       processor.register(file);
     } catch (ex) {
-      logger.error(`Could not register ${file}: ${ex.message}`);
+      logger.error(`Could not load ${file}: ${ex.message}`);
     }
   });
-  processor.process(resources);
+  const resources = processor.process();
   resources.optimize(processor);
   return resources;
 }

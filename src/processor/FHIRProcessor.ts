@@ -38,10 +38,13 @@ export class FHIRProcessor {
       logger.debug(`Registered contents of ${inputPath} as ValueSet.`);
     } else if (rawContent['resourceType'] === 'ImplementationGuide') {
       this.implementationGuides.push(rawContent);
+    } else {
+      logger.warn(`Skipping unsupported resource: ${inputPath}`);
     }
   }
 
-  process(resources: Package) {
+  process(): Package {
+    const resources = new Package();
     let config: ExportableConfiguration;
     if (this.implementationGuides.length > 0) {
       config = ConfigurationProcessor.process(this.implementationGuides[0]);
@@ -74,5 +77,6 @@ export class FHIRProcessor {
         logger.error(`Could not process ValueSet: ${ex.message}`);
       }
     });
+    return resources;
   }
 }
