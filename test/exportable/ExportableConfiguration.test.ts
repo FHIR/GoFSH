@@ -7,7 +7,8 @@ describe('ExportableConfiguration', () => {
     beforeAll(() => {
       const config = new ExportableConfiguration({
         canonical: 'http://example.org/test/package',
-        fhirVersion: ['4.0.1']
+        fhirVersion: ['4.0.1'],
+        FSHOnly: true
       });
       result = config.toFSH();
     });
@@ -18,6 +19,10 @@ describe('ExportableConfiguration', () => {
 
     it('should include the FHIR version', () => {
       expect(result).toMatch(/^fhirVersion: 4\.0\.1/m);
+    });
+
+    it('should include the FSHOnly flag', () => {
+      expect(result).toMatch(/^FSHOnly: true/m);
     });
 
     it('should not include optional fields not present in the configuration', () => {
@@ -35,6 +40,7 @@ describe('ExportableConfiguration', () => {
       const config = new ExportableConfiguration({
         canonical: 'http://example.org/test/package',
         fhirVersion: ['4.0.1'],
+        FSHOnly: true,
         id: 'a.special.package',
         name: 'SpecialTestPackage',
         status: 'active',

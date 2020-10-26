@@ -6,11 +6,12 @@ export class ExportableConfiguration implements Exportable {
   constructor(public config: fshtypes.Configuration) {}
 
   toFSH(): string {
-    // canonical and fhirVersion are always present
+    // canonical, fhirVersion, and FSHOnly are always present
     const yaml = new YAML.Document();
     yaml.contents = YAML.createNode({
       canonical: this.config.canonical,
-      fhirVersion: this.config.fhirVersion[0]
+      fhirVersion: this.config.fhirVersion[0],
+      FSHOnly: this.config.FSHOnly
     });
     // id, name, status, and version are the optional configuration properties.
     if (this.config.id) {
