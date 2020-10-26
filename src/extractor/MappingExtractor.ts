@@ -1,7 +1,11 @@
 import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
-import { difference, isEqual, pullAt } from 'lodash';
+import { isEqual, pullAt } from 'lodash';
 import { ExportableMapping, ExportableMappingRule } from '../exportable';
-import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
+import {
+  ProcessableElementDefinition,
+  ProcessableStructureDefinition,
+  StructureDefinitionProcessor
+} from '../processor';
 import { getPath } from '../utils';
 
 export class MappingExtractor {
@@ -10,17 +14,7 @@ export class MappingExtractor {
     elements: ProcessableElementDefinition[],
     fhir: fhirdefs.FHIRDefinitions
   ): ExportableMapping[] {
-    const mappings = (input.mapping || []).map(m => {
-      const mapping = new ExportableMapping(m.identity);
-      mapping.source = input.name;
-      if (m.name) mapping.title = m.name;
-      if (m.uri) mapping.target = m.uri;
-      if (m.comment) mapping.description = m.comment;
-      return mapping;
-    });
-    elements.forEach(element => {
-      this.extractRules(element, mappings);
-    });
+    const mappings = this.extractMappings(input, elements);
 
     // Filter out mappings on the parent - only include mappings new to the profile
     // or mappings on the base definition with additional mapping rules
@@ -34,25 +28,28 @@ export class MappingExtractor {
     );
 
     // If there is no parent found, all the mappings should be exported.
-    if (parent == null) return mappings;
+    if (parent == null || !StructureDefinitionProcessor.isProcessableStructureDefinition(parent))
+      return mappings;
 
-    const parentSD = fhirtypes.StructureDefinition.fromJSON(parent);
-    const inheritedMappings = mappings.filter(m =>
-      parent.mapping.some((pm: fhirtypes.StructureDefinitionMapping) => pm.identity === m.name)
-    );
-    const newMappings = difference(mappings, inheritedMappings);
+    const parentSDElements =
+      parent.snapshot?.element?.map(rawElement => {
+        return ProcessableElementDefinition.fromJSON(rawElement, false);
+      }) ?? [];
 
-    // For each inherited mapping, look to see if there are any new rules
-    const changedInheritedMappings = inheritedMappings.filter(mapping => {
+    const parentMappings = this.extractMappings(parent, parentSDElements);
+
+    // Filter out any mappings that come directly from the parent SD.
+    // Only return mappings that are new to the profile or inherited mappings that include new MappingRules
+    const newMappings = mappings.filter(mapping => {
       const changedIndexes: number[] = [];
+      const parentMapping = parentMappings.find(pm => pm.name === mapping.name);
+      // If the mapping does not match any from the parent SD, it is new to the profile.
+      if (parentMapping == null) return true;
+
+      // Check if each mapping rule is new to the profile
       mapping.rules.forEach((rule, i) => {
-        const element = parentSD.findElementByPath(rule.path, fhir);
-        // See if any mapping on the element matches the current rule we are looking for
-        // If one matches, this is not a new rule. If none match, this is new to the profile.
-        const elementMappingRules = (element?.mapping || [])?.map((m, i) =>
-          this.processMappingRule(ProcessableElementDefinition.fromJSON(element), m, i)
-        );
-        if (elementMappingRules.find(r => isEqual(r, rule))) {
+        // If it matches one on the parent SD, it is not a new rule. If it doesn't match, this is new to the profile.
+        if (parentMapping.rules.find(r => isEqual(r, rule))) {
           // Remove inherited rules so we don't include them if the mapping is exported
           changedIndexes.push(i);
         }
@@ -60,7 +57,25 @@ export class MappingExtractor {
       pullAt(mapping.rules, changedIndexes);
       return mapping.rules.length > 0;
     });
-    return [...newMappings, ...changedInheritedMappings];
+    return newMappings;
+  }
+
+  static extractMappings(
+    sd: ProcessableStructureDefinition,
+    elements: ProcessableElementDefinition[]
+  ): ExportableMapping[] {
+    const mappings = (sd.mapping || []).map(m => {
+      const mapping = new ExportableMapping(m.identity);
+      mapping.source = sd.name;
+      if (m.name) mapping.title = m.name;
+      if (m.uri) mapping.target = m.uri;
+      if (m.comment) mapping.description = m.comment;
+      return mapping;
+    });
+    elements.forEach(element => {
+      this.extractRules(element, mappings);
+    });
+    return mappings;
   }
 
   static extractRules(element: ProcessableElementDefinition, mappings: ExportableMapping[]) {
