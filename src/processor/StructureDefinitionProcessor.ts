@@ -48,6 +48,9 @@ export class StructureDefinitionProcessor {
       );
       const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fhir);
       StructureDefinitionProcessor.extractRules(input, elements, sd, fhir);
+      // TODO: Destructuring an array with invariants and mappings is required for TypeScript 3.0
+      // With TypeScript 4.0, we should update to return the following line, which is more clear:
+      // return [sd, ...invariants, ...mappings];
       return [sd, ...[...invariants, ...mappings]];
     }
     return [];
