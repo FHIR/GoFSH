@@ -99,17 +99,54 @@ describe('Package', () => {
 
     beforeAll(() => {
       processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
-      // add a StructureDefinition to the processor
+      // add some StructureDefinitions to the processor
       processor.process(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      processor.process(path.join(__dirname, 'fixtures', 'small-extension.json'));
     });
 
     it('should replace a profile parent url with the name of the parent', () => {
       const profile = new ExportableProfile('ExtraProfile');
-      profile.parent = 'https://demo.org/StructureDefinition/SmallProfile';
+      profile.parent = 'https://demo.org/StructureDefinition/Patient';
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.optimize(processor);
-      expect(profile.parent).toBe('SmallProfile');
+      expect(profile.parent).toBe('Patient');
+    });
+
+    it('should replace an extension parent url with the name of the parent', () => {
+      const extension = new ExportableExtension('ExtraExtension');
+      extension.parent = 'https://demo.org/StructureDefinition/SmallExtension';
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.parent).toBe('SmallExtension');
+    });
+
+    it('should replace a profile parent url with the name of a core FHIR resource', () => {
+      const profile = new ExportableProfile('MyObservation');
+      profile.parent = 'http://hl7.org/fhir/StructureDefinition/Observation';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.parent).toBe('Observation');
+    });
+
+    it('should replace an extension parent url with the name of a core FHIR resource', () => {
+      const extension = new ExportableExtension('MyNewExtension');
+      extension.parent = 'http://hl7.org/fhir/StructureDefinition/allergyintolerance-certainty';
+      const myPackage = new Package();
+      myPackage.add(extension);
+      myPackage.optimize(processor);
+      expect(extension.parent).toBe('allergyintolerance-certainty');
+    });
+
+    it('should not replace a parent url with the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
+      const profile = new ExportableProfile('MyPatient');
+      profile.parent = 'http://hl7.org/fhir/StructureDefinition/Patient';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+      expect(profile.parent).toBe('http://hl7.org/fhir/StructureDefinition/Patient');
     });
 
     it('should not change the profile parent url if the parent is not found', () => {
@@ -1177,6 +1214,181 @@ describe('Package', () => {
       myPackage.optimize(processor);
       expect(profile.rules).toHaveLength(1); // date CaretValueRule is not removed
       expect(extension.rules).toHaveLength(1); // date CaretValueRule is not removed
+    });
+
+    // combineContainsRules
+    it('should combine multiple contains rules which have the same path', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+
+      const containsRule1 = new ExportableContainsRule('category');
+      containsRule1.items.push({ name: 'foo' });
+      const cardRule1 = new ExportableCardRule('category[foo]');
+      cardRule1.min = 1;
+      containsRule1.cardRules.push(cardRule1);
+
+      const containsRule2 = new ExportableContainsRule('category');
+      containsRule2.items.push({ name: 'bar' });
+      const cardRule2 = new ExportableCardRule('category[bar]');
+      cardRule2.min = 1;
+      containsRule2.cardRules.push(cardRule2);
+
+      const containsRule3 = new ExportableContainsRule('category');
+      containsRule3.items.push({ name: 'baz' });
+      const cardRule3 = new ExportableCardRule('category[baz]');
+      cardRule3.min = 1;
+      containsRule3.cardRules.push(cardRule3);
+      const flagRule3 = new ExportableFlagRule('category[baz]');
+      flagRule3.mustSupport = true;
+      containsRule3.flagRules.push(flagRule3);
+
+      profile.rules = [containsRule1, containsRule2, containsRule3];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+
+      const combinedContainsRule = new ExportableContainsRule('category');
+      combinedContainsRule.items.push({ name: 'foo' }, { name: 'bar' }, { name: 'baz' });
+      combinedContainsRule.cardRules.push(cardRule1, cardRule2, cardRule3);
+      combinedContainsRule.flagRules.push(flagRule3);
+      expect(profile.rules).toEqual([combinedContainsRule]);
+    });
+
+    it('should not combine multiple contains rules which have the different paths', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'Observation';
+
+      const containsRule1 = new ExportableContainsRule('category');
+      containsRule1.items.push({ name: 'foo' });
+      const cardRule1 = new ExportableCardRule('category[foo]');
+      cardRule1.min = 1;
+      containsRule1.cardRules.push(cardRule1);
+
+      const containsRule2 = new ExportableContainsRule('category');
+      containsRule2.items.push({ name: 'bar' });
+      const cardRule2 = new ExportableCardRule('category[bar]');
+      cardRule2.min = 1;
+      containsRule1.cardRules.push(cardRule2);
+
+      const containsRule3 = new ExportableContainsRule('component');
+      containsRule3.items.push({ name: 'baz' });
+      const cardRule3 = new ExportableCardRule('component[baz]');
+      cardRule3.min = 1;
+      containsRule3.cardRules.push(cardRule3);
+      const flagRule3 = new ExportableFlagRule('component[baz]');
+      flagRule3.mustSupport = true;
+      containsRule3.flagRules.push(flagRule3);
+
+      profile.rules = [containsRule1, containsRule2, containsRule3];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+
+      const combinedContainsRule = new ExportableContainsRule('category');
+      combinedContainsRule.items.push({ name: 'foo' }, { name: 'bar' });
+      combinedContainsRule.cardRules.push(cardRule1, cardRule2);
+      expect(profile.rules).toEqual([combinedContainsRule, containsRule3]);
+    });
+
+    // simplifyOnlyRules
+    it('should replace an only rule type url with the name of a local StructureDefinition', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'https://demo.org/StructureDefinition/Patient',
+          isReference: true
+        }
+      ];
+
+      profile.rules.push(onlySubject);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+
+      const expectedSubject = new ExportableOnlyRule('subject');
+      expectedSubject.types = [
+        {
+          type: 'Patient',
+          isReference: true
+        }
+      ];
+      expect(profile.rules).toContainEqual(expectedSubject);
+    });
+
+    it('should replace an only rule type url with the name of a core FHIR resource', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Group',
+          isReference: true
+        }
+      ];
+      const onlyValue = new ExportableOnlyRule('extension[something].value[x]');
+      onlyValue.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Device'
+        },
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Medication'
+        },
+        {
+          type: 'http://example.org/fhir/StructureDefinition/CustomComponent'
+        }
+      ];
+
+      profile.rules.push(onlySubject, onlyValue);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+
+      const expectedSubject = new ExportableOnlyRule('subject');
+      expectedSubject.types = [
+        {
+          type: 'Group',
+          isReference: true
+        }
+      ];
+      const expectedValue = new ExportableOnlyRule('extension[something].value[x]');
+      expectedValue.types = [
+        {
+          type: 'Device'
+        },
+        {
+          type: 'Medication'
+        },
+        {
+          type: 'http://example.org/fhir/StructureDefinition/CustomComponent'
+        }
+      ];
+      expect(profile.rules).toContainEqual(expectedSubject);
+      expect(profile.rules).toContainEqual(expectedValue);
+    });
+
+    it('should not replace an only rule type url with the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Patient',
+          isReference: true
+        }
+      ];
+
+      profile.rules.push(onlySubject);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      myPackage.optimize(processor);
+
+      const expectedSubject = new ExportableOnlyRule('subject');
+      expectedSubject.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Patient',
+          isReference: true
+        }
+      ];
+      expect(profile.rules).toContainEqual(expectedSubject);
     });
   });
 });

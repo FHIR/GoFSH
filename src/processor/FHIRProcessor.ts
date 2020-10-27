@@ -1,14 +1,17 @@
 import fs from 'fs-extra';
 import { fhirdefs } from 'fsh-sushi';
 import { logger } from '../utils';
-import { ProfileProcessor } from './ProfileProcessor';
-import { ExtensionProcessor } from './ExtensionProcessor';
-import { CodeSystemProcessor } from './CodeSystemProcessor';
-import { ConfigurationProcessor } from './ConfigurationProcessor';
+import {
+  StructureDefinitionProcessor,
+  CodeSystemProcessor,
+  ValueSetProcessor,
+  ConfigurationProcessor
+} from '.';
 import {
   ExportableProfile,
   ExportableExtension,
   ExportableCodeSystem,
+  ExportableValueSet,
   ExportableConfiguration,
   ExportableInvariant
 } from '../exportable';
@@ -28,6 +31,7 @@ export class FHIRProcessor {
     | ExportableProfile
     | ExportableExtension
     | ExportableCodeSystem
+    | ExportableValueSet
     | ExportableConfiguration
     | ExportableInvariant
   )[] {
@@ -37,16 +41,14 @@ export class FHIRProcessor {
       // Profiles and Extensions are both made from StructureDefinitions
       // Invariants may be contained within StructureDefinitions
       this.structureDefinitions.push(rawContent);
-      if (rawContent.type === 'Extension') {
-        logger.debug(`Processing contents of ${inputPath} as Extension.`);
-        return ExtensionProcessor.process(rawContent, this.fhir, existingInvariants);
-      } else {
-        logger.debug(`Processing contents of ${inputPath} as Profile.`);
-        return ProfileProcessor.process(rawContent, this.fhir, existingInvariants);
-      }
+      logger.debug(`Processing contents of ${inputPath} as StructureDefinition.`);
+      return StructureDefinitionProcessor.process(rawContent, this.fhir, existingInvariants);
     } else if (rawContent['resourceType'] === 'CodeSystem') {
       logger.debug(`Processing contents of ${inputPath} as CodeSystem.`);
       return [CodeSystemProcessor.process(rawContent)];
+    } else if (rawContent['resourceType'] === 'ValueSet') {
+      logger.debug(`Processing contents of ${inputPath} as ValueSet.`);
+      return [ValueSetProcessor.process(rawContent)];
     } else if (rawContent['resourceType'] === 'ImplementationGuide') {
       return [ConfigurationProcessor.process(rawContent)];
     } else {
