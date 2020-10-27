@@ -28,8 +28,9 @@ export class MappingExtractor {
     );
 
     // If there is no parent found, all the mappings should be exported.
-    if (parent == null || !StructureDefinitionProcessor.isProcessableStructureDefinition(parent))
+    if (parent == null || !StructureDefinitionProcessor.isProcessableStructureDefinition(parent)) {
       return mappings;
+    }
 
     const parentSDElements =
       parent.snapshot?.element?.map(rawElement => {
