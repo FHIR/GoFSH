@@ -60,22 +60,18 @@ export class ConfigurationExtractor {
     if (canonicalMatch) {
       const hostParts = canonicalMatch[1].split('.').slice(0, -1);
       const pathParts = canonicalMatch[2]?.split('/').filter(part => part.length > 0) ?? [];
-      // Many IGs are hosted at a URL that starts with http://hl7.org/fhir/
-      // However, they generally do not include "hl7" and "fhir" at the start of their id and name.
-      // So, if "hl7" is the only host part, and "fhir" is the first path part,
-      // remove each of them.
-      if (hostParts.length === 1 && hostParts[0] === 'hl7' && pathParts?.[0] === 'fhir') {
-        hostParts.splice(0);
-        pathParts.splice(0, 1);
-      }
       const idParts = [
         ...filter(hostParts, part => part.length > 2 && part !== 'www'),
         ...filter(pathParts, part => part.length > 0)
       ];
-      return {
-        name: idParts.map(capitalize).join(''),
-        id: idParts.join('.')
-      };
+      // Many IGs are hosted at a URL that starts with http://hl7.org/fhir/
+      // However, they generally do not include "hl7" and "fhir" at the start of their name.
+      // So, if the first two idParts are "hl7" and "fhir" don't use them in the name.
+      const id = idParts.join('.');
+      const name = (idParts?.[0] === 'hl7' && idParts?.[1] === 'fhir' ? idParts.slice(2) : idParts)
+        .map(capitalize)
+        .join('');
+      return { name, id };
     } else {
       return {};
     }

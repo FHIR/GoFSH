@@ -230,11 +230,11 @@ describe('ConfigurationExtractor', () => {
       });
     });
 
-    it('should not include hl7 and fhir in the name and id when the canonical starts with http://hl7.org/fhir/', () => {
+    it('should not include hl7 and fhir in the name when the canonical starts with http://hl7.org/fhir/', () => {
       const canonical = 'http://hl7.org/fhir/us/core';
       expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
         name: 'UsCore',
-        id: 'us.core'
+        id: 'hl7.fhir.us.core'
       });
     });
   });
