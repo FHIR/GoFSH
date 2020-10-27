@@ -59,7 +59,15 @@ export class ConfigurationExtractor {
     const canonicalMatch = canonical.match(/^https?:\/\/([\w.]+)(\/.*)?$/);
     if (canonicalMatch) {
       const hostParts = canonicalMatch[1].split('.').slice(0, -1);
-      const pathParts = canonicalMatch[2]?.split('/') ?? [];
+      const pathParts = canonicalMatch[2]?.split('/').filter(part => part.length > 0) ?? [];
+      // Many IGs are hosted at a URL that starts with http://hl7.org/fhir/
+      // However, they generally do not include "hl7" and "fhir" at the start of their id and name.
+      // So, if "hl7" is the only host part, and "fhir" is the first path part,
+      // remove each of them.
+      if (hostParts.length === 1 && hostParts[0] === 'hl7' && pathParts?.[0] === 'fhir') {
+        hostParts.splice(0);
+        pathParts.splice(0, 1);
+      }
       const idParts = [
         ...filter(hostParts, part => part.length > 2 && part !== 'www'),
         ...filter(pathParts, part => part.length > 0)

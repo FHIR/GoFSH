@@ -229,6 +229,14 @@ describe('ConfigurationExtractor', () => {
         id: 'example.orange.apple.banana'
       });
     });
+
+    it('should not include hl7 and fhir in the name and id when the canonical starts with http://hl7.org/fhir/', () => {
+      const canonical = 'http://hl7.org/fhir/us/core';
+      expect(ConfigurationExtractor.inferNameAndId(canonical)).toEqual({
+        name: 'UsCore',
+        id: 'us.core'
+      });
+    });
   });
 
   describe('#inferString', () => {
