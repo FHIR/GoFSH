@@ -22,6 +22,8 @@ import { pullAt, groupBy, values, flatten, isEqual } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
 const { FshCode } = fshtypes;
 
+const FHIR_BASE_URL = /http:\/\/hl7\.org\/fhir\/StructureDefinition\/(.+)/;
+
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
   public readonly extensions: ExportableExtension[] = [];
@@ -70,7 +72,6 @@ export class Package {
     }
   }
 
-  // TODO: Optimization step: combine ContainsRule and OnlyRule for contained item with one type
   optimize(processor: FHIRProcessor) {
     logger.debug('Optimizing FSH definitions...');
     this.resolveProfileParents(processor);
@@ -83,14 +84,25 @@ export class Package {
     this.removeDefaultSlicingRules();
     this.removeDateRules();
     this.combineContainsRules();
+    this.simplifyOnlyRules(processor);
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
-    for (const profile of this.profiles) {
-      if (profile.parent) {
-        const parentSd = processor.structureDefinitions.find(sd => sd.url === profile.parent);
+    for (const resource of [...this.profiles, ...this.extensions]) {
+      if (resource.parent) {
+        // The parent might be another SD in the processor or a core FHIR resource
+        const parentSd = processor.structureDefinitions.find(sd => sd.url === resource.parent);
         if (parentSd?.name) {
-          profile.parent = parentSd.name;
+          resource.parent = parentSd.name;
+        } else {
+          const fhirMatch = resource.parent.match(FHIR_BASE_URL);
+          // Only change the FHIR url into a name if it won't collide with a local SD
+          if (
+            fhirMatch?.[1] &&
+            !processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])
+          ) {
+            resource.parent = fhirMatch[1];
+          }
         }
       }
     }
@@ -415,6 +427,31 @@ export class Package {
         }
       });
       pullAt(sd.rules, rulesToRemove);
+    });
+  }
+
+  private simplifyOnlyRules(processor: FHIRProcessor): void {
+    [...this.profiles, ...this.extensions].forEach(sd => {
+      sd.rules.forEach(rule => {
+        if (rule instanceof ExportableOnlyRule) {
+          rule.types.forEach(onlyRuleType => {
+            // The type might be another SD in the processor or a core FHIR resource
+            const typeSd = processor.structureDefinitions.find(sd => sd.url === onlyRuleType.type);
+            if (typeSd?.name) {
+              onlyRuleType.type = typeSd.name;
+            } else {
+              const fhirMatch = onlyRuleType.type.match(FHIR_BASE_URL);
+              // Only change the FHIR url into a name if it won't collide with a local SD
+              if (
+                fhirMatch?.[1] &&
+                !processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])
+              ) {
+                onlyRuleType.type = fhirMatch[1];
+              }
+            }
+          });
+        }
+      });
     });
   }
 }
