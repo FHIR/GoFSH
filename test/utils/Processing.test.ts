@@ -13,7 +13,6 @@ import {
 } from '../../src/utils/Processing';
 import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { Package } from '../../src/processor';
-import { ExportableInvariant } from '../../src/exportable';
 
 describe('Processing', () => {
   temp.track();
@@ -70,44 +69,34 @@ describe('Processing', () => {
   });
 
   describe('getResources', () => {
-    let processSpy: jest.SpyInstance;
+    let registerSpy: jest.SpyInstance;
 
     beforeAll(() => {
-      processSpy = jest.spyOn(FHIRProcessor.prototype, 'process');
+      registerSpy = jest.spyOn(FHIRProcessor.prototype, 'register');
     });
 
     beforeEach(() => {
-      processSpy.mockClear();
+      registerSpy.mockClear();
     });
 
-    it('should try to process each json file in the directory and its subdirectories when given a path to a directory', () => {
+    it('should try to register each json file in the directory and its subdirectories when given a path to a directory', () => {
       const inDir = path.join(__dirname, 'fixtures');
       const result = getResources(inDir, undefined);
       expect(result instanceof Package).toBeTruthy();
-      expect(processSpy).toHaveBeenCalledTimes(3);
-      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
-        path.join(inDir, 'simple-profile.json'),
-        []
-      );
-      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
-        path.join(inDir, 'other-resource.json'),
-        []
-      );
-      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
-        path.join(inDir, 'more-things', 'another-resource.json'),
-        []
+      expect(registerSpy).toHaveBeenCalledTimes(3);
+      expect(registerSpy).toHaveBeenCalledWith<[string]>(path.join(inDir, 'simple-profile.json'));
+      expect(registerSpy).toHaveBeenCalledWith<[string]>(path.join(inDir, 'other-resource.json'));
+      expect(registerSpy).toHaveBeenCalledWith<[string]>(
+        path.join(inDir, 'more-things', 'another-resource.json')
       );
     });
 
-    it('should process the specified file when given a path to a file', () => {
+    it('should register the specified file when given a path to a file', () => {
       const inDir = path.join(__dirname, 'fixtures', 'simple-profile.json');
       const result = getResources(inDir, undefined);
       expect(result instanceof Package).toBeTruthy();
-      expect(processSpy).toHaveBeenCalledTimes(1);
-      expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
-        path.join(inDir),
-        []
-      );
+      expect(registerSpy).toHaveBeenCalledTimes(1);
+      expect(registerSpy).toHaveBeenCalledWith<[string]>(path.join(inDir));
     });
 
     it('should throw an error when the input directory does not exist', () => {

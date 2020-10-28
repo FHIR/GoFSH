@@ -13,6 +13,7 @@ describe('ConfigurationProcessor', () => {
     expect(result).toBeInstanceOf(ExportableConfiguration);
     expect(result.config.canonical).toBe('http://example.org/tests');
     expect(result.config.fhirVersion).toEqual(['4.0.1']);
+    expect(result.config.FSHOnly).toBe(true);
   });
 
   it('should not create a Configuration without a url', () => {

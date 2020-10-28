@@ -107,8 +107,8 @@ describe('Package', () => {
     beforeAll(() => {
       processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
       // add some StructureDefinitions to the processor
-      processor.process(path.join(__dirname, 'fixtures', 'small-profile.json'));
-      processor.process(path.join(__dirname, 'fixtures', 'small-extension.json'));
+      processor.register(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      processor.register(path.join(__dirname, 'fixtures', 'small-extension.json'));
     });
 
     it('should replace a profile parent url with the name of the parent', () => {

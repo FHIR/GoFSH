@@ -91,7 +91,9 @@ export class Package {
     for (const resource of [...this.profiles, ...this.extensions]) {
       if (resource.parent) {
         // The parent might be another SD in the processor or a core FHIR resource
-        const parentSd = processor.structureDefinitions.find(sd => sd.url === resource.parent);
+        const parentSd = Array.from(processor.structureDefinitions.values()).find(
+          (sd: any) => sd.url === resource.parent
+        );
         if (parentSd?.name) {
           resource.parent = parentSd.name;
         } else {
@@ -99,7 +101,9 @@ export class Package {
           // Only change the FHIR url into a name if it won't collide with a local SD
           if (
             fhirMatch?.[1] &&
-            !processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])
+            !Array.from(processor.structureDefinitions.values()).some(
+              sd => sd.name === fhirMatch[1]
+            )
           ) {
             resource.parent = fhirMatch[1];
           }
@@ -436,7 +440,9 @@ export class Package {
         if (rule instanceof ExportableOnlyRule) {
           rule.types.forEach(onlyRuleType => {
             // The type might be another SD in the processor or a core FHIR resource
-            const typeSd = processor.structureDefinitions.find(sd => sd.url === onlyRuleType.type);
+            const typeSd = Array.from(processor.structureDefinitions.values()).find(
+              sd => sd.url === onlyRuleType.type
+            );
             if (typeSd?.name) {
               onlyRuleType.type = typeSd.name;
             } else {
@@ -444,7 +450,9 @@ export class Package {
               // Only change the FHIR url into a name if it won't collide with a local SD
               if (
                 fhirMatch?.[1] &&
-                !processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])
+                !Array.from(processor.structureDefinitions.values()).some(
+                  sd => sd.name === fhirMatch[1]
+                )
               ) {
                 onlyRuleType.type = fhirMatch[1];
               }

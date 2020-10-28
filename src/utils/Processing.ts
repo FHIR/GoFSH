@@ -20,19 +20,17 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
 }
 
 export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
-  const resources = new Package();
   const processor = new FHIRProcessor(defs);
   const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
   logger.info(`Found ${files.length} JSON files.`);
   files.forEach(file => {
     try {
-      processor.process(file, resources.invariants).forEach(resource => {
-        resources.add(resource);
-      });
+      processor.register(file);
     } catch (ex) {
-      logger.error(`Could not process ${file}: ${ex.message}`);
+      logger.error(`Could not load ${file}: ${ex.message}`);
     }
   });
+  const resources = processor.process();
   resources.optimize(processor);
   return resources;
 }
