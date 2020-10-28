@@ -52,25 +52,35 @@ export async function loadOptimizers(
   const edges: [string, string][] = [];
   optimizers.forEach(opt => {
     nodes.push(opt.name);
-    opt.runAfter?.forEach(dependsOn => edges.push([opt.name, dependsOn]));
-    opt.runBefore?.forEach(dependedOnBy => edges.push([dependedOnBy, opt.name]));
+    opt.runAfter?.forEach(dependsOn => {
+      if (optimizers.some(o => o.name === dependsOn)) {
+        edges.push([opt.name, dependsOn]);
+      } else {
+        logger.error(
+          `The ${opt.name} optimizer specifies an unknown optimizer in runAfter: ${dependsOn}`
+        );
+      }
+    });
+    opt.runBefore?.forEach(dependedOnBy => {
+      if (optimizers.some(o => o.name === dependedOnBy)) {
+        edges.push([dependedOnBy, opt.name]);
+      } else {
+        logger.error(
+          `The ${opt.name} optimizer specifies an unknown optimizer in runBefore: ${dependedOnBy}`
+        );
+      }
+    });
   });
   let ordered: string[];
   try {
     ordered = toposort.array(nodes, edges).reverse();
   } catch (e) {
+    // This message should be reliably present and reliably in this format, but use '?' defensively just in case
     const nodeMatch = e.message?.match(/"([^"]+)"$/);
-    if (nodeMatch?.length === 2) {
-      logger.error(
-        `Could not determine order of optimizers; cyclic dependency involving ${nodeMatch[1]}. Optimization may be affected.`
-      );
-    } else {
-      logger.error(
-        'Could not determine order of optimizers due to a cyclic dependency. Optimization may be affected.',
-        e
-      );
-    }
-    // just resort to the original order
+    logger.error(
+      `Could not determine order of optimizers; cyclic dependency involving ${nodeMatch?.[1]}. Optimization may be affected.`
+    );
+    // just return the original order
     ordered = nodes;
   }
 

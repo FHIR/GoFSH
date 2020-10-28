@@ -50,6 +50,8 @@ describe('optimizer', () => {
     });
 
     describe('#custom', () => {
+      afterEach(() => loggerSpy.reset());
+
       it('should load custom optimizers in the expected order', async () => {
         const custom = await loadOptimizers(path.join(__dirname, 'fixtures', 'custom-optimizers'));
         const names = custom.map(o => o.name);
@@ -74,6 +76,22 @@ describe('optimizer', () => {
         expect(loggerSpy.getLastMessage('error')).toMatch('cyclic dependency involving b');
         const names = custom.map(o => o.name);
         expect(names).toEqual(['a', 'b', 'c', 'd', 'e']);
+      });
+
+      it('should log an error on missing dependencies', async () => {
+        const custom = await loadOptimizers(
+          path.join(__dirname, 'fixtures', 'missing-dependency-optimizers')
+        );
+
+        const errors = loggerSpy.getAllMessages('error');
+        expect(errors).toHaveLength(3);
+        expect(errors.some(e => / b .* runBefore: x$/.test(e))).toBeTruthy();
+        expect(errors.some(e => / c .* runAfter: y$/.test(e))).toBeTruthy();
+        expect(errors.some(e => / c .* runAfter: z$/.test(e))).toBeTruthy();
+
+        const names = custom.map(o => o.name);
+        // It should still sort them correctly otherwise
+        expect(names).toEqual(['d', 'b', 'c', 'a', 'e']);
       });
     });
   });
