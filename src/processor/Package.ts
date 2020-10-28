@@ -7,18 +7,6 @@ import {
   ExportableInvariant,
   ExportableConfiguration
 } from '../exportable';
-import { FHIRProcessor } from './FHIRProcessor';
-import ResolveProfileParentsOptimizer from '../optimizer/plugins/ResolveParentURLsOptimizer';
-import CombineCardAndFlagRulesOptimizer from '../optimizer/plugins/CombineCardAndFlagRulesOptimizer';
-import ConstructNamedExtensionContainsRulesOptimizer from '../optimizer/plugins/ConstructNamedExtensionContainsRulesOptimizer';
-import RemoveChoiceSlicingRulesOptimizer from '../optimizer/plugins/RemoveChoiceSlicingRulesOptimizer';
-import RemoveDefaultExtensionContextRulesOptimizer from '../optimizer/plugins/RemoveDefaultExtensionContextRulesOptimizer';
-import RemoveImpliedZeroZeroCardRulesOptimizer from '../optimizer/plugins/RemoveImpliedZeroZeroCardRulesOptimizer';
-import RemoveExtensionURLAssignmentRules from '../optimizer/plugins/RemoveExtensionURLAssignmentRules';
-import RemoveExtensionSlicingRulesOptimizer from '../optimizer/plugins/RemoveExtensionSlicingRulesOptimizer';
-import RemovePublisherDerivedDateRulesOptimizer from '../optimizer/plugins/RemovePublisherDerivedDateRulesOptimizer';
-import CombineContainsRulesOptimizer from '../optimizer/plugins/CombineContainsRulesOptimizer';
-import ResolveOnlyRuleURLsOptimizer from '../optimizer/plugins/ResolveOnlyRuleURLsOptimizer';
 import { logger } from '../utils';
 
 export class Package {
@@ -63,20 +51,5 @@ export class Package {
         this.configuration = resource;
       }
     }
-  }
-
-  optimize(processor: FHIRProcessor) {
-    logger.debug('Optimizing FSH definitions...');
-    RemoveChoiceSlicingRulesOptimizer.optimize(this);
-    RemoveDefaultExtensionContextRulesOptimizer.optimize(this);
-    RemoveImpliedZeroZeroCardRulesOptimizer.optimize(this);
-    RemoveExtensionURLAssignmentRules.optimize(this);
-    RemoveExtensionSlicingRulesOptimizer.optimize(this);
-    RemovePublisherDerivedDateRulesOptimizer.optimize(this);
-    ResolveProfileParentsOptimizer.optimize(this, processor);
-    ResolveOnlyRuleURLsOptimizer.optimize(this, processor);
-    ConstructNamedExtensionContainsRulesOptimizer.optimize(this);
-    CombineContainsRulesOptimizer.optimize(this);
-    CombineCardAndFlagRulesOptimizer.optimize(this);
   }
 }

@@ -80,9 +80,9 @@ describe('Processing', () => {
       processSpy.mockClear();
     });
 
-    it('should try to process each json file in the directory and its subdirectories when given a path to a directory', () => {
+    it('should try to process each json file in the directory and its subdirectories when given a path to a directory', async () => {
       const inDir = path.join(__dirname, 'fixtures');
-      const result = getResources(inDir, undefined);
+      const result = await getResources(inDir, undefined);
       expect(result instanceof Package).toBeTruthy();
       expect(processSpy).toHaveBeenCalledTimes(3);
       expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
@@ -99,9 +99,9 @@ describe('Processing', () => {
       );
     });
 
-    it('should process the specified file when given a path to a file', () => {
+    it('should process the specified file when given a path to a file', async () => {
       const inDir = path.join(__dirname, 'fixtures', 'simple-profile.json');
-      const result = getResources(inDir, undefined);
+      const result = await getResources(inDir, undefined);
       expect(result instanceof Package).toBeTruthy();
       expect(processSpy).toHaveBeenCalledTimes(1);
       expect(processSpy).toHaveBeenCalledWith<[string, ExportableInvariant[]]>(
@@ -110,11 +110,14 @@ describe('Processing', () => {
       );
     });
 
-    it('should throw an error when the input directory does not exist', () => {
+    it('should throw an error when the input directory does not exist', async () => {
+      expect.assertions(1);
       const inDir = path.join(__dirname, 'wrong-fixtures');
-      expect(() => {
-        getResources(inDir, undefined);
-      }).toThrow();
+      try {
+        await getResources(inDir, undefined);
+      } catch (e) {
+        expect(e.message).toMatch('no such file or directory');
+      }
     });
   });
 
