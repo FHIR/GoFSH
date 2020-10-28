@@ -135,7 +135,7 @@ const IGNORED_PROPERTIES = [
   'title',
   'description',
   'fhirVersion',
-  /*'mapping', NOTE: mapping should be ignored when a mapping extractor is implemented*/
+  'mapping',
   'baseDefinition',
   'derivation',
   'snapshot',

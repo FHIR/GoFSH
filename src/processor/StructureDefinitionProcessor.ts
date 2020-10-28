@@ -1,8 +1,9 @@
 import compact from 'lodash/compact';
-import { fhirdefs } from 'fsh-sushi';
+import { fhirdefs, fhirtypes } from 'fsh-sushi';
 import {
   ExportableSdRule,
   ExportableInvariant,
+  ExportableMapping,
   ExportableProfile,
   ExportableExtension
 } from '../exportable';
@@ -15,7 +16,8 @@ import {
   ContainsRuleExtractor,
   OnlyRuleExtractor,
   ObeysRuleExtractor,
-  InvariantExtractor
+  InvariantExtractor,
+  MappingExtractor
 } from '../extractor';
 import { ProcessableElementDefinition } from '.';
 import { getAncestorElement } from '../utils';
@@ -25,7 +27,9 @@ export class StructureDefinitionProcessor {
     input: any,
     fhir: fhirdefs.FHIRDefinitions,
     existingInvariants: ExportableInvariant[] = []
-  ): [ExportableProfile | ExportableExtension, ...ExportableInvariant[]] | [] {
+  ):
+    | [ExportableProfile | ExportableExtension, ...(ExportableInvariant | ExportableMapping)[]]
+    | [] {
     if (StructureDefinitionProcessor.isProcessableStructureDefinition(input)) {
       let sd: ExportableProfile | ExportableExtension;
       if (input.type === 'Extension') {
@@ -42,8 +46,12 @@ export class StructureDefinitionProcessor {
         elements,
         existingInvariants
       );
+      const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fhir);
       StructureDefinitionProcessor.extractRules(input, elements, sd, fhir);
-      return [sd, ...invariants];
+      // TODO: Destructuring an array with invariants and mappings is required for TypeScript 3.0
+      // With TypeScript 4.0, we should update to return the following line, which is more clear:
+      // return [sd, ...invariants, ...mappings];
+      return [sd, ...[...invariants, ...mappings]];
     }
     return [];
   }
@@ -114,6 +122,14 @@ export class StructureDefinitionProcessor {
     return invariants;
   }
 
+  static extractMappings(
+    elements: ProcessableElementDefinition[],
+    input: ProcessableStructureDefinition,
+    fhir: fhirdefs.FHIRDefinitions
+  ): ExportableMapping[] {
+    return MappingExtractor.process(input, elements, fhir);
+  }
+
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {
     return input.name != null && input.resourceType != null;
   }
@@ -127,6 +143,7 @@ export interface ProcessableStructureDefinition {
   title?: string;
   description?: string;
   baseDefinition?: string;
+  mapping?: fhirtypes.StructureDefinitionMapping[];
   differential?: {
     element: any[];
   };

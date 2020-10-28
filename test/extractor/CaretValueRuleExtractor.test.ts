@@ -110,36 +110,18 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should not extract caret rules when an array is exactly the same as the inherited array', () => {
       const sd = cloneDeep(looseSD);
-      sd.mapping = [
+      sd.context = [
         {
-          identity: 'workflow',
-          uri: 'http://hl7.org/fhir/workflow',
-          name: 'Workflow Pattern'
+          type: 'element',
+          expression: 'Foo'
         },
         {
-          identity: 'sct-concept',
-          uri: 'http://snomed.info/conceptdomain',
-          name: 'SNOMED CT Concept Domain Binding'
+          type: 'element',
+          expression: 'Bar'
         },
         {
-          identity: 'v2',
-          uri: 'http://hl7.org/v2',
-          name: 'HL7 v2 Mapping'
-        },
-        {
-          identity: 'rim',
-          uri: 'http://hl7.org/v3',
-          name: 'RIM Mapping'
-        },
-        {
-          identity: 'w5',
-          uri: 'http://hl7.org/fhir/fivews',
-          name: 'FiveWs Pattern Mapping'
-        },
-        {
-          identity: 'sct-attr',
-          uri: 'http://snomed.org/attributebinding',
-          name: 'SNOMED CT Attribute Binding'
+          type: 'element',
+          expression: 'Baz'
         }
       ];
       const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
@@ -149,16 +131,14 @@ describe('CaretValueRuleExtractor', () => {
     it('should not extract caret rules when an array is a subset of the inherited array', () => {
       // NOTE: This is due to a limitation in FSH; you cannot replace arrays or delete array items
       const sd = cloneDeep(looseSD);
-      sd.mapping = [
+      sd.context = [
         {
-          identity: 'sct-concept',
-          uri: 'http://snomed.info/conceptdomain',
-          name: 'SNOMED CT Concept Domain Binding'
+          type: 'element',
+          expression: 'Foo'
         },
         {
-          identity: 'w5',
-          uri: 'http://hl7.org/fhir/fivews',
-          name: 'FiveWs Pattern Mapping'
+          type: 'element',
+          expression: 'Baz'
         }
       ];
       const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
@@ -167,98 +147,54 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should extract caret rules for added elements in inherited non-extension array', () => {
       const sd = cloneDeep(looseSD);
-      sd.mapping = [
+      sd.context = [
         {
-          identity: 'workflow',
-          uri: 'http://hl7.org/fhir/workflow',
-          name: 'Workflow Pattern'
+          type: 'element',
+          expression: 'Foo'
         },
         {
-          identity: 'sct-concept',
-          uri: 'http://snomed.info/conceptdomain',
-          name: 'SNOMED CT Concept Domain Binding'
+          type: 'element',
+          expression: 'Bar'
         },
         {
-          identity: 'v2',
-          uri: 'http://hl7.org/v2',
-          name: 'HL7 v2 Mapping'
+          type: 'element',
+          expression: 'Baz'
         },
         {
-          identity: 'rim',
-          uri: 'http://hl7.org/v3',
-          name: 'RIM Mapping'
-        },
-        {
-          identity: 'w5',
-          uri: 'http://hl7.org/fhir/fivews',
-          name: 'FiveWs Pattern Mapping'
-        },
-        {
-          identity: 'sct-attr',
-          uri: 'http://snomed.org/attributebinding',
-          name: 'SNOMED CT Attribute Binding'
-        },
-        {
-          identity: 'foo-mapping',
-          uri: 'http://foo.org/mapping',
-          name: 'Foo Mapping'
+          type: 'element',
+          expression: 'SomethingFancyAndNew'
         }
       ];
       const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
       const expectedRule1 = new ExportableCaretValueRule('');
-      expectedRule1.caretPath = 'mapping[6].identity';
-      expectedRule1.value = 'foo-mapping';
+      expectedRule1.caretPath = 'context[3].type';
+      expectedRule1.value = new fshtypes.FshCode('element');
       const expectedRule2 = new ExportableCaretValueRule('');
-      expectedRule2.caretPath = 'mapping[6].uri';
-      expectedRule2.value = 'http://foo.org/mapping';
-      const expectedRule3 = new ExportableCaretValueRule('');
-      expectedRule3.caretPath = 'mapping[6].name';
-      expectedRule3.value = 'Foo Mapping';
-      expect(caretRules).toEqual<ExportableCaretValueRule[]>([
-        expectedRule1,
-        expectedRule2,
-        expectedRule3
-      ]);
+      expectedRule2.caretPath = 'context[3].expression';
+      expectedRule2.value = 'SomethingFancyAndNew';
+      expect(caretRules).toEqual<ExportableCaretValueRule[]>([expectedRule1, expectedRule2]);
     });
 
     it('should extract caret rules for modified elements in inherited non-extension array', () => {
       const sd = cloneDeep(looseSD);
-      sd.mapping = [
+      sd.context = [
         {
-          identity: 'workflow',
-          uri: 'http://hl7.org/fhir/workflow',
-          name: 'Workflow Pattern'
+          type: 'element',
+          expression: 'Foo'
         },
         {
-          identity: 'sct-concept',
-          uri: 'http://snomed.info/conceptdomain',
-          name: 'SNOMED CT Concept Domain Binding'
+          type: 'fhirpath',
+          expression: 'Bar'
         },
         {
-          identity: 'v2',
-          uri: 'http://hl7.org/v2',
-          name: 'HL7 v2 Mapping'
-        },
-        {
-          identity: 'rim',
-          uri: 'http://hl7.org/v3',
-          name: 'RIM Mapping!'
-        },
-        {
-          identity: 'w5',
-          uri: 'http://hl7.org/fhir/fivews',
-          name: 'FiveWs Pattern Mapping'
-        },
-        {
-          identity: 'sct-attr',
-          uri: 'http://snomed.org/attributebinding',
-          name: 'SNOMED CT Attribute Binding'
+          type: 'element',
+          expression: 'Baz'
         }
       ];
       const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
       const expectedRule1 = new ExportableCaretValueRule('');
-      expectedRule1.caretPath = 'mapping[3].name';
-      expectedRule1.value = 'RIM Mapping!';
+      expectedRule1.caretPath = 'context[1].type';
+      expectedRule1.value = new fshtypes.FshCode('fhirpath');
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([expectedRule1]);
     });
 

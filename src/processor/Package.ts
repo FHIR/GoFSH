@@ -5,7 +5,8 @@ import {
   ExportableValueSet,
   ExportableCodeSystem,
   ExportableInvariant,
-  ExportableConfiguration
+  ExportableConfiguration,
+  ExportableMapping
 } from '../exportable';
 import { logger } from '../utils';
 
@@ -16,6 +17,7 @@ export class Package {
   public readonly valueSets: ExportableValueSet[] = [];
   public readonly codeSystems: ExportableCodeSystem[] = [];
   public readonly invariants: ExportableInvariant[] = [];
+  public readonly mappings: ExportableMapping[] = [];
   public configuration: ExportableConfiguration;
 
   constructor() {}
@@ -29,6 +31,7 @@ export class Package {
       | ExportableCodeSystem
       | ExportableInvariant
       | ExportableConfiguration
+      | ExportableMapping
   ) {
     if (resource instanceof ExportableProfile) {
       this.profiles.push(resource);
@@ -42,6 +45,8 @@ export class Package {
       this.codeSystems.push(resource);
     } else if (resource instanceof ExportableInvariant) {
       this.invariants.push(resource);
+    } else if (resource instanceof ExportableMapping) {
+      this.mappings.push(resource);
     } else if (resource instanceof ExportableConfiguration) {
       if (this.configuration) {
         logger.warn(
