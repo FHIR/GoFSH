@@ -14,7 +14,9 @@ export default {
         if (rule instanceof ExportableOnlyRule) {
           rule.types.forEach(onlyRuleType => {
             // The type might be another SD in the processor or a core FHIR resource
-            const typeSd = processor.structureDefinitions.find(sd => sd.url === onlyRuleType.type);
+            const typeSd = Array.from(processor.structureDefinitions.values()).find(
+              sd => sd.url === onlyRuleType.type
+            );
             if (typeSd?.name) {
               onlyRuleType.type = typeSd.name;
             } else {
@@ -22,7 +24,9 @@ export default {
               // Only change the FHIR url into a name if it won't collide with a local SD
               if (
                 fhirMatch?.[1] &&
-                !processor.structureDefinitions.some(sd => sd.name === fhirMatch[1])
+                !Array.from(processor.structureDefinitions.values()).some(
+                  sd => sd.name === fhirMatch[1]
+                )
               ) {
                 onlyRuleType.type = fhirMatch[1];
               }

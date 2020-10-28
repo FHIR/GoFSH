@@ -13,7 +13,7 @@ describe('optimizer', () => {
     beforeAll(() => {
       processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
       // add a StructureDefinition to the processor
-      processor.process(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      processor.register(path.join(__dirname, 'fixtures', 'small-profile.json'));
     });
 
     it('should have appropriate metadata', () => {

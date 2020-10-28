@@ -24,19 +24,17 @@ export async function getResources(
   inDir: string,
   defs: fhirdefs.FHIRDefinitions
 ): Promise<Package> {
-  const resources = new Package();
   const processor = new FHIRProcessor(defs);
   const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
   logger.info(`Found ${files.length} JSON files.`);
   files.forEach(file => {
     try {
-      processor.process(file, resources.invariants).forEach(resource => {
-        resources.add(resource);
-      });
+      processor.register(file);
     } catch (ex) {
-      logger.error(`Could not process ${file}: ${ex.message}`);
+      logger.error(`Could not load ${file}: ${ex.message}`);
     }
   });
+  const resources = processor.process();
   // Dynamically load and run the optimizers
   const optimizers = await loadOptimizers();
   optimizers.forEach(opt => {
