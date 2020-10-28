@@ -4,8 +4,28 @@
   "type": "Observation",
   "name": "MyObservation",
   "id": "my-profile",
+  "mapping": [
+    {
+      "identity": "MyMapping",
+      "name": "My Mapping",
+      "uri": "http://example.org/important",
+      "comment": "This is important"
+    }
+  ],
   "differential": {
     "element": [
+      {
+        "id": "Observation",
+        "path": "Observation",
+        "mapping": [
+          {
+            "identity": "MyMapping",
+            "map": "Observation",
+            "comment": "This is top level",
+            "language": "top"
+          }
+        ]
+      },
       {
         "id": "Observation.valueString",
         "path": "Observation.valueString",
@@ -21,6 +41,18 @@
             "key": "myo-1",
             "severity": "warning",
             "human": "SHALL include the weather."
+          }
+        ]
+      },
+      {
+        "id": "Observation.focus",
+        "path": "Observation.focus",
+        "mapping": [
+          {
+            "identity": "MyMapping",
+            "map": "Observation.otherFocus",
+            "comment": "This is a focused comment",
+            "language": "test"
           }
         ]
       }

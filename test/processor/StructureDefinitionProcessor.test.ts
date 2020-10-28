@@ -157,10 +157,23 @@ describe('StructureDefinitionProcessor', () => {
           return ProcessableElementDefinition.fromJSON(rawElement, false);
         }) ?? [];
       // these paths would be processed by the InvariantExtractor
-      elements[1].processedPaths.push(
+      elements[2].processedPaths.push(
         'constraint[0].key',
         'constraint[0].human',
         'constraint[0].severity'
+      );
+      // these paths would be processed by the MappingExtractor
+      elements[0].processedPaths.push(
+        'mapping[0].identity',
+        'mapping[0].map',
+        'mapping[0].comment',
+        'mapping[0].language'
+      );
+      elements[3].processedPaths.push(
+        'mapping[0].identity',
+        'mapping[0].map',
+        'mapping[0].comment',
+        'mapping[0].language'
       );
       const workingProfile = new ExportableProfile('MyObservation');
       StructureDefinitionProcessor.extractRules(input, elements, workingProfile, defs);
@@ -252,6 +265,21 @@ describe('StructureDefinitionProcessor', () => {
       const result = StructureDefinitionProcessor.extractInvariants(elements, []);
 
       expect(result).toHaveLength(4);
+    });
+  });
+
+  describe('#extractMappings', () => {
+    it('should convert a profile with a mapping', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-profile.json'), 'utf-8')
+      );
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      const mappings = StructureDefinitionProcessor.extractMappings(elements, input, defs);
+
+      expect(mappings).toHaveLength(1);
     });
   });
 });
