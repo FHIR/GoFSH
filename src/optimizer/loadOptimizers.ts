@@ -25,9 +25,9 @@ export async function loadOptimizers(
   // read the plugins folder, filter to only .ts/.js files, and map to unique module paths (without extensions)
   const optimizerModules = uniq(
     fs
-      .readdirSync(folder)
-      .filter(f => /^[^.]+.*\.(t|j)s$/.test(f))
-      .map(f => `${relativePath}/${f.match(/^([^.]+)/)[1]}`)
+      .readdirSync(folder, { withFileTypes: true })
+      .filter(f => f.isFile() && /^[^.]+.*\.(t|j)s$/.test(f.name))
+      .map(f => `${relativePath}/${f.name.match(/^([^.]+)/)[1]}`)
   );
 
   const optimizers = (
