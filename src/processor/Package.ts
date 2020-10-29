@@ -85,6 +85,7 @@ export class Package {
     this.removeDateRules();
     this.combineContainsRules();
     this.simplifyOnlyRules(processor);
+    this.makeMappingNamesUnique();
   }
 
   private resolveProfileParents(processor: FHIRProcessor): void {
@@ -460,6 +461,15 @@ export class Package {
           });
         }
       });
+    });
+  }
+
+  private makeMappingNamesUnique(): void {
+    this.mappings.forEach((mapping, index) => {
+      // If the mapping has the same name as any other mapping, use the source to make the name unique
+      if (this.mappings.find((m, i) => m.id === mapping.id && i !== index)) {
+        mapping.name = `${mapping.name}-for-${mapping.source}`;
+      }
     });
   }
 }
