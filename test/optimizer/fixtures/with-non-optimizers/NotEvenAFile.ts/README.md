@@ -1,0 +1,1 @@
+What kind of crazy person uses a .ts extension on a file name?

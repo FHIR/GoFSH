@@ -4,6 +4,7 @@ import { fhirdefs } from 'fsh-sushi';
 import { Package, FHIRProcessor } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { logger } from './GoFSHLogger';
+import { loadOptimizers } from '../optimizer';
 
 export function getInputDir(input = '.'): string {
   // default to current directory
@@ -19,7 +20,10 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   return output;
 }
 
-export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
+export async function getResources(
+  inDir: string,
+  defs: fhirdefs.FHIRDefinitions
+): Promise<Package> {
   const processor = new FHIRProcessor(defs);
   const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
   logger.info(`Found ${files.length} JSON files.`);
@@ -31,11 +35,16 @@ export function getResources(inDir: string, defs: fhirdefs.FHIRDefinitions) {
     }
   });
   const resources = processor.process();
-  resources.optimize(processor);
+  // Dynamically load and run the optimizers
+  const optimizers = await loadOptimizers();
+  optimizers.forEach(opt => {
+    logger.debug(`Running optimizer ${opt.name}: ${opt.description}`);
+    opt.optimize(resources, processor);
+  });
   return resources;
 }
 
-export function writeFSH(resources: Package, outDir: string) {
+export function writeFSH(resources: Package, outDir: string): void {
   const exporter = new FSHExporter(resources);
   const outputPath = path.join(outDir, 'resources.fsh');
   fs.writeFileSync(outputPath, exporter.export());
