@@ -15,7 +15,7 @@ describe('optimizer', () => {
       it('should load the standard optimizers', () => {
         // NOTE: Intentionally unspecific so that adding new optimizers does not break it
         expect(optimizers.length).toBeGreaterThan(10);
-        optimizers.forEach(o => expect(o.optimize).toBeDefined);
+        optimizers.forEach(o => expect(o.optimize).toBeDefined());
         expect(optimizers.find(o => o.name === 'combine_card_and_flag_rules')).toBeTruthy();
       });
 
