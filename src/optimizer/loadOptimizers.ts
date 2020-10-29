@@ -8,6 +8,7 @@ import { logger } from '../utils/GoFSHLogger';
 
 /**
  * Dynamically load the optimizer plugins and return them in the order they should be executed.
+ * If there is a circular dependency in the plugins, an error will be logged and the resulting order is undetermined.
  * @param folder - the folder to load optimizers from.  Currently only used in tests.  CLI uses default value.
  */
 export async function loadOptimizers(
