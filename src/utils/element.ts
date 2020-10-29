@@ -1,5 +1,5 @@
 import { flatten } from 'flat';
-import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
+import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { fshifyString } from '../exportable/common';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { StructureDefinition, ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
@@ -51,21 +51,21 @@ export function getFSHValue(
   key: string,
   value: number | string | boolean,
   input: ProcessableElementDefinition | any,
-  fhir: fhirdefs.FHIRDefinitions
+  fisher: utils.Fishable
 ) {
   let definition: StructureDefinition;
   // NOTE: Need to check instanceof ElementDefinition (not ProcessableElementDefinition)
   // because, in fact, ProcessableElementDefinition.fromJSON really returns an ElementDefinition.
   // TODO: Fix this when SUSHI supports fromJSON w/ ElementDefinition subclasses
   if (input instanceof ElementDefinition) {
-    definition = input.getOwnStructureDefinition(fhir);
+    definition = input.getOwnStructureDefinition(fisher);
   } else {
     definition = StructureDefinition.fromJSON(
-      fhir.fishForFHIR('StructureDefinition', utils.Type.Resource)
+      fisher.fishForFHIR('StructureDefinition', utils.Type.Resource)
     );
   }
   // Finding element by path works without array information
-  const element = definition.findElementByPath(key.replace(/\[\d+\]/g, ''), fhir);
+  const element = definition.findElementByPath(key.replace(/\[\d+\]/g, ''), fisher);
   if (element?.type?.[0]?.code === 'code') {
     return new fshtypes.FshCode(value.toString());
   }
@@ -75,15 +75,15 @@ export function getFSHValue(
 export function getAncestorElement(
   id: string,
   structDef: ProcessableStructureDefinition,
-  fhir: fhirdefs.FHIRDefinitions
+  fisher: utils.Fishable
 ): any {
   let element: any;
-  let currentStructDef = fhir.fishForFHIR(structDef.baseDefinition);
+  let currentStructDef = fisher.fishForFHIR(structDef.baseDefinition);
   while (currentStructDef && !element) {
     element =
       currentStructDef.snapshot?.element.find((el: any) => el.id === id) ??
       currentStructDef.differential?.element.find((el: any) => el.id === id);
-    currentStructDef = fhir.fishForFHIR(currentStructDef.baseDefinition);
+    currentStructDef = fisher.fishForFHIR(currentStructDef.baseDefinition);
   }
   return element ?? null;
 }
@@ -91,7 +91,7 @@ export function getAncestorElement(
 export function getCardinality(
   id: string,
   structDef: ProcessableStructureDefinition,
-  fhir: fhirdefs.FHIRDefinitions
+  fisher: utils.Fishable
 ): { min: number; max: string } {
   let min: number;
   let max: string;
@@ -102,7 +102,7 @@ export function getCardinality(
       currentStructDef.differential?.element.find((el: any) => el.id === id);
     min = min ?? element?.min;
     max = max ?? element?.max;
-    currentStructDef = fhir.fishForFHIR(currentStructDef.baseDefinition);
+    currentStructDef = fisher.fishForFHIR(currentStructDef.baseDefinition);
   }
   return min != null && max != null ? { min, max } : null;
 }
