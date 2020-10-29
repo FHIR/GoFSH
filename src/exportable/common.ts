@@ -70,7 +70,7 @@ export function metadataToFSH(
       resultLines.push(`Source: ${definition.source}`);
     }
     if (definition.target) {
-      resultLines.push(`Target: "${definition.target}"`);
+      resultLines.push(`Target: "${fshifyString(definition.target)}"`);
     }
   }
   return resultLines.join(EOL);
