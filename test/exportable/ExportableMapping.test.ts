@@ -24,7 +24,7 @@ describe('ExportableMapping', () => {
       'Title: "Meta Mapping"',
       'Description: "This is a Mapping with some metadata"',
       'Source: ProfiledPatient',
-      'Target: http://example.org'
+      'Target: "http://example.org"'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);
