@@ -68,14 +68,14 @@ export class FHIRProcessor {
     });
     this.codeSystems.forEach((cs, inputPath) => {
       try {
-        resources.add(CodeSystemProcessor.process(cs));
+        resources.add(CodeSystemProcessor.process(cs, this.fhir));
       } catch (ex) {
         logger.error(`Could not process CodeSystem at ${inputPath}: ${ex.message}`);
       }
     });
     this.valueSets.forEach((vs, inputPath) => {
       try {
-        resources.add(ValueSetProcessor.process(vs));
+        resources.add(ValueSetProcessor.process(vs, this.fhir));
       } catch (ex) {
         logger.error(`Could not process ValueSet at ${inputPath}: ${ex.message}`);
       }

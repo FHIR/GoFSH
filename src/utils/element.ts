@@ -1,7 +1,7 @@
 import { flatten } from 'flat';
 import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { fshifyString } from '../exportable/common';
-import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
+import { ProcessableStructureDefinition } from '../processor';
 import { StructureDefinition, ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
 
 // This function depends on the id of an element to construct the path.
@@ -50,20 +50,12 @@ export function getPathValuePairs(object: object): FlatObject {
 export function getFSHValue(
   key: string,
   value: number | string | boolean,
-  input: ProcessableElementDefinition | any,
+  resourceType: string,
   fhir: fhirdefs.FHIRDefinitions
 ) {
-  let definition: StructureDefinition;
-  // NOTE: Need to check instanceof ElementDefinition (not ProcessableElementDefinition)
-  // because, in fact, ProcessableElementDefinition.fromJSON really returns an ElementDefinition.
-  // TODO: Fix this when SUSHI supports fromJSON w/ ElementDefinition subclasses
-  if (input instanceof ElementDefinition) {
-    definition = input.getOwnStructureDefinition(fhir);
-  } else {
-    definition = StructureDefinition.fromJSON(
-      fhir.fishForFHIR('StructureDefinition', utils.Type.Resource)
-    );
-  }
+  const definition = StructureDefinition.fromJSON(
+    fhir.fishForFHIR(resourceType, utils.Type.Resource, utils.Type.Type)
+  );
   // Finding element by path works without array information
   const element = definition.findElementByPath(key.replace(/\[\d+\]/g, ''), fhir);
   if (element?.type?.[0]?.code === 'code') {
