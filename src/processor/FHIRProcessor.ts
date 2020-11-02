@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
-import { fhirdefs } from 'fsh-sushi';
-import { logger } from '../utils';
+import { fhirdefs, utils } from 'fsh-sushi';
+import { logger, MasterFisher } from '../utils';
 import {
   StructureDefinitionProcessor,
   CodeSystemProcessor,
@@ -11,20 +11,38 @@ import { ExportableConfiguration } from '../exportable';
 import { ConfigurationExtractor } from '../extractor';
 import { Package } from './Package';
 
-export class FHIRProcessor {
+export class FHIRProcessor implements utils.Fishable {
   public readonly structureDefinitions: Map<string, any> = new Map();
   public readonly codeSystems: Map<string, any> = new Map();
   public readonly valueSets: Map<string, any> = new Map();
   public readonly implementationGuides: Map<string, any> = new Map();
-  public readonly fhir: fhirdefs.FHIRDefinitions;
+  private readonly fhir: fhirdefs.FHIRDefinitions;
+  private readonly local: fhirdefs.FHIRDefinitions;
+  private readonly fisher: MasterFisher;
 
   constructor(fhir: fhirdefs.FHIRDefinitions) {
     this.fhir = fhir;
+    this.local = new fhirdefs.FHIRDefinitions();
+    this.fisher = new MasterFisher(this.local, this.fhir);
   }
 
   register(inputPath: string): void {
     const rawContent = JSON.parse(fs.readFileSync(inputPath, 'utf-8'));
 
+    // First do a very baseline check to ensure this is a FHIR Resource
+    if (typeof rawContent !== 'object' || rawContent.resourceType == null) {
+      logger.debug(`Skipping non-FHIR JSON file: ${inputPath}`);
+      return;
+    } else if (/^http:\/\/hl7.org\/fhir\/comparison\//.test(rawContent.url)) {
+      // The IG Publisher creates weird "Intersection" and "Union" SD files, so this check filters them out
+      logger.debug(`Skipping temporary "comparison" file created by IG Publisher: ${inputPath}`);
+      return;
+    }
+
+    // add it to the local FHIRDefinitions to support fisher functions
+    this.local.add(rawContent);
+
+    // add it to appropriate map by its type
     if (rawContent['resourceType'] === 'StructureDefinition') {
       // Profiles and Extensions are both made from StructureDefinitions
       // Invariants may be contained within StructureDefinitions
@@ -57,7 +75,7 @@ export class FHIRProcessor {
     resources.add(config);
     this.structureDefinitions.forEach((sd, inputPath) => {
       try {
-        StructureDefinitionProcessor.process(sd, this.fhir, resources.invariants).forEach(
+        StructureDefinitionProcessor.process(sd, this.fisher, resources.invariants).forEach(
           resource => {
             resources.add(resource);
           }
@@ -81,5 +99,17 @@ export class FHIRProcessor {
       }
     });
     return resources;
+  }
+
+  fishForFHIR(item: string, ...types: utils.Type[]) {
+    // fall back to implementation in local (FHIRDefinitions)
+    // NOTE: This will need to be updated if we need to support fishing for Instances
+    return this.local.fishForFHIR(item, ...types);
+  }
+
+  fishForMetadata(item: string, ...types: utils.Type[]): utils.Metadata {
+    // fall back to implementation in local (FHIRDefinitions)
+    // NOTE: This will need to be updated if we need to support fishing for Instances
+    return this.local.fishForMetadata(item, ...types);
   }
 }

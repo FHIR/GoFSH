@@ -1,10 +1,11 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { fhirdefs } from 'fsh-sushi';
+import { cloneDeep } from 'lodash';
 import { CardRuleExtractor } from '../../src/extractor';
 import { ExportableCardRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
-import { fhirdefs } from 'fsh-sushi';
-import { cloneDeep } from 'lodash';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('CardRuleExtractor', () => {
   let looseSD: any;
@@ -29,8 +30,7 @@ describe('CardRuleExtractor', () => {
         )
         .trim()
     );
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
   });
   describe('#process', () => {
     it('should extract a card rule with a min and a max', () => {

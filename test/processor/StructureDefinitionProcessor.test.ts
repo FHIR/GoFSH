@@ -17,13 +17,13 @@ import {
   ExportableInvariant
 } from '../../src/exportable';
 import '../helpers/loggerSpy'; // suppresses console logging
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('StructureDefinitionProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
   });
 
   describe('#process', () => {

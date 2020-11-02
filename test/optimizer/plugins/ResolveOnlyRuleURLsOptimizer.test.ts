@@ -1,19 +1,23 @@
 import path from 'path';
+import { utils } from 'fsh-sushi';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
-import { fhirdefs } from 'fsh-sushi';
 import { Package } from '../../../src/processor/Package';
 import { ExportableOnlyRule, ExportableProfile } from '../../../src/exportable';
 import { FHIRProcessor } from '../../../src/processor/FHIRProcessor';
 import optimizer from '../../../src/optimizer/plugins/ResolveOnlyRuleURLsOptimizer';
+import { MasterFisher } from '../../../src/utils';
+import { loadTestDefinitions } from '../../helpers/loadTestDefinitions';
 
 describe('optimizer', () => {
   describe('#resolve_only_rule_urls', () => {
-    let processor: FHIRProcessor;
+    let fisher: utils.Fishable;
 
     beforeAll(() => {
-      processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
+      const defs = loadTestDefinitions();
+      const processor = new FHIRProcessor(defs);
       // add a StructureDefinition to the processor
       processor.register(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      fisher = new MasterFisher(processor, defs);
     });
 
     it('should have appropriate metadata', () => {
@@ -36,7 +40,7 @@ describe('optimizer', () => {
       profile.rules.push(onlySubject);
       const myPackage = new Package();
       myPackage.add(profile);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
 
       const expectedSubject = new ExportableOnlyRule('subject');
       expectedSubject.types = [
@@ -73,7 +77,7 @@ describe('optimizer', () => {
       profile.rules.push(onlySubject, onlyValue);
       const myPackage = new Package();
       myPackage.add(profile);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
 
       const expectedSubject = new ExportableOnlyRule('subject');
       expectedSubject.types = [
@@ -111,7 +115,7 @@ describe('optimizer', () => {
       profile.rules.push(onlySubject);
       const myPackage = new Package();
       myPackage.add(profile);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
 
       const expectedSubject = new ExportableOnlyRule('subject');
       expectedSubject.types = [

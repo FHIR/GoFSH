@@ -1,20 +1,23 @@
 import path from 'path';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
-import { fhirdefs } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { Package } from '../../../src/processor/Package';
 import { ExportableExtension, ExportableProfile } from '../../../src/exportable';
 import { FHIRProcessor } from '../../../src/processor/FHIRProcessor';
 import optimizer from '../../../src/optimizer/plugins/ResolveParentURLsOptimizer';
+import { MasterFisher } from '../../../src/utils';
+import { loadTestDefinitions } from '../../helpers/loadTestDefinitions';
 
 describe('optimizer', () => {
   describe('#resolve_parent_urls', () => {
-    let processor: FHIRProcessor;
+    let fisher: utils.Fishable;
 
     beforeAll(() => {
-      processor = new FHIRProcessor(new fhirdefs.FHIRDefinitions());
-      // add a StructureDefinition to the processor
+      const defs = loadTestDefinitions();
+      const processor = new FHIRProcessor(defs);
       processor.register(path.join(__dirname, 'fixtures', 'small-profile.json'));
       processor.register(path.join(__dirname, 'fixtures', 'small-extension.json'));
+      fisher = new MasterFisher(processor, defs);
     });
 
     it('should have appropriate metadata', () => {
@@ -29,7 +32,7 @@ describe('optimizer', () => {
       profile.parent = 'https://demo.org/StructureDefinition/Patient';
       const myPackage = new Package();
       myPackage.add(profile);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
       expect(profile.parent).toBe('Patient');
     });
 
@@ -38,7 +41,7 @@ describe('optimizer', () => {
       extension.parent = 'https://demo.org/StructureDefinition/SmallExtension';
       const myPackage = new Package();
       myPackage.add(extension);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
       expect(extension.parent).toBe('SmallExtension');
     });
 
@@ -47,17 +50,17 @@ describe('optimizer', () => {
       profile.parent = 'http://hl7.org/fhir/StructureDefinition/Observation';
       const myPackage = new Package();
       myPackage.add(profile);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
       expect(profile.parent).toBe('Observation');
     });
 
-    it('should replace an extension parent url with the name of a core FHIR resource', () => {
+    it('should replace an extension parent url with the name of a core FHIR extension', () => {
       const extension = new ExportableExtension('MyNewExtension');
       extension.parent = 'http://hl7.org/fhir/StructureDefinition/allergyintolerance-certainty';
       const myPackage = new Package();
       myPackage.add(extension);
-      optimizer.optimize(myPackage, processor);
-      expect(extension.parent).toBe('allergyintolerance-certainty');
+      optimizer.optimize(myPackage, fisher);
+      expect(extension.parent).toBe('certainty');
     });
 
     it('should not replace a parent url with the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
@@ -65,7 +68,7 @@ describe('optimizer', () => {
       profile.parent = 'http://hl7.org/fhir/StructureDefinition/Patient';
       const myPackage = new Package();
       myPackage.add(profile);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
       expect(profile.parent).toBe('http://hl7.org/fhir/StructureDefinition/Patient');
     });
 
@@ -74,7 +77,7 @@ describe('optimizer', () => {
       profile.parent = 'https://demo.org/StructureDefinition/MediumProfile';
       const myPackage = new Package();
       myPackage.add(profile);
-      optimizer.optimize(myPackage, processor);
+      optimizer.optimize(myPackage, fisher);
       expect(profile.parent).toBe('https://demo.org/StructureDefinition/MediumProfile');
     });
   });
