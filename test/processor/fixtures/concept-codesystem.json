@@ -1,0 +1,25 @@
+{
+  "resourceType": "CodeSystem",
+  "name": "ConceptCodeSystem",
+  "concept": [
+    {
+      "definition": "This concept is bogus"
+    },
+    {
+      "code": "breakfast"
+    },
+    {
+      "code": "lunch",
+      "definition": "Meal typically eaten at midday."
+    },
+    {
+      "code": "dinner",
+      "display": "Evening meal (non-dangerous)"
+    },
+    {
+      "code": "dangerous-dinner",
+      "definition": "Meal eaten during the late evening. Should only be eaten by dinner experts.",
+      "display": "Evening meal (dangerous)"
+    }
+  ]
+}
