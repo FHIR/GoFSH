@@ -1,12 +1,11 @@
 import path from 'path';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { utils } from 'fsh-sushi';
-import { Package } from '../../../src/processor/Package';
+import { Package } from '../../../src/processor';
 import { ExportableExtension, ExportableProfile } from '../../../src/exportable';
-import { FHIRProcessor } from '../../../src/processor/FHIRProcessor';
-import optimizer from '../../../src/optimizer/plugins/ResolveParentURLsOptimizer';
 import { MasterFisher } from '../../../src/utils';
-import { loadTestDefinitions } from '../../helpers/loadTestDefinitions';
+import { loadTestDefinitions, stockLake } from '../../helpers';
+import optimizer from '../../../src/optimizer/plugins/ResolveParentURLsOptimizer';
 
 describe('optimizer', () => {
   describe('#resolve_parent_urls', () => {
@@ -14,10 +13,11 @@ describe('optimizer', () => {
 
     beforeAll(() => {
       const defs = loadTestDefinitions();
-      const processor = new FHIRProcessor(defs);
-      processor.register(path.join(__dirname, 'fixtures', 'small-profile.json'));
-      processor.register(path.join(__dirname, 'fixtures', 'small-extension.json'));
-      fisher = new MasterFisher(processor, defs);
+      const lake = stockLake(
+        path.join(__dirname, 'fixtures', 'small-profile.json'),
+        path.join(__dirname, 'fixtures', 'small-extension.json')
+      );
+      fisher = new MasterFisher(lake, defs);
     });
 
     it('should have appropriate metadata', () => {

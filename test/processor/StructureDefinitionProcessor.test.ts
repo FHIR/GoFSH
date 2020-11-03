@@ -31,20 +31,22 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-profile.json'), 'utf-8')
       );
-      const expectedProfile = new ExportableProfile('SimpleProfile');
       const result = StructureDefinitionProcessor.process(input, defs);
 
-      expect(result).toContainEqual<ExportableProfile>(expectedProfile);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableProfile);
+      expect(result[0].name).toBe('SimpleProfile');
     });
 
     it('should convert the simplest Extension', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-extension.json'), 'utf-8')
       );
-      const expectedExtension = new ExportableExtension('SimpleExtension');
       const result = StructureDefinitionProcessor.process(input, defs);
 
-      expect(result).toContainEqual<ExportableExtension>(expectedExtension);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableExtension);
+      expect(result[0].name).toBe('SimpleExtension');
     });
 
     it('should convert a profile that has a baseDefinition', () => {

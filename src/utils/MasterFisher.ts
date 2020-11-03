@@ -4,7 +4,7 @@ export class MasterFisher implements utils.Fishable {
   private fishables: utils.Fishable[];
 
   constructor(...fishables: utils.Fishable[]) {
-    this.fishables = fishables ?? [];
+    this.fishables = (fishables ?? []).filter(f => f);
   }
 
   fishForFHIR(item: string, ...types: utils.Type[]) {
