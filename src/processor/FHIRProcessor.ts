@@ -10,12 +10,14 @@ import {
 import { ExportableConfiguration } from '../exportable';
 import { ConfigurationExtractor } from '../extractor';
 import { Package } from './Package';
+import { InstanceProcessor } from './InstanceProcessor';
 
 export class FHIRProcessor {
   public readonly structureDefinitions: Map<string, any> = new Map();
   public readonly codeSystems: Map<string, any> = new Map();
   public readonly valueSets: Map<string, any> = new Map();
   public readonly implementationGuides: Map<string, any> = new Map();
+  public readonly instances: Map<string, any> = new Map();
   public readonly fhir: fhirdefs.FHIRDefinitions;
 
   constructor(fhir: fhirdefs.FHIRDefinitions) {
@@ -38,6 +40,8 @@ export class FHIRProcessor {
       logger.debug(`Registered contents of ${inputPath} as ValueSet.`);
     } else if (rawContent['resourceType'] === 'ImplementationGuide') {
       this.implementationGuides.set(inputPath, rawContent);
+    } else if (rawContent['resourceType'] != null) {
+      this.instances.set(inputPath, rawContent);
     } else {
       logger.warn(`Skipping unsupported resource: ${inputPath}`);
     }
@@ -78,6 +82,15 @@ export class FHIRProcessor {
         resources.add(ValueSetProcessor.process(vs));
       } catch (ex) {
         logger.error(`Could not process ValueSet at ${inputPath}: ${ex.message}`);
+      }
+    });
+    this.instances.forEach((instance, inputPath) => {
+      try {
+        resources.add(
+          InstanceProcessor.process(instance, Array.from(this.implementationGuides.values())[0])
+        );
+      } catch (ex) {
+        logger.error(`Could not process Instance at ${inputPath}: ${ex.message}`);
       }
     });
     return resources;

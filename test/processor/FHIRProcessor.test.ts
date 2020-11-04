@@ -8,6 +8,7 @@ import {
 } from '../../src/processor';
 import { fhirdefs } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
+import { InstanceProcessor } from '../../src/processor/InstanceProcessor';
 
 describe('FHIRProcessor', () => {
   let processor: FHIRProcessor;
@@ -15,12 +16,14 @@ describe('FHIRProcessor', () => {
   let structureDefinitionSpy: jest.SpyInstance;
   let codeSystemSpy: jest.SpyInstance;
   let valueSetSpy: jest.SpyInstance;
+  let instanceSpy: jest.SpyInstance;
 
   beforeAll(() => {
     configurationSpy = jest.spyOn(ConfigurationProcessor, 'process');
     structureDefinitionSpy = jest.spyOn(StructureDefinitionProcessor, 'process');
     codeSystemSpy = jest.spyOn(CodeSystemProcessor, 'process');
     valueSetSpy = jest.spyOn(ValueSetProcessor, 'process');
+    instanceSpy = jest.spyOn(InstanceProcessor, 'process');
   });
 
   beforeEach(() => {
@@ -29,6 +32,7 @@ describe('FHIRProcessor', () => {
     structureDefinitionSpy.mockClear();
     codeSystemSpy.mockClear();
     valueSetSpy.mockClear();
+    instanceSpy.mockClear();
   });
 
   it('should try to process an ImplementationGuide with the ConfigurationProcessor', () => {
@@ -61,7 +65,13 @@ describe('FHIRProcessor', () => {
     expect(valueSetSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should log a warning when the input JSON does not have a recognized resourceType', () => {
+  it('should try to process an Instance with the InstanceProcessor', () => {
+    processor.register(path.join(__dirname, 'fixtures', 'simple-patient.json'));
+    processor.process();
+    expect(instanceSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should log a warning when the input JSON does not have a resourceType', () => {
     processor.register(path.join(__dirname, 'fixtures', 'unsupported-resource.json'));
     expect(loggerSpy.getLastMessage('warn')).toMatch(
       /Skipping unsupported resource:.*unsupported-resource\.json/s

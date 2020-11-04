@@ -6,3 +6,4 @@ export * from './ValueSetProcessor';
 export * from './ProcessableElementDefinition';
 export * from './StructureDefinitionProcessor';
 export * from './ConfigurationProcessor';
+export * from './InstanceProcessor';
