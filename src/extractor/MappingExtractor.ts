@@ -1,4 +1,4 @@
-import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
+import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { isEqual } from 'lodash';
 import { ExportableMapping, ExportableMappingRule } from '../exportable';
 import {
@@ -12,14 +12,14 @@ export class MappingExtractor {
   static process(
     input: ProcessableStructureDefinition,
     elements: ProcessableElementDefinition[],
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableMapping[] {
     const mappings = this.extractMappings(input, elements);
 
     // Filter out mappings on the parent - only include mappings new to the profile
     // or mappings on the base definition with additional mapping rules
     // TODO: Look for parents from the local package being processed. This requires a MasterFisher.
-    const parent = fhir.fishForFHIR(
+    const parent = fisher.fishForFHIR(
       input.baseDefinition,
       utils.Type.Resource,
       utils.Type.Type,

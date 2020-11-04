@@ -1,6 +1,10 @@
 {
   "resourceType": "StructureDefinition",
+  "id": "simple.profile",
+  "url": "http://example.org/tests/StructureDefinition/simple.profile",
   "kind": "resource",
-  "type": "Resource",
-  "name": "SimpleProfile"
+  "type": "Patient",
+  "name": "SimpleProfile",
+  "derivation": "constraint",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Patient"
 }

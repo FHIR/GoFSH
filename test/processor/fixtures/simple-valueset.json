@@ -1,4 +1,6 @@
 {
   "resourceType": "ValueSet",
+  "id": "simple.valueset",
+  "url": "http://example.org/tests/ValueSet/simple.valueset",
   "name": "SimpleValueSet"
 }

@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import temp from 'temp';
 import { fhirdefs } from 'fsh-sushi';
-
 import { loggerSpy } from '../helpers/loggerSpy';
 import {
   ensureOutputDir,
@@ -11,7 +10,6 @@ import {
   loadExternalDependencies,
   writeFSH
 } from '../../src/utils/Processing';
-import { FHIRProcessor } from '../../src/processor/FHIRProcessor';
 import { Package } from '../../src/processor';
 
 describe('Processing', () => {
@@ -69,34 +67,61 @@ describe('Processing', () => {
   });
 
   describe('getResources', () => {
-    let registerSpy: jest.SpyInstance;
-
-    beforeAll(() => {
-      registerSpy = jest.spyOn(FHIRProcessor.prototype, 'register');
-    });
-
-    beforeEach(() => {
-      registerSpy.mockClear();
-    });
+    beforeEach(() => loggerSpy.reset());
 
     it('should try to register each json file in the directory and its subdirectories when given a path to a directory', async () => {
-      const inDir = path.join(__dirname, 'fixtures');
+      const inDir = path.join(__dirname, 'fixtures', 'all-good');
       const result = await getResources(inDir, undefined);
-      expect(result instanceof Package).toBeTruthy();
-      expect(registerSpy).toHaveBeenCalledTimes(3);
-      expect(registerSpy).toHaveBeenCalledWith<[string]>(path.join(inDir, 'simple-profile.json'));
-      expect(registerSpy).toHaveBeenCalledWith<[string]>(path.join(inDir, 'other-resource.json'));
-      expect(registerSpy).toHaveBeenCalledWith<[string]>(
-        path.join(inDir, 'more-things', 'another-resource.json')
-      );
+      expect(result.profiles).toHaveLength(1);
+      expect(result.codeSystems).toHaveLength(1);
+      expect(result.valueSets).toHaveLength(1);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
     });
 
     it('should register the specified file when given a path to a file', async () => {
-      const inDir = path.join(__dirname, 'fixtures', 'simple-profile.json');
+      const inDir = path.join(__dirname, 'fixtures', 'all-good', 'simple-profile.json');
       const result = await getResources(inDir, undefined);
-      expect(result instanceof Package).toBeTruthy();
-      expect(registerSpy).toHaveBeenCalledTimes(1);
-      expect(registerSpy).toHaveBeenCalledWith<[string]>(path.join(inDir));
+      expect(result.profiles).toHaveLength(1);
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
+    });
+
+    it('should log an error when an input file is not valid JSON', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'one-bad');
+      const result = await getResources(inDir, undefined);
+      expect(loggerSpy.getLastMessage('error')).toMatch(/Could not load .*invalid-profile\.json/);
+      expect(result.profiles).toHaveLength(1);
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
+    });
+
+    it('should log debug statements for valid JSON that is not a valid FHIR resource', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'some-non-fhir');
+      const result = await getResources(inDir, undefined);
+      expect(loggerSpy.getMessageAtIndex(0, 'debug')).toMatch(
+        /Skipping non-FHIR JSON file: .*non-fhir\.json/
+      );
+      expect(loggerSpy.getMessageAtIndex(1, 'debug')).toMatch(
+        /Skipping temporary "comparison" file created by IG Publisher: .*sd-us-core-observation-lab-mcode-cancer-disease-status-intersection\.json/
+      );
+      expect(result.profiles).toHaveLength(1);
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
     });
 
     it('should throw an error when the input directory does not exist', async () => {

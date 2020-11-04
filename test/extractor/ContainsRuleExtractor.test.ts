@@ -8,6 +8,7 @@ import {
   ExportableCardRule,
   ExportableFlagRule
 } from '../../src/exportable';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('ContainsRuleExtractor', () => {
   let looseSD: any;
@@ -17,8 +18,7 @@ describe('ContainsRuleExtractor', () => {
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'contains-profile.json'), 'utf-8').trim()
     );
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
   });
 
   it('should extract a ContainsRule with cardinality', () => {

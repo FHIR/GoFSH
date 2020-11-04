@@ -1,5 +1,5 @@
-import path from 'path';
-import { fhirtypes, fhirdefs } from 'fsh-sushi';
+import { fhirtypes, fhirdefs, fshtypes } from 'fsh-sushi';
+import { cloneDeep } from 'lodash';
 import {
   getFSHValue,
   getPath,
@@ -8,15 +8,14 @@ import {
   getAncestorElement
 } from '../../src/utils';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
-import { FshCode } from 'fsh-sushi/dist/fshtypes';
-import { cloneDeep } from 'lodash';
+
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('element', () => {
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
   });
 
   describe('#getPath', () => {
@@ -132,7 +131,7 @@ describe('element', () => {
         new ProcessableElementDefinition(),
         defs
       );
-      expect(value).toEqual(new FshCode('contained'));
+      expect(value).toEqual(new fshtypes.FshCode('contained'));
     });
 
     it('should FSHify a string', () => {

@@ -1,4 +1,4 @@
-import { fhirdefs } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
 import { ExportableCardRule } from '../exportable';
 import { getPath } from '../utils';
@@ -7,7 +7,7 @@ export class CardRuleExtractor {
   static process(
     input: ProcessableElementDefinition,
     structDef: ProcessableStructureDefinition,
-    fhir: fhirdefs.FHIRDefinitions,
+    fisher: utils.Fishable,
     removeInferredSlicedMin = true
   ): ExportableCardRule | null {
     if (input.min || input.max) {
@@ -31,9 +31,9 @@ export class CardRuleExtractor {
       if (
         removeInferredSlicedMin &&
         hasSlicesWithConstrainedCards(input, structDef) &&
-        isSliced(input, structDef, fhir)
+        isSliced(input, structDef, fisher)
       ) {
-        const sumOfMins = getSumOfSliceMins(input, structDef, fhir);
+        const sumOfMins = getSumOfSliceMins(input, structDef, fisher);
         if (sumOfMins === input.min) {
           if (cardRule.max == null) {
             // No min or max, so return null card rule
@@ -66,12 +66,12 @@ function hasSlicesWithConstrainedCards(
 function isSliced(
   input: ProcessableElementDefinition,
   structDef: ProcessableStructureDefinition,
-  fhir: fhirdefs.FHIRDefinitions
+  fisher: utils.Fishable
 ): boolean {
   for (
     let currentStructDef = structDef;
     currentStructDef != null;
-    currentStructDef = fhir.fishForFHIR(currentStructDef.baseDefinition)
+    currentStructDef = fisher.fishForFHIR(currentStructDef.baseDefinition)
   ) {
     // If the element is in the snapshot, then presence or lack of slicing is conclusive
     const snapshotEl = currentStructDef.snapshot?.element?.find(el => el.id === input.id);
@@ -91,14 +91,14 @@ function isSliced(
 function getSumOfSliceMins(
   input: ProcessableElementDefinition,
   structDef: ProcessableStructureDefinition,
-  fhir: fhirdefs.FHIRDefinitions
+  fisher: utils.Fishable
 ): number {
   let sum = 0;
   const countedSlices = new Set<string>();
   for (
     let currentStructDef = structDef;
     currentStructDef != null;
-    currentStructDef = fhir.fishForFHIR(currentStructDef.baseDefinition)
+    currentStructDef = fisher.fishForFHIR(currentStructDef.baseDefinition)
   ) {
     const uncountedSlicesWithMins = (
       currentStructDef.snapshot ?? currentStructDef.differential

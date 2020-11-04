@@ -1,9 +1,10 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { fhirdefs } from 'fsh-sushi';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 import { MappingExtractor } from '../../src/extractor';
 import { ExportableMapping, ExportableMappingRule } from '../../src/exportable';
-import { fhirdefs } from 'fsh-sushi';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('MappingExtractor', () => {
   let looseSD: ProcessableStructureDefinition;
@@ -11,8 +12,7 @@ describe('MappingExtractor', () => {
   let elements: ProcessableElementDefinition[];
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'mapping-profile.json'), 'utf-8').trim()
     );

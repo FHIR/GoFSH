@@ -1,84 +1,68 @@
-import fs from 'fs-extra';
-import { fhirdefs } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { logger } from '../utils';
 import {
   StructureDefinitionProcessor,
   CodeSystemProcessor,
   ValueSetProcessor,
-  ConfigurationProcessor
+  ConfigurationProcessor,
+  Package,
+  LakeOfFHIR
 } from '.';
 import { ExportableConfiguration } from '../exportable';
 import { ConfigurationExtractor } from '../extractor';
-import { Package } from './Package';
 
 export class FHIRProcessor {
-  public readonly structureDefinitions: Map<string, any> = new Map();
-  public readonly codeSystems: Map<string, any> = new Map();
-  public readonly valueSets: Map<string, any> = new Map();
-  public readonly implementationGuides: Map<string, any> = new Map();
-  public readonly fhir: fhirdefs.FHIRDefinitions;
-
-  constructor(fhir: fhirdefs.FHIRDefinitions) {
-    this.fhir = fhir;
-  }
-
-  register(inputPath: string): void {
-    const rawContent = JSON.parse(fs.readFileSync(inputPath, 'utf-8'));
-
-    if (rawContent['resourceType'] === 'StructureDefinition') {
-      // Profiles and Extensions are both made from StructureDefinitions
-      // Invariants may be contained within StructureDefinitions
-      this.structureDefinitions.set(inputPath, rawContent);
-      logger.debug(`Registered contents of ${inputPath} as StructureDefinition.`);
-    } else if (rawContent['resourceType'] === 'CodeSystem') {
-      this.codeSystems.set(inputPath, rawContent);
-      logger.debug(`Registered contents of ${inputPath} as CodeSystem.`);
-    } else if (rawContent['resourceType'] === 'ValueSet') {
-      this.valueSets.set(inputPath, rawContent);
-      logger.debug(`Registered contents of ${inputPath} as ValueSet.`);
-    } else if (rawContent['resourceType'] === 'ImplementationGuide') {
-      this.implementationGuides.set(inputPath, rawContent);
-    } else {
-      logger.warn(`Skipping unsupported resource: ${inputPath}`);
+  constructor(private readonly lake: LakeOfFHIR, private readonly fisher?: utils.Fishable) {
+    // If no fisher was passed in, just use the built-in lake fisher (usually for testing only)
+    if (fisher == null) {
+      fisher = lake;
     }
   }
 
   process(): Package {
     const resources = new Package();
     let config: ExportableConfiguration;
-    if (this.implementationGuides.size > 0) {
-      config = ConfigurationProcessor.process(Array.from(this.implementationGuides.values())[0]);
+    if (this.lake.getAllImplementationGuides().length > 0) {
+      config = ConfigurationProcessor.process(this.lake.getAllImplementationGuides()[0].content);
     } else {
-      config = ConfigurationExtractor.process([
-        ...Array.from(this.structureDefinitions.values()),
-        ...Array.from(this.codeSystems.values())
-      ]);
+      config = ConfigurationExtractor.process(
+        [
+          ...this.lake.getAllStructureDefinitions(),
+          ...this.lake.getAllCodeSystems(),
+          ...this.lake.getAllValueSets()
+        ].map(wild => wild.content)
+      );
     }
     resources.add(config);
-    this.structureDefinitions.forEach((sd, inputPath) => {
+    this.lake.getAllStructureDefinitions().forEach(wild => {
       try {
-        StructureDefinitionProcessor.process(sd, this.fhir, resources.invariants).forEach(
-          resource => {
-            resources.add(resource);
-          }
-        );
+        StructureDefinitionProcessor.process(
+          wild.content,
+          this.fisher,
+          resources.invariants
+        ).forEach(resource => {
+          resources.add(resource);
+        });
       } catch (ex) {
-        logger.error(`Could not process StructureDefinition at ${inputPath}: ${ex.message}`);
+        logger.error(`Could not process StructureDefinition at ${wild.path}: ${ex.message}`);
       }
     });
-    this.codeSystems.forEach((cs, inputPath) => {
+    this.lake.getAllCodeSystems().forEach(wild => {
       try {
-        resources.add(CodeSystemProcessor.process(cs));
+        resources.add(CodeSystemProcessor.process(wild.content));
       } catch (ex) {
-        logger.error(`Could not process CodeSystem at ${inputPath}: ${ex.message}`);
+        logger.error(`Could not process CodeSystem at ${wild.path}: ${ex.message}`);
       }
     });
-    this.valueSets.forEach((vs, inputPath) => {
+    this.lake.getAllValueSets().forEach(wild => {
       try {
-        resources.add(ValueSetProcessor.process(vs));
+        resources.add(ValueSetProcessor.process(wild.content));
       } catch (ex) {
-        logger.error(`Could not process ValueSet at ${inputPath}: ${ex.message}`);
+        logger.error(`Could not process ValueSet at ${wild.path}: ${ex.message}`);
       }
+    });
+    this.lake.getAllUnsupportedResources().forEach(wild => {
+      logger.warn(`Skipping unsupported resource: ${wild.path}`);
     });
     return resources;
   }
