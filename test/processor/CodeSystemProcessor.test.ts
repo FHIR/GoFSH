@@ -3,13 +3,13 @@ import fs from 'fs-extra';
 import { CodeSystemProcessor } from '../../src/processor';
 import { ExportableCaretValueRule, ExportableCodeSystem } from '../../src/exportable';
 import { fhirdefs } from 'fsh-sushi';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('CodeSystemProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
   });
 
   describe('#process', () => {

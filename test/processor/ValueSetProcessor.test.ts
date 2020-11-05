@@ -3,13 +3,13 @@ import fs from 'fs-extra';
 import { fhirdefs } from 'fsh-sushi';
 import { ValueSetProcessor } from '../../src/processor';
 import { ExportableCaretValueRule, ExportableValueSet } from '../../src/exportable';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('ValueSetProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
   });
 
   describe('#process', () => {
