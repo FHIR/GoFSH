@@ -1,0 +1,157 @@
+import path from 'path';
+import { fhirdefs, utils } from 'fsh-sushi';
+import '../../helpers/loggerSpy'; // side-effect: suppresses logs
+import { LakeOfFHIR, Package } from '../../../src/processor';
+import {
+  ExportableValueSet,
+  ExportableValueSetConceptComponentRule,
+  ExportableValueSetFilterComponentRule
+} from '../../../src/exportable';
+import { MasterFisher } from '../../../src/utils';
+import { loadTestDefinitions, stockLake } from '../../helpers';
+import optimizer from '../../../src/optimizer/plugins/ResolveValueSetComponentRuleURLsOptimizer';
+import { cloneDeep } from 'lodash';
+
+describe('optimizer', () => {
+  describe('#resolve_value_set_component_rule_urls', () => {
+    let defs: fhirdefs.FHIRDefinitions;
+    let lake: LakeOfFHIR;
+    let fisher: utils.Fishable;
+
+    beforeAll(() => {
+      defs = loadTestDefinitions();
+      lake = stockLake(
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+    });
+
+    it('should have appropriate metadata', () => {
+      expect(optimizer.name).toBe('resolve_value_set_component_rule_urls');
+      expect(optimizer.description).toBeDefined();
+      expect(optimizer.runBefore).toBeUndefined();
+      expect(optimizer.runAfter).toBeUndefined();
+    });
+
+    it('should replace filter rule system url with the name of a local CodeSystem', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { system: 'http://example.org/tests/CodeSystem/simple.codesystem' };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { system: 'SimpleCodeSystem' };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should replace concept rule system url with the name of a local CodeSystem', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetConceptComponentRule(true);
+      rule.from = { system: 'http://example.org/tests/CodeSystem/simple.codesystem' };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetConceptComponentRule(true);
+      expectedRule.from = { system: 'SimpleCodeSystem' };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should replace filter rule system url with the name of a core FHIR CodeSystem', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { system: 'http://hl7.org/fhir/observation-status' };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { system: 'ObservationStatus' };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should not replace filter rule system url with the name of a core FHIR CodeSystem when it is same as local code system name', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { system: 'http://hl7.org/fhir/observation-status' };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+
+      // Use a modified lake and fisher to force the local CS to have the same name
+      const modLake = cloneDeep(lake);
+      modLake.docs[0].content.name = 'ObservationStatus';
+      optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { system: 'http://hl7.org/fhir/observation-status' };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should replace filter rule valueset url with the name of a local ValueSet', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { valueSets: ['http://example.org/tests/ValueSet/simple.valueset'] };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { valueSets: ['SimpleValueSet'] };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should replace concept rule valueset url with the name of a local ValueSet', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetConceptComponentRule(true);
+      rule.from = { valueSets: ['http://example.org/tests/ValueSet/simple.valueset'] };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetConceptComponentRule(true);
+      expectedRule.from = { valueSets: ['SimpleValueSet'] };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should replace filter rule valueset url with the name of a core FHIR CodeSystem', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { valueSets: ['ObservationStatus'] };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should not replace filter rule system url with the name of a core FHIR CodeSystem when it is same as local code system name', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+
+      // Use a modified lake and fisher to force the local CS to have the same name
+      const modLake = cloneDeep(lake);
+      modLake.docs[1].content.name = 'ObservationStatus';
+      optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+  });
+});
