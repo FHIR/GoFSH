@@ -44,7 +44,19 @@ describe('ExportableConfiguration', () => {
         id: 'a.special.package',
         name: 'SpecialTestPackage',
         status: 'active',
-        version: '0.13.0'
+        version: '0.13.0',
+        dependencies: [
+          {
+            version: '3.1.0',
+            packageId: 'hl7.fhir.us.core',
+            uri: 'http://hl7.org/fhir/us/core/ImplementationGuide/hl7.fhir.us.core'
+          },
+          {
+            version: '1.0.0',
+            packageId: 'hl7.fhir.us.mcode',
+            uri: 'http://hl7.org/fhir/us/mcode/ImplementationGuide/hl7.fhir.us.mcode'
+          }
+        ]
       });
       result = config.toFSH();
     });
@@ -64,5 +76,10 @@ describe('ExportableConfiguration', () => {
     it('should include the version when present', () => {
       expect(result).toMatch(/^version: 0\.13.0/m);
     });
+
+    // TODO: I know that I need another test case here, but the regex confused me
+    // it('should include the dependencies when present', () => {
+    //   expect(result).toMatch(/^dependencies: /m);
+    // });
   });
 });

@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { ConfigurationProcessor } from '../../src/processor/ConfigurationProcessor';
 import { ExportableConfiguration } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
+import { ImplementationGuideDependsOn } from 'fsh-sushi/dist/fhirtypes';
 
 describe('ConfigurationProcessor', () => {
   it('should create a Configuration from an ImplementationGuide with url and fhirVersion properties', () => {
@@ -42,6 +43,20 @@ describe('ConfigurationProcessor', () => {
     const input = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'), 'utf-8')
     );
+
+    const testDependencies: ImplementationGuideDependsOn[] = [
+      {
+        version: '3.1.0',
+        packageId: 'hl7.fhir.us.core',
+        uri: 'http://hl7.org/fhir/us/core/ImplementationGuide/hl7.fhir.us.core'
+      },
+      {
+        version: '1.0.0',
+        packageId: 'hl7.fhir.us.mcode',
+        uri: 'http://hl7.org/fhir/us/mcode/ImplementationGuide/hl7.fhir.us.mcode'
+      }
+    ];
+
     const result = ConfigurationProcessor.process(input);
     expect(result).toBeInstanceOf(ExportableConfiguration);
     expect(result.config.canonical).toBe('http://example.org/tests');
@@ -50,5 +65,6 @@ describe('ConfigurationProcessor', () => {
     expect(result.config.name).toBe('BiggerImplementationGuideForTesting');
     expect(result.config.status).toBe('active');
     expect(result.config.version).toBe('0.12');
+    expect(result.config.dependencies).toEqual(testDependencies);
   });
 });
