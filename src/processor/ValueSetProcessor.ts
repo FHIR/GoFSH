@@ -1,4 +1,4 @@
-import { fhirdefs } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { capitalize, compact } from 'lodash';
 import { ExportableValueSet } from '../exportable';
 import { CaretValueRuleExtractor } from '../extractor';
@@ -16,24 +16,20 @@ export class ValueSetProcessor {
     }
   }
 
-  static extractRules(
-    input: any,
-    target: ExportableValueSet,
-    fhir: fhirdefs.FHIRDefinitions
-  ): void {
+  static extractRules(input: any, target: ExportableValueSet, fisher: utils.Fishable): void {
     const newRules: ExportableValueSet['rules'] = [];
-    newRules.push(...CaretValueRuleExtractor.processResource(input, fhir, input.resourceType));
+    newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
     target.rules = compact(newRules);
   }
 
-  static process(input: any, fhir: fhirdefs.FHIRDefinitions): ExportableValueSet {
+  static process(input: any, fisher: utils.Fishable): ExportableValueSet {
     // We need something to call the ValueSet, so it must have a name or id
     if (input.name != null || input.id != null) {
       // Prefer name (which is optional), otherwise create a reasonable name from the id with only allowable characters
       const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
       const valueSet = new ExportableValueSet(name);
       ValueSetProcessor.extractKeywords(input, valueSet);
-      ValueSetProcessor.extractRules(input, valueSet, fhir);
+      ValueSetProcessor.extractRules(input, valueSet, fisher);
       return valueSet;
     }
   }

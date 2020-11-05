@@ -1,5 +1,5 @@
 import compact from 'lodash/compact';
-import { fhirdefs, fhirtypes } from 'fsh-sushi';
+import { fhirtypes, utils } from 'fsh-sushi';
 import {
   ExportableSdRule,
   ExportableInvariant,
@@ -25,7 +25,7 @@ import { getAncestorElement } from '../utils';
 export class StructureDefinitionProcessor {
   static process(
     input: any,
-    fhir: fhirdefs.FHIRDefinitions,
+    fisher: utils.Fishable,
     existingInvariants: ExportableInvariant[] = []
   ):
     | [ExportableProfile | ExportableExtension, ...(ExportableInvariant | ExportableMapping)[]]
@@ -46,8 +46,8 @@ export class StructureDefinitionProcessor {
         elements,
         existingInvariants
       );
-      const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fhir);
-      StructureDefinitionProcessor.extractRules(input, elements, sd, fhir);
+      const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fisher);
+      StructureDefinitionProcessor.extractRules(input, elements, sd, fisher);
       // TODO: Destructuring an array with invariants and mappings is required for TypeScript 3.0
       // With TypeScript 4.0, we should update to return the following line, which is more clear:
       // return [sd, ...invariants, ...mappings];
@@ -77,16 +77,16 @@ export class StructureDefinitionProcessor {
     input: ProcessableStructureDefinition,
     elements: ProcessableElementDefinition[],
     target: ConstrainableEntity,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): void {
     const newRules: ExportableSdRule[] = [];
     // First extract the top-level caret rules from the StructureDefinition
-    newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fhir));
+    newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fisher));
     // Then extract rules based on the differential elements
     elements.forEach(element => {
-      if (element.sliceName && getAncestorElement(element.id, input, fhir) == null) {
+      if (element.sliceName && getAncestorElement(element.id, input, fisher) == null) {
         newRules.push(
-          ContainsRuleExtractor.process(element, input, fhir),
+          ContainsRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
           AssignmentRuleExtractor.process(element),
           BindingRuleExtractor.process(element),
@@ -94,7 +94,7 @@ export class StructureDefinitionProcessor {
         );
       } else {
         newRules.push(
-          CardRuleExtractor.process(element, input, fhir),
+          CardRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
           AssignmentRuleExtractor.process(element),
           FlagRuleExtractor.process(element),
@@ -104,7 +104,7 @@ export class StructureDefinitionProcessor {
       }
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
       // since it will convert any remaining fields to CaretValueRules
-      newRules.push(...CaretValueRuleExtractor.process(element, fhir));
+      newRules.push(...CaretValueRuleExtractor.process(element, fisher));
     });
     target.rules = compact(newRules);
   }
@@ -125,9 +125,9 @@ export class StructureDefinitionProcessor {
   static extractMappings(
     elements: ProcessableElementDefinition[],
     input: ProcessableStructureDefinition,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableMapping[] {
-    return MappingExtractor.process(input, elements, fhir);
+    return MappingExtractor.process(input, elements, fisher);
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {

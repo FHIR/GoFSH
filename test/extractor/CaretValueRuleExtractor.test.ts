@@ -6,6 +6,7 @@ import { CaretValueRuleExtractor } from '../../src/extractor';
 import { ExportableCaretValueRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { loggerSpy } from '../helpers/loggerSpy';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('CaretValueRuleExtractor', () => {
   let looseSD: any;
@@ -14,8 +15,7 @@ describe('CaretValueRuleExtractor', () => {
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'caret-value-profile.json'), 'utf-8').trim()
     );

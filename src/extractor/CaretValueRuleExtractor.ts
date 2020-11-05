@@ -1,4 +1,4 @@
-import { fhirdefs, utils } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
 import { ProcessableElementDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
@@ -7,7 +7,7 @@ import { getFSHValue, getPath, getPathValuePairs, logger } from '../utils';
 export class CaretValueRuleExtractor {
   static process(
     input: ProcessableElementDefinition,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     // Convert to json to remove extra private properties on fhirtypes.ElementDefinition
     const path = getPath(input);
@@ -19,7 +19,7 @@ export class CaretValueRuleExtractor {
     remainingPaths.forEach(key => {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(key, flatElement[key], 'ElementDefinition', fhir);
+      caretValueRule.value = getFSHValue(key, flatElement[key], 'ElementDefinition', fisher);
       caretValueRules.push(caretValueRule);
     });
     return caretValueRules;
@@ -27,13 +27,13 @@ export class CaretValueRuleExtractor {
 
   static processStructureDefinition(
     input: any,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     // Clone the input so we can modify it for simpler comparison
     const sd = cloneDeep(input);
     // Clone the parent so we can modify it for simpler comparison
     let parent = cloneDeep(
-      fhir.fishForFHIR(
+      fisher.fishForFHIR(
         input.baseDefinition,
         utils.Type.Resource,
         utils.Type.Type,
@@ -112,7 +112,7 @@ export class CaretValueRuleExtractor {
       if (flatParent[key] == null || !isEqual(flatSD[key], flatParent[key])) {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatSD[key], 'StructureDefinition', fhir);
+        caretValueRule.value = getFSHValue(key, flatSD[key], 'StructureDefinition', fisher);
         caretValueRules.push(caretValueRule);
       }
     });
@@ -122,7 +122,7 @@ export class CaretValueRuleExtractor {
 
   static processResource(
     input: any,
-    fhir: fhirdefs.FHIRDefinitions,
+    fisher: utils.Fishable,
     resourceType: 'ValueSet' | 'CodeSystem'
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
@@ -134,7 +134,7 @@ export class CaretValueRuleExtractor {
       .forEach(key => {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatVS[key], resourceType, fhir);
+        caretValueRule.value = getFSHValue(key, flatVS[key], resourceType, fisher);
         caretValueRules.push(caretValueRule);
       });
     return caretValueRules;

@@ -1,35 +1,31 @@
+import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
-import { Package, FHIRProcessor } from '../../processor';
+import { Package } from '../../processor';
 import { ExportableOnlyRule } from '../../exportable';
 
-const FHIR_BASE_URL = /http:\/\/hl7\.org\/fhir\/StructureDefinition\/(.+)/;
+const FISHER_TYPES = [
+  utils.Type.Resource,
+  utils.Type.Type,
+  utils.Type.Profile,
+  utils.Type.Extension
+];
 
 export default {
   name: 'resolve_only_rule_urls',
   description: 'Replace URLs in "only" rules with their names (for local and FHIR Core URLs only)',
 
-  optimize(pkg: Package, processor: FHIRProcessor): void {
+  optimize(pkg: Package, fisher: utils.Fishable): void {
     [...pkg.profiles, ...pkg.extensions].forEach(sd => {
       sd.rules.forEach(rule => {
         if (rule instanceof ExportableOnlyRule) {
           rule.types.forEach(onlyRuleType => {
-            // The type might be another SD in the processor or a core FHIR resource
-            const typeSd = Array.from(processor.structureDefinitions.values()).find(
-              sd => sd.url === onlyRuleType.type
-            );
-            if (typeSd?.name) {
+            // Only substitute the name if the name resolves to the same resource by default (in case of duplicate names)
+            const typeSd = fisher.fishForFHIR(onlyRuleType.type, ...FISHER_TYPES);
+            if (
+              typeSd?.name &&
+              fisher.fishForFHIR(typeSd.name, ...FISHER_TYPES).url === onlyRuleType.type
+            ) {
               onlyRuleType.type = typeSd.name;
-            } else {
-              const fhirMatch = onlyRuleType.type.match(FHIR_BASE_URL);
-              // Only change the FHIR url into a name if it won't collide with a local SD
-              if (
-                fhirMatch?.[1] &&
-                !Array.from(processor.structureDefinitions.values()).some(
-                  sd => sd.name === fhirMatch[1]
-                )
-              ) {
-                onlyRuleType.type = fhirMatch[1];
-              }
             }
           });
         }
