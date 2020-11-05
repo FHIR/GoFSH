@@ -10,5 +10,6 @@ module.exports = {
   },
   testMatch: ['**/test/**/*.test.(ts|js)'],
   testEnvironment: 'node',
-  setupFilesAfterEnv: ['jest-extended']
+  setupFilesAfterEnv: ['jest-extended'],
+  collectCoverageFrom: ['src/**/*.ts']
 };

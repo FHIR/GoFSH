@@ -7,3 +7,5 @@ export * from './ProcessableElementDefinition';
 export * from './StructureDefinitionProcessor';
 export * from './ConfigurationProcessor';
 export * from './InstanceProcessor';
+export * from './LakeOfFHIR';
+export * from './WildFHIR';

@@ -1,4 +1,4 @@
-import { fhirdefs } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableCardRule, ExportableContainsRule } from '../exportable';
 import { getPath, getCardinality } from '../utils';
@@ -9,7 +9,7 @@ export class ContainsRuleExtractor {
   static process(
     input: ProcessableElementDefinition,
     structDef: ProcessableStructureDefinition,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableContainsRule {
     // The path for the rule should not include the slice for the contained element,
     // but should include previous slices.
@@ -20,12 +20,12 @@ export class ContainsRuleExtractor {
       name: input.sliceName
     });
     // CardRule is required, so if it isn't present, we don't get a ContainsRule
-    const cardRule = CardRuleExtractor.process(input, structDef, fhir, false);
+    const cardRule = CardRuleExtractor.process(input, structDef, fisher, false);
     if (cardRule) {
       containsRule.cardRules.push(cardRule);
     } else {
       const slicedElementId = input.id.slice(0, input.id.lastIndexOf(':'));
-      const card = getCardinality(slicedElementId, structDef, fhir);
+      const card = getCardinality(slicedElementId, structDef, fisher);
       if (card) {
         const cardRule = new ExportableCardRule(elementPath);
         cardRule.min = card.min;

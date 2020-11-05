@@ -1,6 +1,10 @@
 {
   "resourceType": "StructureDefinition",
+  "id": "simple.extension",
+  "url": "http://example.org/tests/StructureDefinition/simple.extension",
   "kind": "complex-type",
   "type": "Extension",
-  "name": "SimpleExtension"
+  "name": "SimpleExtension",
+  "derivation": "constraint",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
 }

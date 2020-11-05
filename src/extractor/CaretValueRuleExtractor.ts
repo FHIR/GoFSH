@@ -1,4 +1,4 @@
-import { fhirdefs, utils } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
 import { ProcessableElementDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
@@ -7,7 +7,7 @@ import { getFSHValue, getPath, getPathValuePairs, logger } from '../utils';
 export class CaretValueRuleExtractor {
   static process(
     input: ProcessableElementDefinition,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     // Convert to json to remove extra private properties on fhirtypes.ElementDefinition
     const path = getPath(input);
@@ -19,7 +19,7 @@ export class CaretValueRuleExtractor {
     remainingPaths.forEach(key => {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(key, flatElement[key], input, fhir);
+      caretValueRule.value = getFSHValue(key, flatElement[key], input, fisher);
       caretValueRules.push(caretValueRule);
     });
     return caretValueRules;
@@ -27,13 +27,13 @@ export class CaretValueRuleExtractor {
 
   static processStructureDefinition(
     input: any,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     // Clone the input so we can modify it for simpler comparison
     const sd = cloneDeep(input);
     // Clone the parent so we can modify it for simpler comparison
     let parent = cloneDeep(
-      fhir.fishForFHIR(
+      fisher.fishForFHIR(
         input.baseDefinition,
         utils.Type.Resource,
         utils.Type.Type,
@@ -115,8 +115,8 @@ export class CaretValueRuleExtractor {
         caretValueRule.value = getFSHValue(
           key,
           flatSD[key],
-          fhir.fishForFHIR('StructureDefinition', utils.Type.Resource),
-          fhir
+          fisher.fishForFHIR('StructureDefinition', utils.Type.Resource),
+          fisher
         );
         caretValueRules.push(caretValueRule);
       }
