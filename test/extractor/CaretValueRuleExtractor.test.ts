@@ -430,6 +430,7 @@ describe('CaretValueRuleExtractor', () => {
       const vs = cloneDeep(looseVS);
       vs.status = 'active';
       vs.compose.inactive = true;
+      vs.identifier = { value: 'foo' };
       const caretRules = CaretValueRuleExtractor.processResource(vs, defs, vs.resourceType);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'status';
@@ -437,8 +438,13 @@ describe('CaretValueRuleExtractor', () => {
       const expectedRule2 = new ExportableCaretValueRule('');
       expectedRule2.caretPath = 'compose.inactive';
       expectedRule2.value = true;
+      const expectedRule3 = new ExportableCaretValueRule('');
+      expectedRule3.caretPath = 'identifier.value';
+      expectedRule3.value = 'foo';
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule1);
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule3);
+      expect(caretRules).toHaveLength(3);
     });
   });
 
@@ -456,6 +462,7 @@ describe('CaretValueRuleExtractor', () => {
       const cs = cloneDeep(looseCS);
       cs.status = 'active';
       cs.experimental = true;
+      cs.identifier = { value: 'foo' };
       const caretRules = CaretValueRuleExtractor.processResource(cs, defs, cs.resourceType);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'status';
@@ -463,8 +470,13 @@ describe('CaretValueRuleExtractor', () => {
       const expectedRule2 = new ExportableCaretValueRule('');
       expectedRule2.caretPath = 'experimental';
       expectedRule2.value = true;
+      const expectedRule3 = new ExportableCaretValueRule('');
+      expectedRule3.caretPath = 'identifier.value';
+      expectedRule3.value = 'foo';
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule1);
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule3);
+      expect(caretRules).toHaveLength(3);
     });
   });
 

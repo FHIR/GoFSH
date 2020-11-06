@@ -129,7 +129,10 @@ export class CaretValueRuleExtractor {
     const flatVS = getPathValuePairs(input);
     Object.keys(flatVS)
       .filter(
-        key => !RESOURCE_IGNORED_PROPERTIES[resourceType].some(property => key.startsWith(property))
+        key =>
+          !RESOURCE_IGNORED_PROPERTIES[resourceType].some(
+            property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
+          )
       )
       .forEach(key => {
         const caretValueRule = new ExportableCaretValueRule('');
