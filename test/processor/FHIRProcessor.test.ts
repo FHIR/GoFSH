@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import {
   FHIRProcessor,
   ConfigurationProcessor,
@@ -41,6 +42,21 @@ describe('FHIRProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-ig.json'));
     processor.process();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
+    const simpleIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'simple-ig.json'));
+    expect(configurationSpy).toHaveBeenCalledWith(simpleIgContent); // Uses first and only IG in lake if no path provided
+  });
+
+  it('should try to process a provided ImplementationGuide with the ConfigurationProcessor', () => {
+    restockLake(
+      lake,
+      path.join(__dirname, 'fixtures', 'simple-ig.json'),
+      path.join(__dirname, 'fixtures', 'bigger-ig.json')
+    );
+    const processorWithIg = new FHIRProcessor(lake, null, 'bigger-ig.json');
+    processorWithIg.process();
+    expect(configurationSpy).toHaveBeenCalledTimes(1);
+    const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+    expect(configurationSpy).toHaveBeenCalledWith(biggerIgContent); // Uses path provided instead of first IG in lake
   });
 
   it('should try to process a Profile with the StructureDefinitionProcessor', () => {

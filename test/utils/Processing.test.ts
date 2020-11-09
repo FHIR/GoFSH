@@ -8,7 +8,8 @@ import {
   getInputDir,
   getResources,
   loadExternalDependencies,
-  writeFSH
+  writeFSH,
+  getIgPathFromIgIni
 } from '../../src/utils/Processing';
 import { Package } from '../../src/processor';
 
@@ -222,6 +223,23 @@ describe('Processing', () => {
         expect(defs.packages).toContain('hl7.fhir.r4.core#4.0.1');
         expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       });
+    });
+  });
+
+  describe('getIgPathFromIgIni', () => {
+    it('should return the path to an IG pointed to by an ig.ini file', () => {
+      const ig = getIgPathFromIgIni(path.join(__dirname, 'fixtures', 'ig-ini'));
+      expect(ig).toEqual('ig-ini/ImplementationGuide-fsh.example.json');
+    });
+
+    it('should return nothing if no IG in ig.ini', () => {
+      const ig = getIgPathFromIgIni(path.join(__dirname, 'fixtures', 'empty-ig-ini'));
+      expect(ig).toBeUndefined();
+    });
+
+    it('should return nothing if no ig.ini file present', () => {
+      const ig = getIgPathFromIgIni(path.join(__dirname, 'fixtures', 'all-good'));
+      expect(ig).toBeUndefined();
     });
   });
 });
