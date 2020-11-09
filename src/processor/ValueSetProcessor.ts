@@ -24,6 +24,7 @@ export class ValueSetProcessor {
         ValueSetProcessor.extractValueSetComponentRules(vsComponent, target, false)
       );
     }
+    target.rules = compact(target.rules);
   }
 
   static extractValueSetComponentRules(
@@ -34,7 +35,6 @@ export class ValueSetProcessor {
     if (ValueSetProcessor.isValueSetComponent(vsComponent)) {
       target.rules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, include));
     }
-    target.rules = compact(target.rules);
   }
 
   static process(input: any): ExportableValueSet {

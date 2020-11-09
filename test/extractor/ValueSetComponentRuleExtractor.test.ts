@@ -55,46 +55,10 @@ describe('ValueSetComponentRuleExtractor', () => {
     expect(result.concepts).toContainEqual(new FshCode('LION', 'http://example.org/zoo', 'Lion'));
   });
 
-  it('should extract a ValueSetConceptComponentRule that leaves out concepts with no code', () => {
-    const input: ProcessableValueSetComponent = {
-      system: 'http://example.org/zoo',
-      concept: [
-        {
-          code: 'BEAR'
-        },
-        {
-          display: 'Lion'
-        }
-      ]
-    };
-    const result = ValueSetConceptComponentRuleExtractor.process(input, true);
-
-    expect(result.inclusion).toBe(true);
-    expect(result.from).toEqual({
-      system: 'http://example.org/zoo'
-    });
-    expect(result.concepts).toHaveLength(1);
-    expect(result.concepts).toContainEqual(new FshCode('BEAR', 'http://example.org/zoo'));
-  });
-
   it('should return null when the component has no concepts', () => {
     const input: ProcessableValueSetComponent = {
       system: 'http://example.org/zoo',
       concept: []
-    };
-    const result = ValueSetConceptComponentRuleExtractor.process(input, true);
-
-    expect(result).toBeNull();
-  });
-
-  it('should return null when the component has concepts, but none of them have a code', () => {
-    const input: ProcessableValueSetComponent = {
-      system: 'http://example.org/zoo',
-      concept: [
-        {
-          display: 'Lion'
-        }
-      ]
     };
     const result = ValueSetConceptComponentRuleExtractor.process(input, true);
 
