@@ -44,6 +44,7 @@ export class ValueSetProcessor {
       const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
       const valueSet = new ExportableValueSet(name);
       ValueSetProcessor.extractKeywords(input, valueSet);
+      ValueSetProcessor.extractRules(input, valueSet);
       return valueSet;
     }
   }

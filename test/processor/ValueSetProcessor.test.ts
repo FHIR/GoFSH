@@ -34,6 +34,14 @@ describe('ValueSetProcessor', () => {
       expect(result.name).toBe('MyValueSet');
       expect(result.id).toBe('my.value-set');
     });
+
+    it('should have rules on a converted ValueSet with components', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
+      );
+      const result = ValueSetProcessor.process(input);
+      expect(result.rules.length).toBeGreaterThan(0);
+    });
   });
 
   describe('#extractKeywords', () => {
