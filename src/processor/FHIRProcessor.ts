@@ -10,6 +10,7 @@ import {
 } from '.';
 import { ExportableConfiguration } from '../exportable';
 import { ConfigurationExtractor } from '../extractor';
+import { InstanceProcessor } from './InstanceProcessor';
 
 export class FHIRProcessor {
   constructor(private readonly lake: LakeOfFHIR, private readonly fisher?: utils.Fishable) {
@@ -61,8 +62,17 @@ export class FHIRProcessor {
         logger.error(`Could not process ValueSet at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllUnsupportedResources().forEach(wild => {
-      logger.warn(`Skipping unsupported resource: ${wild.path}`);
+    this.lake.getAllInstances().forEach(wild => {
+      try {
+        resources.add(
+          InstanceProcessor.process(
+            wild.content,
+            this.lake.getAllImplementationGuides()?.[0]?.content
+          )
+        );
+      } catch (ex) {
+        logger.error(`Could not process Instance at ${wild.path}: ${ex.message}`);
+      }
     });
     return resources;
   }

@@ -5,7 +5,8 @@ import {
   ExportableCodeSystem,
   ExportableValueSet,
   ExportableInvariant,
-  ExportableMapping
+  ExportableMapping,
+  ExportableInstance
 } from '.';
 
 export function metadataToFSH(
@@ -16,6 +17,7 @@ export function metadataToFSH(
     | ExportableValueSet
     | ExportableInvariant
     | ExportableMapping
+    | ExportableInstance
 ): string {
   const resultLines: string[] = [];
   if (definition instanceof ExportableProfile) {
@@ -40,13 +42,19 @@ export function metadataToFSH(
     resultLines.push(`Invariant: ${definition.name}`);
   } else if (definition instanceof ExportableMapping) {
     resultLines.push(`Mapping: ${definition.name}`);
+  } else if (definition instanceof ExportableInstance) {
+    resultLines.push(`Instance: ${definition.name}`);
+    resultLines.push(`InstanceOf: ${definition.instanceOf}`);
   }
 
-  // Invariants do not use the Id and Title keywords
-  if (!(definition instanceof ExportableInvariant)) {
+  // Invariants and Instances don't use the "Id" keyword
+  if (!(definition instanceof ExportableInvariant || definition instanceof ExportableInstance)) {
     if (definition.id) {
       resultLines.push(`Id: ${definition.id}`);
     }
+  }
+  // Invariants don't use the "Title" keyword
+  if (!(definition instanceof ExportableInvariant)) {
     if (definition.title) {
       resultLines.push(`Title: "${fshifyString(definition.title)}"`);
     }
@@ -71,6 +79,11 @@ export function metadataToFSH(
     }
     if (definition.target) {
       resultLines.push(`Target: "${fshifyString(definition.target)}"`);
+    }
+  }
+  if (definition instanceof ExportableInstance) {
+    if (definition.usage) {
+      resultLines.push(`Usage: #${definition.usage.toLowerCase()}`);
     }
   }
   return resultLines.join(EOL);
