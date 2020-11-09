@@ -1,9 +1,30 @@
+import { EOL } from 'os';
 import { ExportableInstance } from '../../src/exportable';
 
 describe('ExportableInstance', () => {
-  it('should export a comment that it is unimplemented', () => {
-    const cs = new ExportableInstance('MyInstance');
+  it('should export the simplest Instance', () => {
+    const i = new ExportableInstance('MyInstance');
+    i.instanceOf = 'Patient';
 
-    expect(cs.toFSH()).toBe('// Unimplemented: Instance');
+    const expectedResult = ['Instance: MyInstance', 'InstanceOf: Patient', 'Usage: #example'].join(
+      EOL
+    );
+    expect(i.toFSH()).toBe(expectedResult);
+  });
+
+  it('should export an instance with additional metadata', () => {
+    const i = new ExportableInstance('MyInstance');
+    i.instanceOf = 'Patient';
+    i.title = 'My Patient Title';
+    i.description = 'My Patient Description';
+
+    const expectedResult = [
+      'Instance: MyInstance',
+      'InstanceOf: Patient',
+      'Title: "My Patient Title"',
+      'Description: "My Patient Description"',
+      'Usage: #example'
+    ].join(EOL);
+    expect(i.toFSH()).toBe(expectedResult);
   });
 });

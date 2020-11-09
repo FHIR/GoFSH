@@ -38,11 +38,10 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   /**
-   * Gets all unsupported resources in the lake
-   * TODO: Eventually support all type via Instance
+   * Gets all instances in the lake
    * @returns {WildFHIR[]}
    */
-  getAllUnsupportedResources(): WildFHIR[] {
+  getAllInstances(): WildFHIR[] {
     return this.docs.filter(
       d =>
         ['StructureDefinition', 'ValueSet', 'CodeSystem', 'ImplementationGuide'].indexOf(

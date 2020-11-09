@@ -64,9 +64,9 @@ describe('LakeOfHIR', () => {
     });
   });
 
-  describe('#getAllUnsupportedResources', () => {
+  describe('#getAllInstances', () => {
     it('should get all unsupported resources', () => {
-      const results = lake.getAllUnsupportedResources();
+      const results = lake.getAllInstances();
       expect(results).toHaveLength(1);
       expect(results[0].content.id).toBe('rocky.balboa');
     });
