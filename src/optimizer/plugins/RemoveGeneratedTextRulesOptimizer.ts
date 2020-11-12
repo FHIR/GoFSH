@@ -24,7 +24,7 @@ export default {
           if (
             rule instanceof ExportableCaretValueRule &&
             rule.path === '' &&
-            rule.caretPath.match(/text\./)
+            rule.caretPath.match(/^text\./)
           ) {
             rulesToRemove.push(i);
           }

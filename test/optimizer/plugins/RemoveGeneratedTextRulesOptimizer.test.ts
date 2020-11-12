@@ -79,5 +79,17 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage);
       expect(profile.rules).toEqual([statusRule, divRule, rulesRule]);
     });
+
+    it('should not remove ^ rules for which text is a nested part of the rule', () => {
+      const profile = new ExportableProfile('Foo');
+      const contextTypeRule = new ExportableCaretValueRule('');
+      contextTypeRule.caretPath = 'context.type';
+      contextTypeRule.value = new fshtypes.FshCode('element');
+      profile.rules = [statusRule, divRule, contextTypeRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+      expect(profile.rules).toEqual([contextTypeRule]);
+    });
   });
 });
