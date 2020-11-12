@@ -32,9 +32,7 @@ export class ValueSetProcessor {
     target: ExportableValueSet,
     include: boolean
   ) {
-    if (ValueSetProcessor.isValueSetComponent(vsComponent)) {
-      target.rules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, include));
-    }
+    target.rules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, include));
   }
 
   static process(input: any): ExportableValueSet {
@@ -55,10 +53,6 @@ export class ValueSetProcessor {
   static isProcessableValueSet(input: any): input is ProcessableValueSet {
     return input.name != null || input.id != null;
   }
-
-  static isValueSetComponent(input: any): input is ProcessableValueSetComponent {
-    return typeof input.system === 'string' || Array.isArray(input.valueSet);
-  }
 }
 
 interface ProcessableValueSet {
@@ -70,10 +64,4 @@ interface ProcessableValueSet {
     include?: any;
     exclude?: any;
   };
-}
-
-export interface ProcessableValueSetComponent {
-  system?: string;
-  valueSet?: any[];
-  concept?: any[];
 }

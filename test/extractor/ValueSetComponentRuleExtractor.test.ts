@@ -1,12 +1,11 @@
 import { fshtypes } from 'fsh-sushi';
-import { ProcessableValueSetComponent } from '../../src/processor';
 import { ValueSetConceptComponentRuleExtractor } from '../../src/extractor';
 
 const { FshCode } = fshtypes;
 
 describe('ValueSetComponentRuleExtractor', () => {
   it('should extract a ValueSetConceptComponentRule from a component with a system and at least one concept', () => {
-    const input: ProcessableValueSetComponent = {
+    const input = {
       system: 'http://example.org/zoo',
       concept: [
         {
@@ -30,7 +29,7 @@ describe('ValueSetComponentRuleExtractor', () => {
   });
 
   it('should extract a ValueSetConceptComponentRule from a component with a system, at least one value set, and at least one concept', () => {
-    const input: ProcessableValueSetComponent = {
+    const input = {
       system: 'http://example.org/zoo',
       valueSet: ['http://example.org/mammals', 'http://example.org/vertebrates'],
       concept: [
@@ -56,9 +55,9 @@ describe('ValueSetComponentRuleExtractor', () => {
   });
 
   it('should return null when the component has no concepts', () => {
-    const input: ProcessableValueSetComponent = {
+    const input = {
       system: 'http://example.org/zoo',
-      concept: []
+      concept: [] as any[]
     };
     const result = ValueSetConceptComponentRuleExtractor.process(input, true);
 
