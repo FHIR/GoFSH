@@ -1,0 +1,15 @@
+{
+  "resourceType" : "CodeSystem",
+  "id" : "codesystem-with-caret",
+  "url" : "http://hl7.org/fhir/sushi-test/CodeSystem/codesystem-with-caret",
+  "name" : "CodeSystemWithCaret",
+  "title" : "CodeSystem with Caret",
+  "description" : "A CodeSystem for testing caret rules",
+  "concept" : [
+    {
+      "code" : "foo",
+      "display" : "Foo",
+      "definition" : "Foo code"
+    }
+  ]
+}
