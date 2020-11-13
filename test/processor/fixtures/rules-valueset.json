@@ -1,0 +1,29 @@
+{
+  "resourceType" : "ValueSet",
+  "id" : "valueset-with-caret",
+  "url" : "http://hl7.org/fhir/sushi-test/ValueSet/valueset-with-caret",
+  "name" : "ValueSetWithCaret",
+  "title" : "ValueSet with Caret",
+  "description" : "A ValueSet for testing caret rules",
+  "compose" : {
+    "include" : [
+      {
+        "valueSet" : [
+          "http://hl7.org/fhir/sushi-test/ValueSet/foo"
+        ]
+      },
+      {
+        "valueSet" : [
+          "http://hl7.org/fhir/sushi-test/ValueSet/bar"
+        ]
+      }
+    ],
+    "exclude": [
+      {
+        "valueSet" : [
+          "http://hl7.org/fhir/sushi-test/ValueSet/baz"
+        ]
+      }
+    ]
+  }
+}

@@ -1,18 +1,24 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fshtypes } from 'fsh-sushi';
+import { fshtypes, fhirdefs } from 'fsh-sushi';
 import { ValueSetProcessor } from '../../src/processor';
-import { ExportableValueSet } from '../../src/exportable';
+import { ExportableCaretValueRule, ExportableValueSet } from '../../src/exportable';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 const { FshCode } = fshtypes;
 
 describe('ValueSetProcessor', () => {
+  let defs: fhirdefs.FHIRDefinitions;
+
+  beforeAll(() => {
+    defs = loadTestDefinitions();
+  });
   describe('#process', () => {
     it('should convert the simplest ValueSet', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-valueset.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input);
+      const result = ValueSetProcessor.process(input, defs);
       expect(result).toBeInstanceOf(ExportableValueSet);
       expect(result.name).toBe('SimpleValueSet');
     });
@@ -21,7 +27,7 @@ describe('ValueSetProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-valueset.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input);
+      const result = ValueSetProcessor.process(input, defs);
       expect(result).toBeUndefined();
     });
 
@@ -29,7 +35,7 @@ describe('ValueSetProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-valueset-with-id.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input);
+      const result = ValueSetProcessor.process(input, defs);
       expect(result).toBeInstanceOf(ExportableValueSet);
       expect(result.name).toBe('MyValueSet');
       expect(result.id).toBe('my.value-set');
@@ -39,7 +45,7 @@ describe('ValueSetProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input);
+      const result = ValueSetProcessor.process(input, defs);
       expect(result.rules.length).toBeGreaterThan(0);
     });
   });
@@ -65,7 +71,7 @@ describe('ValueSetProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
       const workingValueSet = new ExportableValueSet('ComposedValueSet');
-      ValueSetProcessor.extractRules(input, workingValueSet);
+      ValueSetProcessor.extractRules(input, workingValueSet, defs);
 
       expect(workingValueSet.rules).toHaveLength(4);
       expect(workingValueSet.rules).toContainEqual(
@@ -112,6 +118,24 @@ describe('ValueSetProcessor', () => {
           ]
         })
       );
+    });
+
+    it('should add caret rules to a ValueSet', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-valueset.json'), 'utf-8')
+      );
+
+      const targetValueSet = new ExportableValueSet('MyValueSet');
+      ValueSetProcessor.extractRules(input, targetValueSet, defs);
+      expect(targetValueSet.rules).toHaveLength(0);
+
+      input.experimental = true;
+      ValueSetProcessor.extractRules(input, targetValueSet, defs);
+      const experimentalRule = new ExportableCaretValueRule('');
+      experimentalRule.caretPath = 'experimental';
+      experimentalRule.value = true;
+      expect(targetValueSet.rules.length).toBe(1);
+      expect(targetValueSet.rules).toContainEqual<ExportableCaretValueRule>(experimentalRule);
     });
   });
 });
