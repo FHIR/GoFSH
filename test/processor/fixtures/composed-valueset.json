@@ -1,0 +1,62 @@
+{
+  "resourceType": "ValueSet",
+  "name": "ComposedValueSet",
+  "id": "composed-value-set",
+  "title": "Composed Value Set",
+  "description": "This is value set has many elements.",
+  "compose": {
+    "include": [
+      {
+        "system": "http://example.org/zoo",
+        "concept": [
+          {
+            "code": "BEAR",
+            "display": "Bear"
+          },
+          {
+            "code": "PEL",
+            "display": "Pelican"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/aquarium",
+        "valueSet": ["http://example.org/mammals"],
+        "concept": [
+          {
+            "code": "SEAL",
+            "display": "Seal"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/ghost-house"
+      }
+    ],
+    "exclude": [
+      {
+        "system": "http://example.org/zoo",
+        "concept": [
+          {
+            "code": "CAT",
+            "display": "Cat"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/aquarium",
+        "valueSet": ["http://example.org/mollusks", "http://example.org/invertebrates"],
+        "concept": [
+          {
+            "code": "BARN",
+            "display": "Barnacle"
+          },
+          {
+            "code": "CLAM",
+            "display": "Clam"
+          }
+        ]
+      }
+    ]
+  }
+}
