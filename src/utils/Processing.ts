@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import ini from 'ini';
-import { fhirdefs } from 'fsh-sushi';
+import { fhirdefs, fhirtypes } from 'fsh-sushi';
 import { logger } from './GoFSHLogger';
 import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
@@ -91,6 +91,23 @@ export function loadExternalDependencies(
     );
   }
   return dependencyDefs;
+}
+
+export function getIGDependencies(inDir: string): string[] {
+  const igFiles = getFilesRecursive(inDir).filter(file =>
+    file.startsWith(inDir + '/ImplementationGuide')
+  );
+  const igDeps: string[] = [];
+  igFiles.forEach(file => {
+    const igContent = fs.readJSONSync(file);
+    if (igContent.dependsOn) {
+      igContent.dependsOn.forEach((dependency: fhirtypes.ImplementationGuideDependsOn) => {
+        const depString = dependency.packageId + '@' + dependency.version;
+        igDeps.push(depString);
+      });
+    }
+  });
+  return igDeps;
 }
 
 function getLakeOfFHIR(inDir: string): LakeOfFHIR {

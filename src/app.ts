@@ -10,6 +10,7 @@ import {
   getInputDir,
   getResources,
   loadExternalDependencies,
+  getIGDependencies,
   writeFSH
 } from './utils/Processing';
 import { logger, stats } from './utils';
@@ -58,12 +59,17 @@ async function app() {
 
   logger.info(`Starting ${getVersion()}`);
 
+  inDir = getInputDir(inDir);
+
   // Load dependencies
   const defs = new fhirdefs.FHIRDefinitions();
   const dependencies = program.dependency;
-  const dependencyDefs = loadExternalDependencies(defs, dependencies);
-
-  inDir = getInputDir(inDir);
+  
+  // Fetch dependencies from included IG
+  const igDependencies = getIGDependencies(inDir);
+  const allDependencies = dependencies.concat(igDependencies);
+  const dependencyDefs = loadExternalDependencies(defs, allDependencies);
+  
   let outDir: string;
   try {
     outDir = ensureOutputDir(program.out);
