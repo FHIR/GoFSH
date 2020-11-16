@@ -3,9 +3,6 @@
   "name": "ConceptCodeSystem",
   "concept": [
     {
-      "definition": "This concept is bogus"
-    },
-    {
       "code": "breakfast"
     },
     {

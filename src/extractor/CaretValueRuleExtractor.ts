@@ -1,4 +1,4 @@
-import { fhirdefs, utils } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
 import { ProcessableElementDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
@@ -7,7 +7,7 @@ import { getFSHValue, getPath, getPathValuePairs, logger } from '../utils';
 export class CaretValueRuleExtractor {
   static process(
     input: ProcessableElementDefinition,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     // Convert to json to remove extra private properties on fhirtypes.ElementDefinition
     const path = getPath(input);
@@ -19,7 +19,7 @@ export class CaretValueRuleExtractor {
     remainingPaths.forEach(key => {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(key, flatElement[key], input, fhir);
+      caretValueRule.value = getFSHValue(key, flatElement[key], 'ElementDefinition', fisher);
       caretValueRules.push(caretValueRule);
     });
     return caretValueRules;
@@ -27,13 +27,13 @@ export class CaretValueRuleExtractor {
 
   static processStructureDefinition(
     input: any,
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     // Clone the input so we can modify it for simpler comparison
     const sd = cloneDeep(input);
     // Clone the parent so we can modify it for simpler comparison
     let parent = cloneDeep(
-      fhir.fishForFHIR(
+      fisher.fishForFHIR(
         input.baseDefinition,
         utils.Type.Resource,
         utils.Type.Type,
@@ -55,7 +55,7 @@ export class CaretValueRuleExtractor {
     }
 
     // Remove properties that are covered by other extractors or keywords
-    IGNORED_PROPERTIES.forEach(prop => {
+    RESOURCE_IGNORED_PROPERTIES['StructureDefinition'].forEach(prop => {
       delete sd[prop];
       delete parent[prop];
     });
@@ -71,7 +71,7 @@ export class CaretValueRuleExtractor {
     // parent (since SUSHI does not inherit these specific properties from the parent).
     // TODO: SUSHI should export the list of cleared properties or export a function that
     // clears them.
-    CLEARED_PROPERTIES.forEach(prop => delete parent[prop]);
+    SD_CLEARED_PROPERTIES.forEach(prop => delete parent[prop]);
 
     // Massage data to support arrays as best as possible. Unfortunately, FSH does not provide
     // full support for array manipulation. You cannot clear arrays, delete elements, replace
@@ -112,38 +112,68 @@ export class CaretValueRuleExtractor {
       if (flatParent[key] == null || !isEqual(flatSD[key], flatParent[key])) {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(
-          key,
-          flatSD[key],
-          fhir.fishForFHIR('StructureDefinition', utils.Type.Resource),
-          fhir
-        );
+        caretValueRule.value = getFSHValue(key, flatSD[key], 'StructureDefinition', fisher);
         caretValueRules.push(caretValueRule);
       }
     });
 
     return caretValueRules;
   }
+
+  static processResource(
+    input: any,
+    fisher: utils.Fishable,
+    resourceType: 'ValueSet' | 'CodeSystem'
+  ): ExportableCaretValueRule[] {
+    const caretValueRules: ExportableCaretValueRule[] = [];
+    const flatVS = getPathValuePairs(input);
+    Object.keys(flatVS)
+      .filter(
+        key =>
+          !RESOURCE_IGNORED_PROPERTIES[resourceType].some(
+            property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
+          )
+      )
+      .forEach(key => {
+        const caretValueRule = new ExportableCaretValueRule('');
+        caretValueRule.caretPath = key;
+        caretValueRule.value = getFSHValue(key, flatVS[key], resourceType, fisher);
+        caretValueRules.push(caretValueRule);
+      });
+    return caretValueRules;
+  }
 }
 
-// The properties that are handled via keywords and other extractors
-const IGNORED_PROPERTIES = [
-  'resourceType',
-  'id',
-  'url', // NOTE: For now, we assume URL matches canonical and is generated
-  'name',
-  'title',
-  'description',
-  'fhirVersion',
-  'mapping',
-  'baseDefinition',
-  'derivation',
-  'snapshot',
-  'differential'
-];
+const RESOURCE_IGNORED_PROPERTIES = {
+  ValueSet: [
+    'resourceType',
+    'id',
+    'url',
+    'name',
+    'title',
+    'description',
+    'compose.include',
+    'compose.exclude'
+  ],
+  CodeSystem: ['resourceType', 'id', 'url', 'name', 'title', 'description', 'concept'],
+  StructureDefinition: [
+    'resourceType',
+    'id',
+    'url', // NOTE: For now, we assume URL matches canonical and is generated
+    'name',
+    'title',
+    'description',
+    'fhirVersion',
+    'mapping',
+    'baseDefinition',
+    'derivation',
+    'snapshot',
+    'differential'
+  ]
+};
 
 // The properties that SUSHI clears before creating a profile
-const CLEARED_PROPERTIES = [
+const SD_CLEARED_PROPERTIES = [
   'meta',
   'implicitRules',
   'language',

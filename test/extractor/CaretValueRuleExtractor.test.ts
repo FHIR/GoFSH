@@ -6,16 +6,26 @@ import { CaretValueRuleExtractor } from '../../src/extractor';
 import { ExportableCaretValueRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { loggerSpy } from '../helpers/loggerSpy';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('CaretValueRuleExtractor', () => {
   let looseSD: any;
+  let looseVS: any;
+  let looseCS: any;
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'caret-value-profile.json'), 'utf-8').trim()
+    );
+    looseVS = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'caret-value-valueSet.json'), 'utf-8').trim()
+    );
+    looseCS = JSON.parse(
+      fs
+        .readFileSync(path.join(__dirname, 'fixtures', 'caret-value-codeSystem.json'), 'utf-8')
+        .trim()
     );
   });
 
@@ -403,6 +413,70 @@ describe('CaretValueRuleExtractor', () => {
       expectedRule.caretPath = 'publisher';
       expectedRule.value = 'Acme, Inc.';
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([expectedRule]);
+    });
+  });
+
+  describe('ValueSet', () => {
+    it('should not extract any ValueSet caret rules when only keyword-based properties have changed', () => {
+      const caretRules = CaretValueRuleExtractor.processResource(
+        looseVS,
+        defs,
+        looseVS.resourceType
+      );
+      expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should extract ValueSet caret rules when non keyword-based properties have changed', () => {
+      const vs = cloneDeep(looseVS);
+      vs.status = 'active';
+      vs.compose.inactive = true;
+      vs.identifier = { value: 'foo' };
+      const caretRules = CaretValueRuleExtractor.processResource(vs, defs, vs.resourceType);
+      const expectedRule1 = new ExportableCaretValueRule('');
+      expectedRule1.caretPath = 'status';
+      expectedRule1.value = new fshtypes.FshCode('active');
+      const expectedRule2 = new ExportableCaretValueRule('');
+      expectedRule2.caretPath = 'compose.inactive';
+      expectedRule2.value = true;
+      const expectedRule3 = new ExportableCaretValueRule('');
+      expectedRule3.caretPath = 'identifier.value';
+      expectedRule3.value = 'foo';
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule1);
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule3);
+      expect(caretRules).toHaveLength(3);
+    });
+  });
+
+  describe('CodeSystem', () => {
+    it('should not extract any CodeSystem caret rules when only keyword-based properties have changed', () => {
+      const caretRules = CaretValueRuleExtractor.processResource(
+        looseCS,
+        defs,
+        looseCS.resourceType
+      );
+      expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should extract CodeSystem caret rules when non keyword-based properties have changed', () => {
+      const cs = cloneDeep(looseCS);
+      cs.status = 'active';
+      cs.experimental = true;
+      cs.identifier = { value: 'foo' };
+      const caretRules = CaretValueRuleExtractor.processResource(cs, defs, cs.resourceType);
+      const expectedRule1 = new ExportableCaretValueRule('');
+      expectedRule1.caretPath = 'status';
+      expectedRule1.value = new fshtypes.FshCode('active');
+      const expectedRule2 = new ExportableCaretValueRule('');
+      expectedRule2.caretPath = 'experimental';
+      expectedRule2.value = true;
+      const expectedRule3 = new ExportableCaretValueRule('');
+      expectedRule3.caretPath = 'identifier.value';
+      expectedRule3.value = 'foo';
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule1);
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule3);
+      expect(caretRules).toHaveLength(3);
     });
   });
 

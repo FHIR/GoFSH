@@ -1,16 +1,26 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { compact } from 'lodash';
-import { CodeSystemProcessor, ProcessableConceptDefinition } from '../../src/processor';
-import { ExportableCodeSystem, ExportableConceptRule } from '../../src/exportable';
+import { fhirdefs } from 'fsh-sushi';
+import { CodeSystemProcessor } from '../../src/processor';
+import {
+  ExportableCodeSystem,
+  ExportableConceptRule,
+  ExportableCaretValueRule
+} from '../../src/exportable';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('CodeSystemProcessor', () => {
+  let defs: fhirdefs.FHIRDefinitions;
+
+  beforeAll(() => {
+    defs = loadTestDefinitions();
+  });
   describe('#process', () => {
     it('should convert the simplest CodeSystem', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-codesystem.json'), 'utf-8')
       );
-      const result = CodeSystemProcessor.process(input);
+      const result = CodeSystemProcessor.process(input, defs);
       expect(result).toBeInstanceOf(ExportableCodeSystem);
       expect(result.name).toBe('SimpleCodeSystem');
     });
@@ -19,7 +29,7 @@ describe('CodeSystemProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-codesystem.json'), 'utf-8')
       );
-      const result = CodeSystemProcessor.process(input);
+      const result = CodeSystemProcessor.process(input, defs);
       expect(result).toBeUndefined();
     });
 
@@ -30,7 +40,7 @@ describe('CodeSystemProcessor', () => {
           'utf-8'
         )
       );
-      const result = CodeSystemProcessor.process(input);
+      const result = CodeSystemProcessor.process(input, defs);
       expect(result).toBeInstanceOf(ExportableCodeSystem);
       expect(result.name).toBe('MyCodeSystem');
       expect(result.id).toBe('my.code-system');
@@ -52,22 +62,12 @@ describe('CodeSystemProcessor', () => {
   });
 
   describe('#extractRules', () => {
-    it('should extract an ExportableConceptRule for each concept that has a code', () => {
+    it('should extract an ExportableConceptRule for each concept', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
       );
       const workingCodeSystem = new ExportableCodeSystem('MyCodeSystem');
-      const concepts = compact<ProcessableConceptDefinition>(
-        input.concept?.map((rawConcept: any) => {
-          if (CodeSystemProcessor.isCodeSystemConcept(rawConcept)) {
-            return {
-              ...rawConcept,
-              processedPaths: []
-            } as ProcessableConceptDefinition;
-          }
-        }) ?? []
-      );
-      CodeSystemProcessor.extractRules(input, concepts, workingCodeSystem);
+      CodeSystemProcessor.extractRules(input, workingCodeSystem, defs);
       expect(workingCodeSystem.rules).toHaveLength(4);
       expect(workingCodeSystem.rules).toEqual(
         expect.arrayContaining([
@@ -81,6 +81,24 @@ describe('CodeSystemProcessor', () => {
           )
         ])
       );
+    });
+
+    it('should add caret rules to a CodeSystem', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-codesystem.json'), 'utf-8')
+      );
+
+      const targetCodeSystem = new ExportableCodeSystem('MyValueSet');
+      CodeSystemProcessor.extractRules(input, targetCodeSystem, defs);
+      expect(targetCodeSystem.rules).toHaveLength(0);
+
+      input.experimental = true;
+      CodeSystemProcessor.extractRules(input, targetCodeSystem, defs);
+      const experimentalRule = new ExportableCaretValueRule('');
+      experimentalRule.caretPath = 'experimental';
+      experimentalRule.value = true;
+      expect(targetCodeSystem.rules.length).toBe(1);
+      expect(targetCodeSystem.rules).toContainEqual<ExportableCaretValueRule>(experimentalRule);
     });
   });
 });

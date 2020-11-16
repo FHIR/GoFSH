@@ -1,9 +1,10 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { fhirdefs, fshtypes } from 'fsh-sushi';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 import { MappingExtractor } from '../../src/extractor';
 import { ExportableMapping, ExportableMappingRule } from '../../src/exportable';
-import { fhirdefs } from 'fsh-sushi';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('MappingExtractor', () => {
   let looseSD: ProcessableStructureDefinition;
@@ -11,8 +12,7 @@ describe('MappingExtractor', () => {
   let elements: ProcessableElementDefinition[];
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'mapping-profile.json'), 'utf-8').trim()
     );
@@ -26,6 +26,7 @@ describe('MappingExtractor', () => {
     const mappings = MappingExtractor.process(looseSD, elements, defs);
     const expectedMapping = new ExportableMapping('FirstMapping');
     expectedMapping.source = 'MyObservation';
+    expectedMapping.name = 'FirstMapping-for-MyObservation'; // Name may be simplified in optimizer
     const mappingRule = new ExportableMappingRule('focus');
     mappingRule.map = 'Observation.otherFocus';
     expectedMapping.rules.push(mappingRule);
@@ -41,11 +42,22 @@ describe('MappingExtractor', () => {
     const catElement = elements[1]; // Observation.category
     const focusElement = elements[2]; // Observation.focus
     const mappings = MappingExtractor.process(looseSD, elements, defs);
-    const expectedMapping = new ExportableMapping('FirstMapping');
+    const expectedMapping = new ExportableMapping('SecondMapping');
     expectedMapping.source = 'MyObservation';
-    const mappingRule = new ExportableMappingRule('focus');
-    mappingRule.map = 'Observation.otherFocus';
-    expectedMapping.rules.push(mappingRule);
+    expectedMapping.name = 'SecondMapping-for-MyObservation'; // Name may be simplified in optimizer
+    expectedMapping.target = 'http://example.org/two';
+    expectedMapping.description = 'This is second';
+    expectedMapping.title = 'Second Mapping';
+    const mappingRule1 = new ExportableMappingRule('category');
+    mappingRule1.map = 'Observation.category';
+    mappingRule1.comment = 'A comment here';
+    mappingRule1.language = new fshtypes.FshCode('yes');
+    expectedMapping.rules.push(mappingRule1);
+    const mappingRule2 = new ExportableMappingRule('focus');
+    mappingRule2.map = 'Observation.focus';
+    mappingRule2.comment = 'This is a focused comment';
+    mappingRule2.language = new fshtypes.FshCode('test');
+    expectedMapping.rules.push(mappingRule2);
 
     expect(mappings).toHaveLength(4); // All mappings are created
     expect(mappings).toContainEqual(expectedMapping);
@@ -67,6 +79,7 @@ describe('MappingExtractor', () => {
     const mappings = MappingExtractor.process(looseSD, elements, defs);
     const expectedMapping = new ExportableMapping('TopLevelMapping');
     expectedMapping.source = 'MyObservation';
+    expectedMapping.name = 'TopLevelMapping-for-MyObservation'; // Name may be simplified in optimizer
     const mappingRule = new ExportableMappingRule('');
     mappingRule.map = 'Observation';
     expectedMapping.rules.push(mappingRule);
@@ -105,13 +118,14 @@ describe('MappingExtractor', () => {
     // sct-concept is a mapping on all observations, but has a new mapping rule applied on this profile
     const expectedMapping = new ExportableMapping('sct-concept');
     expectedMapping.source = 'MyObservation';
+    expectedMapping.name = 'sct-concept-for-MyObservation';
     expectedMapping.title = 'SNOMED CT Concept Domain Binding';
     expectedMapping.target = 'http://snomed.info/conceptdomain';
     const mappingRule = new ExportableMappingRule('note');
     mappingRule.map = 'Observation.newNote';
     expectedMapping.rules.push(mappingRule);
 
-    const sctConceptMapping = mappings.find(m => m.name === 'sct-concept');
+    const sctConceptMapping = mappings.find(m => m.id === 'sct-concept');
 
     expect(mappings).toHaveLength(4); // All mappings are created
     expect(sctConceptMapping).toBeDefined();

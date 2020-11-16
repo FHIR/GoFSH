@@ -1,32 +1,28 @@
+import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
-import { Package, FHIRProcessor } from '../../processor';
+import { Package } from '../../processor';
 
-const FHIR_BASE_URL = /http:\/\/hl7\.org\/fhir\/StructureDefinition\/(.+)/;
+const FISHER_TYPES = [
+  utils.Type.Resource,
+  utils.Type.Type,
+  utils.Type.Profile,
+  utils.Type.Extension
+];
 
 export default {
   name: 'resolve_parent_urls',
   description: 'Replace declared parent URLs with their names (for local and FHIR Core URLs only)',
 
-  optimize(pkg: Package, processor: FHIRProcessor): void {
+  optimize(pkg: Package, fisher: utils.Fishable): void {
     for (const resource of [...pkg.profiles, ...pkg.extensions]) {
       if (resource.parent) {
-        // The parent might be another SD in the processor or a core FHIR resource
-        const parentSd = Array.from(processor.structureDefinitions.values()).find(
-          (sd: any) => sd.url === resource.parent
-        );
-        if (parentSd?.name) {
+        // Only substitute the name if the name resolves to the same resource by default (in case of duplicate names)
+        const parentSd = fisher.fishForFHIR(resource.parent, ...FISHER_TYPES);
+        if (
+          parentSd?.name &&
+          fisher.fishForFHIR(parentSd.name, ...FISHER_TYPES).url === resource.parent
+        ) {
           resource.parent = parentSd.name;
-        } else {
-          const fhirMatch = resource.parent.match(FHIR_BASE_URL);
-          // Only change the FHIR url into a name if it won't collide with a local SD
-          if (
-            fhirMatch?.[1] &&
-            !Array.from(processor.structureDefinitions.values()).some(
-              sd => sd.name === fhirMatch[1]
-            )
-          ) {
-            resource.parent = fhirMatch[1];
-          }
         }
       }
     }

@@ -1,4 +1,4 @@
-import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
+import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { isEqual } from 'lodash';
 import { ExportableMapping, ExportableMappingRule } from '../exportable';
 import {
@@ -12,14 +12,14 @@ export class MappingExtractor {
   static process(
     input: ProcessableStructureDefinition,
     elements: ProcessableElementDefinition[],
-    fhir: fhirdefs.FHIRDefinitions
+    fisher: utils.Fishable
   ): ExportableMapping[] {
     const mappings = this.extractMappings(input, elements);
 
     // Filter out mappings on the parent - only include mappings new to the profile
     // or mappings on the base definition with additional mapping rules
     // TODO: Look for parents from the local package being processed. This requires a MasterFisher.
-    const parent = fhir.fishForFHIR(
+    const parent = fisher.fishForFHIR(
       input.baseDefinition,
       utils.Type.Resource,
       utils.Type.Type,
@@ -42,7 +42,7 @@ export class MappingExtractor {
     // Only return mappings that are new to the profile or inherited mappings with new MappingRules
     const newMappings: ExportableMapping[] = [];
     mappings.forEach(mapping => {
-      const parentMapping = parentMappings.find(pm => pm.name === mapping.name);
+      const parentMapping = parentMappings.find(pm => pm.id === mapping.id);
       // filter rules to include only those not in a parent
       mapping.rules = mapping.rules.filter(
         rule => !parentMapping?.rules.find(r => isEqual(r, rule))
@@ -62,6 +62,7 @@ export class MappingExtractor {
     const mappings = (sd.mapping || []).map(m => {
       const mapping = new ExportableMapping(m.identity);
       mapping.source = sd.name;
+      mapping.name = `${mapping.id}-for-${mapping.source}`;
       if (m.name) mapping.title = m.name;
       if (m.uri) mapping.target = m.uri;
       if (m.comment) mapping.description = m.comment;
@@ -76,7 +77,7 @@ export class MappingExtractor {
   static extractRules(element: ProcessableElementDefinition, mappings: ExportableMapping[]) {
     element.mapping?.forEach((mapping, i) => {
       // Mappings are created at SD, so should always find a match at this point
-      const matchingMapping = mappings.find(m => m.name === mapping.identity);
+      const matchingMapping = mappings.find(m => m.id === mapping.identity);
       matchingMapping?.rules.push(this.processMappingRule(element, mapping, i));
     });
   }

@@ -1,5 +1,5 @@
-import path from 'path';
-import { fhirtypes, fhirdefs } from 'fsh-sushi';
+import { fhirtypes, fhirdefs, fshtypes } from 'fsh-sushi';
+import { cloneDeep } from 'lodash';
 import {
   getFSHValue,
   getPath,
@@ -8,15 +8,14 @@ import {
   getAncestorElement
 } from '../../src/utils';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
-import { FshCode } from 'fsh-sushi/dist/fshtypes';
-import { cloneDeep } from 'lodash';
+
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('element', () => {
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
-    defs = new fhirdefs.FHIRDefinitions();
-    fhirdefs.loadFromPath(path.join(__dirname, '..', 'utils', 'testdefs'), 'testPackage', defs);
+    defs = loadTestDefinitions();
   });
 
   describe('#getPath', () => {
@@ -126,29 +125,19 @@ describe('element', () => {
 
   describe('#getFSHValue', () => {
     it('should convert a code value into a FSHCode', () => {
-      const value = getFSHValue(
-        'type[0].aggregation[0]',
-        'contained',
-        new ProcessableElementDefinition(),
-        defs
-      );
-      expect(value).toEqual(new FshCode('contained'));
+      const value = getFSHValue('type[0].aggregation[0]', 'contained', 'ElementDefinition', defs);
+      expect(value).toEqual(new fshtypes.FshCode('contained'));
     });
 
     it('should FSHify a string', () => {
-      const value = getFSHValue(
-        'short',
-        'This is a "string"',
-        new ProcessableElementDefinition(),
-        defs
-      );
+      const value = getFSHValue('short', 'This is a "string"', 'ElementDefinition', defs);
       expect(value).toEqual('This is a \\"string\\"');
     });
     it('should leave a non-code value as is', () => {
       const value = getFSHValue(
         'type[0].profile[0]',
         'http://foo.com/bar',
-        new ProcessableElementDefinition(),
+        'ElementDefinition',
         defs
       );
       expect(value).toEqual('http://foo.com/bar');
