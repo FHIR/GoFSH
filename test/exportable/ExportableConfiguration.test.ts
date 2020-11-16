@@ -79,8 +79,8 @@ describe('ExportableConfiguration', () => {
 
     it('should include the dependencies when present', () => {
       expect(result).toMatch(/^dependencies:/m);
-      expect(result).toMatch(/hl7\.fhir\.us\.core: 3\.1\.0/m);
-      expect(result).toMatch(/hl7\.fhir\.us\.mcode: 1\.0\.0/m);
+      expect(result).toMatch(/^\s+hl7\.fhir\.us\.core: 3\.1\.0$/m);
+      expect(result).toMatch(/^\s+hl7\.fhir\.us\.mcode: 1\.0\.0$/m);
     });
   });
 });
