@@ -28,7 +28,7 @@ export class FHIRProcessor {
     const resources = new Package();
     let config: ExportableConfiguration;
     const igForConfig =
-      this.lake.getAllImplementationGuides().find(doc => doc.path.endsWith(this.igPath)) ??
+      this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
       this.lake.getAllImplementationGuides()[0];
     if (this.lake.getAllImplementationGuides().length > 0) {
       config = ConfigurationProcessor.process(igForConfig.content);

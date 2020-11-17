@@ -116,7 +116,7 @@ export function getIgPathFromIgIni(inDir: string): string {
     try {
       const igIni = ini.parse(fs.readFileSync(igIniPath, 'utf-8'));
       if (igIni.IG?.ig) {
-        igPath = igIni.IG.ig;
+        igPath = path.join(path.dirname(igIniPath), igIni.IG.ig);
       }
     } catch {}
   }

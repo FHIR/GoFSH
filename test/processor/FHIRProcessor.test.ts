@@ -52,7 +52,11 @@ describe('FHIRProcessor', () => {
       path.join(__dirname, 'fixtures', 'simple-ig.json'),
       path.join(__dirname, 'fixtures', 'bigger-ig.json')
     );
-    const processorWithIg = new FHIRProcessor(lake, null, 'bigger-ig.json');
+    const processorWithIg = new FHIRProcessor(
+      lake,
+      null,
+      path.join(__dirname, 'fixtures', 'bigger-ig.json')
+    );
     processorWithIg.process();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));

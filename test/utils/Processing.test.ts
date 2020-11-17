@@ -229,7 +229,23 @@ describe('Processing', () => {
   describe('getIgPathFromIgIni', () => {
     it('should return the path to an IG pointed to by an ig.ini file', () => {
       const ig = getIgPathFromIgIni(path.join(__dirname, 'fixtures', 'ig-ini'));
-      expect(ig).toEqual('ig-ini/ImplementationGuide-fsh.example.json');
+      expect(ig).toEqual(
+        path.join(__dirname, 'fixtures', 'ig-ini', 'ImplementationGuide-fsh.example.json')
+      );
+    });
+
+    it('should return the path to an IG in a different directory than the ig.ini file', () => {
+      const ig = getIgPathFromIgIni(path.join(__dirname, 'fixtures', 'nested-ig-ini'));
+      expect(ig).toEqual(
+        path.join(
+          __dirname,
+          'fixtures',
+          'nested-ig-ini',
+          'nested',
+          'other',
+          'ImplementationGuide-fsh.example.json'
+        )
+      );
     });
 
     it('should return nothing if no IG in ig.ini', () => {
