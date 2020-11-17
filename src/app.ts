@@ -65,10 +65,11 @@ async function app() {
   const defs = new fhirdefs.FHIRDefinitions();
   const dependencies = program.dependency;
 
-  // Fetch dependencies from included IG
-  const igDependencies = getIGDependencies(inDir);
-  const allDependencies = dependencies.concat(igDependencies);
-  const dependencyDefs = loadExternalDependencies(defs, allDependencies);
+  // Fetch dependencies from included IG(s)
+  const dependencyDefs = loadExternalDependencies(defs, [
+    ...(dependencies ?? []),
+    ...getIGDependencies(inDir)
+  ]);
 
   let outDir: string;
   try {

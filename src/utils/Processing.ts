@@ -94,17 +94,21 @@ export function loadExternalDependencies(
 }
 
 export function getIGDependencies(inDir: string): string[] {
-  const igFiles = getFilesRecursive(inDir).filter(file =>
-    file.startsWith(inDir + '/ImplementationGuide')
-  );
+  const inputFiles = getFilesRecursive(inDir);
   const igDeps: string[] = [];
-  igFiles.forEach(file => {
-    const igContent = fs.readJSONSync(file);
-    if (igContent.dependsOn) {
-      igContent.dependsOn.forEach((dependency: fhirtypes.ImplementationGuideDependsOn) => {
-        const depString = dependency.packageId + '@' + dependency.version;
-        igDeps.push(depString);
-      });
+  inputFiles.forEach(file => {
+    try {
+      const content = fs.readJSONSync(file);
+      if (content.resourceType === 'ImplementationGuide') {
+        if (content.dependsOn) {
+          content.dependsOn.forEach((dependency: fhirtypes.ImplementationGuideDependsOn) => {
+            const depString = dependency.packageId + '@' + dependency.version;
+            igDeps.push(depString);
+          });
+        }
+      }
+    } catch (error) {
+      logger.error(`Could not read ${file}: ${error.message}`);
     }
   });
   return igDeps;
