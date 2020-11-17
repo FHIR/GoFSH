@@ -13,6 +13,7 @@ logs
 results
 tmp
 /build*
+/gofsh
 
 # Build
 public/css/main.css
