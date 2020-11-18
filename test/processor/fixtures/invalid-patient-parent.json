@@ -1,0 +1,7 @@
+{
+  "resourceType": "Patient",
+  "id": "invalid-patient-parent",
+  "meta": {
+    "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/fake-parent"]
+  }
+}

@@ -67,7 +67,8 @@ export class FHIRProcessor {
         resources.add(
           InstanceProcessor.process(
             wild.content,
-            this.lake.getAllImplementationGuides()?.[0]?.content
+            this.lake.getAllImplementationGuides()?.[0]?.content,
+            this.fisher
           )
         );
       } catch (ex) {
