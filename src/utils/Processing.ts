@@ -94,7 +94,7 @@ export function loadExternalDependencies(
 }
 
 export function getIGDependencies(inDir: string): string[] {
-  const inputFiles = getFilesRecursive(inDir);
+  const inputFiles = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
   const igDeps: string[] = [];
   inputFiles.forEach(file => {
     try {
