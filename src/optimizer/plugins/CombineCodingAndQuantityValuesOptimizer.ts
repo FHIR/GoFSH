@@ -2,10 +2,9 @@ import { fshtypes } from 'fsh-sushi';
 import { pullAt } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
-import { ExportableCaretValueRule } from '../../exportable';
-import { FshQuantity } from 'fsh-sushi/dist/fshtypes';
+import { ExportableCaretValueRule, ExportableAssignmentRule } from '../../exportable';
 
-const { FshCode } = fshtypes;
+const { FshCode, FshQuantity } = fshtypes;
 
 export default {
   name: 'combine_coding_and_quantity_values',
@@ -73,6 +72,65 @@ export default {
         }
       });
       pullAt(sd.rules, rulesToRemove);
+    });
+    pkg.instances.forEach(instance => {
+      const rulesToRemove: number[] = [];
+      instance.rules.forEach(rule => {
+        if (
+          rule instanceof ExportableAssignmentRule &&
+          rule.path.endsWith('.code') &&
+          rule.value instanceof FshCode
+        ) {
+          const basePath = rule.path.replace(/\.code$/, '');
+          const siblingPaths = [
+            `${basePath}.system`,
+            `${basePath}.display`,
+            `${basePath}.unit`,
+            `${basePath}.value`
+          ];
+          const siblings = instance.rules.filter(
+            otherRule =>
+              otherRule instanceof ExportableAssignmentRule && siblingPaths.includes(otherRule.path)
+          ) as ExportableAssignmentRule[];
+          if (siblings.length) {
+            const systemSibling = siblings.find(sibling => sibling.path.endsWith('.system'));
+            const displaySibling = siblings.find(sibling => sibling.path.endsWith('.display'));
+            const unitSibling = siblings.find(sibling => sibling.path.endsWith('.unit'));
+            const valueSibling = siblings.find(sibling => sibling.path.endsWith('.value'));
+            if (unitSibling) {
+              rule.path = basePath;
+              rule.value.display = unitSibling.value.toString();
+              rulesToRemove.push(instance.rules.indexOf(unitSibling));
+              // system may also be present
+              if (systemSibling) {
+                rule.value.system = systemSibling.value.toString();
+                rulesToRemove.push(instance.rules.indexOf(systemSibling));
+              }
+            } else if (valueSibling && systemSibling?.value === 'http://unitsofmeasure.org') {
+              rule.path = basePath;
+              rule.value = new FshQuantity(
+                valueSibling.value as number,
+                new FshCode(rule.value.code, 'http://unitsofmeasure.org')
+              );
+              rulesToRemove.push(
+                instance.rules.indexOf(valueSibling),
+                instance.rules.indexOf(systemSibling)
+              );
+            } else if (systemSibling || displaySibling) {
+              rule.path = basePath;
+              if (systemSibling) {
+                rule.value.system = systemSibling.value.toString();
+                rulesToRemove.push(instance.rules.indexOf(systemSibling));
+              }
+              if (displaySibling) {
+                rule.value.display = displaySibling.value.toString();
+                rulesToRemove.push(instance.rules.indexOf(displaySibling));
+              }
+            }
+          }
+        }
+      });
+      pullAt(instance.rules, rulesToRemove);
     });
   }
 } as OptimizerPlugin;
