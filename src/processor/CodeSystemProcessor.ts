@@ -18,10 +18,10 @@ export class CodeSystemProcessor {
 
   static extractRules(input: any, target: ExportableCodeSystem, fisher: utils.Fishable): void {
     const newRules: ExportableCodeSystem['rules'] = [];
+    newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
     input.concept?.forEach((concept: any) => {
       newRules.push(new ExportableConceptRule(concept.code, concept.display, concept.definition));
     });
-    newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
     target.rules = compact(newRules);
   }
 
