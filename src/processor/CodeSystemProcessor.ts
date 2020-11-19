@@ -1,6 +1,6 @@
-import { utils } from 'fsh-sushi';
 import { capitalize, compact } from 'lodash';
-import { ExportableCodeSystem } from '../exportable';
+import { utils } from 'fsh-sushi';
+import { ExportableCodeSystem, ExportableConceptRule } from '../exportable';
 import { CaretValueRuleExtractor } from '../extractor';
 
 export class CodeSystemProcessor {
@@ -19,6 +19,9 @@ export class CodeSystemProcessor {
   static extractRules(input: any, target: ExportableCodeSystem, fisher: utils.Fishable): void {
     const newRules: ExportableCodeSystem['rules'] = [];
     newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
+    input.concept?.forEach((concept: any) => {
+      newRules.push(new ExportableConceptRule(concept.code, concept.display, concept.definition));
+    });
     target.rules = compact(newRules);
   }
 
