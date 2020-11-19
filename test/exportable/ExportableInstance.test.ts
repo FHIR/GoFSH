@@ -1,3 +1,4 @@
+import { FshCode } from 'fsh-sushi/dist/fshtypes';
 import { EOL } from 'os';
 import { ExportableInstance, ExportableAssignmentRule } from '../../src/exportable';
 
@@ -33,7 +34,8 @@ describe('ExportableInstance', () => {
     exInstance.instanceOf = 'Observation';
 
     const statusRule = new ExportableAssignmentRule('status');
-    statusRule.value = 'final';
+    const statusCode = new FshCode('final');
+    statusRule.value = statusCode;
     exInstance.rules.push(statusRule);
 
     const dateRule = new ExportableAssignmentRule('effectiveDateTime');
@@ -44,7 +46,7 @@ describe('ExportableInstance', () => {
       'Instance: MyInstance',
       'InstanceOf: Observation',
       'Usage: #example',
-      '* status = "final"',
+      '* status = #final',
       '* effectiveDateTime = "2019-04-01"'
     ].join(EOL);
     expect(exInstance.toFSH()).toBe(expectedResult);
