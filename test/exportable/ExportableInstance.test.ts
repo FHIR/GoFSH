@@ -1,4 +1,4 @@
-import { FshCode } from 'fsh-sushi/dist/fshtypes';
+import { fshtypes } from 'fsh-sushi';
 import { EOL } from 'os';
 import { ExportableInstance, ExportableAssignmentRule } from '../../src/exportable';
 
@@ -34,7 +34,7 @@ describe('ExportableInstance', () => {
     exInstance.instanceOf = 'Observation';
 
     const statusRule = new ExportableAssignmentRule('status');
-    const statusCode = new FshCode('final');
+    const statusCode = new fshtypes.FshCode('final');
     statusRule.value = statusCode;
     exInstance.rules.push(statusRule);
 
