@@ -13,7 +13,7 @@ export default {
     'Replace URLs in value set rules with their names (for local and FHIR Core URLs only)',
 
   optimize(pkg: Package, fisher: utils.Fishable): void {
-    [...pkg.valueSets].forEach(vs => {
+    pkg.valueSets.forEach(vs => {
       vs.rules.forEach(rule => {
         if (
           rule instanceof ExportableValueSetConceptComponentRule ||
