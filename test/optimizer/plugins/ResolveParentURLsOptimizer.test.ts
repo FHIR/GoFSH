@@ -56,11 +56,11 @@ describe('optimizer', () => {
 
     it('should replace an extension parent url with the name of a core FHIR extension', () => {
       const extension = new ExportableExtension('MyNewExtension');
-      extension.parent = 'http://hl7.org/fhir/StructureDefinition/allergyintolerance-certainty';
+      extension.parent = 'http://hl7.org/fhir/StructureDefinition/geolocation';
       const myPackage = new Package();
       myPackage.add(extension);
       optimizer.optimize(myPackage, fisher);
-      expect(extension.parent).toBe('certainty');
+      expect(extension.parent).toBe('Geolocation');
     });
 
     it('should not replace a parent url with the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {

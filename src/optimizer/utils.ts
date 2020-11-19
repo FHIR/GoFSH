@@ -16,7 +16,12 @@ export function resolveURL(url: string, types: utils.Type[], fisher: utils.Fisha
   }
 
   const def = fisher.fishForMetadata(url, ...types);
-  if (def?.name && fisher.fishForMetadata(def.name, ...types).url === url) {
+  // NOTE: Testing against a regex from FHIR because some FHIR core definitions have names that are
+  // invalid against the spec!  Good heavens!
+  if (
+    def?.name.match(/^[A-Z]([A-Za-z0-9_]){0,254}$/) &&
+    fisher.fishForMetadata(def.name, ...types).url === url
+  ) {
     return def.name;
   }
   return url;

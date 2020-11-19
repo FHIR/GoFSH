@@ -33,6 +33,16 @@ describe('optimizer', () => {
       expect(result).toBe('Group');
     });
 
+    it('should not resolve a URL to a name that would not be supported by FSH', () => {
+      // FHIR Core's definition for http://terminology.hl7.org/CodeSystem/v2-0487 has name v2.0487! Totally outrageous!
+      const result = resolveURL(
+        'http://terminology.hl7.org/CodeSystem/v2-0487',
+        [utils.Type.CodeSystem],
+        fisher
+      );
+      expect(result).toBe('http://terminology.hl7.org/CodeSystem/v2-0487');
+    });
+
     it('should not resolve a URL to the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
       const result = resolveURL(
         'http://hl7.org/fhir/StructureDefinition/Patient',
