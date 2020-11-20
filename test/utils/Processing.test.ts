@@ -150,7 +150,7 @@ describe('Processing', () => {
     it('should write output to a file named resources.fsh in the output directory', () => {
       const resources = new Package();
       writeFSH(resources, tempRoot);
-      expect(fs.existsSync(path.join(tempRoot, 'resources.fsh'))).toBeTruthy();
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'resources.fsh'))).toBeTruthy();
     });
   });
 

@@ -42,13 +42,19 @@ export async function getResources(
 
 export function writeFSH(resources: Package, outDir: string): void {
   const exporter = new FSHExporter(resources);
-  const outputPath = path.join(outDir, 'resources.fsh');
-  fs.writeFileSync(outputPath, exporter.export());
-  logger.info(`Wrote fsh to ${outputPath}.`);
-  if (resources.configuration) {
-    const configPath = path.join(outDir, 'config.yaml');
-    fs.writeFileSync(configPath, resources.configuration.toFSH());
-    logger.info(`Wrote config to ${configPath}.`);
+  try {
+    const resourceDir = ensureOutputDir(path.join(outDir, 'input', 'fsh'));
+    const outputPath = path.join(resourceDir, 'resources.fsh');
+    fs.writeFileSync(outputPath, exporter.export());
+    logger.info(`Wrote fsh to ${outputPath}.`);
+    if (resources.configuration) {
+      const configPath = path.join(outDir, 'config.yaml');
+      fs.writeFileSync(configPath, resources.configuration.toFSH());
+      logger.info(`Wrote config to ${configPath}.`);
+    }
+  } catch (error) {
+    logger.error(`Could not load output direcotry: ${error.message}`);
+    process.exit(1);
   }
 }
 
