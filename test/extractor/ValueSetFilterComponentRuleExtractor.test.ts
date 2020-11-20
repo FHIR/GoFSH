@@ -179,7 +179,7 @@ describe('ValueSetFilterComponentRuleExtractor', () => {
     loggerSpy.reset();
     const filter = ValueSetFilterComponentRuleExtractor.process(input, VALUESET, false);
     expect(loggerSpy.getLastMessage('error')).toBe(
-      'Unsuported filter operator in ValueSet test-vs: begets'
+      'Unsupported filter operator in ValueSet test-vs: begets'
     );
     const expectedFilter = new ExportableValueSetFilterComponentRule(false);
     expectedFilter.from = { system: 'http://mycodesystem.org' };
