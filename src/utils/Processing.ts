@@ -53,7 +53,7 @@ export function writeFSH(resources: Package, outDir: string): void {
       logger.info(`Wrote config to ${configPath}.`);
     }
   } catch (error) {
-    logger.error(`Could not load output direcotry: ${error.message}`);
+    logger.error(`Could not write to output directory: ${error.message}`);
     process.exit(1);
   }
 }
