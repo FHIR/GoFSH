@@ -13,7 +13,11 @@ import { ConfigurationExtractor } from '../extractor';
 import { InstanceProcessor } from './InstanceProcessor';
 
 export class FHIRProcessor {
-  constructor(private readonly lake: LakeOfFHIR, private readonly fisher?: utils.Fishable) {
+  constructor(
+    private readonly lake: LakeOfFHIR,
+    private readonly fisher?: utils.Fishable,
+    private readonly igPath: string = null
+  ) {
     // If no fisher was passed in, just use the built-in lake fisher (usually for testing only)
     if (fisher == null) {
       fisher = lake;
@@ -23,8 +27,11 @@ export class FHIRProcessor {
   process(): Package {
     const resources = new Package();
     let config: ExportableConfiguration;
+    const igForConfig =
+      this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
+      this.lake.getAllImplementationGuides()[0];
     if (this.lake.getAllImplementationGuides().length > 0) {
-      config = ConfigurationProcessor.process(this.lake.getAllImplementationGuides()[0].content);
+      config = ConfigurationProcessor.process(igForConfig.content);
     } else {
       config = ConfigurationExtractor.process(
         [
@@ -64,12 +71,7 @@ export class FHIRProcessor {
     });
     this.lake.getAllInstances().forEach(wild => {
       try {
-        resources.add(
-          InstanceProcessor.process(
-            wild.content,
-            this.lake.getAllImplementationGuides()?.[0]?.content
-          )
-        );
+        resources.add(InstanceProcessor.process(wild.content, igForConfig?.content));
       } catch (ex) {
         logger.error(`Could not process Instance at ${wild.path}: ${ex.message}`);
       }
