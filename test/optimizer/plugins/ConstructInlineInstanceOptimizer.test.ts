@@ -67,7 +67,13 @@ describe('optimizer', () => {
         []
       );
 
-      expect(instance.rules).toHaveLength(0);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+      inlineInstanceRule1.value = 'Bar';
+      inlineInstanceRule1.isInstance = true;
+      const inlineInstanceRule2 = new ExportableAssignmentRule('contained[1]');
+      inlineInstanceRule2.value = 'Baz';
+      inlineInstanceRule2.isInstance = true;
+      expect(instance.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
     });
 
     it('should create inline instances from contained and bundle resources', () => {
@@ -96,7 +102,13 @@ describe('optimizer', () => {
         []
       );
 
-      expect(instance.rules).toHaveLength(0);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+      inlineInstanceRule1.value = 'Bar';
+      inlineInstanceRule1.isInstance = true;
+      const inlineInstanceRule2 = new ExportableAssignmentRule('entry[0].resource');
+      inlineInstanceRule2.value = 'Bam';
+      inlineInstanceRule2.isInstance = true;
+      expect(instance.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
     });
 
     it('should create an inline instance from a contained resource with non-numeric paths', () => {
@@ -118,7 +130,10 @@ describe('optimizer', () => {
         []
       );
 
-      expect(instance.rules).toHaveLength(0);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained');
+      inlineInstanceRule1.value = 'Bar';
+      inlineInstanceRule1.isInstance = true;
+      expect(instance.rules).toEqual([inlineInstanceRule1]);
     });
 
     it('should create inline instances from contained resources with no id', () => {
@@ -147,7 +162,13 @@ describe('optimizer', () => {
         []
       );
 
-      expect(instance.rules).toHaveLength(0);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+      inlineInstanceRule1.value = 'Inline-Instance-for-Foo-1';
+      inlineInstanceRule1.isInstance = true;
+      const inlineInstanceRule2 = new ExportableAssignmentRule('contained[1]');
+      inlineInstanceRule2.value = 'Inline-Instance-for-Foo-2';
+      inlineInstanceRule2.isInstance = true;
+      expect(instance.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
     });
 
     it('should create an inline instance from a contained resource with additional rules', () => {
@@ -169,7 +190,10 @@ describe('optimizer', () => {
         [containedString]
       );
 
-      expect(instance.rules).toHaveLength(0);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+      inlineInstanceRule1.value = 'Bar';
+      inlineInstanceRule1.isInstance = true;
+      expect(instance.rules).toEqual([inlineInstanceRule1]);
     });
 
     it('should create an inline instance from a contained resource and ignore other rules', () => {
@@ -195,7 +219,10 @@ describe('optimizer', () => {
         [containedString]
       );
 
-      expect(instance.rules).toEqual([nonContainedRule]);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+      inlineInstanceRule1.value = 'Bar';
+      inlineInstanceRule1.isInstance = true;
+      expect(instance.rules).toEqual([nonContainedRule, inlineInstanceRule1]);
     });
 
     it('should create a profiled inline instance from a contained resource', () => {
@@ -218,7 +245,10 @@ describe('optimizer', () => {
         []
       );
 
-      expect(instance.rules).toHaveLength(0);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+      inlineInstanceRule1.value = 'Bar';
+      inlineInstanceRule1.isInstance = true;
+      expect(instance.rules).toEqual([inlineInstanceRule1]);
     });
 
     it('should create a profiled inline instance from a contained resource with non-numeric path', () => {
@@ -241,7 +271,10 @@ describe('optimizer', () => {
         []
       );
 
-      expect(instance.rules).toHaveLength(0);
+      const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+      inlineInstanceRule1.value = 'Bar';
+      inlineInstanceRule1.isInstance = true;
+      expect(instance.rules).toEqual([inlineInstanceRule1]);
     });
   });
 });

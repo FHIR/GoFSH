@@ -12,7 +12,7 @@ export default {
     const inlineInstances: ExportableInstance[] = [];
     [...pkg.instances].forEach(instance => {
       // First get all possible paths for which child elements should be extracted onto an inline instance
-      const possibleBasePaths = instance.rules
+      const basePaths = instance.rules
         .filter(
           rule =>
             rule instanceof ExportableAssignmentRule &&
@@ -23,7 +23,7 @@ export default {
 
       let generatedIdCount = 0;
       // For each base path, extract an inline instance
-      possibleBasePaths.forEach(possibleBasePath => {
+      basePaths.forEach(basePath => {
         const rulesToRemove: number[] = [];
         let id: string;
         let resourceType: string;
@@ -33,22 +33,18 @@ export default {
         // Find all rules on the instance that are children of the base path and should be
         // added to the inline instance
         instance.rules.forEach((rule, i) => {
-          if (
-            !(rule instanceof ExportableAssignmentRule && rule.path.startsWith(possibleBasePath))
-          ) {
+          if (!(rule instanceof ExportableAssignmentRule && rule.path.startsWith(basePath))) {
             return;
           }
 
           rulesToRemove.push(i);
           // id and resourceType and meta.profile should be used for keywords, all other rules are added
-          if (rule.path === `${possibleBasePath}.id`) {
+          if (rule.path === `${basePath}.id`) {
             id = rule.value as string;
-          } else if (rule.path === `${possibleBasePath}.resourceType`) {
+          } else if (rule.path === `${basePath}.resourceType`) {
             resourceType = rule.value as string;
           } else if (
-            new RegExp(`${escapeRegExp(possibleBasePath)}\\.meta\\.profile(\\[0\\])?`).test(
-              rule.path
-            )
+            new RegExp(`${escapeRegExp(basePath)}\\.meta\\.profile(\\[0\\])?`).test(rule.path)
           ) {
             profile = rule.value as string;
           } else {
@@ -60,7 +56,12 @@ export default {
         newInstance.instanceOf = profile ?? resourceType;
         newInstance.usage = 'Inline';
         inlineInstances.push(newInstance);
+
         pullAt(instance.rules, rulesToRemove);
+        const inlineInstanceRule = new ExportableAssignmentRule(basePath);
+        inlineInstanceRule.isInstance = true;
+        inlineInstanceRule.value = newInstance.id;
+        instance.rules.push(inlineInstanceRule);
       });
     });
     pkg.instances.push(...inlineInstances);
