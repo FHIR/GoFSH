@@ -1,9 +1,11 @@
 import { fshtypes } from 'fsh-sushi';
-import { FshCode } from 'fsh-sushi/dist/fshtypes';
+import { EOL } from 'os';
 import {
   ExportableValueSetConceptComponentRule,
   ExportableValueSetFilterComponentRule
 } from '../../src/exportable';
+
+const { FshCode } = fshtypes;
 
 describe('ExportableValueSetConceptComponentRule', () => {
   it('should export a ValueSetConceptComponentRule with a single concept', () => {
@@ -164,5 +166,57 @@ describe('ExportableValueSetFilterComponentRule', () => {
     expect(rule.toFSH()).toBe(
       '* include codes from system someSystem where version = "2.0" and status exists true'
     );
+  });
+
+  it('should format a long ValueSetConceptComponentRule to take up multiple lines', () => {
+    const rule = new ExportableValueSetConceptComponentRule(true);
+    rule.concepts = [
+      new FshCode('cookies', undefined, 'Cookies'),
+      new FshCode('candy', undefined, 'Candy'),
+      new FshCode('chips', undefined, 'Chips'),
+      new FshCode('cakes', undefined, 'Cakes'),
+      new FshCode('verylargecakes', undefined, 'Very Large Cakes')
+    ];
+    rule.from.system = 'http://fhir.food-pyramid.org/FoodPyramidGuide/CodeSystems/FoodGroupsCS';
+    rule.from.valueSets = ['http://fhir.food-pyramid.org/FoodPyramidGuide/ValueSets/DeliciousVS'];
+
+    const result = rule.toFSH();
+    const expectedResult = [
+      '* include #cookies "Cookies"',
+      '  and #candy "Candy"',
+      '  and #chips "Chips"',
+      '  and #cakes "Cakes"',
+      '  and #verylargecakes "Very Large Cakes"',
+      '  from system http://fhir.food-pyramid.org/FoodPyramidGuide/CodeSystems/FoodGroupsCS',
+      '  and valueset http://fhir.food-pyramid.org/FoodPyramidGuide/ValueSets/DeliciousVS'
+    ].join(EOL);
+    expect(result).toEqual(expectedResult);
+  });
+
+  it('should format a long ValueSetFilterComponentRule to take up multiple lines', () => {
+    const rule = new ExportableValueSetFilterComponentRule(true);
+    rule.from.system = 'http://fhir.example.org/myImplementationGuide/CodeSystem/AppleCS';
+    rule.from.valueSets = [
+      'http://fhir.example.org/myImplementationGuide/ValueSet/BananaVS',
+      'http://fhir.example.org/myImplementationGuide/ValueSet/CupcakeVS'
+    ];
+    rule.filters.push({ property: 'display', operator: fshtypes.VsOperator.EQUALS, value: 'abc' });
+    rule.filters.push({ property: 'version', operator: fshtypes.VsOperator.EXISTS, value: true });
+    rule.filters.push({
+      property: 'concept',
+      operator: fshtypes.VsOperator.DESCENDENT_OF,
+      value: new FshCode('comestible')
+    });
+
+    const result = rule.toFSH();
+    const expectedResult = [
+      '* include codes from system http://fhir.example.org/myImplementationGuide/CodeSystem/AppleCS',
+      '  and valueset http://fhir.example.org/myImplementationGuide/ValueSet/BananaVS',
+      '  and http://fhir.example.org/myImplementationGuide/ValueSet/CupcakeVS',
+      '  where display = "abc"',
+      '  and version exists true',
+      '  and concept descendent-of #comestible'
+    ].join(EOL);
+    expect(result).toEqual(expectedResult);
   });
 });
