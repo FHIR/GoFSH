@@ -1,8 +1,12 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { CodeSystemProcessor } from '../../src/processor';
-import { ExportableCaretValueRule, ExportableCodeSystem } from '../../src/exportable';
 import { fhirdefs } from 'fsh-sushi';
+import { CodeSystemProcessor } from '../../src/processor';
+import {
+  ExportableCodeSystem,
+  ExportableConceptRule,
+  ExportableCaretValueRule
+} from '../../src/exportable';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('CodeSystemProcessor', () => {
@@ -11,7 +15,6 @@ describe('CodeSystemProcessor', () => {
   beforeAll(() => {
     defs = loadTestDefinitions();
   });
-
   describe('#process', () => {
     it('should convert the simplest CodeSystem', () => {
       const input = JSON.parse(
@@ -20,19 +23,6 @@ describe('CodeSystemProcessor', () => {
       const result = CodeSystemProcessor.process(input, defs);
       expect(result).toBeInstanceOf(ExportableCodeSystem);
       expect(result.name).toBe('SimpleCodeSystem');
-    });
-
-    it('should convert a CodeSystem with simple metadata', () => {
-      // Simple metadata fields are Id, Title, Description
-      const input = JSON.parse(
-        fs.readFileSync(path.join(__dirname, 'fixtures', 'metadata-codesystem.json'), 'utf-8')
-      );
-      const result = CodeSystemProcessor.process(input, defs);
-      expect(result).toBeInstanceOf(ExportableCodeSystem);
-      expect(result.name).toBe('MyCodeSystem');
-      expect(result.id).toBe('my-code-system');
-      expect(result.title).toBe('My Code System');
-      expect(result.description).toBe('This is my simple code system with metadata');
     });
 
     it('should not convert a CodeSystem without a name or id', () => {
@@ -57,7 +47,42 @@ describe('CodeSystemProcessor', () => {
     });
   });
 
+  describe('#extractKeywords', () => {
+    it('should get keywords for a CodeSystem with simple metadata', () => {
+      // Simple metadata fields are Id, Title, Description
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'metadata-codesystem.json'), 'utf-8')
+      );
+      const workingCodeSystem = new ExportableCodeSystem('MyCodeSystem');
+      CodeSystemProcessor.extractKeywords(input, workingCodeSystem);
+      expect(workingCodeSystem.id).toBe('my-code-system');
+      expect(workingCodeSystem.title).toBe('My Code System');
+      expect(workingCodeSystem.description).toBe('This is my simple code system with metadata');
+    });
+  });
+
   describe('#extractRules', () => {
+    it('should extract an ExportableConceptRule for each concept', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
+      );
+      const workingCodeSystem = new ExportableCodeSystem('MyCodeSystem');
+      CodeSystemProcessor.extractRules(input, workingCodeSystem, defs);
+      expect(workingCodeSystem.rules).toHaveLength(4);
+      expect(workingCodeSystem.rules).toEqual(
+        expect.arrayContaining([
+          new ExportableConceptRule('breakfast'),
+          new ExportableConceptRule('lunch', undefined, 'Meal typically eaten at midday.'),
+          new ExportableConceptRule('dinner', 'Evening meal (non-dangerous)'),
+          new ExportableConceptRule(
+            'dangerous-dinner',
+            'Evening meal (dangerous)',
+            'Meal eaten during the late evening. Should only be eaten by dinner experts.'
+          )
+        ])
+      );
+    });
+
     it('should add caret rules to a CodeSystem', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-codesystem.json'), 'utf-8')

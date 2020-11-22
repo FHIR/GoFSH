@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import ini from 'ini';
 import { fhirdefs } from 'fsh-sushi';
 import { logger } from './GoFSHLogger';
 import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR } from '../processor';
@@ -26,8 +27,9 @@ export async function getResources(
   defs: fhirdefs.FHIRDefinitions
 ): Promise<Package> {
   const lake = getLakeOfFHIR(inDir);
+  const igIniIgPath = getIgPathFromIgIni(inDir);
   const fisher = new MasterFisher(lake, defs);
-  const processor = new FHIRProcessor(lake, fisher);
+  const processor = new FHIRProcessor(lake, fisher, igIniIgPath);
   const resources = processor.process();
   // Dynamically load and run the optimizers
   const optimizers = await loadOptimizers();
@@ -105,6 +107,20 @@ function getLakeOfFHIR(inDir: string): LakeOfFHIR {
     }
   });
   return new LakeOfFHIR(docs);
+}
+
+export function getIgPathFromIgIni(inDir: string): string {
+  let igPath;
+  const igIniPath = getFilesRecursive(inDir).find(file => path.parse(file).base === 'ig.ini');
+  if (igIniPath) {
+    try {
+      const igIni = ini.parse(fs.readFileSync(igIniPath, 'utf-8'));
+      if (igIni.IG?.ig) {
+        igPath = path.join(path.dirname(igIniPath), igIni.IG.ig);
+      }
+    } catch {}
+  }
+  return igPath;
 }
 
 // thanks, peturv
