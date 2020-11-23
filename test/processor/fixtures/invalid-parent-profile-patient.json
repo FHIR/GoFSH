@@ -3,5 +3,7 @@
   "id": "invalid-patient-parent",
   "meta": {
     "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/fake-parent"]
-  }
+  },
+  "gender": "female",
+  "birthDate": "1955-05-20"
 }

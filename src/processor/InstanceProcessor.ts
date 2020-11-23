@@ -30,7 +30,7 @@ export class InstanceProcessor {
     const newRules: ExportableInstance['rules'] = [];
     // Clone input so it can be modified
     const inputJSON = cloneDeep(input);
-    const instanceOfJSON = fisher.fishForFHIR(
+    let instanceOfJSON = fisher.fishForFHIR(
       target.instanceOf,
       utils.Type.Resource,
       utils.Type.Profile,
@@ -39,10 +39,24 @@ export class InstanceProcessor {
     );
 
     if (instanceOfJSON == null) {
-      logger.error(
-        `InstanceOf definition not found for ${input.id} and cannot export any Assignment Rules.`
+      if (input.meta?.profile?.[0]) {
+        logger.warn(
+          `InstanceOf definition not found for ${input.id}. The ResourceType of the instance will be used as a base.`
+        );
+      }
+      instanceOfJSON = fisher.fishForFHIR(
+        input.resourceType,
+        utils.Type.Resource,
+        utils.Type.Profile,
+        utils.Type.Extension,
+        utils.Type.Type
       );
-      return;
+      if (instanceOfJSON == null) {
+        logger.error(
+          `Definition of ResourceType not found for ${input.id}. Cannot export any Assignment Rules`
+        );
+        return;
+      }
     }
 
     IGNORED_PROPERTIES.forEach(prop => {

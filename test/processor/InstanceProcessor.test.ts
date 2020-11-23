@@ -180,16 +180,38 @@ describe('InstanceProcessor', () => {
       expect(result.rules).toContainEqual(addressCountry);
     });
 
-    it('should not add assignment rules when InstanceOf is not found', () => {
+    it('should use ResourceType and add assignment rules when InstanceOf is a profile that is not found', () => {
       const input = JSON.parse(
-        fs.readFileSync(path.join(__dirname, 'fixtures', 'invalid-patient-parent.json'), 'utf-8')
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'invalid-parent-profile-patient.json'),
+          'utf-8'
+        )
       );
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
       expect(result.name).toBe('invalid-patient-parent');
-      expect(result.rules).toHaveLength(0);
       expect(loggerSpy.getAllMessages()).toHaveLength(1);
-      expect(loggerSpy.getLastMessage('error')).toMatch(/InstanceOf definition not found/s);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found/s);
+      expect(result.rules).toHaveLength(2); // Add rules after using ResourceType as parent
+    });
+
+    it('should not add assignment rules when ResourceType of Instance is not found', () => {
+      const input = JSON.parse(
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'invalid-parent-profile-patient.json'),
+          'utf-8'
+        )
+      );
+      // Change the resource type to be an invalid FHIR resourceType.
+      // This should never really happen and is just for testing purposes.
+      input.resourceType = 'FakePatient';
+      const result = InstanceProcessor.process(input, simpleIg, defs);
+      expect(result).toBeInstanceOf(ExportableInstance);
+      expect(result.name).toBe('invalid-patient-parent');
+      expect(loggerSpy.getAllMessages()).toHaveLength(2);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found/s);
+      expect(loggerSpy.getLastMessage('error')).toMatch(/Definition of ResourceType not found/s);
+      expect(result.rules).toHaveLength(0); // Do not add rules
     });
   });
 });
