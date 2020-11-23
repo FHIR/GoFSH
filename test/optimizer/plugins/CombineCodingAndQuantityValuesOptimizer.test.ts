@@ -197,7 +197,7 @@ describe('optimizer', () => {
         expect(extension.rules).toContainEqual(valueRule);
       });
 
-      it('should prefer combining code, system, and unit, even when value is available', () => {
+      it('should prefer combining code, system, and value, even when unit is available, if system is http://unitsofmeasure.org', () => {
         const extension = new ExportableExtension('MyExtension');
         const codeRule = new ExportableCaretValueRule('');
         codeRule.caretPath = 'extension[0].valueQuantity.code';
@@ -217,11 +217,38 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
-        expectedRule.value = new FshCode('GW', 'http://unitsofmeasure.org', 'Gigawatts');
+        expectedRule.value = new FshQuantity(1.21, new FshCode('GW', 'http://unitsofmeasure.org'));
         optimizer.optimize(myPackage);
         expect(extension.rules.length).toBe(2);
-        expect(extension.rules).toContainEqual(valueRule);
         expect(extension.rules).toContainEqual(expectedRule);
+        expect(extension.rules).toContainEqual(unitRule);
+      });
+
+      it('should combine rules on code, system, and unit when value is available, but system is not http://unitsofmeasure.org', () => {
+        const extension = new ExportableExtension('MyExtension');
+        const codeRule = new ExportableCaretValueRule('');
+        codeRule.caretPath = 'extension[0].valueQuantity.code';
+        codeRule.value = new FshCode('GW');
+        const systemRule = new ExportableCaretValueRule('');
+        systemRule.caretPath = 'extension[0].valueQuantity.system';
+        systemRule.value = 'http://other-units.org';
+        const valueRule = new ExportableCaretValueRule('');
+        valueRule.caretPath = 'extension[0].valueQuantity.value';
+        valueRule.value = 1.21;
+        const unitRule = new ExportableCaretValueRule('');
+        unitRule.caretPath = 'extension[0].valueQuantity.unit';
+        unitRule.value = 'Gigawatts';
+        extension.rules.push(codeRule, systemRule, valueRule, unitRule);
+        const myPackage = new Package();
+        myPackage.add(extension);
+
+        const expectedRule = new ExportableCaretValueRule('');
+        expectedRule.caretPath = 'extension[0].valueQuantity';
+        expectedRule.value = new FshCode('GW', 'http://other-units.org', 'Gigawatts');
+        optimizer.optimize(myPackage);
+        expect(extension.rules.length).toBe(2);
+        expect(extension.rules).toContainEqual(expectedRule);
+        expect(extension.rules).toContainEqual(valueRule);
       });
 
       it('should not combine rules that have sibling caretPaths, but different paths', () => {
@@ -423,7 +450,7 @@ describe('optimizer', () => {
         expect(instance.rules).toContainEqual(valueRule);
       });
 
-      it('should prefer combining code, system, and unit, even when value is available', () => {
+      it('should prefer combining code, system, and value, even when unit is available, if system is http://unitsofmeasure.org', () => {
         const instance = new ExportableInstance('MyProfile');
         instance.instanceOf = 'Observation';
         const codeRule = new ExportableAssignmentRule('referenceRange.low.code');
@@ -439,15 +466,38 @@ describe('optimizer', () => {
         myPackage.add(instance);
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
+        expectedRule.value = new FshQuantity(6, new FshCode('Cal', 'http://unitsofmeasure.org'));
+        optimizer.optimize(myPackage);
+        expect(instance.rules.length).toBe(2);
+        expect(instance.rules).toContainEqual(expectedRule);
+        expect(instance.rules).toContainEqual(unitRule);
+      });
+
+      it('should combine rules on code, system, and unit when value is available, but system is not http://unitsofmeasure.org', () => {
+        const instance = new ExportableInstance('MyProfile');
+        instance.instanceOf = 'Observation';
+        const codeRule = new ExportableAssignmentRule('referenceRange.low.code');
+        codeRule.value = new FshCode('Cal');
+        const systemRule = new ExportableAssignmentRule('referenceRange.low.system');
+        systemRule.value = 'http://other-units.org';
+        const valueRule = new ExportableAssignmentRule('referenceRange.low.value');
+        valueRule.value = 6;
+        const unitRule = new ExportableAssignmentRule('referenceRange.low.unit');
+        unitRule.value = 'nutrition label Calories';
+        instance.rules.push(codeRule, systemRule, valueRule, unitRule);
+        const myPackage = new Package();
+        myPackage.add(instance);
+
+        const expectedRule = new ExportableAssignmentRule('referenceRange.low');
         expectedRule.value = new FshCode(
           'Cal',
-          'http://unitsofmeasure.org',
+          'http://other-units.org',
           'nutrition label Calories'
         );
         optimizer.optimize(myPackage);
         expect(instance.rules.length).toBe(2);
-        expect(instance.rules).toContainEqual(valueRule);
         expect(instance.rules).toContainEqual(expectedRule);
+        expect(instance.rules).toContainEqual(valueRule);
       });
 
       it('should not combine rules that have different base paths', () => {

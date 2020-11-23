@@ -44,7 +44,14 @@ export default {
             const displaySibling = siblings.find(sibling => sibling.caretPath.endsWith('.display'));
             const unitSibling = siblings.find(sibling => sibling.caretPath.endsWith('.unit'));
             const valueSibling = siblings.find(sibling => sibling.caretPath.endsWith('.value'));
-            if (unitSibling) {
+            if (valueSibling && systemSibling?.value === 'http://unitsofmeasure.org') {
+              rule.caretPath = basePath;
+              rule.value = new FshQuantity(
+                valueSibling.value as number,
+                new FshCode(rule.value.code, 'http://unitsofmeasure.org')
+              );
+              rulesToRemove.push(sd.rules.indexOf(valueSibling), sd.rules.indexOf(systemSibling));
+            } else if (unitSibling) {
               rule.caretPath = basePath;
               rule.value.display = unitSibling.value.toString();
               rulesToRemove.push(sd.rules.indexOf(unitSibling));
@@ -53,13 +60,6 @@ export default {
                 rule.value.system = systemSibling.value.toString();
                 rulesToRemove.push(sd.rules.indexOf(systemSibling));
               }
-            } else if (valueSibling && systemSibling?.value === 'http://unitsofmeasure.org') {
-              rule.caretPath = basePath;
-              rule.value = new FshQuantity(
-                valueSibling.value as number,
-                new FshCode(rule.value.code, 'http://unitsofmeasure.org')
-              );
-              rulesToRemove.push(sd.rules.indexOf(valueSibling), sd.rules.indexOf(systemSibling));
             } else if (systemSibling || displaySibling) {
               rule.caretPath = basePath;
               if (systemSibling) {
@@ -100,16 +100,7 @@ export default {
             const displaySibling = siblings.find(sibling => sibling.path.endsWith('.display'));
             const unitSibling = siblings.find(sibling => sibling.path.endsWith('.unit'));
             const valueSibling = siblings.find(sibling => sibling.path.endsWith('.value'));
-            if (unitSibling) {
-              rule.path = basePath;
-              rule.value.display = unitSibling.value.toString();
-              rulesToRemove.push(instance.rules.indexOf(unitSibling));
-              // system may also be present
-              if (systemSibling) {
-                rule.value.system = systemSibling.value.toString();
-                rulesToRemove.push(instance.rules.indexOf(systemSibling));
-              }
-            } else if (valueSibling && systemSibling?.value === 'http://unitsofmeasure.org') {
+            if (valueSibling && systemSibling?.value === 'http://unitsofmeasure.org') {
               rule.path = basePath;
               rule.value = new FshQuantity(
                 valueSibling.value as number,
@@ -119,6 +110,15 @@ export default {
                 instance.rules.indexOf(valueSibling),
                 instance.rules.indexOf(systemSibling)
               );
+            } else if (unitSibling) {
+              rule.path = basePath;
+              rule.value.display = unitSibling.value.toString();
+              rulesToRemove.push(instance.rules.indexOf(unitSibling));
+              // system may also be present
+              if (systemSibling) {
+                rule.value.system = systemSibling.value.toString();
+                rulesToRemove.push(instance.rules.indexOf(systemSibling));
+              }
             } else if (systemSibling || displaySibling) {
               rule.path = basePath;
               if (systemSibling) {
