@@ -200,7 +200,11 @@ describe('ExportableValueSetFilterComponentRule', () => {
       'http://fhir.example.org/myImplementationGuide/ValueSet/BananaVS',
       'http://fhir.example.org/myImplementationGuide/ValueSet/CupcakeVS'
     ];
-    rule.filters.push({ property: 'display', operator: fshtypes.VsOperator.EQUALS, value: 'abc' });
+    rule.filters.push({
+      property: 'display',
+      operator: fshtypes.VsOperator.EQUALS,
+      value: 'this and that'
+    });
     rule.filters.push({ property: 'version', operator: fshtypes.VsOperator.EXISTS, value: true });
     rule.filters.push({
       property: 'concept',
@@ -213,7 +217,7 @@ describe('ExportableValueSetFilterComponentRule', () => {
       '* include codes from system http://fhir.example.org/myImplementationGuide/CodeSystem/AppleCS',
       '  and valueset http://fhir.example.org/myImplementationGuide/ValueSet/BananaVS',
       '  and http://fhir.example.org/myImplementationGuide/ValueSet/CupcakeVS',
-      '  where display = "abc"',
+      '  where display = "this and that"',
       '  and version exists true',
       '  and concept descendent-of #comestible'
     ].join(EOL);
