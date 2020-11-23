@@ -1,7 +1,11 @@
-import { utils } from 'fsh-sushi';
+import { utils, fhirtypes } from 'fsh-sushi';
 import { capitalize, compact } from 'lodash';
 import { ExportableValueSet } from '../exportable';
-import { ValueSetConceptComponentRuleExtractor, CaretValueRuleExtractor } from '../extractor';
+import {
+  ValueSetConceptComponentRuleExtractor,
+  ValueSetFilterComponentRuleExtractor,
+  CaretValueRuleExtractor
+} from '../extractor';
 
 export class ValueSetProcessor {
   static extractKeywords(input: ProcessableValueSet, target: ExportableValueSet): void {
@@ -20,12 +24,14 @@ export class ValueSetProcessor {
     const newRules: ExportableValueSet['rules'] = [];
     newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
     if (input.compose) {
-      input.compose.include?.forEach((vsComponent: any) =>
-        newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, true))
-      );
-      input.compose.exclude?.forEach((vsComponent: any) =>
-        newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, false))
-      );
+      input.compose.include?.forEach((vsComponent: any) => {
+        newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, true));
+        newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, true));
+      });
+      input.compose.exclude?.forEach((vsComponent: any) => {
+        newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, false));
+        newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, false));
+      });
     }
     target.rules = compact(newRules);
   }
@@ -50,13 +56,11 @@ export class ValueSetProcessor {
   }
 }
 
-interface ProcessableValueSet {
+export interface ProcessableValueSet {
+  resourceType?: string;
   name?: string;
   id?: string;
   title?: string;
   description?: string;
-  compose?: {
-    include?: any;
-    exclude?: any;
-  };
+  compose?: fhirtypes.ValueSetCompose;
 }

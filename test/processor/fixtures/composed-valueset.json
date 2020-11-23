@@ -31,6 +31,26 @@
       },
       {
         "system": "http://example.org/ghost-house"
+      },
+      {
+        "system": "http://example.org/planetarium",
+        "filter": [
+          {
+            "property": "gaseous",
+            "op": "=",
+            "value": "true"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/eatery",
+        "filter": [
+          {
+            "property": "species",
+            "op": "is-a",
+            "value": "fish"
+          }
+        ]
       }
     ],
     "exclude": [
@@ -54,6 +74,16 @@
           {
             "code": "CLAM",
             "display": "Clam"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/eatery",
+        "filter": [
+          {
+            "property": "tastiness",
+            "op": "exists",
+            "value": "true"
           }
         ]
       }
