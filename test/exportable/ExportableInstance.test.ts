@@ -1,5 +1,6 @@
+import { fshtypes } from 'fsh-sushi';
 import { EOL } from 'os';
-import { ExportableInstance } from '../../src/exportable';
+import { ExportableInstance, ExportableAssignmentRule } from '../../src/exportable';
 
 describe('ExportableInstance', () => {
   it('should export the simplest Instance', () => {
@@ -26,5 +27,28 @@ describe('ExportableInstance', () => {
       'Usage: #example'
     ].join(EOL);
     expect(i.toFSH()).toBe(expectedResult);
+  });
+
+  it('should export an instance with assignment rules', () => {
+    const exInstance = new ExportableInstance('MyInstance');
+    exInstance.instanceOf = 'Observation';
+
+    const statusRule = new ExportableAssignmentRule('status');
+    const statusCode = new fshtypes.FshCode('final');
+    statusRule.value = statusCode;
+    exInstance.rules.push(statusRule);
+
+    const dateRule = new ExportableAssignmentRule('effectiveDateTime');
+    dateRule.value = '2019-04-01';
+    exInstance.rules.push(dateRule);
+
+    const expectedResult = [
+      'Instance: MyInstance',
+      'InstanceOf: Observation',
+      'Usage: #example',
+      '* status = #final',
+      '* effectiveDateTime = "2019-04-01"'
+    ].join(EOL);
+    expect(exInstance.toFSH()).toBe(expectedResult);
   });
 });

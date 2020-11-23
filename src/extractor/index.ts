@@ -8,7 +8,10 @@ export * from './OnlyRuleExtractor';
 export * from './CaretValueRuleExtractor';
 export * from './ContainsRuleExtractor';
 export * from './ObeysRuleExtractor';
+
+// value set rule extractors
 export * from './ValueSetConceptComponentRuleExtractor';
+export * from './ValueSetFilterComponentRuleExtractor';
 
 // non-rule extractors
 export * from './InvariantExtractor';

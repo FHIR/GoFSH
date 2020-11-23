@@ -1,0 +1,6 @@
+{
+  "resourceType": "CodeSystem",
+  "id": "simple.codesystem",
+  "url": "http://example.org/tests/CodeSystem/simple.codesystem",
+  "name": "SimpleCodeSystem"
+}
