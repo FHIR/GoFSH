@@ -1,12 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 import ini from 'ini';
-import { fhirdefs, fhirtypes } from 'fsh-sushi';
+import { fhirdefs } from 'fsh-sushi';
 import { logger } from './GoFSHLogger';
 import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { loadOptimizers } from '../optimizer';
 import { MasterFisher } from '../utils';
+import { ExportableConfiguration } from '../exportable';
 
 export function getInputDir(input = '.'): string {
   // default to current directory
@@ -38,6 +39,19 @@ export async function getResources(
     opt.optimize(resources, fisher);
   });
   return resources;
+}
+
+export async function getConfig(
+  inDir: string,
+  defs: fhirdefs.FHIRDefinitions,
+  externalDeps: string[]
+): Promise<ExportableConfiguration> {
+  const lake = getLakeOfFHIR(inDir);
+  const igIniIgPath = getIgPathFromIgIni(inDir);
+  const fisher = new MasterFisher(lake, defs);
+  const processor = new FHIRProcessor(lake, fisher, igIniIgPath);
+  const config = processor.processConfig(externalDeps);
+  return config;
 }
 
 export function writeFSH(resources: Package, outDir: string): void {
@@ -91,27 +105,6 @@ export function loadExternalDependencies(
     );
   }
   return dependencyDefs;
-}
-
-export function getIGDependencies(inDir: string): string[] {
-  const inputFiles = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
-  const igDeps: string[] = [];
-  inputFiles.forEach(file => {
-    try {
-      const content = fs.readJSONSync(file);
-      if (content.resourceType === 'ImplementationGuide') {
-        if (content.dependsOn) {
-          content.dependsOn.forEach((dependency: fhirtypes.ImplementationGuideDependsOn) => {
-            const depString = dependency.packageId + '@' + dependency.version;
-            igDeps.push(depString);
-          });
-        }
-      }
-    } catch (error) {
-      logger.error(`Could not read ${file}: ${error.message}`);
-    }
-  });
-  return igDeps;
 }
 
 function getLakeOfFHIR(inDir: string): LakeOfFHIR {

@@ -24,8 +24,7 @@ export class FHIRProcessor {
     }
   }
 
-  process(): Package {
-    const resources = new Package();
+  processConfig(externalDeps?: string[]): ExportableConfiguration {
     let config: ExportableConfiguration;
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
@@ -41,7 +40,67 @@ export class FHIRProcessor {
         ].map(wild => wild.content)
       );
     }
-    resources.add(config);
+    if (externalDeps && externalDeps.length > 0) {
+      const existingIds: string[] = [];
+      if (!config.config.dependencies) config.config.dependencies = [];
+      externalDeps.forEach(dep => {
+        const [id, version] = dep.split('@');
+        config.config.dependencies.forEach(element => {
+          existingIds.push(element.packageId);
+          if (element.packageId === id && element.version !== version) {
+            const externalVersionArr = version.split('.').map(Number);
+            const igVersionArr = element.version.split('.').map(Number);
+            const resolvedVersion = this.resolveVersion(externalVersionArr, igVersionArr);
+            element.version = resolvedVersion;
+          }
+        });
+        if (!existingIds.includes(id)) {
+          const newDep = {
+            packageId: id,
+            version: version
+          };
+          config.config.dependencies.push(newDep);
+        }
+      });
+    }
+    return config;
+  }
+
+  // Resolves version numbers between dependencies, selecting the highest version
+  private resolveVersion(externalVersionArr: number[], internalVersionArr: number[]): string {
+    let resolvedVersion = '';
+    let found = false;
+    let i = 0;
+    while (!found) {
+      if (externalVersionArr[i] && !internalVersionArr[i]) {
+        resolvedVersion = externalVersionArr.join('.');
+        found = true;
+        break;
+      }
+      if (internalVersionArr[i] && !externalVersionArr[i]) {
+        resolvedVersion = internalVersionArr.join('.');
+        found = true;
+        break;
+      }
+      if (externalVersionArr[i] !== internalVersionArr[i]) {
+        if (externalVersionArr[i] > internalVersionArr[i]) {
+          resolvedVersion = externalVersionArr.join('.');
+          found = true;
+          break;
+        } else if (internalVersionArr[i] > externalVersionArr[i]) {
+          resolvedVersion = internalVersionArr.join('.');
+          break;
+        } else i++;
+      }
+    }
+    return resolvedVersion;
+  }
+
+  process(): Package {
+    const resources = new Package();
+    const igForConfig =
+      this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
+      this.lake.getAllImplementationGuides()[0];
     this.lake.getAllStructureDefinitions().forEach(wild => {
       try {
         StructureDefinitionProcessor.process(

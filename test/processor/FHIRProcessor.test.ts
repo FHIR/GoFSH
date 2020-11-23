@@ -40,10 +40,25 @@ describe('FHIRProcessor', () => {
 
   it('should try to process an ImplementationGuide with the ConfigurationProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-ig.json'));
-    processor.process();
+    processor.processConfig();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const simpleIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'simple-ig.json'));
     expect(configurationSpy).toHaveBeenCalledWith(simpleIgContent); // Uses first and only IG in lake if no path provided
+  });
+
+  it('should resolve version numbers between command lines deps and ImplementationGuide deps', () => {
+    restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+    const config = processor.processConfig(['hl7.fhir.us.core@2.1.0']);
+    expect(configurationSpy).toHaveBeenCalledTimes(1);
+    const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+    expect(configurationSpy).toHaveBeenCalledWith(biggerIgContent); // Uses first and only IG in lake if no path provided
+    expect(config.config.dependencies[0].version).toEqual('3.1.0');
+  });
+
+  it('should export a config file with command line dependencies', () => {
+    restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+    const config = processor.processConfig(['hl7.fhir.ha.haha@2.1.0']);
+    expect(config.config.dependencies[2].packageId).toEqual('hl7.fhir.ha.haha');
   });
 
   it('should try to process a provided ImplementationGuide with the ConfigurationProcessor', () => {
@@ -57,7 +72,7 @@ describe('FHIRProcessor', () => {
       null,
       path.join(__dirname, 'fixtures', 'bigger-ig.json')
     );
-    processorWithIg.process();
+    processorWithIg.processConfig();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
     expect(configurationSpy).toHaveBeenCalledWith(biggerIgContent); // Uses path provided instead of first IG in lake
