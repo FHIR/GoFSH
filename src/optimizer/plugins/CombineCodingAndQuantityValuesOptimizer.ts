@@ -15,6 +15,9 @@ export default {
     // Quantity has: code, system, unit, value
     // Profiles and Extensions may have relevant caret rules
     // Instances may have relevant assignment rules
+    // It is not necessary to check assignment rules on Profiles and Extensions. Codings and Quantities that
+    // are present on Profile and Extension elements are extracted as a single assignment rule, because they are represented as
+    // a whole element (patternCoding, fixedQuantity, etc.) rather than a collection of parts.
     [...pkg.profiles, ...pkg.extensions].forEach(sd => {
       const rulesToRemove: number[] = [];
       sd.rules.forEach(rule => {
