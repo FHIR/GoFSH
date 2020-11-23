@@ -1,9 +1,12 @@
-import { fshtypes } from 'fsh-sushi';
+import { fshtypes, fhirtypes } from 'fsh-sushi';
 import { cloneDeep } from 'lodash';
 import { ExportableValueSetConceptComponentRule } from '../exportable';
 
 export class ValueSetConceptComponentRuleExtractor {
-  static process(vsComponent: any, inclusion: boolean): ExportableValueSetConceptComponentRule {
+  static process(
+    vsComponent: fhirtypes.ValueSetComposeIncludeOrExclude,
+    inclusion: boolean
+  ): ExportableValueSetConceptComponentRule {
     if (vsComponent.concept?.length > 0) {
       const rule = new ExportableValueSetConceptComponentRule(inclusion);
       rule.from.system = vsComponent.system;
