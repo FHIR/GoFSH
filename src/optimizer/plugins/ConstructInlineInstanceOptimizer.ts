@@ -1,7 +1,12 @@
 import { pullAt, escapeRegExp } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
-import { ExportableAssignmentRule, ExportableInstance } from '../../exportable';
+import {
+  ExportableAssignmentRule,
+  ExportableCaretValueRule,
+  ExportableInstance,
+  ExportableSdRule
+} from '../../exportable';
 
 export default {
   name: 'construct_inline_instance',
@@ -10,16 +15,20 @@ export default {
 
   optimize(pkg: Package): void {
     const inlineInstances: ExportableInstance[] = [];
-    [...pkg.instances].forEach(instance => {
+    [...pkg.instances, ...pkg.profiles].forEach(resource => {
+      const ruleType =
+        resource instanceof ExportableInstance
+          ? ExportableAssignmentRule
+          : ExportableCaretValueRule;
       // First get all possible paths for which child elements should be extracted onto an inline instance
-      const basePaths = instance.rules
+      const basePaths = resource.rules
         .filter(
           rule =>
-            rule instanceof ExportableAssignmentRule &&
-            (/^contained(\[\d+\])?\.resourceType$/.test(rule.path) ||
-              /^entry(\[\d+\])?\.resource\.resourceType$/.test(rule.path))
+            rule instanceof ruleType &&
+            (/^contained(\[\d+\])?\.resourceType$/.test(getRulePath(rule)) ||
+              /^entry(\[\d+\])?\.resource\.resourceType$/.test(getRulePath(rule)))
         )
-        .map(rule => rule.path.replace('.resourceType', ''));
+        .map(rule => getRulePath(rule).replace('.resourceType', ''));
 
       let generatedIdCount = 0;
       // For each base path, extract an inline instance
@@ -32,12 +41,17 @@ export default {
 
         // Find all rules on the instance that are children of the base path and should be
         // added to the inline instance
-        instance.rules.forEach((rule, i) => {
-          if (!(rule instanceof ExportableAssignmentRule && rule.path.startsWith(basePath))) {
+        resource.rules.forEach((rule, i) => {
+          if (!(rule instanceof ruleType && getRulePath(rule).startsWith(basePath))) {
             return;
           }
 
           rulesToRemove.push(i);
+          if (rule instanceof ExportableCaretValueRule) {
+            const newRule = new ExportableAssignmentRule(rule.caretPath);
+            newRule.value = rule.value;
+            rule = newRule;
+          }
           // id and resourceType and meta.profile should be used for keywords, all other rules are added
           if (rule.path === `${basePath}.id`) {
             id = rule.value as string;
@@ -52,18 +66,30 @@ export default {
           }
         });
 
-        newInstance.id = id ?? `Inline-Instance-for-${instance.id}-${(generatedIdCount += 1)}`;
+        newInstance.id = id ?? `Inline-Instance-for-${resource.id}-${(generatedIdCount += 1)}`;
         newInstance.instanceOf = profile ?? resourceType;
         newInstance.usage = 'Inline';
         inlineInstances.push(newInstance);
 
-        pullAt(instance.rules, rulesToRemove);
-        const inlineInstanceRule = new ExportableAssignmentRule(basePath);
-        inlineInstanceRule.isInstance = true;
-        inlineInstanceRule.value = newInstance.id;
-        instance.rules.push(inlineInstanceRule);
+        pullAt(resource.rules, rulesToRemove);
+        if (resource instanceof ExportableInstance) {
+          const inlineInstanceRule = new ExportableAssignmentRule(basePath);
+          inlineInstanceRule.isInstance = true;
+          inlineInstanceRule.value = newInstance.id;
+          resource.rules.push(inlineInstanceRule);
+        } else {
+          const inlineInstanceRule = new ExportableCaretValueRule('');
+          inlineInstanceRule.caretPath = basePath;
+          inlineInstanceRule.isInstance = true;
+          inlineInstanceRule.value = newInstance.id;
+          resource.rules.push(inlineInstanceRule);
+        }
       });
     });
     pkg.instances.push(...inlineInstances);
   }
 } as OptimizerPlugin;
+
+function getRulePath(rule: ExportableSdRule): string {
+  return rule instanceof ExportableCaretValueRule ? rule.caretPath : rule.path;
+}
