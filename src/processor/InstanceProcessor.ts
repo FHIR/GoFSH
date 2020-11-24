@@ -76,7 +76,12 @@ export class InstanceProcessor {
 
     const flatInstance = getPathValuePairs(inputJSON);
     Object.keys(flatInstance).forEach(key => {
-      const assignmentRule = new ExportableAssignmentRule(key);
+      // Remove any _ at the start of any path part
+      const path = key
+        .split('.')
+        .map(p => p.replace(/^_/, ''))
+        .join('.');
+      const assignmentRule = new ExportableAssignmentRule(path);
       assignmentRule.value = getFSHValue(key, flatInstance[key], instanceOfJSON.type, fisher);
       newRules.push(assignmentRule);
     });

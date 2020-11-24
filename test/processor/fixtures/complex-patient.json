@@ -46,7 +46,14 @@
       "city": "Anytown",
       "state": "MA",
       "postalCode": "12345",
-      "country": "US"
+      "country": "US",
+      "_country": {
+        "extension": [
+          {
+            "url": "http://foo.com"
+          }
+        ]
+      }
     }
   ]
 }
