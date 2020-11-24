@@ -75,13 +75,10 @@ export class InstanceProcessor {
     }
 
     const flatInstance = getPathValuePairs(inputJSON);
-    const flatInstanceOf = getPathValuePairs(instanceOfJSON);
     Object.keys(flatInstance).forEach(key => {
-      if (flatInstanceOf[key] == null || !isEqual(flatInstance[key], flatInstanceOf[key])) {
-        const assignmentRule = new ExportableAssignmentRule(key);
-        assignmentRule.value = getFSHValue(key, flatInstance[key], instanceOfJSON.type, fisher);
-        newRules.push(assignmentRule);
-      }
+      const assignmentRule = new ExportableAssignmentRule(key);
+      assignmentRule.value = getFSHValue(key, flatInstance[key], instanceOfJSON.type, fisher);
+      newRules.push(assignmentRule);
     });
     target.rules = compact(newRules);
   }
