@@ -1,4 +1,4 @@
-import { cloneDeep, compact, isEqual } from 'lodash';
+import { cloneDeep, compact, isEmpty } from 'lodash';
 import { fhirtypes, utils } from 'fsh-sushi';
 import { ExportableAssignmentRule, ExportableInstance } from '../exportable';
 import { getFSHValue, getPathValuePairs, logger } from '../utils';
@@ -62,6 +62,14 @@ export class InstanceProcessor {
     IGNORED_PROPERTIES.forEach(prop => {
       delete inputJSON[prop];
     });
+    // First profile will be used in InstanceOf keyword if present
+    inputJSON.meta?.profile?.splice(0, 1);
+    if (inputJSON.meta?.profile?.length === 0) {
+      delete inputJSON.meta?.profile;
+      if (isEmpty(inputJSON.meta)) {
+        delete inputJSON.meta;
+      }
+    }
     if (inputJSON.text?.status === 'generated') {
       delete inputJSON.text;
     }
@@ -106,4 +114,4 @@ const CONFORMANCE_AND_TERMINOLOGY_RESOURCES = new Set([
 ]);
 
 // The properties that are handled via keywords
-const IGNORED_PROPERTIES = ['resourceType', 'id', 'meta'];
+const IGNORED_PROPERTIES = ['resourceType', 'id'];
