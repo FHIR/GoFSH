@@ -1,0 +1,14 @@
+{
+  "resourceType": "Bundle",
+  "id": "simple-bundle",
+  "type": "searchset",
+  "total": 1,
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "status": "final"
+      }
+    }
+  ]
+}

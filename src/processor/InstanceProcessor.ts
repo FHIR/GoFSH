@@ -1,6 +1,7 @@
 import { cloneDeep, compact, isEmpty } from 'lodash';
 import { fhirtypes, utils } from 'fsh-sushi';
 import { ExportableAssignmentRule, ExportableInstance } from '../exportable';
+import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { getFSHValue, getPathValuePairs, logger } from '../utils';
 
 export class InstanceProcessor {
@@ -77,12 +78,9 @@ export class InstanceProcessor {
     const flatInstance = getPathValuePairs(inputJSON);
     Object.keys(flatInstance).forEach(key => {
       // Remove any _ at the start of any path part
-      const path = key
-        .split('.')
-        .map(p => p.replace(/^_/, ''))
-        .join('.');
+      const path = removeUnderscoreForPrimitiveChildPath(key);
       const assignmentRule = new ExportableAssignmentRule(path);
-      assignmentRule.value = getFSHValue(path, flatInstance[key], instanceOfJSON.type, fisher);
+      assignmentRule.value = getFSHValue(key, flatInstance, instanceOfJSON.type, fisher);
       newRules.push(assignmentRule);
     });
     target.rules = compact(newRules);

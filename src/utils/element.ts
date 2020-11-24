@@ -1,6 +1,7 @@
 import { flatten } from 'flat';
+import { pickBy, mapKeys } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
-import { fshifyString } from '../exportable/common';
+import { fshifyString, removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { ProcessableStructureDefinition } from '../processor';
 import { StructureDefinition, ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
 
@@ -49,15 +50,44 @@ export function getPathValuePairs(object: object): FlatObject {
 
 export function getFSHValue(
   key: string,
-  value: number | string | boolean,
+  flatObject: FlatObject,
   resourceType: string,
   fisher: utils.Fishable
-) {
+): number | boolean | string | fshtypes.FshCode {
+  const value = flatObject[key];
   const definition = StructureDefinition.fromJSON(
     fisher.fishForFHIR(resourceType, utils.Type.Resource, utils.Type.Type)
   );
-  // Finding element by path works without array information
-  const element = definition.findElementByPath(key.replace(/\[\d+\]/g, ''), fisher);
+  // Finding element by path works without array information and _ from children of primitives
+  const pathWithoutIndex = removeUnderscoreForPrimitiveChildPath(key).replace(/\[\d+\]/g, '');
+  const element = definition.findElementByPath(pathWithoutIndex, fisher);
+  // If the path is one on an entry/contained resource, find the element on the ResourceType of the entry/contained resource
+  if (
+    element == null &&
+    (pathWithoutIndex.startsWith('entry.resource.') || pathWithoutIndex.startsWith('contained.'))
+  ) {
+    let basePath: string;
+    if (element == null && pathWithoutIndex.startsWith('entry.resource.')) {
+      basePath = key.split('.').slice(0, 2).join('.') + '.';
+    } else if (element == null && pathWithoutIndex.startsWith('contained.')) {
+      basePath = key.split('.').slice(0, 1).join('.') + '.';
+    }
+    // Only need to worry about fixed values of entry/contained resource
+    let filteredFlatObject = pickBy(flatObject, (value, key) => key.startsWith(basePath));
+    // Modify the object to make paths relative to the entry/contained resource
+    filteredFlatObject = mapKeys(filteredFlatObject, (value, key) =>
+      key.substring(basePath.length)
+    );
+    const containedResourceType = filteredFlatObject['resourceType'] as string;
+
+    // Get the FSH value based on the contained resource type. Use paths relative to the contained resource.
+    return getFSHValue(
+      key.replace(basePath, ''),
+      filteredFlatObject,
+      containedResourceType,
+      fisher
+    );
+  }
   if (element?.type?.[0]?.code === 'code') {
     return new fshtypes.FshCode(value.toString());
   }

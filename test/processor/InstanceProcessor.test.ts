@@ -200,6 +200,32 @@ describe('InstanceProcessor', () => {
       expect(result.rules).toContainEqual(countryExtensionValue);
     });
 
+    it('should use entry resource type to determine assignment rule value types on bundle entry resources', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-bundle.json'), 'utf-8')
+      );
+      const result = InstanceProcessor.process(input, simpleIg, defs);
+      expect(result).toBeInstanceOf(ExportableInstance);
+      expect(result.name).toBe('simple-bundle');
+
+      const status = new ExportableAssignmentRule('entry[0].resource.status');
+      status.value = new fshtypes.FshCode('final');
+      expect(result.rules).toContainEqual(status);
+    });
+
+    it('should use contained resource type to determine assignment rule value type on contained resources', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'patient-with-contained.json'), 'utf-8')
+      );
+      const result = InstanceProcessor.process(input, simpleIg, defs);
+      expect(result).toBeInstanceOf(ExportableInstance);
+      expect(result.name).toBe('patient-with-contained');
+
+      const status = new ExportableAssignmentRule('contained[0].status');
+      status.value = new fshtypes.FshCode('final');
+      expect(result.rules).toContainEqual(status);
+    });
+
     it('should use ResourceType and add assignment rules when InstanceOf is a profile that is not found', () => {
       const input = JSON.parse(
         fs.readFileSync(
