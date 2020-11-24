@@ -104,7 +104,7 @@ describe('InstanceProcessor', () => {
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
       expect(result.name).toBe('complex-patient');
-      expect(result.rules).toHaveLength(20); // One rule for every value set since there are no optimizations for things like codes
+      expect(result.rules).toHaveLength(21); // One rule for every value set since there are no optimizations for things like codes
 
       const genderAssignmentRule = new ExportableAssignmentRule('gender');
       genderAssignmentRule.value = new fshtypes.FshCode('female');
@@ -122,7 +122,7 @@ describe('InstanceProcessor', () => {
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
       expect(result.name).toBe('complex-patient');
-      expect(result.rules).toHaveLength(20); // One rule for every value set since there are no optimizations for things like codes
+      expect(result.rules).toHaveLength(21); // One rule for every value set since there are no optimizations for things like codes
 
       const ombCategoryUrl = new ExportableAssignmentRule('extension[0].extension[0].url');
       ombCategoryUrl.value = 'ombCategory';
@@ -188,9 +188,16 @@ describe('InstanceProcessor', () => {
       expect(result).toBeInstanceOf(ExportableInstance);
       expect(result.name).toBe('complex-patient');
 
-      const countryExtension = new ExportableAssignmentRule('address[0].country.extension[0].url');
-      countryExtension.value = 'http://foo.com';
-      expect(result.rules).toContainEqual(countryExtension);
+      const countryExtensionUrl = new ExportableAssignmentRule(
+        'address[0].country.extension[0].url'
+      );
+      countryExtensionUrl.value = 'http://foo.com';
+      const countryExtensionValue = new ExportableAssignmentRule(
+        'address[0].country.extension[0].valueCode'
+      );
+      countryExtensionValue.value = new fshtypes.FshCode('bar');
+      expect(result.rules).toContainEqual(countryExtensionUrl);
+      expect(result.rules).toContainEqual(countryExtensionValue);
     });
 
     it('should use ResourceType and add assignment rules when InstanceOf is a profile that is not found', () => {

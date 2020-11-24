@@ -50,7 +50,8 @@
       "_country": {
         "extension": [
           {
-            "url": "http://foo.com"
+            "url": "http://foo.com",
+            "valueCode": "bar"
           }
         ]
       }

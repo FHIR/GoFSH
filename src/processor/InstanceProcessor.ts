@@ -82,7 +82,7 @@ export class InstanceProcessor {
         .map(p => p.replace(/^_/, ''))
         .join('.');
       const assignmentRule = new ExportableAssignmentRule(path);
-      assignmentRule.value = getFSHValue(key, flatInstance[key], instanceOfJSON.type, fisher);
+      assignmentRule.value = getFSHValue(path, flatInstance[key], instanceOfJSON.type, fisher);
       newRules.push(assignmentRule);
     });
     target.rules = compact(newRules);
