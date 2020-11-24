@@ -15,7 +15,7 @@ export default {
 
   optimize(pkg: Package): void {
     const inlineInstances: ExportableInstance[] = [];
-    [...pkg.instances, ...pkg.profiles].forEach(resource => {
+    [...pkg.instances, ...pkg.profiles, ...pkg.extensions].forEach(resource => {
       const ruleType =
         resource instanceof ExportableInstance
           ? ExportableAssignmentRule
@@ -66,7 +66,7 @@ export default {
           }
         });
 
-        newInstance.id = id ?? `Inline-Instance-for-${resource.id}-${(generatedIdCount += 1)}`;
+        newInstance.id = id ?? `Inline-Instance-for-${resource.id}-${++generatedIdCount}`;
         newInstance.instanceOf = profile ?? resourceType;
         newInstance.usage = 'Inline';
         inlineInstances.push(newInstance);
@@ -76,13 +76,13 @@ export default {
           const inlineInstanceRule = new ExportableAssignmentRule(basePath);
           inlineInstanceRule.isInstance = true;
           inlineInstanceRule.value = newInstance.id;
-          resource.rules.push(inlineInstanceRule);
+          resource.rules.splice(rulesToRemove[0], 0, inlineInstanceRule);
         } else {
           const inlineInstanceRule = new ExportableCaretValueRule('');
           inlineInstanceRule.caretPath = basePath;
           inlineInstanceRule.isInstance = true;
           inlineInstanceRule.value = newInstance.id;
-          resource.rules.push(inlineInstanceRule);
+          resource.rules.splice(rulesToRemove[0], 0, inlineInstanceRule);
         }
       });
     });

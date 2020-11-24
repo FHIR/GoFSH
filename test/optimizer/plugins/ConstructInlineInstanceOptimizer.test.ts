@@ -3,6 +3,7 @@ import { Package } from '../../../src/processor';
 import {
   ExportableAssignmentRule,
   ExportableCaretValueRule,
+  ExportableExtension,
   ExportableInstance,
   ExportableProfile
 } from '../../../src/exportable';
@@ -233,7 +234,7 @@ describe('optimizer', () => {
         const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
         inlineInstanceRule1.value = 'Bar';
         inlineInstanceRule1.isInstance = true;
-        expect(instance.rules).toEqual([nonContainedRule, inlineInstanceRule1]);
+        expect(instance.rules).toEqual([inlineInstanceRule1, nonContainedRule]);
       });
 
       it('should create a profiled inline instance from a contained resource', () => {
@@ -289,12 +290,13 @@ describe('optimizer', () => {
       });
     });
 
-    describe('Profiles', () => {
+    describe('StructureDefinitions', () => {
       let containedResourceType1: ExportableCaretValueRule;
       let containedId1: ExportableCaretValueRule;
       let containedResourceType2: ExportableCaretValueRule;
       let containedId2: ExportableCaretValueRule;
       let profile: ExportableProfile;
+      let extension: ExportableExtension;
 
       beforeEach(() => {
         containedResourceType1 = new ExportableCaretValueRule('');
@@ -313,6 +315,8 @@ describe('optimizer', () => {
 
         profile = new ExportableProfile('Foo');
         profile.parent = 'Patient';
+
+        extension = new ExportableExtension('FooExtension');
       });
 
       it('should have appropriate metadata', () => {
@@ -322,7 +326,7 @@ describe('optimizer', () => {
         expect(optimizer.runAfter).toBeUndefined();
       });
 
-      it('should create inline instances from contained resources', () => {
+      it('should create inline instances from contained resources on a profile', () => {
         profile.rules = [
           containedResourceType1,
           containedId1,
@@ -362,6 +366,48 @@ describe('optimizer', () => {
         inlineInstanceRule2.value = 'Baz';
         inlineInstanceRule2.isInstance = true;
         expect(profile.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
+      });
+
+      it('should create inline instances from contained resources on an extension', () => {
+        extension.rules = [
+          containedResourceType1,
+          containedId1,
+          containedResourceType2,
+          containedId2
+        ];
+        const myPackage = new Package();
+        myPackage.add(extension);
+        optimizer.optimize(myPackage);
+
+        expect(myPackage.instances).toHaveLength(2);
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+        assertExportableInstance(
+          myPackage.instances[1],
+          'Baz',
+          'ValueSet',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        const inlineInstanceRule2 = new ExportableCaretValueRule('');
+        inlineInstanceRule2.caretPath = 'contained[1]';
+        inlineInstanceRule2.value = 'Baz';
+        inlineInstanceRule2.isInstance = true;
+        expect(extension.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
       });
 
       it('should create an inline instance from a contained resource with non-numeric paths', () => {
@@ -487,7 +533,7 @@ describe('optimizer', () => {
         inlineInstanceRule1.caretPath = 'contained[0]';
         inlineInstanceRule1.value = 'Bar';
         inlineInstanceRule1.isInstance = true;
-        expect(profile.rules).toEqual([nonContainedRule, inlineInstanceRule1]);
+        expect(profile.rules).toEqual([inlineInstanceRule1, nonContainedRule]);
       });
 
       it('should create a profiled inline instance from a contained resource', () => {
