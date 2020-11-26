@@ -35,6 +35,48 @@ describe('ValueSetProcessor', () => {
       expect(result).toBeUndefined();
     });
 
+    it('should not convert a ValueSet with an included concept designation', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
+      );
+      input.compose.include[0].concept[0].designation = {
+        value: 'ourse'
+      };
+      const result = ValueSetProcessor.process(input, defs);
+      expect(result).toBeUndefined();
+    });
+
+    it('should not convert a ValueSet with an excluded concept designation', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
+      );
+      input.compose.exclude[0].concept[0].designation = {
+        value: 'chatte'
+      };
+      const result = ValueSetProcessor.process(input, defs);
+      expect(result).toBeUndefined();
+    });
+
+    it('should not convert a ValueSet with a compose.include id', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
+      );
+      input.compose.include[0].id = 'some-id';
+      const result = ValueSetProcessor.process(input, defs);
+      expect(result).toBeUndefined();
+    });
+
+    it('should not convert a ValueSet with a compose.include.system extension', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
+      );
+      input.compose.include[0]._system = {
+        extension: {}
+      };
+      const result = ValueSetProcessor.process(input, defs);
+      expect(result).toBeUndefined();
+    });
+
     it('should convert a ValueSet without a name but with an id', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-valueset-with-id.json'), 'utf-8')
