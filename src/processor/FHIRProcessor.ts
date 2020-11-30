@@ -71,7 +71,7 @@ export class FHIRProcessor {
     });
     this.lake.getAllInstances(true).forEach(wild => {
       try {
-        resources.add(InstanceProcessor.process(wild.content, igForConfig?.content));
+        resources.add(InstanceProcessor.process(wild.content, igForConfig?.content, this.fisher));
       } catch (ex) {
         logger.error(`Could not process Instance at ${wild.path}: ${ex.message}`);
       }
