@@ -1,4 +1,5 @@
 import { fhirdefs, utils } from 'fsh-sushi';
+import { ValueSetProcessor } from './ValueSetProcessor';
 import { WildFHIR } from './WildFHIR';
 
 // Like FSHTank in SUSHI, but it doesn't contain FSH, it contains FHIR.  And who ever heard of a tank of FHIR?  But a lake of FHIR...
@@ -17,8 +18,12 @@ export class LakeOfFHIR implements utils.Fishable {
    * Gets all value sets in the lake
    * @returns {WildFHIR[]}
    */
-  getAllValueSets(): WildFHIR[] {
-    return this.docs.filter(d => d.content.resourceType === 'ValueSet');
+  getAllValueSets(includeUnsupported = true): WildFHIR[] {
+    return this.docs.filter(
+      d =>
+        d.content.resourceType === 'ValueSet' &&
+        (includeUnsupported || ValueSetProcessor.isProcessableValueSet(d.content))
+    );
   }
 
   /**
@@ -41,13 +46,19 @@ export class LakeOfFHIR implements utils.Fishable {
    * Gets all instances in the lake
    * @returns {WildFHIR[]}
    */
-  getAllInstances(): WildFHIR[] {
-    return this.docs.filter(
-      d =>
-        ['StructureDefinition', 'ValueSet', 'CodeSystem', 'ImplementationGuide'].indexOf(
-          d.content.resourceType
-        ) === -1
-    );
+  getAllInstances(includeUnsupportedValueSets = false): WildFHIR[] {
+    return this.docs.filter(d => {
+      switch (d.content.resourceType) {
+        case 'ImplementationGuide':
+        case 'StructureDefinition':
+        case 'CodeSystem':
+          return false;
+        case 'ValueSet':
+          return includeUnsupportedValueSets && !ValueSetProcessor.isProcessableValueSet(d.content);
+        default:
+          return true;
+      }
+    });
   }
 
   fishForFHIR(item: string, ...types: utils.Type[]) {

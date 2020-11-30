@@ -81,15 +81,24 @@ describe('FHIRProcessor', () => {
     expect(codeSystemSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should try to process a ValueSet with the ValueSetProcessor', () => {
+  it('should try to process a supported ValueSet with the ValueSetProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-valueset.json'));
     processor.process();
     expect(valueSetSpy).toHaveBeenCalledTimes(1);
+    expect(instanceSpy).not.toHaveBeenCalled();
   });
 
-  it('should try to process an Instance with the InstanceProcessor', () => {
+  it('should try to process a non-IG/SD/VS/CS Instance with the InstanceProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-patient.json'));
     processor.process();
     expect(instanceSpy).toHaveBeenCalledTimes(1);
+    expect(valueSetSpy).not.toHaveBeenCalled();
+  });
+
+  it('should try to process an unsupported ValueSet with the InstanceProcessor', () => {
+    restockLake(lake, path.join(__dirname, 'fixtures', 'unsupported-valueset.json'));
+    processor.process();
+    expect(instanceSpy).toHaveBeenCalledTimes(1);
+    expect(valueSetSpy).not.toHaveBeenCalled();
   });
 });
