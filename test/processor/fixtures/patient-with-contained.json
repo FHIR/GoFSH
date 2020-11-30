@@ -1,0 +1,10 @@
+{
+  "resourceType": "Patient",
+  "id": "patient-with-contained",
+  "contained": [
+    {
+      "resourceType": "Observation",
+      "status": "final"
+    }
+  ]
+}

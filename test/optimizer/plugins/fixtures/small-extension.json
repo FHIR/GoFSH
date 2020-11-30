@@ -4,6 +4,7 @@
   "type": "Extension",
   "name": "SmallExtension",
   "url": "https://demo.org/StructureDefinition/SmallExtension",
+  "derivation": "constraint",
   "snapshot": {
     "element": []
   }

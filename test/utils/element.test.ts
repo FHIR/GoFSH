@@ -125,18 +125,28 @@ describe('element', () => {
 
   describe('#getFSHValue', () => {
     it('should convert a code value into a FSHCode', () => {
-      const value = getFSHValue('type[0].aggregation[0]', 'contained', 'ElementDefinition', defs);
+      const value = getFSHValue(
+        'type[0].aggregation[0]',
+        { 'type[0].aggregation[0]': 'contained' },
+        'ElementDefinition',
+        defs
+      );
       expect(value).toEqual(new fshtypes.FshCode('contained'));
     });
 
     it('should FSHify a string', () => {
-      const value = getFSHValue('short', 'This is a "string"', 'ElementDefinition', defs);
+      const value = getFSHValue(
+        'short',
+        { short: 'This is a "string"' },
+        'ElementDefinition',
+        defs
+      );
       expect(value).toEqual('This is a \\"string\\"');
     });
     it('should leave a non-code value as is', () => {
       const value = getFSHValue(
         'type[0].profile[0]',
-        'http://foo.com/bar',
+        { 'type[0].profile[0]': 'http://foo.com/bar' },
         'ElementDefinition',
         defs
       );

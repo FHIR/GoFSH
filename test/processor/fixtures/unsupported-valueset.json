@@ -1,9 +1,9 @@
 {
   "resourceType": "ValueSet",
-  "name": "ComposedValueSet",
-  "id": "composed-value-set",
-  "title": "Composed Value Set",
-  "description": "This is value set has many elements.",
+  "name": "UnsupportedValueSet",
+  "id": "unsupported.valueset",
+  "title": "Unsupported ValueSet",
+  "description": "This value set is not supported by ValueSet FSH syntax because it has a concept designation.",
   "compose": {
     "include": [
       {
@@ -11,7 +11,11 @@
         "concept": [
           {
             "code": "BEAR",
-            "display": "Bear"
+            "display": "Bear",
+            "designation": {
+              "language": "fr",
+              "value": "ourse"
+            }
           },
           {
             "code": "PEL",
