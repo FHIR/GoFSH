@@ -13,15 +13,30 @@ export class ExportableValueSetConceptComponentRule extends fshrules.ValueSetCon
   }
 
   toFSH() {
-    const inclusionPart = `* ${this.inclusion ? 'include' : 'exclude'} `;
-    let conceptPart = this.concepts.map(concept => concept.toString()).join(' and ');
-    let fromPart = fromString(this.from);
-    // if the result is more than 100 characters long, build it again, but with linebreaks
-    if (inclusionPart.length + conceptPart.length + fromPart.length > 100) {
-      conceptPart = this.concepts.map(concept => concept.toString()).join(`${EOL}  and `);
-      fromPart = `${EOL} ` + fromString(this.from, `${EOL}  and `);
+    // if this rule has valueSets in its "from" definition, write using the typical syntax
+    // otherwise, write each code on its own line, and omit "include" and "from system"
+    if (this.from.valueSets?.length > 0) {
+      const inclusionPart = `* ${this.inclusion ? 'include' : 'exclude'} `;
+      let conceptPart = this.concepts.map(concept => concept.toString()).join(' and ');
+      let fromPart = fromString(this.from);
+      // if the result is more than 100 characters long, build it again, but with linebreaks
+      if (inclusionPart.length + conceptPart.length + fromPart.length > 100) {
+        conceptPart = this.concepts.map(concept => concept.toString()).join(` and${EOL}    `);
+        fromPart = `${EOL}   ` + fromString(this.from, ` and${EOL}    `);
+      }
+      return `${inclusionPart}${conceptPart}${fromPart}`;
+    } else {
+      const inclusionPart = `* ${this.inclusion ? '' : 'exclude '}`;
+      return this.concepts
+        .map(concept => {
+          if (!concept.system && this.from.system) {
+            concept.system = this.from.system;
+          }
+
+          return `${inclusionPart}${concept}`;
+        })
+        .join(EOL);
     }
-    return `${inclusionPart}${conceptPart}${fromPart}`;
   }
 }
 
@@ -37,8 +52,8 @@ export class ExportableValueSetFilterComponentRule extends fshrules.ValueSetFilt
     let filterPart = this.buildFilterString();
     // if the result is more than 100 characters long, build it again, but with linebreaks
     if (inclusionPart.length + fromPart.length + filterPart.length > 100) {
-      fromPart = fromString(this.from, `${EOL}  and `);
-      filterPart = `${EOL} ` + this.buildFilterString(`${EOL}  and `);
+      fromPart = fromString(this.from, ` and${EOL}    `);
+      filterPart = `${EOL}   ` + this.buildFilterString(` and${EOL}    `);
     }
     return `${inclusionPart}${fromPart}${filterPart}`;
   }

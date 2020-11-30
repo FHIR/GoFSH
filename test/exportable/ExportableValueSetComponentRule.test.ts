@@ -12,7 +12,7 @@ describe('ExportableValueSetConceptComponentRule', () => {
     const rule = new ExportableValueSetConceptComponentRule(true);
     rule.concepts.push(new fshtypes.FshCode('foo', 'bar'));
 
-    expect(rule.toFSH()).toBe('* include bar#foo');
+    expect(rule.toFSH()).toBe('* bar#foo');
   });
 
   it('should export a ValueSetConceptComponentRule with a single excluded concept', () => {
@@ -26,7 +26,7 @@ describe('ExportableValueSetConceptComponentRule', () => {
     const rule = new ExportableValueSetConceptComponentRule(true);
     rule.concepts.push(new fshtypes.FshCode('foo', 'bar', 'baz'));
 
-    expect(rule.toFSH()).toBe('* include bar#foo "baz"');
+    expect(rule.toFSH()).toBe('* bar#foo "baz"');
   });
 
   it('should export a ValueSetConceptComponentRule with a concept from a system', () => {
@@ -34,7 +34,7 @@ describe('ExportableValueSetConceptComponentRule', () => {
     rule.concepts.push(new fshtypes.FshCode('foo'));
     rule.from.system = 'someSystem';
 
-    expect(rule.toFSH()).toBe('* include #foo from system someSystem');
+    expect(rule.toFSH()).toBe('* someSystem#foo');
   });
 
   it('should export a ValueSetConceptComponentRule with several concepts from a system', () => {
@@ -43,7 +43,7 @@ describe('ExportableValueSetConceptComponentRule', () => {
     rule.concepts.push(new fshtypes.FshCode('bar'));
     rule.from.system = 'someSystem';
 
-    expect(rule.toFSH()).toBe('* include #foo and #bar from system someSystem');
+    expect(rule.toFSH()).toBe(`* someSystem#foo${EOL}* someSystem#bar`);
   });
 
   it('should export a ValueSetConceptComponentRule with a concept from a valueset', () => {
@@ -182,13 +182,13 @@ describe('ExportableValueSetFilterComponentRule', () => {
 
     const result = rule.toFSH();
     const expectedResult = [
-      '* include #cookies "Cookies"',
-      '  and #candy "Candy"',
-      '  and #chips "Chips"',
-      '  and #cakes "Cakes"',
-      '  and #verylargecakes "Very Large Cakes"',
-      '  from system http://fhir.food-pyramid.org/FoodPyramidGuide/CodeSystems/FoodGroupsCS',
-      '  and valueset http://fhir.food-pyramid.org/FoodPyramidGuide/ValueSets/DeliciousVS'
+      '* include #cookies "Cookies" and',
+      '    #candy "Candy" and',
+      '    #chips "Chips" and',
+      '    #cakes "Cakes" and',
+      '    #verylargecakes "Very Large Cakes"',
+      '    from system http://fhir.food-pyramid.org/FoodPyramidGuide/CodeSystems/FoodGroupsCS and',
+      '    valueset http://fhir.food-pyramid.org/FoodPyramidGuide/ValueSets/DeliciousVS'
     ].join(EOL);
     expect(result).toEqual(expectedResult);
   });
@@ -214,12 +214,12 @@ describe('ExportableValueSetFilterComponentRule', () => {
 
     const result = rule.toFSH();
     const expectedResult = [
-      '* include codes from system http://fhir.example.org/myImplementationGuide/CodeSystem/AppleCS',
-      '  and valueset http://fhir.example.org/myImplementationGuide/ValueSet/BananaVS',
-      '  and http://fhir.example.org/myImplementationGuide/ValueSet/CupcakeVS',
-      '  where display = "this and that"',
-      '  and version exists true',
-      '  and concept descendent-of #comestible'
+      '* include codes from system http://fhir.example.org/myImplementationGuide/CodeSystem/AppleCS and',
+      '    valueset http://fhir.example.org/myImplementationGuide/ValueSet/BananaVS and',
+      '    http://fhir.example.org/myImplementationGuide/ValueSet/CupcakeVS',
+      '    where display = "this and that" and',
+      '    version exists true and',
+      '    concept descendent-of #comestible'
     ].join(EOL);
     expect(result).toEqual(expectedResult);
   });
