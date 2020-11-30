@@ -2,6 +2,7 @@ import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import { ExportableOnlyRule } from '../../exportable';
+import { resolveURL } from '../utils';
 
 const FISHER_TYPES = [
   utils.Type.Resource,
@@ -19,14 +20,7 @@ export default {
       sd.rules.forEach(rule => {
         if (rule instanceof ExportableOnlyRule) {
           rule.types.forEach(onlyRuleType => {
-            // Only substitute the name if the name resolves to the same resource by default (in case of duplicate names)
-            const typeSd = fisher.fishForFHIR(onlyRuleType.type, ...FISHER_TYPES);
-            if (
-              typeSd?.name &&
-              fisher.fishForFHIR(typeSd.name, ...FISHER_TYPES).url === onlyRuleType.type
-            ) {
-              onlyRuleType.type = typeSd.name;
-            }
+            onlyRuleType.type = resolveURL(onlyRuleType.type, FISHER_TYPES, fisher);
           });
         }
       });

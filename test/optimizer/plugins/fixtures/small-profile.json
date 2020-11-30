@@ -4,6 +4,7 @@
   "type": "Resource",
   "name": "Patient",
   "url": "https://demo.org/StructureDefinition/Patient",
+  "derivation": "constraint",
   "snapshot": {
     "element": []
   }

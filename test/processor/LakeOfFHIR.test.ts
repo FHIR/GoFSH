@@ -8,26 +8,28 @@ describe('LakeOfHIR', () => {
 
   beforeAll(() => {
     lake = new LakeOfFHIR(
-      getRawFHIRs(
+      getWildFHIRs(
         'simple-profile.json',
         'simple-extension.json',
         'simple-codesystem.json',
         'simple-valueset.json',
         'simple-ig.json',
-        'rocky-balboa.json'
+        'rocky-balboa.json',
+        'unsupported-valueset.json'
       )
     );
   });
 
   describe('#constructor', () => {
     it('should store all the passed in values', () => {
-      expect(lake.docs).toHaveLength(6);
+      expect(lake.docs).toHaveLength(7);
       expect(lake.docs[0].content.id).toBe('simple.profile');
       expect(lake.docs[1].content.id).toBe('simple.extension');
       expect(lake.docs[2].content.id).toBe('simple.codesystem');
       expect(lake.docs[3].content.id).toBe('simple.valueset');
       expect(lake.docs[4].content.id).toBe('simple.ig');
       expect(lake.docs[5].content.id).toBe('rocky.balboa');
+      expect(lake.docs[6].content.id).toBe('unsupported.valueset');
     });
   });
 
@@ -41,8 +43,22 @@ describe('LakeOfHIR', () => {
   });
 
   describe('#getAllValueSets', () => {
-    it('should get all value sets', () => {
+    it('should get all value sets by default', () => {
       const results = lake.getAllValueSets();
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBe('simple.valueset');
+      expect(results[1].content.id).toBe('unsupported.valueset');
+    });
+
+    it('should get all value sets when includeUnsupported is true', () => {
+      const results = lake.getAllValueSets(true);
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBe('simple.valueset');
+      expect(results[1].content.id).toBe('unsupported.valueset');
+    });
+
+    it('should get only supported value sets when includeUnsupported is false', () => {
+      const results = lake.getAllValueSets(false);
       expect(results).toHaveLength(1);
       expect(results[0].content.id).toBe('simple.valueset');
     });
@@ -65,10 +81,23 @@ describe('LakeOfHIR', () => {
   });
 
   describe('#getAllInstances', () => {
-    it('should get all unsupported resources', () => {
+    it('should get all non-IG/SD/VS/CS resources by default', () => {
       const results = lake.getAllInstances();
       expect(results).toHaveLength(1);
       expect(results[0].content.id).toBe('rocky.balboa');
+    });
+
+    it('should get all non-IG/SD/VS/CS resources when includeUnsupportedValueSets is false', () => {
+      const results = lake.getAllInstances(false);
+      expect(results).toHaveLength(1);
+      expect(results[0].content.id).toBe('rocky.balboa');
+    });
+
+    it('should also get unsupported value sets when includeUnsupportedValueSets is true', () => {
+      const results = lake.getAllInstances(true);
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBe('rocky.balboa');
+      expect(results[1].content.id).toBe('unsupported.valueset');
     });
   });
 
@@ -294,7 +323,7 @@ describe('LakeOfHIR', () => {
   });
 });
 
-function getRawFHIRs(...files: string[]): WildFHIR[] {
+function getWildFHIRs(...files: string[]): WildFHIR[] {
   return files.map(f => {
     const fPath = path.join(__dirname, 'fixtures', f);
     return new WildFHIR(fs.readJSONSync(fPath), fPath);
