@@ -62,14 +62,14 @@ export class FHIRProcessor {
         logger.error(`Could not process CodeSystem at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllValueSets().forEach(wild => {
+    this.lake.getAllValueSets(false).forEach(wild => {
       try {
         resources.add(ValueSetProcessor.process(wild.content, this.fisher));
       } catch (ex) {
         logger.error(`Could not process ValueSet at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllInstances().forEach(wild => {
+    this.lake.getAllInstances(true).forEach(wild => {
       try {
         resources.add(InstanceProcessor.process(wild.content, igForConfig?.content, this.fisher));
       } catch (ex) {
