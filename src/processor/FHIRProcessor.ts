@@ -55,7 +55,7 @@ export class FHIRProcessor {
         logger.error(`Could not process StructureDefinition at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllCodeSystems().forEach(wild => {
+    this.lake.getAllCodeSystems(false).forEach(wild => {
       try {
         resources.add(CodeSystemProcessor.process(wild.content, this.fisher));
       } catch (ex) {

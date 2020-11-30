@@ -15,14 +15,15 @@ describe('LakeOfHIR', () => {
         'simple-valueset.json',
         'simple-ig.json',
         'rocky-balboa.json',
-        'unsupported-valueset.json'
+        'unsupported-valueset.json',
+        'unsupported-codesystem.json'
       )
     );
   });
 
   describe('#constructor', () => {
     it('should store all the passed in values', () => {
-      expect(lake.docs).toHaveLength(7);
+      expect(lake.docs).toHaveLength(8);
       expect(lake.docs[0].content.id).toBe('simple.profile');
       expect(lake.docs[1].content.id).toBe('simple.extension');
       expect(lake.docs[2].content.id).toBe('simple.codesystem');
@@ -30,6 +31,7 @@ describe('LakeOfHIR', () => {
       expect(lake.docs[4].content.id).toBe('simple.ig');
       expect(lake.docs[5].content.id).toBe('rocky.balboa');
       expect(lake.docs[6].content.id).toBe('unsupported.valueset');
+      expect(lake.docs[7].content.id).toBe('unsupported.codesystem');
     });
   });
 
@@ -65,8 +67,22 @@ describe('LakeOfHIR', () => {
   });
 
   describe('#getAllCodeSystems', () => {
-    it('should get all code systems', () => {
+    it('should get all code systems by default', () => {
       const results = lake.getAllCodeSystems();
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBe('simple.codesystem');
+      expect(results[1].content.id).toBe('unsupported.codesystem');
+    });
+
+    it('should get all code systems when includeUnsupported is true', () => {
+      const results = lake.getAllCodeSystems(true);
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBe('simple.codesystem');
+      expect(results[1].content.id).toBe('unsupported.codesystem');
+    });
+
+    it('should get only supported code systems when includeUnsupported is false', () => {
+      const results = lake.getAllCodeSystems(false);
       expect(results).toHaveLength(1);
       expect(results[0].content.id).toBe('simple.codesystem');
     });
@@ -93,11 +109,12 @@ describe('LakeOfHIR', () => {
       expect(results[0].content.id).toBe('rocky.balboa');
     });
 
-    it('should also get unsupported value sets when includeUnsupportedValueSets is true', () => {
+    it('should also get unsupported value sets and code systems when includeUnsupportedTerminologyResources is true', () => {
       const results = lake.getAllInstances(true);
-      expect(results).toHaveLength(2);
+      expect(results).toHaveLength(3);
       expect(results[0].content.id).toBe('rocky.balboa');
       expect(results[1].content.id).toBe('unsupported.valueset');
+      expect(results[2].content.id).toBe('unsupported.codesystem');
     });
   });
 
