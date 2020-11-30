@@ -11,7 +11,7 @@ export class ExportableAssignmentRule extends fshrules.AssignmentRule implements
     if (typeof this.value === 'boolean' || typeof this.value === 'number') {
       printableValue = String(this.value);
     } else if (typeof this.value === 'string') {
-      printableValue = `"${this.value}"`;
+      printableValue = this.isInstance ? this.value : `"${this.value}"`;
     } else if (
       this.value instanceof fshtypes.FshCode ||
       this.value instanceof fshtypes.FshQuantity ||

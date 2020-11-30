@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { Package } from '../../../src/processor';
 import {
@@ -183,6 +184,81 @@ describe('optimizer', () => {
         expect(instance.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
       });
 
+      it('should create inline instances from contained resources with numerical ids', () => {
+        containedId1.value = '123';
+        containedId2.value = '456';
+        instance.rules = [
+          containedResourceType1,
+          containedId1,
+          containedResourceType2,
+          containedId2
+        ];
+        const myPackage = new Package();
+        myPackage.add(instance);
+        optimizer.optimize(myPackage);
+
+        expect(myPackage.instances).toHaveLength(3);
+        const expectedRule1 = cloneDeep(containedId1);
+        expectedRule1.path = 'id';
+        assertExportableInstance(
+          myPackage.instances[1],
+          'Inline-Instance-for-Foo-1',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [expectedRule1]
+        );
+
+        const expectedRule2 = cloneDeep(containedId2);
+        expectedRule2.path = 'id';
+        assertExportableInstance(
+          myPackage.instances[2],
+          'Inline-Instance-for-Foo-2',
+          'ValueSet',
+          'Inline',
+          undefined,
+          undefined,
+          [expectedRule2]
+        );
+
+        const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+        inlineInstanceRule1.value = 'Inline-Instance-for-Foo-1';
+        inlineInstanceRule1.isInstance = true;
+        const inlineInstanceRule2 = new ExportableAssignmentRule('contained[1]');
+        inlineInstanceRule2.value = 'Inline-Instance-for-Foo-2';
+        inlineInstanceRule2.isInstance = true;
+        expect(instance.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
+      });
+
+      it('should create inline instances from contained resources with repeated ids', () => {
+        const someInstance = new ExportableInstance('repeated-id');
+        containedId1.value = 'repeated-id';
+        instance.rules = [containedResourceType1, containedId1];
+        const myPackage = new Package();
+        myPackage.add(someInstance);
+        myPackage.add(instance);
+        optimizer.optimize(myPackage);
+
+        expect(myPackage.instances).toHaveLength(3);
+        const expectedRule = cloneDeep(containedId1);
+        expectedRule.path = 'id';
+        assertExportableInstance(
+          myPackage.instances[2],
+          'Inline-Instance-for-Foo-1',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [expectedRule]
+        );
+
+        const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+        inlineInstanceRule1.value = 'Inline-Instance-for-Foo-1';
+        inlineInstanceRule1.isInstance = true;
+        expect(instance.rules).toEqual([inlineInstanceRule1]);
+      });
+
       it('should create an inline instance from a contained resource with additional rules', () => {
         const containedString = new ExportableAssignmentRule('contained[0].valueString');
         containedString.value = 'string value';
@@ -191,6 +267,8 @@ describe('optimizer', () => {
         myPackage.add(instance);
         optimizer.optimize(myPackage);
 
+        const expectedRule = cloneDeep(containedString);
+        expectedRule.path = 'valueString';
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
           myPackage.instances[1],
@@ -199,7 +277,7 @@ describe('optimizer', () => {
           'Inline',
           undefined,
           undefined,
-          [containedString]
+          [expectedRule]
         );
 
         const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
@@ -220,6 +298,8 @@ describe('optimizer', () => {
         myPackage.add(instance);
         optimizer.optimize(myPackage);
 
+        const expectedRule = cloneDeep(containedString);
+        expectedRule.path = 'valueString';
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
           myPackage.instances[1],
@@ -228,7 +308,7 @@ describe('optimizer', () => {
           'Inline',
           undefined,
           undefined,
-          [containedString]
+          [expectedRule]
         );
 
         const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
@@ -483,7 +563,7 @@ describe('optimizer', () => {
         optimizer.optimize(myPackage);
 
         expect(myPackage.instances).toHaveLength(1);
-        const expectedRule = new ExportableAssignmentRule('contained[0].valueString');
+        const expectedRule = new ExportableAssignmentRule('valueString');
         expectedRule.value = 'string value';
         assertExportableInstance(
           myPackage.instances[0],
@@ -516,7 +596,7 @@ describe('optimizer', () => {
         myPackage.add(profile);
         optimizer.optimize(myPackage);
 
-        const expectedRule = new ExportableAssignmentRule('contained[0].valueString');
+        const expectedRule = new ExportableAssignmentRule('valueString');
         expectedRule.value = 'string value';
         expect(myPackage.instances).toHaveLength(1);
         assertExportableInstance(
