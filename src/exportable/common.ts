@@ -99,13 +99,10 @@ export function fshifyString(input: string): string {
     .replace(/\t/g, '\\t');
 }
 
-export function splitOnPathPeriods(path: string): string[] {
-  return path.split(/\.(?![^\[]*\])/g); // match a period that isn't within square brackets
-}
-
 // Removes the underscore on paths of children of primitive elements
 export function removeUnderscoreForPrimitiveChildPath(input: string): string {
-  return splitOnPathPeriods(input)
+  return input
+    .split('.')
     .map(p => p.replace(/^_/, ''))
     .join('.');
 }
