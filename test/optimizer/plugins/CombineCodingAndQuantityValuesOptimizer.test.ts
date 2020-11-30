@@ -89,6 +89,96 @@ describe('optimizer', () => {
         expect(profile.rules[0]).toEqual(expectedRule);
       });
 
+      it('should move the combined rule to the parent CodeableConcept when the rule is on the child coding[0] and there are no other rules on the child', () => {
+        const profile = new ExportableProfile('MyProfile');
+        const codeRule = new ExportableCaretValueRule('note');
+        codeRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].code';
+        codeRule.value = new FshCode('raspberry');
+        const systemRule = new ExportableCaretValueRule('note');
+        systemRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].system';
+        systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
+        const displayRule = new ExportableCaretValueRule('note');
+        displayRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].display';
+        displayRule.value = 'fresh, delicious raspberries';
+        profile.rules.push(codeRule, systemRule, displayRule);
+        const myPackage = new Package();
+        myPackage.add(profile);
+
+        const expectedRule = new ExportableCaretValueRule('note');
+        expectedRule.caretPath = 'extension[0].valueCodeableConcept';
+        expectedRule.value = new FshCode(
+          'raspberry',
+          'https://fruit.net/CodeSystems/FruitCS',
+          'fresh, delicious raspberries'
+        );
+        optimizer.optimize(myPackage);
+        expect(profile.rules.length).toBe(1);
+        expect(profile.rules[0]).toEqual(expectedRule);
+      });
+
+      it('should not move the combined rule to the parent CodeableConcept when it has more than one coding', () => {
+        const profile = new ExportableProfile('MyProfile');
+        const codeRule = new ExportableCaretValueRule('note');
+        codeRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].code';
+        codeRule.value = new FshCode('raspberry');
+        const systemRule = new ExportableCaretValueRule('note');
+        systemRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].system';
+        systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
+        const displayRule = new ExportableCaretValueRule('note');
+        displayRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].display';
+        displayRule.value = 'fresh, delicious raspberries';
+        const secondCodeRule = new ExportableCaretValueRule('note');
+        secondCodeRule.caretPath = 'extension[0].valueCodeableConcept.coding[1].code';
+        secondCodeRule.value = new FshCode('strawberry');
+        profile.rules.push(codeRule, systemRule, displayRule, secondCodeRule);
+        const myPackage = new Package();
+        myPackage.add(profile);
+
+        const expectedRule = new ExportableCaretValueRule('note');
+        expectedRule.caretPath = 'extension[0].valueCodeableConcept.coding[0]';
+        expectedRule.value = new FshCode(
+          'raspberry',
+          'https://fruit.net/CodeSystems/FruitCS',
+          'fresh, delicious raspberries'
+        );
+        optimizer.optimize(myPackage);
+        expect(profile.rules.length).toBe(2);
+        expect(profile.rules[0]).toEqual(expectedRule);
+        expect(profile.rules[1]).toEqual(secondCodeRule);
+      });
+
+      it('should not move the combined rule to the parent CodeableConcept when there are additional rules on the coding', () => {
+        const profile = new ExportableProfile('MyProfile');
+        const codeRule = new ExportableCaretValueRule('note');
+        codeRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].code';
+        codeRule.value = new FshCode('raspberry');
+        const systemRule = new ExportableCaretValueRule('note');
+        systemRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].system';
+        systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
+        const displayRule = new ExportableCaretValueRule('note');
+        displayRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].display';
+        displayRule.value = 'fresh, delicious raspberries';
+        const idRule = new ExportableCaretValueRule('note');
+        idRule.caretPath = 'extension[0].valueCodeableConcept.coding[0].id';
+        idRule.value = 'SecretElementIdentifier';
+
+        profile.rules.push(codeRule, systemRule, displayRule, idRule);
+        const myPackage = new Package();
+        myPackage.add(profile);
+
+        const expectedRule = new ExportableCaretValueRule('note');
+        expectedRule.caretPath = 'extension[0].valueCodeableConcept.coding[0]';
+        expectedRule.value = new FshCode(
+          'raspberry',
+          'https://fruit.net/CodeSystems/FruitCS',
+          'fresh, delicious raspberries'
+        );
+        optimizer.optimize(myPackage);
+        expect(profile.rules.length).toBe(2);
+        expect(profile.rules[0]).toEqual(expectedRule);
+        expect(profile.rules[1]).toEqual(idRule);
+      });
+
       it('should combine rules on code and unit into a single rule', () => {
         const extension = new ExportableExtension('MyExtension');
         const codeRule = new ExportableCaretValueRule('');
@@ -292,16 +382,16 @@ describe('optimizer', () => {
       // assignment rule tests with instances
       it('should combine rules on code and system into a single rule', () => {
         const instance = new ExportableInstance('MyProfile');
-        instance.instanceOf = 'Observation';
-        const codeRule = new ExportableAssignmentRule('category.coding.code');
+        instance.instanceOf = 'Questionnaire';
+        const codeRule = new ExportableAssignmentRule('code.code');
         codeRule.value = new FshCode('gooseberry');
-        const systemRule = new ExportableAssignmentRule('category.coding.system');
+        const systemRule = new ExportableAssignmentRule('code.system');
         systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
         instance.rules.push(codeRule, systemRule);
         const myPackage = new Package();
         myPackage.add(instance);
 
-        const expectedRule = new ExportableAssignmentRule('category.coding');
+        const expectedRule = new ExportableAssignmentRule('code');
         expectedRule.value = new FshCode('gooseberry', 'https://fruit.net/CodeSystems/FruitCS');
         optimizer.optimize(myPackage);
         expect(instance.rules.length).toBe(1);
@@ -310,16 +400,16 @@ describe('optimizer', () => {
 
       it('should combine rules on code and display into a single rule', () => {
         const instance = new ExportableInstance('MyProfile');
-        instance.instanceOf = 'Observation';
-        const codeRule = new ExportableAssignmentRule('category.coding.code');
+        instance.instanceOf = 'Questionnaire';
+        const codeRule = new ExportableAssignmentRule('code.code');
         codeRule.value = new FshCode('gooseberry');
-        const displayRule = new ExportableAssignmentRule('category.coding.display');
+        const displayRule = new ExportableAssignmentRule('code.display');
         displayRule.value = 'the goose is loose';
         instance.rules.push(codeRule, displayRule);
         const myPackage = new Package();
         myPackage.add(instance);
 
-        const expectedRule = new ExportableAssignmentRule('category.coding');
+        const expectedRule = new ExportableAssignmentRule('code');
         expectedRule.value = new FshCode('gooseberry', undefined, 'the goose is loose');
         optimizer.optimize(myPackage);
         expect(instance.rules.length).toBe(1);
@@ -328,18 +418,18 @@ describe('optimizer', () => {
 
       it('should combine rules on code, system, and display into a single rule', () => {
         const instance = new ExportableInstance('MyProfile');
-        instance.instanceOf = 'Observation';
-        const codeRule = new ExportableAssignmentRule('category.coding.code');
+        instance.instanceOf = 'Questionnaire';
+        const codeRule = new ExportableAssignmentRule('code.code');
         codeRule.value = new FshCode('gooseberry');
-        const systemRule = new ExportableAssignmentRule('category.coding.system');
+        const systemRule = new ExportableAssignmentRule('code.system');
         systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
-        const displayRule = new ExportableAssignmentRule('category.coding.display');
+        const displayRule = new ExportableAssignmentRule('code.display');
         displayRule.value = 'the goose is loose';
         instance.rules.push(codeRule, systemRule, displayRule);
         const myPackage = new Package();
         myPackage.add(instance);
 
-        const expectedRule = new ExportableAssignmentRule('category.coding');
+        const expectedRule = new ExportableAssignmentRule('code');
         expectedRule.value = new FshCode(
           'gooseberry',
           'https://fruit.net/CodeSystems/FruitCS',
@@ -348,6 +438,84 @@ describe('optimizer', () => {
         optimizer.optimize(myPackage);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
+      });
+
+      it('should move the combined rule to the parent CodeableConcept when the rule is on the child coding[0] and there are no other rules on the child', () => {
+        const instance = new ExportableInstance('MyProfile');
+        instance.instanceOf = 'Observation';
+        const codeRule = new ExportableAssignmentRule('category.coding[0].code');
+        codeRule.value = new FshCode('gooseberry');
+        const systemRule = new ExportableAssignmentRule('category.coding[0].system');
+        systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
+        const displayRule = new ExportableAssignmentRule('category.coding[0].display');
+        displayRule.value = 'the goose is loose';
+        instance.rules.push(codeRule, systemRule, displayRule);
+        const myPackage = new Package();
+        myPackage.add(instance);
+
+        const expectedRule = new ExportableAssignmentRule('category');
+        expectedRule.value = new FshCode(
+          'gooseberry',
+          'https://fruit.net/CodeSystems/FruitCS',
+          'the goose is loose'
+        );
+        optimizer.optimize(myPackage);
+        expect(instance.rules.length).toBe(1);
+        expect(instance.rules[0]).toEqual(expectedRule);
+      });
+
+      it('should not move the combined rule to the parent CodeableConcept when it has more than one coding', () => {
+        const instance = new ExportableInstance('MyProfile');
+        instance.instanceOf = 'Observation';
+        const codeRule = new ExportableAssignmentRule('category.coding[0].code');
+        codeRule.value = new FshCode('gooseberry');
+        const systemRule = new ExportableAssignmentRule('category.coding[0].system');
+        systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
+        const displayRule = new ExportableAssignmentRule('category.coding[0].display');
+        displayRule.value = 'the goose is loose';
+        const secondCodeRule = new ExportableAssignmentRule('category.coding[1].code');
+        secondCodeRule.value = 'strawberry';
+        instance.rules.push(codeRule, systemRule, displayRule, secondCodeRule);
+        const myPackage = new Package();
+        myPackage.add(instance);
+
+        const expectedRule = new ExportableAssignmentRule('category.coding[0]');
+        expectedRule.value = new FshCode(
+          'gooseberry',
+          'https://fruit.net/CodeSystems/FruitCS',
+          'the goose is loose'
+        );
+        optimizer.optimize(myPackage);
+        expect(instance.rules.length).toBe(2);
+        expect(instance.rules[0]).toEqual(expectedRule);
+        expect(instance.rules[1]).toEqual(secondCodeRule);
+      });
+
+      it('should not move the combined rule to the parent CodeableConcept when there are additional rules on the coding', () => {
+        const instance = new ExportableInstance('MyProfile');
+        instance.instanceOf = 'Observation';
+        const codeRule = new ExportableAssignmentRule('category.coding[0].code');
+        codeRule.value = new FshCode('gooseberry');
+        const systemRule = new ExportableAssignmentRule('category.coding[0].system');
+        systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
+        const displayRule = new ExportableAssignmentRule('category.coding[0].display');
+        displayRule.value = 'the goose is loose';
+        const idRule = new ExportableAssignmentRule('category.coding[0].id');
+        idRule.value = 'ExtraElementIdentifier';
+        instance.rules.push(codeRule, systemRule, displayRule, idRule);
+        const myPackage = new Package();
+        myPackage.add(instance);
+
+        const expectedRule = new ExportableAssignmentRule('category.coding[0]');
+        expectedRule.value = new FshCode(
+          'gooseberry',
+          'https://fruit.net/CodeSystems/FruitCS',
+          'the goose is loose'
+        );
+        optimizer.optimize(myPackage);
+        expect(instance.rules.length).toBe(2);
+        expect(instance.rules[0]).toEqual(expectedRule);
+        expect(instance.rules[1]).toEqual(idRule);
       });
 
       it('should combine rules on code and unit into a single rule', () => {
@@ -503,9 +671,9 @@ describe('optimizer', () => {
       it('should not combine rules that have different base paths', () => {
         const instance = new ExportableInstance('MyProfile');
         instance.instanceOf = 'Observation';
-        const codeRule = new ExportableAssignmentRule('category.coding.code');
+        const codeRule = new ExportableAssignmentRule('category.coding[0].code');
         codeRule.value = new FshCode('gooseberry');
-        const displayRule = new ExportableAssignmentRule('method.coding.display');
+        const displayRule = new ExportableAssignmentRule('method.coding[0].display');
         displayRule.value = 'the goose is loose';
         instance.rules.push(codeRule, displayRule);
         const myPackage = new Package();
