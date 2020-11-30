@@ -22,15 +22,16 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   logger.info(`Using output directory: ${output}`);
   return output;
 }
-
-export async function getResources(
-  inDir: string,
-  defs: fhirdefs.FHIRDefinitions
-): Promise<Package> {
+export async function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions) {
   const lake = getLakeOfFHIR(inDir);
   const igIniIgPath = getIgPathFromIgIni(inDir);
   const fisher = new MasterFisher(lake, defs);
   const processor = new FHIRProcessor(lake, fisher, igIniIgPath);
+  return processor;
+}
+
+export async function getResources(processor: FHIRProcessor): Promise<Package> {
+  const fisher = processor.getFisher();
   const resources = processor.process();
   // Dynamically load and run the optimizers
   const optimizers = await loadOptimizers();
@@ -42,14 +43,9 @@ export async function getResources(
 }
 
 export async function getConfig(
-  inDir: string,
-  defs: fhirdefs.FHIRDefinitions,
+  processor: FHIRProcessor,
   externalDeps: string[]
 ): Promise<ExportableConfiguration> {
-  const lake = getLakeOfFHIR(inDir);
-  const igIniIgPath = getIgPathFromIgIni(inDir);
-  const fisher = new MasterFisher(lake, defs);
-  const processor = new FHIRProcessor(lake, fisher, igIniIgPath);
   const config = processor.processConfig(externalDeps);
   return config;
 }

@@ -3,11 +3,12 @@
 import path from 'path';
 import fs from 'fs-extra';
 import program from 'commander';
-import { fhirdefs, utils } from 'fsh-sushi';
+import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
 
 import {
   ensureOutputDir,
   getInputDir,
+  getFhirProcessor,
   getResources,
   loadExternalDependencies,
   writeFSH
@@ -62,26 +63,17 @@ async function app() {
 
   // Load dependencies
   const defs = new fhirdefs.FHIRDefinitions();
-  const dependencies = program.dependency;
+  let dependencies = program.dependency;
 
   // Trim empty spaces from commad line dependencies
-  if (dependencies && dependencies.length > 0) {
-    dependencies.forEach((dep: string, i: number) => {
-      dependencies[i] = dep.trim();
-    });
-  }
+  dependencies = dependencies?.map((dep: string) => dep.trim());
 
-  const config = await getConfig(inDir, defs, dependencies);
-  let allDependencies: string[];
+  const processor = await getFhirProcessor(inDir, defs);
+  const config = await getConfig(processor, dependencies);
 
-  if (config.config.dependencies && config.config.dependencies.length > 0) {
-    allDependencies = [];
-
-    config.config.dependencies.forEach(dep => {
-      const newDep = `${dep.packageId}@${dep.version}`;
-      allDependencies.push(newDep);
-    });
-  }
+  const allDependencies = config.config.dependencies?.map(
+    (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
+  );
 
   // Load dependencies from config for GoFSH processing
   const dependencyDefs = loadExternalDependencies(defs, allDependencies);
@@ -98,7 +90,7 @@ async function app() {
 
   let resources: Package;
   try {
-    resources = await getResources(inDir, defs);
+    resources = await getResources(processor);
     resources.add(config);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);

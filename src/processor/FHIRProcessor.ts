@@ -1,4 +1,5 @@
 import { utils } from 'fsh-sushi';
+import semver from 'semver';
 import { logger } from '../utils';
 import {
   StructureDefinitionProcessor,
@@ -24,6 +25,10 @@ export class FHIRProcessor {
     }
   }
 
+  getFisher(): utils.Fishable {
+    return this.fisher;
+  }
+
   processConfig(externalDeps?: string[]): ExportableConfiguration {
     let config: ExportableConfiguration;
     const igForConfig =
@@ -40,18 +45,15 @@ export class FHIRProcessor {
         ].map(wild => wild.content)
       );
     }
-    if (externalDeps && externalDeps.length > 0) {
+    if (externalDeps?.length > 0) {
       const existingIds: string[] = [];
-      if (!config.config.dependencies) config.config.dependencies = [];
+      config.config.dependencies = config.config.dependencies || [];
       externalDeps.forEach(dep => {
         const [id, version] = dep.split('@');
         config.config.dependencies.forEach(element => {
           existingIds.push(element.packageId);
           if (element.packageId === id && element.version !== version) {
-            const externalVersionArr = version.split('.').map(Number);
-            const igVersionArr = element.version.split('.').map(Number);
-            const resolvedVersion = this.resolveVersion(externalVersionArr, igVersionArr);
-            element.version = resolvedVersion;
+            if (semver.gt(version, element.version)) element.version = version;
           }
         });
         if (!existingIds.includes(id)) {
@@ -64,36 +66,6 @@ export class FHIRProcessor {
       });
     }
     return config;
-  }
-
-  // Resolves version numbers between dependencies, selecting the highest version
-  private resolveVersion(externalVersionArr: number[], internalVersionArr: number[]): string {
-    let resolvedVersion = '';
-    let found = false;
-    let i = 0;
-    while (!found) {
-      if (externalVersionArr[i] && !internalVersionArr[i]) {
-        resolvedVersion = externalVersionArr.join('.');
-        found = true;
-        break;
-      }
-      if (internalVersionArr[i] && !externalVersionArr[i]) {
-        resolvedVersion = internalVersionArr.join('.');
-        found = true;
-        break;
-      }
-      if (externalVersionArr[i] !== internalVersionArr[i]) {
-        if (externalVersionArr[i] > internalVersionArr[i]) {
-          resolvedVersion = externalVersionArr.join('.');
-          found = true;
-          break;
-        } else if (internalVersionArr[i] > externalVersionArr[i]) {
-          resolvedVersion = internalVersionArr.join('.');
-          break;
-        } else i++;
-      }
-    }
-    return resolvedVersion;
   }
 
   process(): Package {
