@@ -1,0 +1,96 @@
+{
+  "resourceType": "ValueSet",
+  "name": "UnsupportedValueSet",
+  "id": "unsupported.valueset",
+  "title": "Unsupported ValueSet",
+  "description": "This value set is not supported by ValueSet FSH syntax because it has a concept designation.",
+  "compose": {
+    "include": [
+      {
+        "system": "http://example.org/zoo",
+        "concept": [
+          {
+            "code": "BEAR",
+            "display": "Bear",
+            "designation": {
+              "language": "fr",
+              "value": "ourse"
+            }
+          },
+          {
+            "code": "PEL",
+            "display": "Pelican"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/aquarium",
+        "valueSet": ["http://example.org/mammals"],
+        "concept": [
+          {
+            "code": "SEAL",
+            "display": "Seal"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/ghost-house"
+      },
+      {
+        "system": "http://example.org/planetarium",
+        "filter": [
+          {
+            "property": "gaseous",
+            "op": "=",
+            "value": "true"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/eatery",
+        "filter": [
+          {
+            "property": "species",
+            "op": "is-a",
+            "value": "fish"
+          }
+        ]
+      }
+    ],
+    "exclude": [
+      {
+        "system": "http://example.org/zoo",
+        "concept": [
+          {
+            "code": "CAT",
+            "display": "Cat"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/aquarium",
+        "valueSet": ["http://example.org/mollusks", "http://example.org/invertebrates"],
+        "concept": [
+          {
+            "code": "BARN",
+            "display": "Barnacle"
+          },
+          {
+            "code": "CLAM",
+            "display": "Clam"
+          }
+        ]
+      },
+      {
+        "system": "http://example.org/eatery",
+        "filter": [
+          {
+            "property": "tastiness",
+            "op": "exists",
+            "value": "true"
+          }
+        ]
+      }
+    ]
+  }
+}

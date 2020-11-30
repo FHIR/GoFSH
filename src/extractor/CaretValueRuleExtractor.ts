@@ -19,7 +19,7 @@ export class CaretValueRuleExtractor {
     remainingPaths.forEach(key => {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(key, flatElement[key], 'ElementDefinition', fisher);
+      caretValueRule.value = getFSHValue(key, flatElement, 'ElementDefinition', fisher);
       caretValueRules.push(caretValueRule);
     });
     return caretValueRules;
@@ -112,7 +112,7 @@ export class CaretValueRuleExtractor {
       if (flatParent[key] == null || !isEqual(flatSD[key], flatParent[key])) {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatSD[key], 'StructureDefinition', fisher);
+        caretValueRule.value = getFSHValue(key, flatSD, 'StructureDefinition', fisher);
         caretValueRules.push(caretValueRule);
       }
     });
@@ -137,7 +137,7 @@ export class CaretValueRuleExtractor {
       .forEach(key => {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatVS[key], resourceType, fisher);
+        caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
         caretValueRules.push(caretValueRule);
       });
     return caretValueRules;
