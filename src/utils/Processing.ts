@@ -43,12 +43,13 @@ export async function getResources(
 export function writeFSH(resources: Package, outDir: string): void {
   const exporter = new FSHExporter(resources);
   try {
-    const resourceDir = ensureOutputDir(path.join(outDir, 'input', 'fsh'));
+    const resourceDir = path.join(outDir, 'input', 'fsh');
+    fs.ensureDirSync(resourceDir);
     const outputPath = path.join(resourceDir, 'resources.fsh');
     fs.writeFileSync(outputPath, exporter.export());
     logger.info(`Wrote fsh to ${outputPath}.`);
     if (resources.configuration) {
-      const configPath = path.join(outDir, 'config.yaml');
+      const configPath = path.join(outDir, 'sushi-config.yaml');
       fs.writeFileSync(configPath, resources.configuration.toFSH());
       logger.info(`Wrote config to ${configPath}.`);
     }
