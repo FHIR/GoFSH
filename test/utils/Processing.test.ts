@@ -12,6 +12,7 @@ import {
   getIgPathFromIgIni
 } from '../../src/utils/Processing';
 import { Package } from '../../src/processor';
+import { ExportableConfiguration } from '../../src/exportable';
 
 describe('Processing', () => {
   temp.track();
@@ -150,7 +151,15 @@ describe('Processing', () => {
     it('should write output to a file named resources.fsh in the output directory', () => {
       const resources = new Package();
       writeFSH(resources, tempRoot);
-      expect(fs.existsSync(path.join(tempRoot, 'resources.fsh'))).toBeTruthy();
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'resources.fsh'))).toBeTruthy();
+    });
+
+    it('should write configuration details to a file named sushi-config.yaml in the output directory', () => {
+      const resources = new Package();
+      const config = new ExportableConfiguration({ canonical: 'fakeCanonical', fhirVersion: [] });
+      resources.add(config);
+      writeFSH(resources, tempRoot);
+      expect(fs.existsSync(path.join(tempRoot, 'sushi-config.yaml'))).toBeTruthy();
     });
   });
 
