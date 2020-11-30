@@ -156,19 +156,20 @@ function moveUpCaretValueRule(
   // we can move the rule up a level to take advantage of how SUSHI handles rules on CodeableConcepts.
   if (rule.caretPath.endsWith('coding[0]')) {
     const basePath = rule.caretPath.replace(/\.coding\[0]$/, '');
-    const siblings = sd.rules.filter(
+    const hasOtherSiblings = sd.rules.some(
       otherRule =>
+        rule !== otherRule &&
         otherRule instanceof ExportableCaretValueRule &&
         !knownSiblings.includes(otherRule) &&
-        rule !== otherRule &&
         rule.path === otherRule.path &&
         otherRule.caretPath.startsWith(`${basePath}.coding[`)
     );
-    if (siblings.length === 0) {
+    if (!hasOtherSiblings) {
       rule.caretPath = basePath;
     }
   }
 }
+
 function moveUpAssignmentRule(
   rule: ExportableAssignmentRule,
   instance: ExportableInstance,
@@ -178,13 +179,14 @@ function moveUpAssignmentRule(
   // we can move the rule up a level to take advantage of how SUSHI handles rules on CodeableConcepts.
   if (rule.path.endsWith('coding[0]')) {
     const basePath = rule.path.replace(/\.coding\[0]$/, '');
-    const siblings = instance.rules.filter(
+    const hasOtherSiblings = instance.rules.some(
       otherRule =>
         rule !== otherRule &&
+        otherRule instanceof ExportableAssignmentRule &&
         !knownSiblings.includes(otherRule) &&
         otherRule.path.startsWith(`${basePath}.coding[`)
     );
-    if (siblings.length === 0) {
+    if (!hasOtherSiblings) {
       rule.path = basePath;
     }
   }
