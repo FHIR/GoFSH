@@ -13,7 +13,7 @@ import {
   loadExternalDependencies,
   writeFSH
 } from './utils/Processing';
-import { getConfig, logger, stats } from './utils';
+import { logger, stats } from './utils';
 import { Package } from './processor';
 
 const FSH_VERSION = '0.13.x';
@@ -63,19 +63,18 @@ async function app() {
 
   // Load dependencies
   const defs = new fhirdefs.FHIRDefinitions();
-  let dependencies = program.dependency;
 
-  // Trim empty spaces from commad line dependencies
-  dependencies = dependencies?.map((dep: string) => dep.trim());
+  // Trim empty spaces from command line dependencies
+  const dependencies = program.dependencies?.map((dep: string) => dep.trim());
 
-  const processor = await getFhirProcessor(inDir, defs);
-  const config = await getConfig(processor, dependencies);
+  // Load FhirProcessor and config object
+  const processor = getFhirProcessor(inDir, defs);
+  const config = processor.processConfig(dependencies);
 
+  // Load dependencies from config for GoFSH processing
   const allDependencies = config.config.dependencies?.map(
     (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
   );
-
-  // Load dependencies from config for GoFSH processing
   const dependencyDefs = loadExternalDependencies(defs, allDependencies);
 
   let outDir: string;
