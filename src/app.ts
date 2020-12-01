@@ -65,7 +65,7 @@ async function app() {
   const defs = new fhirdefs.FHIRDefinitions();
 
   // Trim empty spaces from command line dependencies
-  const dependencies = program.dependencies?.map((dep: string) => dep.trim());
+  const dependencies = program.dependency?.map((dep: string) => dep.trim());
 
   // Load FhirProcessor and config object
   const processor = getFhirProcessor(inDir, defs);
