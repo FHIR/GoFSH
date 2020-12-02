@@ -80,39 +80,45 @@ describe('FHIRProcessor', () => {
 
   it('should try to process a Profile with the StructureDefinitionProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-profile.json'));
-    processor.process();
+    const config = processor.processConfig();
+    processor.process(config);
     expect(structureDefinitionSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should try to process an Extension with the StructureDefinitionProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-extension.json'));
-    processor.process();
+    const config = processor.processConfig();
+    processor.process(config);
     expect(structureDefinitionSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should try to process a CodeSystem with the CodeSystemProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
-    processor.process();
+    const config = processor.processConfig();
+    processor.process(config);
     expect(codeSystemSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should try to process a supported ValueSet with the ValueSetProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-valueset.json'));
-    processor.process();
+    const config = processor.processConfig();
+    processor.process(config);
     expect(valueSetSpy).toHaveBeenCalledTimes(1);
     expect(instanceSpy).not.toHaveBeenCalled();
   });
 
   it('should try to process a non-IG/SD/VS/CS Instance with the InstanceProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-patient.json'));
-    processor.process();
+    const config = processor.processConfig();
+    processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
     expect(valueSetSpy).not.toHaveBeenCalled();
   });
 
   it('should try to process an unsupported ValueSet with the InstanceProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'unsupported-valueset.json'));
-    processor.process();
+    const config = processor.processConfig();
+    processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
     expect(valueSetSpy).not.toHaveBeenCalled();
   });

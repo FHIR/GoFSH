@@ -68,11 +68,12 @@ export class FHIRProcessor {
     return config;
   }
 
-  process(): Package {
+  process(config: ExportableConfiguration): Package {
     const resources = new Package();
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
       this.lake.getAllImplementationGuides()[0];
+    resources.add(config);
     this.lake.getAllStructureDefinitions().forEach(wild => {
       try {
         StructureDefinitionProcessor.process(

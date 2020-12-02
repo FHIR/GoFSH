@@ -75,7 +75,8 @@ describe('Processing', () => {
     it('should try to register each json file in the directory and its subdirectories when given a path to a directory', async () => {
       const inDir = path.join(__dirname, 'fixtures', 'all-good');
       const processor = await getFhirProcessor(inDir, undefined);
-      const result = await getResources(processor);
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
       expect(result.profiles).toHaveLength(1);
       expect(result.codeSystems).toHaveLength(1);
       expect(result.valueSets).toHaveLength(1);
@@ -88,7 +89,8 @@ describe('Processing', () => {
     it('should register the specified file when given a path to a file', async () => {
       const inDir = path.join(__dirname, 'fixtures', 'all-good', 'simple-profile.json');
       const processor = await getFhirProcessor(inDir, undefined);
-      const result = await getResources(processor);
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
       expect(result.profiles).toHaveLength(1);
       expect(result.codeSystems).toHaveLength(0);
       expect(result.valueSets).toHaveLength(0);
@@ -101,7 +103,8 @@ describe('Processing', () => {
     it('should log an error when an input file is not valid JSON', async () => {
       const inDir = path.join(__dirname, 'fixtures', 'one-bad');
       const processor = await getFhirProcessor(inDir, undefined);
-      const result = await getResources(processor);
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
       expect(loggerSpy.getLastMessage('error')).toMatch(/Could not load .*invalid-profile\.json/);
       expect(result.profiles).toHaveLength(1);
       expect(result.codeSystems).toHaveLength(0);
@@ -115,7 +118,8 @@ describe('Processing', () => {
     it('should log debug statements for valid JSON that is not a valid FHIR resource', async () => {
       const inDir = path.join(__dirname, 'fixtures', 'some-non-fhir');
       const processor = await getFhirProcessor(inDir, undefined);
-      const result = await getResources(processor);
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
       expect(loggerSpy.getMessageAtIndex(0, 'debug')).toMatch(
         /Skipping non-FHIR JSON file: .*non-fhir\.json/
       );

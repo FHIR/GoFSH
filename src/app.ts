@@ -89,8 +89,7 @@ async function app() {
 
   let resources: Package;
   try {
-    resources = await getResources(processor);
-    resources.add(config);
+    resources = await getResources(processor, config);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);
