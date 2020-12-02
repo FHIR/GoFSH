@@ -22,3 +22,4 @@ export * from './ExportableSdRule';
 export * from './ExportableValueSet';
 export * from './ExportableBindingRule';
 export * from './ExportableValueSetComponentRule';
+export * from './ExportableAlias';
