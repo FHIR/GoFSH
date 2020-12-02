@@ -1,7 +1,6 @@
 import { cloneDeep } from 'lodash';
-import path from 'path';
+import { fshtypes } from 'fsh-sushi';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
-import { utils, fshtypes } from 'fsh-sushi';
 import { Package } from '../../../src/processor';
 import {
   ExportableAssignmentRule,
@@ -9,8 +8,6 @@ import {
   ExportableInstance,
   ExportableProfile
 } from '../../../src/exportable';
-import { MasterFisher } from '../../../src/utils';
-import { loadTestDefinitions, stockLake } from '../../helpers';
 import CombineCodingAndQuantityValuesOptimizer from '../../../src/optimizer/plugins/CombineCodingAndQuantityValuesOptimizer';
 import optimizer from '../../../src/optimizer/plugins/ResolveValueRuleURLsOptimizer';
 
