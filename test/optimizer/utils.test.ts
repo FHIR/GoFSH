@@ -1,9 +1,9 @@
 import path from 'path';
-import { utils } from 'fsh-sushi';
+import { fhirdefs, utils } from 'fsh-sushi';
 import '../helpers/loggerSpy'; // side-effect: suppresses logs
 import { MasterFisher } from '../../src/utils';
 import { loadTestDefinitions, stockLake } from '../helpers';
-import { optimizeURL, resolveURL } from '../../src/optimizer/utils';
+import { optimizeURL, resolveAliasFromURL, resolveURL } from '../../src/optimizer/utils';
 import { ExportableAlias } from '../../src/exportable';
 
 describe('optimizer', () => {
@@ -52,6 +52,7 @@ describe('optimizer', () => {
       expect(aliases).toHaveLength(0);
     });
   });
+
   describe('#resolveURL', () => {
     let fisher: utils.Fishable;
 
@@ -114,6 +115,71 @@ describe('optimizer', () => {
         fisher
       );
       expect(result).toBeUndefined();
+    });
+
+    describe('#resolveAliasFromURL', () => {
+      let aliases: ExportableAlias[];
+
+      beforeEach(() => {
+        aliases = [new ExportableAlias('$foo', 'http://example.org/foo')];
+      });
+
+      it('should resolve an existing alias', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org/foo', aliases)).toBe('$foo');
+        expect(aliases).toHaveLength(originalLength);
+      });
+
+      it('should not resolve non-web url', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('urn:oid:123', aliases)).toBeUndefined();
+        expect(aliases).toHaveLength(originalLength);
+      });
+
+      it('should create a new alias using the path', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org/bar', aliases)).toBe('$bar');
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$bar',
+          url: 'http://example.org/bar'
+        });
+      });
+
+      it('should create a new alias using the host when no path is present', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org', aliases)).toBe('$example');
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$example',
+          url: 'http://example.org'
+        });
+      });
+
+      it('should create a new alias without "www" using the host when no path is present', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://www.example.org', aliases)).toBe('$example');
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$example',
+          url: 'http://www.example.org'
+        });
+      });
+
+      it('should ensure newly created aliases are unique', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://foo.org', aliases)).toBe('$foo_1');
+        expect(resolveAliasFromURL('http://example.org/bar/foo', aliases)).toBe('$foo_2');
+        expect(aliases).toHaveLength(originalLength + 2);
+        expect(aliases[aliases.length - 2]).toEqual({
+          alias: '$foo_1',
+          url: 'http://foo.org'
+        });
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$foo_2',
+          url: 'http://example.org/bar/foo'
+        });
+      });
     });
   });
 });
