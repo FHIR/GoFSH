@@ -140,7 +140,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should not replace filter rule system url with the name of a core FHIR ValueSet when it is same as local code system name', () => {
+    it('should alias the filter rule system url when it is same as local code system name', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };

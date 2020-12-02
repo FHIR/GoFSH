@@ -1,5 +1,5 @@
 import path from 'path';
-import { fhirdefs, utils } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import '../helpers/loggerSpy'; // side-effect: suppresses logs
 import { MasterFisher } from '../../src/utils';
 import { loadTestDefinitions, stockLake } from '../helpers';

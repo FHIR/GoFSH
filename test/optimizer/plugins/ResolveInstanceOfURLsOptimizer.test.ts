@@ -13,10 +13,7 @@ describe('optimizer', () => {
 
     beforeAll(() => {
       const defs = loadTestDefinitions();
-      const lake = stockLake(
-        path.join(__dirname, 'fixtures', 'small-profile.json'),
-        path.join(__dirname, 'fixtures', 'small-extension.json')
-      );
+      const lake = stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
       fisher = new MasterFisher(lake, defs);
     });
 

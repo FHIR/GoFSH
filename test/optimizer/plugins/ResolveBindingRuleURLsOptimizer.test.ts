@@ -1,13 +1,9 @@
 import path from 'path';
 import { cloneDeep } from 'lodash';
-import { fshtypes, utils } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { Package } from '../../../src/processor';
-import {
-  ExportableBindingRule,
-  ExportableCaretValueRule,
-  ExportableProfile
-} from '../../../src/exportable';
+import { ExportableBindingRule, ExportableProfile } from '../../../src/exportable';
 import optimizer from '../../../src/optimizer/plugins/ResolveBindingRuleURLsOptimizer';
 import { loadTestDefinitions, stockLake } from '../../helpers';
 import { MasterFisher } from '../../../src/utils';
