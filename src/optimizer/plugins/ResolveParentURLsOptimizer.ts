@@ -1,7 +1,7 @@
 import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
-import { resolveURL } from '../utils';
+import { optimizeURL } from '../utils';
 
 const FISHER_TYPES = [
   utils.Type.Resource,
@@ -12,12 +12,12 @@ const FISHER_TYPES = [
 
 export default {
   name: 'resolve_parent_urls',
-  description: 'Replace declared parent URLs with their names (for local and FHIR Core URLs only)',
+  description: 'Replace declared parent URLs with their names or aliases',
 
   optimize(pkg: Package, fisher: utils.Fishable): void {
     for (const resource of [...pkg.profiles, ...pkg.extensions]) {
       if (resource.parent) {
-        resource.parent = resolveURL(resource.parent, FISHER_TYPES, fisher);
+        resource.parent = optimizeURL(resource.parent, pkg.aliases, FISHER_TYPES, fisher);
       }
     }
   }

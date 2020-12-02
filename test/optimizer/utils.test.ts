@@ -3,9 +3,55 @@ import { utils } from 'fsh-sushi';
 import '../helpers/loggerSpy'; // side-effect: suppresses logs
 import { MasterFisher } from '../../src/utils';
 import { loadTestDefinitions, stockLake } from '../helpers';
-import { resolveURL } from '../../src/optimizer/utils';
+import { optimizeURL, resolveURL } from '../../src/optimizer/utils';
+import { ExportableAlias } from '../../src/exportable';
 
 describe('optimizer', () => {
+  describe('#optimizeURL', () => {
+    let fisher: utils.Fishable;
+
+    beforeAll(() => {
+      const defs = loadTestDefinitions();
+      const lake = stockLake(path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json'));
+      fisher = new MasterFisher(lake, defs);
+    });
+
+    it('should prefer to resolve the URL to a FHIR resource', () => {
+      const result = optimizeURL(
+        'https://demo.org/StructureDefinition/Patient',
+        [],
+        [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher
+      );
+      expect(result).toBe('Patient');
+    });
+
+    it('should resolve the URL to an alias and add that alias if the URL cannot be resolved', () => {
+      const aliases: ExportableAlias[] = [];
+      const result = optimizeURL(
+        'https://not-resolved/StructureDefinition/Patient',
+        aliases,
+        [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher
+      );
+      expect(result).toBe('$Patient');
+      expect(aliases).toEqual([
+        { alias: '$Patient', url: 'https://not-resolved/StructureDefinition/Patient' }
+      ]);
+    });
+
+    it('should return the original URL if it can not be resolved or aliased', () => {
+      const aliases: ExportableAlias[] = [];
+      const result = optimizeURL(
+        'urn:oid:2.16.840.1.113883.6.238',
+        aliases,
+        [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher
+      );
+      expect(result).toBe('urn:oid:2.16.840.1.113883.6.238');
+      expect(aliases).toHaveLength(0);
+    });
+  });
   describe('#resolveURL', () => {
     let fisher: utils.Fishable;
 
@@ -40,7 +86,7 @@ describe('optimizer', () => {
         [utils.Type.CodeSystem],
         fisher
       );
-      expect(result).toBe('http://terminology.hl7.org/CodeSystem/v2-0487');
+      expect(result).toBeUndefined();
     });
 
     it('should not resolve a URL to the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
@@ -49,7 +95,7 @@ describe('optimizer', () => {
         [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('http://hl7.org/fhir/StructureDefinition/Patient');
+      expect(result).toBeUndefined();
     });
 
     it('should not resolve a URL when the URL does not match anything', () => {
@@ -58,7 +104,7 @@ describe('optimizer', () => {
         [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('https://youcantgettherefromhere.org/StructureDefinition/Patient');
+      expect(result).toBeUndefined();
     });
 
     it('should not resolve a URL when it only matches a type that was not asked for', () => {
@@ -67,7 +113,7 @@ describe('optimizer', () => {
         [utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('https://demo.org/StructureDefinition/Patient');
+      expect(result).toBeUndefined();
     });
   });
 });

@@ -63,22 +63,28 @@ describe('optimizer', () => {
       expect(extension.parent).toBe('Geolocation');
     });
 
-    it('should not replace a parent url with the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
+    it('should alias a core FHIR resource if it shares a name with a local StructureDefinition', () => {
       const profile = new ExportableProfile('MyPatient');
       profile.parent = 'http://hl7.org/fhir/StructureDefinition/Patient';
       const myPackage = new Package();
       myPackage.add(profile);
       optimizer.optimize(myPackage, fisher);
-      expect(profile.parent).toBe('http://hl7.org/fhir/StructureDefinition/Patient');
+      expect(profile.parent).toBe('$Patient');
+      expect(myPackage.aliases).toEqual([
+        { alias: '$Patient', url: 'http://hl7.org/fhir/StructureDefinition/Patient' }
+      ]);
     });
 
-    it('should not change the profile parent url if the parent is not found', () => {
+    it('should alias the profile parent url if the parent is not found', () => {
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'https://demo.org/StructureDefinition/MediumProfile';
       const myPackage = new Package();
       myPackage.add(profile);
       optimizer.optimize(myPackage, fisher);
-      expect(profile.parent).toBe('https://demo.org/StructureDefinition/MediumProfile');
+      expect(profile.parent).toBe('$MediumProfile');
+      expect(myPackage.aliases).toEqual([
+        { alias: '$MediumProfile', url: 'https://demo.org/StructureDefinition/MediumProfile' }
+      ]);
     });
   });
 });
