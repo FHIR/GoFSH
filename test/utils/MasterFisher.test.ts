@@ -1,4 +1,6 @@
-import { utils } from 'fsh-sushi';
+import { utils, fhirdefs } from 'fsh-sushi';
+import { FHIRDefinitions } from 'fsh-sushi/dist/fhirdefs';
+import { LakeOfFHIR } from '../../src/processor';
 import { MasterFisher } from '../../src/utils';
 
 const RESOURCE_A_FHIR = { resourceType: 'TypeA', id: 'resource-a', name: 'ResourceA' };
@@ -7,125 +9,125 @@ const RESOURCE_B_FHIR = { resourceType: 'TypeB', id: 'resource-b', name: 'Resour
 const RESOURCE_B_METADATA = { id: 'resource-b', name: 'ResourceB' };
 
 describe('MasterFisher', () => {
-  let fisherA: utils.Fishable;
-  let fisherB: utils.Fishable;
+  let lake: LakeOfFHIR;
+  let fhir: fhirdefs.FHIRDefinitions;
+  let fisher: MasterFisher;
 
   beforeAll(() => {
-    fisherA = {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      fishForFHIR: (item: string, ...types: utils.Type[]) => {
-        return RESOURCE_A_FHIR;
-      },
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      fishForMetadata: (item: string, ...types: utils.Type[]): utils.Metadata => {
-        return RESOURCE_A_METADATA;
-      }
-    };
-    fisherB = {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      fishForFHIR: (item: string, ...types: utils.Type[]) => {
-        return RESOURCE_B_FHIR;
-      },
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      fishForMetadata: (item: string, ...types: utils.Type[]): utils.Metadata => {
-        return RESOURCE_B_METADATA;
-      }
-    };
+    lake = new LakeOfFHIR([]);
+    fhir = new FHIRDefinitions();
+    fisher = new MasterFisher(lake, fhir);
   });
 
   describe('#fishForFHIR', () => {
-    let fisherAfishForFHIRSpy: jest.SpyInstance;
-    let fisherBfishForFHIRSpy: jest.SpyInstance;
+    let lakeSpy: jest.SpyInstance;
+    let fhirSpy: jest.SpyInstance;
 
     beforeEach(() => {
-      fisherAfishForFHIRSpy = jest.spyOn(fisherA, 'fishForFHIR');
-      fisherBfishForFHIRSpy = jest.spyOn(fisherB, 'fishForFHIR');
+      lakeSpy = jest.spyOn(lake, 'fishForFHIR');
+      fhirSpy = jest.spyOn(fhir, 'fishForFHIR');
     });
 
     afterEach(() => jest.clearAllMocks());
 
-    it('should process fishers in order, returning the first positive hit', () => {
-      // First, A B
-      let fisher = new MasterFisher(fisherA, fisherB);
+    it('should return match from LakeOfFHIR if it exists only in the lake', () => {
+      lakeSpy.mockReturnValue(RESOURCE_A_FHIR);
+      fhirSpy.mockReturnValue(undefined);
       expect(fisher.fishForFHIR('Foo', utils.Type.Resource)).toEqual(RESOURCE_A_FHIR);
-      expect(fisherAfishForFHIRSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherBfishForFHIRSpy).not.toHaveBeenCalled();
-      // Then, B A, just to be sure
-      jest.clearAllMocks();
-      fisher = new MasterFisher(fisherB, fisherA);
-      expect(fisher.fishForFHIR('Foo', utils.Type.Resource)).toEqual(RESOURCE_B_FHIR);
-      expect(fisherBfishForFHIRSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherAfishForFHIRSpy).not.toHaveBeenCalled();
     });
 
-    it('should use the second fisher if the first fisher does not get a hit', () => {
-      const fisher = new MasterFisher(fisherA, fisherB);
-      fisherAfishForFHIRSpy.mockReturnValue(undefined);
+    it('should return match from FHIRDefinitions if it exists only in the FHIR defs', () => {
+      lakeSpy.mockReturnValue(undefined);
+      fhirSpy.mockReturnValue(RESOURCE_B_FHIR);
       expect(fisher.fishForFHIR('Foo', utils.Type.Resource)).toEqual(RESOURCE_B_FHIR);
-      expect(fisherAfishForFHIRSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherBfishForFHIRSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
+    });
+
+    it('should return match from LakeOfFHIR if it exists both in the lake and FHIR defs', () => {
+      lakeSpy.mockReturnValue(RESOURCE_A_FHIR);
+      fhirSpy.mockReturnValue(RESOURCE_B_FHIR);
+      expect(fisher.fishForFHIR('Foo', utils.Type.Resource)).toEqual(RESOURCE_A_FHIR);
     });
 
     it('should return undefined if no fisher gets a hit', () => {
-      const fisher = new MasterFisher(fisherA, fisherB);
-      fisherAfishForFHIRSpy.mockReturnValue(undefined);
-      fisherBfishForFHIRSpy.mockReturnValue(undefined);
-      expect(fisher.fishForFHIR('Foo', utils.Type.Resource)).toBeUndefined();
-      expect(fisherAfishForFHIRSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherBfishForFHIRSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-    });
-
-    it('should return undefined if there are no fishers', () => {
-      const fisher = new MasterFisher();
+      lakeSpy.mockReturnValue(undefined);
+      fhirSpy.mockReturnValue(undefined);
       expect(fisher.fishForFHIR('Foo', utils.Type.Resource)).toBeUndefined();
     });
   });
 
   describe('#fishForMetadata', () => {
-    let fisherAfishForMetadataSpy: jest.SpyInstance;
-    let fisherBfishForMetadataSpy: jest.SpyInstance;
+    let lakeSpy: jest.SpyInstance;
+    let fhirSpy: jest.SpyInstance;
 
     beforeEach(() => {
-      fisherAfishForMetadataSpy = jest.spyOn(fisherA, 'fishForMetadata');
-      fisherBfishForMetadataSpy = jest.spyOn(fisherB, 'fishForMetadata');
+      lakeSpy = jest.spyOn(lake, 'fishForMetadata');
+      fhirSpy = jest.spyOn(fhir, 'fishForMetadata');
     });
 
     afterEach(() => jest.clearAllMocks());
 
-    it('should process fishers in order, returning the first positive hit', () => {
-      // First, A B
-      let fisher = new MasterFisher(fisherA, fisherB);
+    it('should return match from LakeOfFHIR if it exists only in the lake', () => {
+      lakeSpy.mockReturnValue(RESOURCE_A_METADATA);
+      fhirSpy.mockReturnValue(undefined);
       expect(fisher.fishForMetadata('Foo', utils.Type.Resource)).toEqual(RESOURCE_A_METADATA);
-      expect(fisherAfishForMetadataSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherBfishForMetadataSpy).not.toHaveBeenCalled();
-      // Then, B A, just to be sure
-      jest.clearAllMocks();
-      fisher = new MasterFisher(fisherB, fisherA);
-      expect(fisher.fishForMetadata('Foo', utils.Type.Resource)).toEqual(RESOURCE_B_METADATA);
-      expect(fisherBfishForMetadataSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherAfishForMetadataSpy).not.toHaveBeenCalled();
     });
 
-    it('should use the second fisher if the first fisher does not get a hit', () => {
-      const fisher = new MasterFisher(fisherA, fisherB);
-      fisherAfishForMetadataSpy.mockReturnValue(undefined);
+    it('should return match from FHIRDefinitions if it exists only in the FHIR defs', () => {
+      lakeSpy.mockReturnValue(undefined);
+      fhirSpy.mockReturnValue(RESOURCE_B_METADATA);
       expect(fisher.fishForMetadata('Foo', utils.Type.Resource)).toEqual(RESOURCE_B_METADATA);
-      expect(fisherAfishForMetadataSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherBfishForMetadataSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
+    });
+
+    it('should return match from LakeOfFHIR if it exists both in the lake and FHIR defs', () => {
+      lakeSpy.mockReturnValue(RESOURCE_A_METADATA);
+      fhirSpy.mockReturnValue(RESOURCE_B_METADATA);
+      expect(fisher.fishForMetadata('Foo', utils.Type.Resource)).toEqual(RESOURCE_A_METADATA);
     });
 
     it('should return undefined if no fisher gets a hit', () => {
-      const fisher = new MasterFisher(fisherA, fisherB);
-      fisherAfishForMetadataSpy.mockReturnValue(undefined);
-      fisherBfishForMetadataSpy.mockReturnValue(undefined);
+      lakeSpy.mockReturnValue(undefined);
+      fhirSpy.mockReturnValue(undefined);
       expect(fisher.fishForMetadata('Foo', utils.Type.Resource)).toBeUndefined();
-      expect(fisherAfishForMetadataSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
-      expect(fisherBfishForMetadataSpy).toHaveBeenCalledWith('Foo', utils.Type.Resource);
+    });
+  });
+
+  describe('#lakeOfFHIR', () => {
+    afterEach(() => jest.clearAllMocks());
+
+    it('should support fishing for FHIR on the lake', () => {
+      const spy = jest.spyOn(lake, 'fishForFHIR');
+      spy.mockReturnValue(RESOURCE_A_FHIR);
+      expect(fisher.lakeOfFHIR.fishForFHIR('Foo', utils.Type.Resource)).toEqual(RESOURCE_A_FHIR);
+      expect(spy).toHaveBeenCalled();
     });
 
-    it('should return undefined if there are no fishers', () => {
-      const fisher = new MasterFisher();
-      expect(fisher.fishForMetadata('Foo', utils.Type.Resource)).toBeUndefined();
+    it('should support fishing for metadata on the lake', () => {
+      const spy = jest.spyOn(lake, 'fishForMetadata');
+      spy.mockReturnValue(RESOURCE_A_METADATA);
+      expect(fisher.lakeOfFHIR.fishForMetadata('Foo', utils.Type.Resource)).toEqual(
+        RESOURCE_A_METADATA
+      );
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('#fhir', () => {
+    afterEach(() => jest.clearAllMocks());
+
+    it('should support fishing for FHIR on the FHIR Definitions', () => {
+      const spy = jest.spyOn(fhir, 'fishForFHIR');
+      spy.mockReturnValue(RESOURCE_A_FHIR);
+      expect(fisher.external.fishForFHIR('Foo', utils.Type.Resource)).toEqual(RESOURCE_A_FHIR);
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should support fishing for metadata on the lake', () => {
+      const spy = jest.spyOn(fhir, 'fishForMetadata');
+      spy.mockReturnValue(RESOURCE_A_METADATA);
+      expect(fisher.external.fishForMetadata('Foo', utils.Type.Resource)).toEqual(
+        RESOURCE_A_METADATA
+      );
+      expect(spy).toHaveBeenCalled();
     });
   });
 });

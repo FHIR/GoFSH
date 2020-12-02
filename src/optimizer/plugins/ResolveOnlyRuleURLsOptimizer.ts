@@ -2,6 +2,7 @@ import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import { ExportableOnlyRule } from '../../exportable';
+import { MasterFisher } from '../../utils';
 import { resolveURL } from '../utils';
 
 const FISHER_TYPES = [
@@ -15,7 +16,7 @@ export default {
   name: 'resolve_only_rule_urls',
   description: 'Replace URLs in "only" rules with their names (for local and FHIR Core URLs only)',
 
-  optimize(pkg: Package, fisher: utils.Fishable): void {
+  optimize(pkg: Package, fisher: MasterFisher): void {
     [...pkg.profiles, ...pkg.extensions].forEach(sd => {
       sd.rules.forEach(rule => {
         if (rule instanceof ExportableOnlyRule) {
