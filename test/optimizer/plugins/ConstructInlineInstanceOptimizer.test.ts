@@ -1,4 +1,5 @@
 import { cloneDeep } from 'lodash';
+import { fshtypes } from 'fsh-sushi';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { Package } from '../../../src/processor';
 import {
@@ -10,6 +11,7 @@ import {
 } from '../../../src/exportable';
 import optimizer from '../../../src/optimizer/plugins/ConstructInlineInstanceOptimizer';
 import { assertExportableInstance } from '../../helpers/asserts';
+import RemoveGeneratedTextRulesOptimizer from '../../../src/optimizer/plugins/RemoveGeneratedTextRulesOptimizer';
 
 describe('optimizer', () => {
   describe('#construct_inline_instance', () => {
@@ -45,7 +47,7 @@ describe('optimizer', () => {
       it('should have appropriate metadata', () => {
         expect(optimizer.name).toBe('construct_inline_instance');
         expect(optimizer.description).toBeDefined();
-        expect(optimizer.runBefore).toBeUndefined();
+        expect(optimizer.runBefore).toEqual([RemoveGeneratedTextRulesOptimizer.name]);
         expect(optimizer.runAfter).toBeUndefined();
       });
 
@@ -368,6 +370,54 @@ describe('optimizer', () => {
         inlineInstanceRule1.isInstance = true;
         expect(instance.rules).toEqual([inlineInstanceRule1]);
       });
+
+      it('should use an existing instance if creating a new inline instance would duplicate it', () => {
+        const containedString = new ExportableAssignmentRule('contained[0].valueString');
+        containedString.value = 'string value';
+        const containedStatusRule = new ExportableAssignmentRule('contained[0].text.status');
+        containedStatusRule.value = new fshtypes.FshCode('generated');
+        const containedDivRule = new ExportableAssignmentRule('contained[0].text.div');
+        containedDivRule.value = 'some text';
+        instance.rules = [
+          containedResourceType1,
+          containedId1,
+          containedString,
+          containedStatusRule,
+          containedDivRule
+        ];
+        const myPackage = new Package();
+        myPackage.add(instance);
+
+        const existingInstance = new ExportableInstance('Bar');
+        existingInstance.instanceOf = 'Observation';
+        const stringRule = new ExportableAssignmentRule('valueString');
+        stringRule.value = 'string value';
+        const statusRule = new ExportableAssignmentRule('text.status');
+        statusRule.value = new fshtypes.FshCode('generated');
+        const divRule = new ExportableAssignmentRule('text.div');
+        divRule.value = 'other text';
+        existingInstance.rules = [stringRule, statusRule, divRule];
+        myPackage.add(existingInstance);
+        optimizer.optimize(myPackage);
+
+        const expectedRule = cloneDeep(containedString);
+        expectedRule.path = 'valueString';
+        expect(myPackage.instances).toHaveLength(2);
+        assertExportableInstance(
+          myPackage.instances[1],
+          existingInstance.id,
+          existingInstance.instanceOf,
+          existingInstance.usage,
+          existingInstance.title,
+          existingInstance.description,
+          existingInstance.rules
+        );
+
+        const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(instance.rules).toEqual([inlineInstanceRule1]);
+      });
     });
 
     describe('StructureDefinitions', () => {
@@ -397,13 +447,6 @@ describe('optimizer', () => {
         profile.parent = 'Patient';
 
         extension = new ExportableExtension('FooExtension');
-      });
-
-      it('should have appropriate metadata', () => {
-        expect(optimizer.name).toBe('construct_inline_instance');
-        expect(optimizer.description).toBeDefined();
-        expect(optimizer.runBefore).toBeUndefined();
-        expect(optimizer.runAfter).toBeUndefined();
       });
 
       it('should create inline instances from contained resources on a profile', () => {

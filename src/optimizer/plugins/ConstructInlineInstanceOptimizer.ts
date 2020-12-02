@@ -1,4 +1,4 @@
-import { pullAt, escapeRegExp, cloneDeep } from 'lodash';
+import { pullAt, escapeRegExp, cloneDeep, isEqual } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import {
@@ -7,11 +7,14 @@ import {
   ExportableInstance,
   ExportableSdRule
 } from '../../exportable';
+import { hasGeneratedText } from './RemoveGeneratedTextRulesOptimizer';
+import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
 
 export default {
   name: 'construct_inline_instance',
   description:
     'Construct inline instances from groups of rules in a contained resource or a Bundle',
+  runBefore: [RemoveGeneratedTextRulesOptimizer.name],
 
   optimize(pkg: Package): void {
     const inlineInstances: ExportableInstance[] = [];
@@ -74,13 +77,22 @@ export default {
           }
         });
 
-        const newInstance = new ExportableInstance(
+        let newInstance = new ExportableInstance(
           id ?? `Inline-Instance-for-${resource.id}-${++generatedIdCount}`
         );
         newInstance.rules.push(...inlineInstanceRules);
         newInstance.instanceOf = profile ?? resourceType;
         newInstance.usage = 'Inline';
-        inlineInstances.push(newInstance);
+
+        const duplicatedInstance = duplicatesExistingInstance(newInstance, [
+          ...inlineInstances,
+          ...pkg.instances
+        ]);
+        if (duplicatedInstance) {
+          newInstance = duplicatedInstance;
+        } else {
+          inlineInstances.push(newInstance);
+        }
 
         pullAt(resource.rules, rulesToRemove);
         if (resource instanceof ExportableInstance) {
@@ -103,4 +115,35 @@ export default {
 
 function getRulePath(rule: ExportableSdRule): string {
   return rule instanceof ExportableCaretValueRule ? rule.caretPath : rule.path;
+}
+
+function duplicatesExistingInstance(
+  instance: ExportableInstance,
+  existingInstances: ExportableInstance[]
+): ExportableInstance {
+  const instanceId =
+    ((instance.rules.find(rule => rule.path === 'id') as ExportableAssignmentRule)
+      ?.value as string) ?? instance.id;
+
+  const duplicatedInstance = existingInstances.find(
+    i => i.name === instanceId && i.instanceOf === instance.instanceOf
+  );
+
+  // We need to ignore generated text rules, since these will be later removed anyway, and will not match
+  // between an instance and the inline version of that instance
+  const instanceHasGeneratedText = hasGeneratedText(instance);
+  const duplicatedInstanceHasGeneratedText =
+    duplicatedInstance != null && hasGeneratedText(duplicatedInstance);
+  if (
+    isEqual(
+      instance.rules.filter(
+        rule => rule.path !== 'id' && !(instanceHasGeneratedText && rule.path.match(/^text\./))
+      ),
+      duplicatedInstance?.rules?.filter(
+        rule => !(duplicatedInstanceHasGeneratedText && rule.path.match(/^text\./))
+      )
+    )
+  ) {
+    return duplicatedInstance;
+  }
 }
