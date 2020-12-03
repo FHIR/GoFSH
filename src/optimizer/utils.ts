@@ -33,8 +33,6 @@ export function resolveURL(url: string, types: utils.Type[], fisher: MasterFishe
   // NOTE: Testing against a regex from FHIR because some FHIR core definitions have names that are
   // invalid against the spec!  Good heavens!
   if (
-    // !isUnsupportedCodeSystem &&
-    // !isUnsupportedValueSet &&
     def?.name.match(/^[A-Z]([A-Za-z0-9_]){0,254}$/) &&
     fisher.fishForMetadata(def.name, ...types).url === url
   ) {
