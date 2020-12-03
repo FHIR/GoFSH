@@ -1,4 +1,5 @@
 import { utils } from 'fsh-sushi';
+import semver from 'semver';
 import { logger } from '../utils';
 import {
   StructureDefinitionProcessor,
@@ -24,8 +25,11 @@ export class FHIRProcessor {
     }
   }
 
-  process(): Package {
-    const resources = new Package();
+  getFisher(): utils.Fishable {
+    return this.fisher;
+  }
+
+  processConfig(externalDeps?: string[]): ExportableConfiguration {
     let config: ExportableConfiguration;
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
@@ -41,6 +45,34 @@ export class FHIRProcessor {
         ].map(wild => wild.content)
       );
     }
+    if (externalDeps?.length > 0) {
+      const existingIds: string[] = [];
+      config.config.dependencies = config.config.dependencies || [];
+      externalDeps.forEach(dep => {
+        const [id, version] = dep.split('@');
+        config.config.dependencies.forEach(element => {
+          existingIds.push(element.packageId);
+          if (element.packageId === id && element.version !== version) {
+            if (semver.gt(version, element.version)) element.version = version;
+          }
+        });
+        if (!existingIds.includes(id)) {
+          const newDep = {
+            packageId: id,
+            version: version
+          };
+          config.config.dependencies.push(newDep);
+        }
+      });
+    }
+    return config;
+  }
+
+  process(config: ExportableConfiguration): Package {
+    const resources = new Package();
+    const igForConfig =
+      this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
+      this.lake.getAllImplementationGuides()[0];
     resources.add(config);
     this.lake.getAllStructureDefinitions().forEach(wild => {
       try {

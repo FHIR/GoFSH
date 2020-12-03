@@ -5,5 +5,17 @@
   "id": "bigger.ig",
   "name": "BiggerImplementationGuideForTesting",
   "status": "active",
-  "version": "0.12"
+  "version": "0.12",
+  "dependsOn": [
+    {
+      "uri": "http://hl7.org/fhir/us/core/ImplementationGuide/hl7.fhir.us.core",
+      "packageId": "hl7.fhir.us.core",
+      "version": "3.1.0"
+    },
+    {
+      "uri": "http://hl7.org/fhir/us/mcode/ImplementationGuide/hl7.fhir.us.mcode",
+      "packageId": "hl7.fhir.us.mcode",
+      "version": "1.0.0"
+    }
+  ]
 }
