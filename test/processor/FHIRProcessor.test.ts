@@ -126,7 +126,8 @@ describe('FHIRProcessor', () => {
 
   it('should try to process an unsupported CodeSystem with the InstanceProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'));
-    processor.process();
+    const config = processor.processConfig();
+    processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
     expect(codeSystemSpy).not.toHaveBeenCalled();
   });

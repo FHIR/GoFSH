@@ -1,6 +1,5 @@
-import { utils } from 'fsh-sushi';
 import semver from 'semver';
-import { logger } from '../utils';
+import { MasterFisher, logger } from '../utils';
 import {
   StructureDefinitionProcessor,
   CodeSystemProcessor,
@@ -16,16 +15,16 @@ import { InstanceProcessor } from './InstanceProcessor';
 export class FHIRProcessor {
   constructor(
     private readonly lake: LakeOfFHIR,
-    private readonly fisher?: utils.Fishable,
+    private readonly fisher?: MasterFisher,
     private readonly igPath: string = null
   ) {
     // If no fisher was passed in, just use the built-in lake fisher (usually for testing only)
     if (fisher == null) {
-      fisher = lake;
+      fisher = new MasterFisher(lake);
     }
   }
 
-  getFisher(): utils.Fishable {
+  getFisher(): MasterFisher {
     return this.fisher;
   }
 
