@@ -7,6 +7,7 @@ import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { loadOptimizers } from '../optimizer';
 import { MasterFisher } from '../utils';
+import { ExportableConfiguration } from '../exportable';
 
 export function getInputDir(input = '.'): string {
   // default to current directory
@@ -21,16 +22,19 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   logger.info(`Using output directory: ${output}`);
   return output;
 }
-
-export async function getResources(
-  inDir: string,
-  defs: fhirdefs.FHIRDefinitions
-): Promise<Package> {
+export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions) {
   const lake = getLakeOfFHIR(inDir);
   const igIniIgPath = getIgPathFromIgIni(inDir);
   const fisher = new MasterFisher(lake, defs);
-  const processor = new FHIRProcessor(lake, fisher, igIniIgPath);
-  const resources = processor.process();
+  return new FHIRProcessor(lake, fisher, igIniIgPath);
+}
+
+export async function getResources(
+  processor: FHIRProcessor,
+  config: ExportableConfiguration
+): Promise<Package> {
+  const fisher = processor.getFisher();
+  const resources = processor.process(config);
   // Dynamically load and run the optimizers
   const optimizers = await loadOptimizers();
   optimizers.forEach(opt => {
