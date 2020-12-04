@@ -96,7 +96,11 @@ function getTypesForPath(
   path: string,
   fisher: MasterFisher
 ): fhirtypes.ElementDefinitionType[] | undefined {
-  const instanceOfDef = fisher.fishForFHIR(instanceOf);
+  let instanceOfDef = fisher.fishForFHIR(instanceOf);
+  if (instanceOfDef?.type && !(instanceOfDef.snapshot?.length > 1)) {
+    // StructureDefinition.fromJSON requires a snapshot, so get the definition of the base resource type instead
+    instanceOfDef = fisher.fishForFHIR(instanceOfDef.type);
+  }
   if (instanceOfDef?.resourceType === 'StructureDefinition') {
     const instanceOfSD = fhirtypes.StructureDefinition.fromJSON(instanceOfDef);
     // NOTE: Normalize the path to remove indexes and/or slice references
