@@ -1,6 +1,7 @@
-import { fshtypes } from 'fsh-sushi';
+import { fshtypes, fshrules } from 'fsh-sushi';
 import { pullAt } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
+import { getTypesForCaretPath, getTypesForInstancePath } from '../utils';
 import { Package } from '../../processor';
 import {
   ExportableCaretValueRule,
@@ -8,16 +9,36 @@ import {
   ExportableExtension,
   ExportableProfile,
   ExportableInstance,
-  ExportableRule
+  ExportableRule,
+  ExportableValueSet,
+  ExportableCodeSystem
 } from '../../exportable';
+import { MasterFisher } from '../../utils';
 
 const { FshCode, FshQuantity } = fshtypes;
+const OPTIMIZABLE_TYPES = [
+  'code',
+  'Coding',
+  'CodeableConcept',
+  'Quantity',
+  'Age',
+  'Distance',
+  'Duration',
+  'Count'
+];
+const CODE_IMPOSTER_PATHS = [
+  /^concept(\[[^\]]+\])?(\.concept(\[[^\]]+\])?)*$/, // from CodeSystem
+  /^group(\[[^\]]+\])?\.element(\[[^\]]+\])?(\.target(\[[^\]]+\])?)?$/, // from ConceptMap
+  /^group(\[[^\]]+\])?\.unmapped$/, // from ConceptMap
+  /^compose\.(include|exclude)(\[[^\]]+\])?\.concept(\[[^\]]+\])?$/, // from ValueSet
+  /^expansion(\.contains(\[[^\]]+\])?)+$/ // from ValueSet
+];
 
 export default {
   name: 'combine_coding_and_quantity_values',
   description:
     'Combine separate caret and assignment rules that together form a Coding or Quantity value',
-  optimize(pkg: Package): void {
+  optimize(pkg: Package, fisher: MasterFisher): void {
     // Coding has: code, system, display
     // Quantity has: code, system, unit, value
     // Profiles and Extensions may have relevant caret rules
@@ -25,22 +46,28 @@ export default {
     // It is not necessary to check assignment rules on Profiles and Extensions. Codings and Quantities that
     // are present on Profile and Extension elements are extracted as a single assignment rule, because they are represented as
     // a whole element (patternCoding, fixedQuantity, etc.) rather than a collection of parts.
-    [...pkg.profiles, ...pkg.extensions].forEach(sd => {
+    [...pkg.profiles, ...pkg.extensions, ...pkg.valueSets, ...pkg.codeSystems].forEach(def => {
       const rulesToRemove: number[] = [];
-      sd.rules.forEach(rule => {
+      const rules: fshrules.Rule[] = def.rules; // <-- this assignment makes TypeScript happier in the next chunk of code
+      rules.forEach(rule => {
         if (
           rule instanceof ExportableCaretValueRule &&
           rule.caretPath.endsWith('.code') &&
           rule.value instanceof FshCode
         ) {
           const basePath = rule.caretPath.replace(/\.code$/, '');
+          const types = getTypesForCaretPath(def, rule.path, basePath, fisher);
+          if (types && !types.some(t => OPTIMIZABLE_TYPES.indexOf(t.code) >= 0)) {
+            return;
+          }
+
           const siblingPaths = [
             `${basePath}.system`,
             `${basePath}.display`,
             `${basePath}.unit`,
             `${basePath}.value`
           ];
-          const siblings = sd.rules.filter(
+          const siblings = rules.filter(
             otherRule =>
               otherRule instanceof ExportableCaretValueRule &&
               rule.path === otherRule.path &&
@@ -57,32 +84,32 @@ export default {
                 valueSibling.value as number,
                 new FshCode(rule.value.code, 'http://unitsofmeasure.org')
               );
-              rulesToRemove.push(sd.rules.indexOf(valueSibling), sd.rules.indexOf(systemSibling));
+              rulesToRemove.push(rules.indexOf(valueSibling), rules.indexOf(systemSibling));
             } else if (unitSibling) {
               rule.caretPath = basePath;
               rule.value.display = unitSibling.value.toString();
-              rulesToRemove.push(sd.rules.indexOf(unitSibling));
+              rulesToRemove.push(rules.indexOf(unitSibling));
               // system may also be present
               if (systemSibling) {
                 rule.value.system = systemSibling.value.toString();
-                rulesToRemove.push(sd.rules.indexOf(systemSibling));
+                rulesToRemove.push(rules.indexOf(systemSibling));
               }
             } else if (systemSibling || displaySibling) {
               rule.caretPath = basePath;
               if (systemSibling) {
                 rule.value.system = systemSibling.value.toString();
-                rulesToRemove.push(sd.rules.indexOf(systemSibling));
+                rulesToRemove.push(rules.indexOf(systemSibling));
               }
               if (displaySibling) {
                 rule.value.display = displaySibling.value.toString();
-                rulesToRemove.push(sd.rules.indexOf(displaySibling));
+                rulesToRemove.push(rules.indexOf(displaySibling));
               }
-              moveUpCaretValueRule(rule, sd, siblings);
+              moveUpCaretValueRule(rule, def, siblings);
             }
           }
         }
       });
-      pullAt(sd.rules, rulesToRemove);
+      pullAt(rules, rulesToRemove);
     });
     pkg.instances.forEach(instance => {
       const rulesToRemove: number[] = [];
@@ -93,6 +120,16 @@ export default {
           rule.value instanceof FshCode
         ) {
           const basePath = rule.path.replace(/\.code$/, '');
+          const types = getTypesForInstancePath(instance, basePath, fisher);
+          if (types && !types.some(t => OPTIMIZABLE_TYPES.indexOf(t.code) >= 0)) {
+            return;
+          }
+          // types might be null if it's an instance of a profile that the fisher couldn't find.
+          // In this case, just to be safe, don't optimize known bad paths!
+          else if (types == null && CODE_IMPOSTER_PATHS.some(cip => cip.test(basePath))) {
+            return;
+          }
+
           const siblingPaths = [
             `${basePath}.system`,
             `${basePath}.display`,
@@ -149,7 +186,7 @@ export default {
 
 function moveUpCaretValueRule(
   rule: ExportableCaretValueRule,
-  sd: ExportableProfile | ExportableExtension,
+  sd: ExportableProfile | ExportableExtension | ExportableValueSet | ExportableCodeSystem,
   knownSiblings: ExportableCaretValueRule[]
 ): void {
   // if the caretPath ends with coding[0], and there are no sibling rules that use indices on coding,
@@ -157,7 +194,7 @@ function moveUpCaretValueRule(
   if (rule.caretPath.endsWith('coding[0]')) {
     const basePath = rule.caretPath.replace(/\.coding\[0]$/, '');
     const hasOtherSiblings = sd.rules.some(
-      otherRule =>
+      (otherRule: fshrules.Rule) =>
         rule !== otherRule &&
         otherRule instanceof ExportableCaretValueRule &&
         !knownSiblings.includes(otherRule) &&
