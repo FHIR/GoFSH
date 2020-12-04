@@ -8,9 +8,9 @@ import {
   ExportableInstance,
   ExportableProfile,
   ExportableRule,
+  ExportableSdRule,
   ExportableValueSet
 } from '../../exportable';
-import { pullAt } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
 
 export default {
@@ -19,31 +19,24 @@ export default {
 
   optimize(pkg: Package): void {
     [...pkg.profiles, ...pkg.extensions, ...pkg.valueSets, ...pkg.codeSystems].forEach(resource => {
-      const rulesToRemove: number[] = [];
       if (hasGeneratedText(resource)) {
-        resource.rules.forEach((rule: ExportableRule, i: number) => {
-          if (
-            rule instanceof ExportableCaretValueRule &&
-            rule.path === '' &&
-            rule.caretPath.match(/^text\./)
-          ) {
-            rulesToRemove.push(i);
-          }
-        });
+        resource.rules = (resource.rules as ExportableSdRule[]).filter(
+          rule =>
+            !(
+              rule instanceof ExportableCaretValueRule &&
+              rule.path === '' &&
+              rule.caretPath.match(/^text\./)
+            )
+        );
       }
-      pullAt(resource.rules as ExportableRule[], rulesToRemove);
     });
 
     [...pkg.instances].forEach(instance => {
-      const rulesToRemove: number[] = [];
       if (hasGeneratedText(instance)) {
-        instance.rules.forEach((rule: ExportableRule, i: number) => {
-          if (rule instanceof ExportableAssignmentRule && rule.path.match(/^text\./)) {
-            rulesToRemove.push(i);
-          }
-        });
+        instance.rules = instance.rules.filter(
+          rule => !(rule instanceof ExportableAssignmentRule && rule.path.match(/^text\./))
+        );
       }
-      pullAt(instance.rules as ExportableRule[], rulesToRemove);
     });
   }
 } as OptimizerPlugin;
