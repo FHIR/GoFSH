@@ -3,11 +3,12 @@
 import path from 'path';
 import fs from 'fs-extra';
 import program from 'commander';
-import { fhirdefs, utils } from 'fsh-sushi';
+import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
 
 import {
   ensureOutputDir,
   getInputDir,
+  getFhirProcessor,
   getResources,
   loadExternalDependencies,
   writeFSH
@@ -58,12 +59,24 @@ async function app() {
 
   logger.info(`Starting ${getVersion()}`);
 
+  inDir = getInputDir(inDir);
+
   // Load dependencies
   const defs = new fhirdefs.FHIRDefinitions();
-  const dependencies = program.dependency;
-  const dependencyDefs = loadExternalDependencies(defs, dependencies);
 
-  inDir = getInputDir(inDir);
+  // Trim empty spaces from command line dependencies
+  const dependencies = program.dependency?.map((dep: string) => dep.trim());
+
+  // Load FhirProcessor and config object
+  const processor = getFhirProcessor(inDir, defs);
+  const config = processor.processConfig(dependencies);
+
+  // Load dependencies from config for GoFSH processing
+  const allDependencies = config.config.dependencies?.map(
+    (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
+  );
+  const dependencyDefs = loadExternalDependencies(defs, allDependencies);
+
   let outDir: string;
   try {
     outDir = ensureOutputDir(program.out);
@@ -76,7 +89,7 @@ async function app() {
 
   let resources: Package;
   try {
-    resources = await getResources(inDir, defs);
+    resources = await getResources(processor, config);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);

@@ -26,11 +26,13 @@ export class ConfigurationProcessor {
       fhirVersion: input.fhirVersion,
       FSHOnly: true
     };
-    // id, name, status, and version are the optional configuration properties.
+    // id, name, status, version, and dependencies are the optional configuration properties.
     config.id = input.id;
     config.name = input.name;
     config.status = input.status;
     config.version = input.version;
+    config.dependencies = input.dependsOn;
+
     return new ExportableConfiguration(config);
   }
 }

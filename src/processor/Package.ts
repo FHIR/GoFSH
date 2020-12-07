@@ -6,7 +6,8 @@ import {
   ExportableCodeSystem,
   ExportableInvariant,
   ExportableConfiguration,
-  ExportableMapping
+  ExportableMapping,
+  ExportableAlias
 } from '../exportable';
 import { logger } from '../utils';
 
@@ -18,6 +19,7 @@ export class Package {
   public readonly codeSystems: ExportableCodeSystem[] = [];
   public readonly invariants: ExportableInvariant[] = [];
   public readonly mappings: ExportableMapping[] = [];
+  public readonly aliases: ExportableAlias[] = [];
   public configuration: ExportableConfiguration;
 
   constructor() {}

@@ -11,14 +11,14 @@ const FISHER_TYPES = [
 ];
 
 export default {
-  name: 'resolve_parent_urls',
-  description: 'Replace declared parent URLs with their names or aliases',
+  name: 'resolve_instanceof_urls',
+  description: 'Replace declared instanceOf URLs with their names or aliases',
 
   optimize(pkg: Package, fisher: utils.Fishable): void {
-    for (const resource of [...pkg.profiles, ...pkg.extensions]) {
-      if (resource.parent) {
-        resource.parent = optimizeURL(resource.parent, pkg.aliases, FISHER_TYPES, fisher);
+    pkg.instances.forEach(instance => {
+      if (instance.instanceOf) {
+        instance.instanceOf = optimizeURL(instance.instanceOf, pkg.aliases, FISHER_TYPES, fisher);
       }
-    }
+    });
   }
 } as OptimizerPlugin;

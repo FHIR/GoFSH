@@ -7,6 +7,9 @@ export class FSHExporter {
 
   export(): string {
     const results: string[] = [];
+    if (this.fshPackage.aliases.length > 0) {
+      results.push(this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
+    }
     for (const profile of this.fshPackage.profiles) {
       results.push(profile.toFSH());
     }

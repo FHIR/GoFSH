@@ -8,7 +8,8 @@ import {
   ExportableValueSet,
   ExportableInvariant,
   ExportableMapping,
-  ExportableInstance
+  ExportableInstance,
+  ExportableAlias
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
 
@@ -22,6 +23,7 @@ describe('FSHExporter', () => {
   let invariantSpy: jest.SpyInstance;
   let mappingSpy: jest.SpyInstance;
   let instanceSpy: jest.SpyInstance;
+  let aliasSpy: jest.SpyInstance;
 
   beforeAll(() => {
     profileSpy = jest.spyOn(ExportableProfile.prototype, 'toFSH');
@@ -31,6 +33,7 @@ describe('FSHExporter', () => {
     invariantSpy = jest.spyOn(ExportableInvariant.prototype, 'toFSH');
     mappingSpy = jest.spyOn(ExportableMapping.prototype, 'toFSH');
     instanceSpy = jest.spyOn(ExportableInstance.prototype, 'toFSH');
+    aliasSpy = jest.spyOn(ExportableAlias.prototype, 'toFSH');
   });
 
   beforeEach(() => {
@@ -43,6 +46,7 @@ describe('FSHExporter', () => {
     invariantSpy.mockReset();
     mappingSpy.mockReset();
     instanceSpy.mockReset();
+    aliasSpy.mockReset();
   });
 
   it('should try to export a Profile', () => {
@@ -87,6 +91,12 @@ describe('FSHExporter', () => {
     expect(instanceSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('should try to export an Alias', () => {
+    myPackage.aliases.push(new ExportableAlias('LNC', 'http://loinc.org'));
+    exporter.export();
+    expect(aliasSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('should log info messages with the number of exported entities', () => {
     myPackage.add(new ExportableProfile('FirstProfile'));
     myPackage.add(new ExportableProfile('SecondProfile'));
@@ -108,7 +118,9 @@ describe('FSHExporter', () => {
     profileSpy.mockRestore();
     extensionSpy.mockRestore();
     codeSystemSpy.mockRestore();
+    aliasSpy.mockRestore();
 
+    myPackage.aliases.push(new ExportableAlias('LNC', 'http://loinc.org'));
     myPackage.add(new ExportableProfile('SomeProfile'));
     myPackage.add(new ExportableExtension('SomeExtension'));
     myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
@@ -116,6 +128,9 @@ describe('FSHExporter', () => {
     const result = exporter.export();
     expect(result).toBe(
       [
+        'Alias: LNC = http://loinc.org',
+        EOL,
+        EOL,
         'Profile: SomeProfile',
         EOL,
         'Id: SomeProfile',
