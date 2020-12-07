@@ -3,9 +3,56 @@ import { utils } from 'fsh-sushi';
 import '../helpers/loggerSpy'; // side-effect: suppresses logs
 import { MasterFisher } from '../../src/utils';
 import { loadTestDefinitions, stockLake } from '../helpers';
-import { resolveURL } from '../../src/optimizer/utils';
+import { optimizeURL, resolveAliasFromURL, resolveURL } from '../../src/optimizer/utils';
+import { ExportableAlias } from '../../src/exportable';
 
 describe('optimizer', () => {
+  describe('#optimizeURL', () => {
+    let fisher: MasterFisher;
+
+    beforeAll(() => {
+      const defs = loadTestDefinitions();
+      const lake = stockLake(path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json'));
+      fisher = new MasterFisher(lake, defs);
+    });
+
+    it('should prefer to resolve the URL to a FHIR resource', () => {
+      const result = optimizeURL(
+        'https://demo.org/StructureDefinition/Patient',
+        [],
+        [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher
+      );
+      expect(result).toBe('Patient');
+    });
+
+    it('should resolve the URL to an alias and add that alias if the URL cannot be resolved', () => {
+      const aliases: ExportableAlias[] = [];
+      const result = optimizeURL(
+        'https://not-resolved/StructureDefinition/Patient',
+        aliases,
+        [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher
+      );
+      expect(result).toBe('$Patient');
+      expect(aliases).toEqual([
+        { alias: '$Patient', url: 'https://not-resolved/StructureDefinition/Patient' }
+      ]);
+    });
+
+    it('should return the original URL if it can not be resolved or aliased', () => {
+      const aliases: ExportableAlias[] = [];
+      const result = optimizeURL(
+        'urn:oid:2.16.840.1.113883.6.238',
+        aliases,
+        [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher
+      );
+      expect(result).toBe('urn:oid:2.16.840.1.113883.6.238');
+      expect(aliases).toHaveLength(0);
+    });
+  });
+
   describe('#resolveURL', () => {
     let fisher: MasterFisher;
 
@@ -44,7 +91,7 @@ describe('optimizer', () => {
         [utils.Type.CodeSystem],
         fisher
       );
-      expect(result).toBe('http://terminology.hl7.org/CodeSystem/v2-0487');
+      expect(result).toBeUndefined();
     });
 
     it('should not resolve a URL to the name of a core FHIR resource if it shares a name with a local StructureDefinition', () => {
@@ -53,7 +100,7 @@ describe('optimizer', () => {
         [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('http://hl7.org/fhir/StructureDefinition/Patient');
+      expect(result).toBeUndefined();
     });
 
     // TODO: Revisit this when SUSHI supports fishing for Instance CodeSystems by name/id
@@ -63,7 +110,7 @@ describe('optimizer', () => {
         [utils.Type.CodeSystem],
         fisher
       );
-      expect(result).toBe('http://example.org/tests/CodeSystem/unsupported.codesystem');
+      expect(result).toBeUndefined();
     });
 
     // TODO: Revisit this when SUSHI supports fishing for Instance ValueSets by name/id
@@ -73,7 +120,7 @@ describe('optimizer', () => {
         [utils.Type.CodeSystem],
         fisher
       );
-      expect(result).toBe('http://example.org/tests/CodeSystem/unsupported.valueset');
+      expect(result).toBeUndefined();
     });
 
     it('should not resolve a URL when the URL does not match anything', () => {
@@ -82,7 +129,7 @@ describe('optimizer', () => {
         [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('https://youcantgettherefromhere.org/StructureDefinition/Patient');
+      expect(result).toBeUndefined();
     });
 
     it('should not resolve a URL when it only matches a type that was not asked for', () => {
@@ -91,7 +138,72 @@ describe('optimizer', () => {
         [utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('https://demo.org/StructureDefinition/Patient');
+      expect(result).toBeUndefined();
+    });
+
+    describe('#resolveAliasFromURL', () => {
+      let aliases: ExportableAlias[];
+
+      beforeEach(() => {
+        aliases = [new ExportableAlias('$foo', 'http://example.org/foo')];
+      });
+
+      it('should resolve an existing alias', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org/foo', aliases)).toBe('$foo');
+        expect(aliases).toHaveLength(originalLength);
+      });
+
+      it('should not resolve non-web url', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('urn:oid:123', aliases)).toBeUndefined();
+        expect(aliases).toHaveLength(originalLength);
+      });
+
+      it('should create a new alias using the path', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org/bar', aliases)).toBe('$bar');
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$bar',
+          url: 'http://example.org/bar'
+        });
+      });
+
+      it('should create a new alias using the host when no path is present', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org', aliases)).toBe('$example');
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$example',
+          url: 'http://example.org'
+        });
+      });
+
+      it('should create a new alias without "www" using the host when no path is present', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://www.example.org', aliases)).toBe('$example');
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$example',
+          url: 'http://www.example.org'
+        });
+      });
+
+      it('should ensure newly created aliases are unique', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://foo.org', aliases)).toBe('$foo_1');
+        expect(resolveAliasFromURL('http://example.org/bar/foo', aliases)).toBe('$foo_2');
+        expect(aliases).toHaveLength(originalLength + 2);
+        expect(aliases[aliases.length - 2]).toEqual({
+          alias: '$foo_1',
+          url: 'http://foo.org'
+        });
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$foo_2',
+          url: 'http://example.org/bar/foo'
+        });
+      });
     });
   });
 });
