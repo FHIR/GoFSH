@@ -1,3 +1,4 @@
+import { remove } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import {
@@ -8,7 +9,6 @@ import {
   ExportableInstance,
   ExportableProfile,
   ExportableRule,
-  ExportableSdRule,
   ExportableValueSet
 } from '../../exportable';
 import { fshtypes } from 'fsh-sushi';
@@ -20,13 +20,12 @@ export default {
   optimize(pkg: Package): void {
     [...pkg.profiles, ...pkg.extensions, ...pkg.valueSets, ...pkg.codeSystems].forEach(resource => {
       if (hasGeneratedText(resource)) {
-        resource.rules = (resource.rules as ExportableSdRule[]).filter(
+        remove(
+          resource.rules as ExportableRule[],
           rule =>
-            !(
-              rule instanceof ExportableCaretValueRule &&
-              rule.path === '' &&
-              rule.caretPath.match(/^text\./)
-            )
+            rule instanceof ExportableCaretValueRule &&
+            rule.path === '' &&
+            rule.caretPath.match(/^text\./)
         );
       }
     });
