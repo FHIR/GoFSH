@@ -77,7 +77,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should not replace filter rule system url with the name of a core FHIR CodeSystem when it is same as local code system name', () => {
+    it('should alias filter rule system url when it is same as local code system name', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://hl7.org/fhir/observation-status' };
@@ -91,8 +91,11 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
-      expectedRule.from = { system: 'http://hl7.org/fhir/observation-status' };
+      expectedRule.from = { system: '$observation-status' };
       expect(valueset.rules).toContainEqual(expectedRule);
+      expect(myPackage.aliases).toEqual([
+        { alias: '$observation-status', url: 'http://hl7.org/fhir/observation-status' }
+      ]);
     });
 
     it('should replace filter rule valueset url with the name of a local ValueSet', () => {
@@ -137,7 +140,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should not replace filter rule system url with the name of a core FHIR ValueSet when it is same as local code system name', () => {
+    it('should alias the filter rule system url when it is same as local code system name', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
@@ -151,8 +154,11 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
-      expectedRule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
+      expectedRule.from = { valueSets: ['$observation-status'] };
       expect(valueset.rules).toContainEqual(expectedRule);
+      expect(myPackage.aliases).toEqual([
+        { alias: '$observation-status', url: 'http://hl7.org/fhir/ValueSet/observation-status' }
+      ]);
     });
 
     it('should replace concept rule concept system url with the name of a local CodeSystem', () => {

@@ -40,6 +40,7 @@
     "@types/semver": "^7.3.4",
     "@types/temp": "^0.8.34",
     "@types/toposort": "^2.0.3",
+    "@types/valid-url": "^1.0.3",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
@@ -63,6 +64,7 @@
     "semver": "^7.3.2",
     "temp": "^0.9.1",
     "toposort": "^2.0.2",
+    "valid-url": "^1.0.9",
     "winston": "^3.3.3",
     "yaml": "^1.10.0"
   }
