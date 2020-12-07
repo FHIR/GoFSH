@@ -32,8 +32,9 @@ export default {
 
     [...pkg.instances].forEach(instance => {
       if (hasGeneratedText(instance)) {
-        instance.rules = instance.rules.filter(
-          rule => !(rule instanceof ExportableAssignmentRule && rule.path.match(/^text\./))
+        remove(
+          instance.rules,
+          rule => rule instanceof ExportableAssignmentRule && rule.path.match(/^text\./)
         );
       }
     });

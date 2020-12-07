@@ -9,12 +9,13 @@ import {
 } from '../../exportable';
 import { hasGeneratedText } from './RemoveGeneratedTextRulesOptimizer';
 import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
+import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
 
 export default {
   name: 'construct_inline_instance',
   description:
     'Construct inline instances from groups of rules in a contained resource or a Bundle',
-  runBefore: [RemoveGeneratedTextRulesOptimizer.name],
+  runBefore: [RemoveGeneratedTextRulesOptimizer.name, ResolveInstanceOfURLsOptimizer.name],
 
   optimize(pkg: Package): void {
     const inlineInstances: ExportableInstance[] = [];
