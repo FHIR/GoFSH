@@ -165,42 +165,52 @@ describe('FSHExporter', () => {
         )
       );
     });
-
-    it('should export to a single resources.fsh file when style is undefined', () => {
-      profileSpy.mockRestore();
-      extensionSpy.mockRestore();
-      codeSystemSpy.mockRestore();
-
-      myPackage.add(new ExportableProfile('SomeProfile'));
-      myPackage.add(new ExportableExtension('SomeExtension'));
-      myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
-
-      const result = exporter.export(undefined);
-      expect(result).toEqual(
-        new Map().set(
-          'resources.fsh',
-          [
-            'Profile: SomeProfile',
-            EOL,
-            'Id: SomeProfile',
-            EOL,
-            EOL,
-            'Extension: SomeExtension',
-            EOL,
-            'Id: SomeExtension',
-            EOL,
-            EOL,
-            'CodeSystem: SomeCodeSystem',
-            EOL,
-            'Id: SomeCodeSystem'
-          ].join('')
-        )
-      );
-    });
   });
 
   describe('#groupByCategory', () => {
     it('should export to a multiple files grouped by category when style is "by-category"', () => {
+      myPackage.add(new ExportableProfile('SomeProfile'));
+      myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableValueSet('SomeValueSet'));
+      myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
+      const instance = new ExportableInstance('SomeInstance');
+      instance.instanceOf = 'SomeProfile';
+      myPackage.add(instance);
+      myPackage.add(new ExportableInvariant('SomeInvariant'));
+      myPackage.add(new ExportableMapping('SomeMapping'));
+      myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
+
+      const result = exporter.export('by-category');
+      expect(result).toEqual(
+        new Map()
+          .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
+          .set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
+          .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
+          .set(
+            'terminology.fsh',
+            [
+              'ValueSet: SomeValueSet',
+              EOL,
+              'Id: SomeValueSet',
+              EOL,
+              EOL,
+              'CodeSystem: SomeCodeSystem',
+              EOL,
+              'Id: SomeCodeSystem'
+            ].join('')
+          )
+          .set(
+            'instances.fsh',
+            ['Instance: SomeInstance', EOL, 'InstanceOf: SomeProfile', EOL, 'Usage: #example'].join(
+              ''
+            )
+          )
+          .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
+          .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
+      );
+    });
+
+    it('should export to a multiple files grouped by category when style is undefined', () => {
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));

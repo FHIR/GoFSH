@@ -19,9 +19,9 @@ export class FSHExporter {
         break;
       default:
         if (style != null) {
-          logger.warn(`Unrecognized output style "${style}". Defaulting to "single-file" style.`);
+          logger.warn(`Unrecognized output style "${style}". Defaulting to "by-category" style.`);
         }
-        exports = this.groupAsSingleFile();
+        exports = this.groupByCategory();
     }
 
     logger.info(
