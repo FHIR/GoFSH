@@ -17,6 +17,9 @@ export class FSHExporter {
       case 'by-type':
         exports = this.groupByType();
         break;
+      case 'file-per-definition':
+        exports = this.groupAsFilePerDefinition();
+        break;
       default:
         if (style != null) {
           logger.warn(`Unrecognized output style "${style}". Defaulting to "by-category" style.`);
@@ -90,6 +93,43 @@ export class FSHExporter {
       results.push(mapping.toFSH());
     }
     return new Map().set('resources.fsh', results.join(`${EOL}${EOL}`));
+  }
+
+  private groupAsFilePerDefinition(): Map<string, string> {
+    const exports: Map<string, string> = new Map();
+    // Aliases, Invariants, and Mappings still get grouped into one file
+    if (this.fshPackage.aliases.length > 0) {
+      exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
+    }
+    exports.set(
+      'invariants.fsh',
+      this.fshPackage.invariants.map(invariant => invariant.toFSH()).join(`${EOL}${EOL}`)
+    );
+    exports.set(
+      'mappings.fsh',
+      this.fshPackage.mappings.map(mapping => mapping.toFSH()).join(`${EOL}${EOL}`)
+    );
+    // Other definitions are each placed in an individual file
+    for (const profile of this.fshPackage.profiles) {
+      exports.set(`${profile.name}-Profile.fsh`, profile.toFSH());
+    }
+    for (const extension of this.fshPackage.extensions) {
+      exports.set(`${extension.name}-Extension.fsh`, extension.toFSH());
+    }
+    for (const codeSystem of this.fshPackage.codeSystems) {
+      exports.set(`${codeSystem.name}-CodeSystem.fsh`, codeSystem.toFSH());
+    }
+    for (const valueSet of this.fshPackage.valueSets) {
+      exports.set(`${valueSet.name}-ValueSet.fsh`, valueSet.toFSH());
+    }
+    for (const instance of this.fshPackage.instances) {
+      exports.set(`${instance.name}-Instance.fsh`, instance.toFSH());
+    }
+    for (const instance of this.fshPackage.instances) {
+      exports.set(`${instance.name}-Instance.fsh`, instance.toFSH());
+    }
+
+    return exports;
   }
 
   private groupByCategory(): Map<string, string> {

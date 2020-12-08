@@ -328,4 +328,46 @@ describe('FSHExporter', () => {
       );
     });
   });
+
+  describe('#groupAsFilePerDefinition', () => {
+    it('should export each definition to its own file when style is "file-per-definition"', () => {
+      myPackage.add(new ExportableProfile('SomeProfile'));
+      myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableValueSet('SomeValueSet'));
+      myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
+      const instance = new ExportableInstance('SomeInstance');
+      instance.instanceOf = 'SomeProfile';
+      myPackage.add(instance);
+      myPackage.add(new ExportableInvariant('SomeInvariant'));
+      myPackage.add(new ExportableMapping('SomeMapping'));
+      myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
+
+      const result = exporter.export('file-per-definition');
+      expect(result).toEqual(
+        new Map()
+          .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
+          .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
+          .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
+          .set('SomeProfile-Profile.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
+          .set(
+            'SomeExtension-Extension.fsh',
+            ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join('')
+          )
+          .set(
+            'SomeCodeSystem-CodeSystem.fsh',
+            ['CodeSystem: SomeCodeSystem', EOL, 'Id: SomeCodeSystem'].join('')
+          )
+          .set(
+            'SomeValueSet-ValueSet.fsh',
+            ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join('')
+          )
+          .set(
+            'SomeInstance-Instance.fsh',
+            ['Instance: SomeInstance', EOL, 'InstanceOf: SomeProfile', EOL, 'Usage: #example'].join(
+              ''
+            )
+          )
+      );
+    });
+  });
 });
