@@ -34,7 +34,11 @@ export class ValueSetProcessor {
     }
   }
 
-  static extractRules(input: any, target: ExportableValueSet, fisher: utils.Fishable): void {
+  static extractRules(
+    input: ProcessableValueSet,
+    target: ExportableValueSet,
+    fisher: utils.Fishable
+  ): void {
     const newRules: ExportableValueSet['rules'] = [];
     newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
     if (input.compose) {
@@ -51,7 +55,7 @@ export class ValueSetProcessor {
   }
 
   static process(input: any, fisher: utils.Fishable): ExportableValueSet {
-    // We need something to call the ValueSet, so it must have a name or id
+    // It must be representable using the FSH ValueSet syntax
     if (ValueSetProcessor.isProcessableValueSet(input)) {
       // Prefer name (which is optional), otherwise create a reasonable name from the id with only allowable characters
       const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
@@ -93,7 +97,7 @@ export class ValueSetProcessor {
 }
 
 export interface ProcessableValueSet {
-  resourceType?: string;
+  resourceType?: 'ValueSet';
   name?: string;
   id?: string;
   title?: string;

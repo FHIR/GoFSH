@@ -1,6 +1,5 @@
-import { utils } from 'fsh-sushi';
 import semver from 'semver';
-import { logger } from '../utils';
+import { MasterFisher, logger } from '../utils';
 import {
   StructureDefinitionProcessor,
   CodeSystemProcessor,
@@ -16,16 +15,16 @@ import { InstanceProcessor } from './InstanceProcessor';
 export class FHIRProcessor {
   constructor(
     private readonly lake: LakeOfFHIR,
-    private readonly fisher?: utils.Fishable,
+    private readonly fisher?: MasterFisher,
     private readonly igPath: string = null
   ) {
     // If no fisher was passed in, just use the built-in lake fisher (usually for testing only)
     if (fisher == null) {
-      fisher = lake;
+      fisher = new MasterFisher(lake);
     }
   }
 
-  getFisher(): utils.Fishable {
+  getFisher(): MasterFisher {
     return this.fisher;
   }
 
@@ -87,7 +86,7 @@ export class FHIRProcessor {
         logger.error(`Could not process StructureDefinition at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllCodeSystems().forEach(wild => {
+    this.lake.getAllCodeSystems(false).forEach(wild => {
       try {
         resources.add(CodeSystemProcessor.process(wild.content, this.fisher));
       } catch (ex) {

@@ -1,18 +1,32 @@
+import path from 'path';
 import { fshtypes } from 'fsh-sushi';
 import { Package } from '../../../src/processor/Package';
+import { MasterFisher } from '../../../src/utils';
+import { loadTestDefinitions, stockLake } from '../../helpers';
 import optimizer from '../../../src/optimizer/plugins/CombineCodingAndQuantityValuesOptimizer';
 import {
   ExportableProfile,
   ExportableExtension,
   ExportableCaretValueRule,
   ExportableInstance,
-  ExportableAssignmentRule
+  ExportableAssignmentRule,
+  ExportableCodeSystem,
+  ExportableValueSet
 } from '../../../src/exportable';
+import { cloneDeep } from 'lodash';
 
 const { FshCode, FshQuantity } = fshtypes;
 
 describe('optimizer', () => {
   describe('#combine_coding_and_quantity_values', () => {
+    let fisher: MasterFisher;
+
+    beforeAll(() => {
+      const defs = loadTestDefinitions();
+      const lake = stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      fisher = new MasterFisher(lake, defs);
+    });
+
     it('should have appropriate metadata', () => {
       expect(optimizer.name).toBe('combine_coding_and_quantity_values');
       expect(optimizer.description).toBeDefined();
@@ -37,7 +51,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueCoding';
         expectedRule.value = new FshCode('raspberry', 'https://fruit.net/CodeSystems/FruitCS');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(1);
         expect(profile.rules[0]).toEqual(expectedRule);
       });
@@ -57,7 +71,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[1].valueCoding';
         expectedRule.value = new FshCode('raspberry', undefined, 'fresh, delicious raspberries');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(1);
         expect(profile.rules[0]).toEqual(expectedRule);
       });
@@ -84,7 +98,7 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'fresh, delicious raspberries'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(1);
         expect(profile.rules[0]).toEqual(expectedRule);
       });
@@ -111,7 +125,7 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'fresh, delicious raspberries'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(1);
         expect(profile.rules[0]).toEqual(expectedRule);
       });
@@ -141,7 +155,7 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'fresh, delicious raspberries'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(2);
         expect(profile.rules[0]).toEqual(expectedRule);
         expect(profile.rules[1]).toEqual(secondCodeRule);
@@ -173,10 +187,50 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'fresh, delicious raspberries'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(2);
         expect(profile.rules[0]).toEqual(expectedRule);
         expect(profile.rules[1]).toEqual(idRule);
+      });
+
+      it('should not combine rules on code and display for CodeSystem.concept', () => {
+        const codeSystem = new ExportableCodeSystem('MyCodeSystem');
+        const codeRule = new ExportableCaretValueRule('');
+        codeRule.caretPath = 'concept[0].code';
+        codeRule.value = new FshCode('gooseberry');
+        const displayRule = new ExportableCaretValueRule('');
+        displayRule.caretPath = 'concept[0].display';
+        displayRule.value = 'the goose is loose';
+        codeSystem.rules.push(codeRule, displayRule);
+        const myPackage = new Package();
+        myPackage.add(codeSystem);
+
+        const expecteCodeRule = cloneDeep(codeRule);
+        const expectedDisplayRule = cloneDeep(displayRule);
+        optimizer.optimize(myPackage, fisher);
+        expect(codeSystem.rules.length).toBe(2);
+        expect(codeSystem.rules[0]).toEqual(expecteCodeRule);
+        expect(codeSystem.rules[1]).toEqual(expectedDisplayRule);
+      });
+
+      it('should not combine rules on code and display for ValueSet.compose.include.concept', () => {
+        const valueSet = new ExportableValueSet('ValueSet');
+        const codeRule = new ExportableCaretValueRule('');
+        codeRule.caretPath = 'compose.include[0].concept[0].code';
+        codeRule.value = new FshCode('gooseberry');
+        const displayRule = new ExportableCaretValueRule('');
+        displayRule.caretPath = 'compose.include[0].concept[0].display';
+        displayRule.value = 'the goose is loose';
+        valueSet.rules.push(codeRule, displayRule);
+        const myPackage = new Package();
+        myPackage.add(valueSet);
+
+        const expecteCodeRule = cloneDeep(codeRule);
+        const expectedDisplayRule = cloneDeep(displayRule);
+        optimizer.optimize(myPackage, fisher);
+        expect(valueSet.rules.length).toBe(2);
+        expect(valueSet.rules[0]).toEqual(expecteCodeRule);
+        expect(valueSet.rules[1]).toEqual(expectedDisplayRule);
       });
 
       it('should combine rules on code and unit into a single rule', () => {
@@ -194,7 +248,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
         expectedRule.value = new FshCode('GW', undefined, 'Gigawatts');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(extension.rules.length).toBe(1);
         expect(extension.rules[0]).toEqual(expectedRule);
       });
@@ -217,7 +271,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
         expectedRule.value = new FshCode('GW', 'http://unitsofmeasure.org', 'Gigawatts');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(extension.rules.length).toBe(1);
         expect(extension.rules[0]).toEqual(expectedRule);
       });
@@ -240,7 +294,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
         expectedRule.value = new FshQuantity(1.21, new FshCode('GW', 'http://unitsofmeasure.org'));
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(extension.rules.length).toBe(1);
         expect(extension.rules[0]).toEqual(expectedRule);
       });
@@ -263,7 +317,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
         expectedRule.value = new FshCode('GW', 'http://different-units.org');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(extension.rules.length).toBe(2);
         expect(extension.rules).toContainEqual(valueRule);
         expect(extension.rules).toContainEqual(expectedRule);
@@ -281,7 +335,7 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(extension);
 
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(extension.rules.length).toBe(2);
         expect(extension.rules).toContainEqual(codeRule);
         expect(extension.rules).toContainEqual(valueRule);
@@ -308,7 +362,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
         expectedRule.value = new FshQuantity(1.21, new FshCode('GW', 'http://unitsofmeasure.org'));
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(extension.rules.length).toBe(2);
         expect(extension.rules).toContainEqual(expectedRule);
         expect(extension.rules).toContainEqual(unitRule);
@@ -335,7 +389,7 @@ describe('optimizer', () => {
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
         expectedRule.value = new FshCode('GW', 'http://other-units.org', 'Gigawatts');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(extension.rules.length).toBe(2);
         expect(extension.rules).toContainEqual(expectedRule);
         expect(extension.rules).toContainEqual(valueRule);
@@ -353,7 +407,7 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(profile);
 
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(2);
         expect(profile.rules[0]).toBe(codeRule);
         expect(profile.rules[1]).toBe(displayRule);
@@ -371,7 +425,7 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(profile);
 
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(profile.rules.length).toBe(2);
         expect(profile.rules[0]).toBe(codeRule);
         expect(profile.rules[1]).toBe(displayRule);
@@ -393,7 +447,7 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableAssignmentRule('code');
         expectedRule.value = new FshCode('gooseberry', 'https://fruit.net/CodeSystems/FruitCS');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
       });
@@ -411,7 +465,7 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableAssignmentRule('code');
         expectedRule.value = new FshCode('gooseberry', undefined, 'the goose is loose');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
       });
@@ -435,7 +489,7 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'the goose is loose'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
       });
@@ -459,7 +513,7 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'the goose is loose'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
       });
@@ -485,7 +539,7 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'the goose is loose'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(2);
         expect(instance.rules[0]).toEqual(expectedRule);
         expect(instance.rules[1]).toEqual(secondCodeRule);
@@ -512,10 +566,48 @@ describe('optimizer', () => {
           'https://fruit.net/CodeSystems/FruitCS',
           'the goose is loose'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(2);
         expect(instance.rules[0]).toEqual(expectedRule);
         expect(instance.rules[1]).toEqual(idRule);
+      });
+
+      it('should not combine rules on code and display for CodeSystem.concept', () => {
+        const instance = new ExportableInstance('MyCodeSystem');
+        instance.instanceOf = 'CodeSystem';
+        const codeRule = new ExportableAssignmentRule('concept[0].code');
+        codeRule.value = new FshCode('gooseberry');
+        const displayRule = new ExportableAssignmentRule('concept[0].display');
+        displayRule.value = 'the goose is loose';
+        instance.rules.push(codeRule, displayRule);
+        const myPackage = new Package();
+        myPackage.add(instance);
+
+        const expecteCodeRule = cloneDeep(codeRule);
+        const expectedDisplayRule = cloneDeep(displayRule);
+        optimizer.optimize(myPackage, fisher);
+        expect(instance.rules.length).toBe(2);
+        expect(instance.rules[0]).toEqual(expecteCodeRule);
+        expect(instance.rules[1]).toEqual(expectedDisplayRule);
+      });
+
+      it('should not combine rules on code and display for ValueSet.compose.include.concept', () => {
+        const instance = new ExportableInstance('MyValueSet');
+        instance.instanceOf = 'ValueSet';
+        const codeRule = new ExportableAssignmentRule('compose.include[0].concept[0].code');
+        codeRule.value = new FshCode('gooseberry');
+        const displayRule = new ExportableAssignmentRule('compose.include[0].concept[0].display');
+        displayRule.value = 'the goose is loose';
+        instance.rules.push(codeRule, displayRule);
+        const myPackage = new Package();
+        myPackage.add(instance);
+
+        const expecteCodeRule = cloneDeep(codeRule);
+        const expectedDisplayRule = cloneDeep(displayRule);
+        optimizer.optimize(myPackage, fisher);
+        expect(instance.rules.length).toBe(2);
+        expect(instance.rules[0]).toEqual(expecteCodeRule);
+        expect(instance.rules[1]).toEqual(expectedDisplayRule);
       });
 
       it('should combine rules on code and unit into a single rule', () => {
@@ -531,7 +623,7 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
         expectedRule.value = new FshCode('Cal', undefined, 'nutrition label Calories');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
       });
@@ -555,7 +647,7 @@ describe('optimizer', () => {
           'http://unitsofmeasure.org',
           'nutrition label Calories'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
       });
@@ -575,7 +667,7 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
         expectedRule.value = new FshQuantity(6, new FshCode('Cal', 'http://unitsofmeasure.org'));
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(1);
         expect(instance.rules[0]).toEqual(expectedRule);
       });
@@ -595,7 +687,7 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
         expectedRule.value = new FshCode('Cal', 'http://mystery-system.org');
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(2);
         expect(instance.rules).toContainEqual(valueRule);
         expect(instance.rules).toContainEqual(expectedRule);
@@ -612,7 +704,7 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(instance);
 
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(2);
         expect(instance.rules).toContainEqual(codeRule);
         expect(instance.rules).toContainEqual(valueRule);
@@ -635,7 +727,7 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
         expectedRule.value = new FshQuantity(6, new FshCode('Cal', 'http://unitsofmeasure.org'));
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(2);
         expect(instance.rules).toContainEqual(expectedRule);
         expect(instance.rules).toContainEqual(unitRule);
@@ -662,7 +754,7 @@ describe('optimizer', () => {
           'http://other-units.org',
           'nutrition label Calories'
         );
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(2);
         expect(instance.rules).toContainEqual(expectedRule);
         expect(instance.rules).toContainEqual(valueRule);
@@ -679,7 +771,7 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(instance);
 
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
         expect(instance.rules.length).toBe(2);
         expect(instance.rules[0]).toEqual(codeRule);
         expect(instance.rules[1]).toEqual(displayRule);

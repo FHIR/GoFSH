@@ -1,6 +1,5 @@
 import path from 'path';
 import { cloneDeep } from 'lodash';
-import { utils } from 'fsh-sushi';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { Package } from '../../../src/processor';
 import { ExportableBindingRule, ExportableProfile } from '../../../src/exportable';
@@ -10,7 +9,7 @@ import { MasterFisher } from '../../../src/utils';
 
 describe('optimizer', () => {
   describe('#resolve_binding_rule_urls', () => {
-    let fisher: utils.Fishable;
+    let fisher: MasterFisher;
 
     beforeAll(() => {
       const defs = loadTestDefinitions();

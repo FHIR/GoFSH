@@ -1,0 +1,29 @@
+{
+  "resourceType": "CodeSystem",
+  "name": "UnsupportedCodeSystem",
+  "id": "unsupported.codesystem",
+  "title": "Unsupported CodeSystem",
+  "description": "This code system is not supported by CodeSystem FSH syntax because it has a concept designation.",
+  "concept": [
+    {
+      "code": "breakfast"
+    },
+    {
+      "code": "lunch",
+      "definition": "Meal typically eaten at midday."
+    },
+    {
+      "code": "dinner",
+      "display": "Evening meal (non-dangerous)"
+    },
+    {
+      "code": "dangerous-dinner",
+      "definition": "Meal eaten during the late evening. Should only be eaten by dinner experts.",
+      "display": "Evening meal (dangerous)",
+      "designation": {
+        "language": "fr",
+        "value": "diner-dangereux"
+      }
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 import path from 'path';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
-import { utils } from 'fsh-sushi';
 import { Package } from '../../../src/processor';
 import { ExportableExtension, ExportableProfile } from '../../../src/exportable';
 import { MasterFisher } from '../../../src/utils';
@@ -9,7 +8,7 @@ import optimizer from '../../../src/optimizer/plugins/ResolveParentURLsOptimizer
 
 describe('optimizer', () => {
   describe('#resolve_parent_urls', () => {
-    let fisher: utils.Fishable;
+    let fisher: MasterFisher;
 
     beforeAll(() => {
       const defs = loadTestDefinitions();

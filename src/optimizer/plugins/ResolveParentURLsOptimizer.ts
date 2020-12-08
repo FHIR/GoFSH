@@ -1,7 +1,8 @@
 import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
-import { Package } from '../../processor';
 import { optimizeURL } from '../utils';
+import { Package } from '../../processor';
+import { MasterFisher } from '../../utils';
 
 const FISHER_TYPES = [
   utils.Type.Resource,
@@ -14,7 +15,7 @@ export default {
   name: 'resolve_parent_urls',
   description: 'Replace declared parent URLs with their names or aliases',
 
-  optimize(pkg: Package, fisher: utils.Fishable): void {
+  optimize(pkg: Package, fisher: MasterFisher): void {
     for (const resource of [...pkg.profiles, ...pkg.extensions]) {
       if (resource.parent) {
         resource.parent = optimizeURL(resource.parent, pkg.aliases, FISHER_TYPES, fisher);

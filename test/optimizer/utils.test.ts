@@ -8,7 +8,7 @@ import { ExportableAlias } from '../../src/exportable';
 
 describe('optimizer', () => {
   describe('#optimizeURL', () => {
-    let fisher: utils.Fishable;
+    let fisher: MasterFisher;
 
     beforeAll(() => {
       const defs = loadTestDefinitions();
@@ -54,11 +54,15 @@ describe('optimizer', () => {
   });
 
   describe('#resolveURL', () => {
-    let fisher: utils.Fishable;
+    let fisher: MasterFisher;
 
     beforeAll(() => {
       const defs = loadTestDefinitions();
-      const lake = stockLake(path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json'));
+      const lake = stockLake(
+        path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json'),
+        path.join(__dirname, 'plugins', 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'plugins', 'fixtures', 'unsupported-valueset.json')
+      );
       fisher = new MasterFisher(lake, defs);
     });
 
@@ -94,6 +98,26 @@ describe('optimizer', () => {
       const result = resolveURL(
         'http://hl7.org/fhir/StructureDefinition/Patient',
         [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher
+      );
+      expect(result).toBeUndefined();
+    });
+
+    // TODO: Revisit this when SUSHI supports fishing for Instance CodeSystems by name/id
+    it('should not resolve a URL to a code system that is not supported by FSH syntax', () => {
+      const result = resolveURL(
+        'http://example.org/tests/CodeSystem/unsupported.codesystem',
+        [utils.Type.CodeSystem],
+        fisher
+      );
+      expect(result).toBeUndefined();
+    });
+
+    // TODO: Revisit this when SUSHI supports fishing for Instance ValueSets by name/id
+    it('should not resolve a URL to a value set that is not supported by FSH syntax', () => {
+      const result = resolveURL(
+        'http://example.org/tests/CodeSystem/unsupported.valueset',
+        [utils.Type.CodeSystem],
         fisher
       );
       expect(result).toBeUndefined();
