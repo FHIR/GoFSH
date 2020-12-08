@@ -44,6 +44,16 @@ describe('FSHExporter', () => {
     expect(loggerSpy.getLastMessage('warn')).toMatch(/Unrecognized output style "foo"/);
   });
 
+  it('should not export an empty file', () => {
+    myPackage.add(new ExportableProfile('SomeProfile'));
+
+    const result = exporter.export('by-category');
+    // Only the profiles.fsh file should be present in the map
+    expect(result).toEqual(
+      new Map().set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
+    );
+  });
+
   describe('#groupBySingleFile', () => {
     let profileSpy: jest.SpyInstance;
     let extensionSpy: jest.SpyInstance;

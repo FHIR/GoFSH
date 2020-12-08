@@ -63,6 +63,14 @@ export class FSHExporter {
       }.`
     );
 
+    // Remove any empty files
+    const keys = exports.keys();
+    Array.from(keys).forEach(key => {
+      if (/^\s*$/.test(exports.get(key))) {
+        exports.delete(key);
+      }
+    });
+
     return exports;
   }
 
@@ -98,9 +106,7 @@ export class FSHExporter {
   private groupAsFilePerDefinition(): Map<string, string> {
     const exports: Map<string, string> = new Map();
     // Aliases, Invariants, and Mappings still get grouped into one file
-    if (this.fshPackage.aliases.length > 0) {
-      exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
-    }
+    exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
     exports.set(
       'invariants.fsh',
       this.fshPackage.invariants.map(invariant => invariant.toFSH()).join(`${EOL}${EOL}`)
@@ -134,9 +140,7 @@ export class FSHExporter {
 
   private groupByCategory(): Map<string, string> {
     const exports: Map<string, string> = new Map();
-    if (this.fshPackage.aliases.length > 0) {
-      exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
-    }
+    exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
     exports.set(
       'profiles.fsh',
       this.fshPackage.profiles.map(profile => profile.toFSH()).join(`${EOL}${EOL}`)
@@ -185,9 +189,7 @@ export class FSHExporter {
     });
 
     // All other artifacts are grouped by category
-    if (this.fshPackage.aliases.length > 0) {
-      files.set('aliases.fsh', [this.fshPackage.aliases.map(a => a.toFSH()).join(EOL)]);
-    }
+    files.set('aliases.fsh', [this.fshPackage.aliases.map(a => a.toFSH()).join(EOL)]);
     files.set(
       'extensions.fsh',
       this.fshPackage.extensions.map(extension => extension.toFSH())

@@ -180,13 +180,8 @@ describe('Processing', () => {
 
     it('should write output to a file named resources.fsh in the output directory', () => {
       const resources = new Package();
+      resources.add(new ExportableProfile('Foo'));
       writeFSH(resources, tempRoot, 'single-file');
-      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'resources.fsh'))).toBeTruthy();
-    });
-
-    it('should write output to a file named resources.fsh in the output directory when style is undefined', () => {
-      const resources = new Package();
-      writeFSH(resources, tempRoot, undefined);
       expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'resources.fsh'))).toBeTruthy();
     });
 
@@ -195,6 +190,15 @@ describe('Processing', () => {
       resources.add(new ExportableProfile('Foo'));
       resources.add(new ExportableInstance('Bar'));
       writeFSH(resources, tempRoot, 'by-category');
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'profiles.fsh'))).toBeTruthy();
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'instances.fsh'))).toBeTruthy();
+    });
+
+    it('should write output to files organized by category when style is undefined', () => {
+      const resources = new Package();
+      resources.add(new ExportableProfile('Foo'));
+      resources.add(new ExportableInstance('Bar'));
+      writeFSH(resources, tempRoot, undefined);
       expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'profiles.fsh'))).toBeTruthy();
       expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'instances.fsh'))).toBeTruthy();
     });
