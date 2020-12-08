@@ -45,6 +45,42 @@ describe('CodeSystemProcessor', () => {
       expect(result.name).toBe('MyCodeSystem');
       expect(result.id).toBe('my.code-system');
     });
+
+    it('should not convert a CodeSystem with a concept designation', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
+      );
+      input.concept[2].designation = {
+        language: 'fr',
+        value: 'diner-dangereux'
+      };
+      const result = CodeSystemProcessor.process(input, defs);
+      expect(result).toBeUndefined();
+    });
+
+    it('should not convert a CodeSystem with a concept property', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
+      );
+      input.concept[0].property = {
+        code: 'healthy',
+        valueCode: 'sometimes'
+      };
+      const result = CodeSystemProcessor.process(input, defs);
+      expect(result).toBeUndefined();
+    });
+
+    it('should not convert a CodeSystem with a child concept', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
+      );
+      input.concept[0].concept = {
+        code: 'breakfast2',
+        display: 'Second breakfast'
+      };
+      const result = CodeSystemProcessor.process(input, defs);
+      expect(result).toBeUndefined();
+    });
   });
 
   describe('#extractKeywords', () => {

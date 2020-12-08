@@ -92,7 +92,7 @@ describe('FHIRProcessor', () => {
     expect(structureDefinitionSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should try to process a CodeSystem with the CodeSystemProcessor', () => {
+  it('should try to process a supported CodeSystem with the CodeSystemProcessor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
     const config = processor.processConfig();
     processor.process(config);
@@ -113,6 +113,7 @@ describe('FHIRProcessor', () => {
     processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
     expect(valueSetSpy).not.toHaveBeenCalled();
+    expect(codeSystemSpy).not.toHaveBeenCalled();
   });
 
   it('should try to process an unsupported ValueSet with the InstanceProcessor', () => {
@@ -121,5 +122,13 @@ describe('FHIRProcessor', () => {
     processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
     expect(valueSetSpy).not.toHaveBeenCalled();
+  });
+
+  it('should try to process an unsupported CodeSystem with the InstanceProcessor', () => {
+    restockLake(lake, path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'));
+    const config = processor.processConfig();
+    processor.process(config);
+    expect(instanceSpy).toHaveBeenCalledTimes(1);
+    expect(codeSystemSpy).not.toHaveBeenCalled();
   });
 });

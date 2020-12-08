@@ -1,4 +1,5 @@
 import { fhirdefs, utils } from 'fsh-sushi';
+import { CodeSystemProcessor } from './CodeSystemProcessor';
 import { ValueSetProcessor } from './ValueSetProcessor';
 import { WildFHIR } from './WildFHIR';
 
@@ -15,7 +16,8 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   /**
-   * Gets all value sets in the lake
+   * Gets all value sets in the lake, optionally excluding value sets that can't be processed using FSH ValueSet syntax
+   * @param includeUnsupported - indicates if value sets that can't be processed using FSH ValueSet syntax should be returned
    * @returns {WildFHIR[]}
    */
   getAllValueSets(includeUnsupported = true): WildFHIR[] {
@@ -27,11 +29,16 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   /**
-   * Gets all code systems in the lake
+   * Gets all code systems in the lake, optionally excluding code systems that can't be processed using FSH CodeSystem syntax
+   * @param includeUnsupported - indicates if code systems that can't be processed using FSH CodeSystem syntax should be returned
    * @returns {WildFHIR[]}
    */
-  getAllCodeSystems(): WildFHIR[] {
-    return this.docs.filter(d => d.content.resourceType === 'CodeSystem');
+  getAllCodeSystems(includeUnsupported = true): WildFHIR[] {
+    return this.docs.filter(
+      d =>
+        d.content.resourceType === 'CodeSystem' &&
+        (includeUnsupported || CodeSystemProcessor.isProcessableCodeSystem(d.content))
+    );
   }
 
   /**
@@ -43,18 +50,26 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   /**
-   * Gets all instances in the lake
+   * Gets all instances in the lake, optionally including value sets / code systems that can't be processed using FSH VS/CS syntax
+   * @param includeUnsupported - indicates if terminology resources that can't be processed using FSH VS/CS syntax should be returned
    * @returns {WildFHIR[]}
    */
-  getAllInstances(includeUnsupportedValueSets = false): WildFHIR[] {
+  getAllInstances(includeUnsupportedTerminologyResources = false): WildFHIR[] {
     return this.docs.filter(d => {
       switch (d.content.resourceType) {
         case 'ImplementationGuide':
         case 'StructureDefinition':
-        case 'CodeSystem':
           return false;
+        case 'CodeSystem':
+          return (
+            includeUnsupportedTerminologyResources &&
+            !CodeSystemProcessor.isProcessableCodeSystem(d.content)
+          );
         case 'ValueSet':
-          return includeUnsupportedValueSets && !ValueSetProcessor.isProcessableValueSet(d.content);
+          return (
+            includeUnsupportedTerminologyResources &&
+            !ValueSetProcessor.isProcessableValueSet(d.content)
+          );
         default:
           return true;
       }

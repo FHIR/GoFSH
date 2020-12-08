@@ -1,5 +1,5 @@
-import { utils } from 'fsh-sushi';
 import { Package } from '../processor';
+import { MasterFisher } from '../utils';
 
 /**
  * OptimizerPlugin defines the interface that an optimizer must support to be automatically loaded by the loadOptimizers function.
@@ -34,5 +34,5 @@ export interface OptimizerPlugin {
    * @param pkg - the Package containing all of the definitions that can potentially be optimized
    * @param fisher - a fisher that can be used to look up definitions from local files, FHIR core, and dependencies
    */
-  optimize(pkg: Package, fisher?: utils.Fishable): void;
+  optimize(pkg: Package, fisher?: MasterFisher): void;
 }

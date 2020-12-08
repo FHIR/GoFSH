@@ -1,5 +1,5 @@
 import path from 'path';
-import { fhirdefs, utils } from 'fsh-sushi';
+import { fhirdefs } from 'fsh-sushi';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { LakeOfFHIR, Package } from '../../../src/processor';
 import {
@@ -17,13 +17,15 @@ describe('optimizer', () => {
   describe('#resolve_value_set_component_rule_urls', () => {
     let defs: fhirdefs.FHIRDefinitions;
     let lake: LakeOfFHIR;
-    let fisher: utils.Fishable;
+    let fisher: MasterFisher;
 
     beforeAll(() => {
       defs = loadTestDefinitions();
       lake = stockLake(
         path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json')
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
       );
       fisher = new MasterFisher(lake, defs);
     });
@@ -98,6 +100,21 @@ describe('optimizer', () => {
       ]);
     });
 
+    // TODO: Revisit this when SUSHI supports fishing for Instance CodeSystems by name/id
+    it('should not replace filter rule system url with the name of a local unsupported CodeSystem', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { system: 'http://example.org/tests/CodeSystem/unsupported.codesystem' };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { system: '$unsupported.codesystem' };
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
     it('should replace filter rule valueset url with the name of a local ValueSet', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
@@ -150,7 +167,7 @@ describe('optimizer', () => {
 
       // Use a modified lake and fisher to force the local CS to have the same name
       const modLake = cloneDeep(lake);
-      modLake.docs[1].content.name = 'ObservationStatus';
+      modLake.docs[2].content.name = 'ObservationStatus';
       optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -159,6 +176,21 @@ describe('optimizer', () => {
       expect(myPackage.aliases).toEqual([
         { alias: '$observation-status', url: 'http://hl7.org/fhir/ValueSet/observation-status' }
       ]);
+    });
+
+    // TODO: Revisit this when SUSHI supports fishing for Instance ValueSets by name/id
+    it('should not replace filter rule valueset url with the name of a local unsupported ValueSet', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { valueSets: ['http://example.org/tests/ValueSet/unsupported.valueset'] };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { valueSets: ['$unsupported.valueset'] };
+      expect(valueset.rules).toContainEqual(expectedRule);
     });
 
     it('should replace concept rule concept system url with the name of a local CodeSystem', () => {
@@ -207,6 +239,22 @@ describe('optimizer', () => {
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
       expectedRule.concepts = [new FshCode('final', 'ObservationStatus', 'Final')];
+      expect(valueset.rules).toContainEqual(expectedRule);
+    });
+
+    it('should not replace concept rule concept system url with the name of a local unsupported CodeSystem', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetConceptComponentRule(true);
+      rule.concepts = [
+        new FshCode('A', 'http://example.org/tests/CodeSystem/unsupported.codesystem', 'Letter A')
+      ];
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableValueSetConceptComponentRule(true);
+      expectedRule.concepts = [new FshCode('A', '$unsupported.codesystem', 'Letter A')];
       expect(valueset.rules).toContainEqual(expectedRule);
     });
   });
