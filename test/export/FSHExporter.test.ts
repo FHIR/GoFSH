@@ -200,7 +200,7 @@ describe('FSHExporter', () => {
   });
 
   describe('#groupByCategory', () => {
-    it('should export to a single resources.fsh file when style is "by-category"', () => {
+    it('should export to a multiple files grouped by category when style is "by-category"', () => {
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
@@ -210,10 +210,12 @@ describe('FSHExporter', () => {
       myPackage.add(instance);
       myPackage.add(new ExportableInvariant('SomeInvariant'));
       myPackage.add(new ExportableMapping('SomeMapping'));
+      myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
 
       const result = exporter.export('by-category');
       expect(result).toEqual(
         new Map()
+          .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
           .set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
           .set(
@@ -234,6 +236,82 @@ describe('FSHExporter', () => {
             ['Instance: SomeInstance', EOL, 'InstanceOf: SomeProfile', EOL, 'Usage: #example'].join(
               ''
             )
+          )
+          .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
+          .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
+      );
+    });
+  });
+
+  describe('#groupByType', () => {
+    it('should export to multiple files grouped by type when style is "by-type"', () => {
+      myPackage.add(new ExportableProfile('SomeProfile'));
+      myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableValueSet('SomeValueSet'));
+      myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
+      const instance = new ExportableInstance('SomeInstance');
+      instance.instanceOf = 'SomeProfile';
+      myPackage.add(instance);
+      const definitionalInstance = new ExportableInstance('DefinitionalInstance');
+      definitionalInstance.instanceOf = 'ValueSet';
+      definitionalInstance.usage = 'Definition';
+      myPackage.add(definitionalInstance);
+      const externalExampleInstance = new ExportableInstance('ExternalExampleInstance');
+      externalExampleInstance.instanceOf = 'Patient';
+      myPackage.add(externalExampleInstance);
+      myPackage.add(new ExportableInvariant('SomeInvariant'));
+      myPackage.add(new ExportableMapping('SomeMapping'));
+      myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
+
+      const result = exporter.export('by-type');
+      expect(result).toEqual(
+        new Map()
+          .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
+          .set(
+            'SomeProfile.fsh',
+            [
+              'Profile: SomeProfile',
+              EOL,
+              'Id: SomeProfile',
+              EOL,
+              EOL,
+              'Instance: SomeInstance',
+              EOL,
+              'InstanceOf: SomeProfile',
+              EOL,
+              'Usage: #example'
+            ].join('')
+          )
+          .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
+          .set(
+            'terminology.fsh',
+            [
+              'ValueSet: SomeValueSet',
+              EOL,
+              'Id: SomeValueSet',
+              EOL,
+              EOL,
+              'CodeSystem: SomeCodeSystem',
+              EOL,
+              'Id: SomeCodeSystem'
+            ].join('')
+          )
+          .set(
+            'instances.fsh',
+            [
+              'Instance: DefinitionalInstance',
+              EOL,
+              'InstanceOf: ValueSet',
+              EOL,
+              'Usage: #definition',
+              EOL,
+              EOL,
+              'Instance: ExternalExampleInstance',
+              EOL,
+              'InstanceOf: Patient',
+              EOL,
+              'Usage: #example'
+            ].join('')
           )
           .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
           .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))

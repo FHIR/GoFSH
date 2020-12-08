@@ -14,6 +14,9 @@ export class FSHExporter {
       case 'by-category':
         exports = this.groupByCategory();
         break;
+      case 'by-type':
+        exports = this.groupByType();
+        break;
       default:
         if (style != null) {
           logger.warn(`Unrecognized output style "${style}". Defaulting to "single-file" style.`);
@@ -91,6 +94,9 @@ export class FSHExporter {
 
   private groupByCategory(): Map<string, string> {
     const exports: Map<string, string> = new Map();
+    if (this.fshPackage.aliases.length > 0) {
+      exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
+    }
     exports.set(
       'profiles.fsh',
       this.fshPackage.profiles.map(profile => profile.toFSH()).join(`${EOL}${EOL}`)
@@ -118,6 +124,50 @@ export class FSHExporter {
       'mappings.fsh',
       this.fshPackage.mappings.map(mapping => mapping.toFSH()).join(`${EOL}${EOL}`)
     );
+    return exports;
+  }
+
+  private groupByType(): Map<string, string> {
+    const files: Map<string, string[]> = new Map();
+
+    // Group profiles and examples of those profiles into individual files
+    this.fshPackage.profiles.forEach(profile => {
+      files.set(`${profile.name}.fsh`, [profile.toFSH()]);
+    });
+    this.fshPackage.instances.forEach(instance => {
+      if (instance.usage === 'Example' && files.has(`${instance.instanceOf}.fsh`)) {
+        files.get(`${instance.instanceOf}.fsh`).push(instance.toFSH());
+      } else if (files.has('instances.fsh')) {
+        files.get('instances.fsh').push(instance.toFSH());
+      } else {
+        files.set('instances.fsh', [instance.toFSH()]);
+      }
+    });
+
+    // All other artifacts are grouped by category
+    if (this.fshPackage.aliases.length > 0) {
+      files.set('aliases.fsh', [this.fshPackage.aliases.map(a => a.toFSH()).join(EOL)]);
+    }
+    files.set(
+      'extensions.fsh',
+      this.fshPackage.extensions.map(extension => extension.toFSH())
+    );
+    files.set('terminology.fsh', [
+      ...this.fshPackage.valueSets.map(valueSet => valueSet.toFSH()),
+      ...this.fshPackage.codeSystems.map(codeSystem => codeSystem.toFSH())
+    ]);
+
+    files.set(
+      'invariants.fsh',
+      this.fshPackage.invariants.map(invariant => invariant.toFSH())
+    );
+    files.set(
+      'mappings.fsh',
+      this.fshPackage.mappings.map(mapping => mapping.toFSH())
+    );
+
+    const exports: Map<string, string> = new Map();
+    files.forEach((content, fileName) => exports.set(fileName, content.join(`${EOL}${EOL}`)));
     return exports;
   }
 }
