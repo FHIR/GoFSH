@@ -13,7 +13,8 @@ import {
   getFhirProcessor
 } from '../../src/utils/Processing';
 import { Package } from '../../src/processor';
-import { ExportableConfiguration } from '../../src/exportable';
+import { ExportableAssignmentRule, ExportableConfiguration } from '../../src/exportable';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('Processing', () => {
   temp.track();
@@ -143,6 +144,21 @@ describe('Processing', () => {
       } catch (e) {
         expect(e.message).toMatch('no such file or directory');
       }
+    });
+
+    it('should not create duplicate inline instances', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'inline-instances');
+      const processor = await getFhirProcessor(inDir, loadTestDefinitions());
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
+      expect(result.instances).toHaveLength(2);
+      const bundle = result.instances.find(i => i.id === 'foo');
+      const inlineInstanceRule = new ExportableAssignmentRule('entry[0].resource');
+      inlineInstanceRule.isInstance = true;
+      inlineInstanceRule.value = 'bar';
+      expect(bundle.rules).toContainEqual(inlineInstanceRule);
+      const patient = result.instances.find(i => i.id === 'bar');
+      expect(patient.usage).toBe('Example');
     });
   });
 

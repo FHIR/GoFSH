@@ -1,36 +1,70 @@
+import { remove } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
-import { ExportableCaretValueRule, ExportableRule } from '../../exportable';
-import { pullAt } from 'lodash';
+import {
+  ExportableAssignmentRule,
+  ExportableCaretValueRule,
+  ExportableCodeSystem,
+  ExportableExtension,
+  ExportableInstance,
+  ExportableProfile,
+  ExportableRule,
+  ExportableValueSet
+} from '../../exportable';
 import { fshtypes } from 'fsh-sushi';
 
 export default {
   name: 'remove_generated_text_rules',
-  description: 'Remove caret rules on "text" which represent generated content.',
+  description: 'Remove rules on "text" which represent generated content.',
 
   optimize(pkg: Package): void {
     [...pkg.profiles, ...pkg.extensions, ...pkg.valueSets, ...pkg.codeSystems].forEach(resource => {
-      const rulesToRemove: number[] = [];
-      const hasGeneratedText = resource.rules.some(
-        (rule: ExportableRule) =>
-          rule instanceof ExportableCaretValueRule &&
-          rule.path === '' &&
-          rule.caretPath === 'text.status' &&
-          rule.value instanceof fshtypes.FshCode &&
-          ['generated', 'extensions'].includes(rule.value.code)
-      );
-      if (hasGeneratedText) {
-        resource.rules.forEach((rule: ExportableRule, i: number) => {
-          if (
+      if (hasGeneratedText(resource)) {
+        remove(
+          resource.rules as ExportableRule[],
+          rule =>
             rule instanceof ExportableCaretValueRule &&
             rule.path === '' &&
             rule.caretPath.match(/^text\./)
-          ) {
-            rulesToRemove.push(i);
-          }
-        });
+        );
       }
-      pullAt(resource.rules as ExportableRule[], rulesToRemove);
+    });
+
+    [...pkg.instances].forEach(instance => {
+      if (hasGeneratedText(instance)) {
+        remove(
+          instance.rules,
+          rule => rule instanceof ExportableAssignmentRule && rule.path.match(/^text\./)
+        );
+      }
     });
   }
 } as OptimizerPlugin;
+
+export function hasGeneratedText(
+  resource:
+    | ExportableInstance
+    | ExportableProfile
+    | ExportableExtension
+    | ExportableValueSet
+    | ExportableCodeSystem
+): boolean {
+  if (resource instanceof ExportableInstance) {
+    return resource.rules.some(
+      (rule: ExportableRule) =>
+        rule instanceof ExportableAssignmentRule &&
+        rule.path === 'text.status' &&
+        rule.value instanceof fshtypes.FshCode &&
+        ['generated', 'extensions'].includes(rule.value.code)
+    );
+  } else {
+    return resource.rules.some(
+      (rule: ExportableRule) =>
+        rule instanceof ExportableCaretValueRule &&
+        rule.path === '' &&
+        rule.caretPath === 'text.status' &&
+        rule.value instanceof fshtypes.FshCode &&
+        ['generated', 'extensions'].includes(rule.value.code)
+    );
+  }
+}
