@@ -1,6 +1,6 @@
 {
   "name": "gofsh",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON to FSH.",
   "main": "dist/app.js",
   "scripts": {
@@ -25,6 +25,7 @@
   ],
   "contributors": [
     "Julia Afeltra <jafeltra@mitre.org>",
+    "Julian Carter <jacarter@mitre.org",
     "Nick Freiter <nfreiter@mitre.org>",
     "Chris Moesel <cmoesel@mitre.org>",
     "Mint Thompson <mathompson@mitre.org>"
