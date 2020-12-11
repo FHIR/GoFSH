@@ -196,18 +196,10 @@ describe('FSHExporter', () => {
           .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
           .set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
+          .set('valueSets.fsh', ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join(''))
           .set(
-            'terminology.fsh',
-            [
-              'ValueSet: SomeValueSet',
-              EOL,
-              'Id: SomeValueSet',
-              EOL,
-              EOL,
-              'CodeSystem: SomeCodeSystem',
-              EOL,
-              'Id: SomeCodeSystem'
-            ].join('')
+            'codeSystems.fsh',
+            ['CodeSystem: SomeCodeSystem', EOL, 'Id: SomeCodeSystem'].join('')
           )
           .set(
             'instances.fsh',
@@ -238,18 +230,10 @@ describe('FSHExporter', () => {
           .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
           .set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
+          .set('valueSets.fsh', ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join(''))
           .set(
-            'terminology.fsh',
-            [
-              'ValueSet: SomeValueSet',
-              EOL,
-              'Id: SomeValueSet',
-              EOL,
-              EOL,
-              'CodeSystem: SomeCodeSystem',
-              EOL,
-              'Id: SomeCodeSystem'
-            ].join('')
+            'codeSystems.fsh',
+            ['CodeSystem: SomeCodeSystem', EOL, 'Id: SomeCodeSystem'].join('')
           )
           .set(
             'instances.fsh',
@@ -356,8 +340,8 @@ describe('FSHExporter', () => {
       expect(result).toEqual(
         new Map()
           .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
-          .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
-          .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
+          .set('SomeInvariant-Invariant.fsh', ['Invariant: SomeInvariant'].join(''))
+          .set('SomeMapping-Mapping.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
           .set('SomeProfile-Profile.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
           .set(
             'SomeExtension-Extension.fsh',

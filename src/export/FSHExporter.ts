@@ -105,17 +105,16 @@ export class FSHExporter {
 
   private groupAsFilePerDefinition(): Map<string, string> {
     const exports: Map<string, string> = new Map();
-    // Aliases, Invariants, and Mappings still get grouped into one file
+    // Aliases, still get grouped into one file
     exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
-    exports.set(
-      'invariants.fsh',
-      this.fshPackage.invariants.map(invariant => invariant.toFSH()).join(`${EOL}${EOL}`)
-    );
-    exports.set(
-      'mappings.fsh',
-      this.fshPackage.mappings.map(mapping => mapping.toFSH()).join(`${EOL}${EOL}`)
-    );
+
     // Other definitions are each placed in an individual file
+    for (const invariant of this.fshPackage.invariants) {
+      exports.set(`${invariant.name}-Invariant.fsh`, invariant.toFSH());
+    }
+    for (const mapping of this.fshPackage.mappings) {
+      exports.set(`${mapping.name}-Mapping.fsh`, mapping.toFSH());
+    }
     for (const profile of this.fshPackage.profiles) {
       exports.set(`${profile.name}-Profile.fsh`, profile.toFSH());
     }
@@ -127,9 +126,6 @@ export class FSHExporter {
     }
     for (const valueSet of this.fshPackage.valueSets) {
       exports.set(`${valueSet.name}-ValueSet.fsh`, valueSet.toFSH());
-    }
-    for (const instance of this.fshPackage.instances) {
-      exports.set(`${instance.name}-Instance.fsh`, instance.toFSH());
     }
     for (const instance of this.fshPackage.instances) {
       exports.set(`${instance.name}-Instance.fsh`, instance.toFSH());
@@ -150,11 +146,12 @@ export class FSHExporter {
       this.fshPackage.extensions.map(extension => extension.toFSH()).join(`${EOL}${EOL}`)
     );
     exports.set(
-      'terminology.fsh',
-      [
-        ...this.fshPackage.valueSets.map(valueSet => valueSet.toFSH()),
-        ...this.fshPackage.codeSystems.map(codeSystem => codeSystem.toFSH())
-      ].join(`${EOL}${EOL}`)
+      'valueSets.fsh',
+      this.fshPackage.valueSets.map(valueSet => valueSet.toFSH()).join(`${EOL}${EOL}`)
+    );
+    exports.set(
+      'codeSystems.fsh',
+      this.fshPackage.codeSystems.map(codeSystem => codeSystem.toFSH()).join(`${EOL}${EOL}`)
     );
     exports.set(
       'instances.fsh',
