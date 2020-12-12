@@ -1,4 +1,16 @@
+import table from 'text-table';
+import { partition } from 'lodash';
 import { EOL } from 'os';
+import {
+  Exportable,
+  ExportableAlias,
+  ExportableAssignmentRule,
+  ExportableInstance,
+  ExportableInvariant,
+  ExportableObeysRule,
+  ExportableProfile,
+  NamedExportable
+} from '../exportable';
 import { Package } from '../processor';
 import { logger } from '../utils';
 
@@ -6,25 +18,25 @@ export class FSHExporter {
   constructor(public readonly fshPackage: Package) {}
 
   export(style: string): Map<string, string> {
-    let exports: Map<string, string>;
+    let files: Map<string, Exportable[]>;
     switch (style) {
       case 'single-file':
-        exports = this.groupAsSingleFile();
+        files = this.groupAsSingleFile();
         break;
       case 'by-category':
-        exports = this.groupByCategory();
+        files = this.groupByCategory();
         break;
       case 'by-type':
-        exports = this.groupByType();
+        files = this.groupByType();
         break;
       case 'file-per-definition':
-        exports = this.groupAsFilePerDefinition();
+        files = this.groupAsFilePerDefinition();
         break;
       default:
         if (style != null) {
           logger.warn(`Unrecognized output style "${style}". Defaulting to "by-category" style.`);
         }
-        exports = this.groupByCategory();
+        files = this.groupByCategory();
     }
 
     logger.info(
@@ -63,150 +75,190 @@ export class FSHExporter {
       }.`
     );
 
-    // Remove any empty files
-    const keys = exports.keys();
-    Array.from(keys).forEach(key => {
-      if (/^\s*$/.test(exports.get(key))) {
-        exports.delete(key);
+    const writtenFiles: Map<string, string> = new Map();
+
+    const index: string[][] = [];
+    files.forEach((exportables, file) => {
+      // Aliases are each their own "exportable", but should be joined together
+      // by a single EOL, not double EOLs, and they should not be written in index.txt
+      // so they are handled separately
+      const [aliases, namedExportables] = partition(
+        exportables,
+        exportable => exportable instanceof ExportableAlias
+      );
+      const fileContent = [
+        aliases.map(a => a.toFSH()).join(EOL),
+        namedExportables.map(e => e.toFSH()).join(`${EOL}${EOL}`)
+      ]
+        .join(EOL)
+        .trim();
+      // Ignore empty files, and don't write them to index.txt
+      if (!fileContent) {
+        return;
       }
+      writtenFiles.set(file, fileContent);
+      namedExportables.forEach((exportable: NamedExportable) => {
+        // The index will have the name, FSH type, and file of the entity
+        index.push([exportable.name, exportable.constructor.name.replace('Exportable', ''), file]);
+      });
     });
 
-    return exports;
+    // Alphabetically sort the index by the name of the entity
+    index.sort((line1, line2) => (line1[0] > line2[0] ? 1 : -1));
+    index.unshift(['Name', 'Type', 'File']);
+    writtenFiles.set('index.txt', table(index));
+
+    return writtenFiles;
   }
 
-  private groupAsSingleFile(): Map<string, string> {
-    const results: string[] = [];
-    if (this.fshPackage.aliases.length > 0) {
-      results.push(this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
-    }
-    for (const profile of this.fshPackage.profiles) {
-      results.push(profile.toFSH());
-    }
-    for (const extension of this.fshPackage.extensions) {
-      results.push(extension.toFSH());
-    }
-    for (const codeSystem of this.fshPackage.codeSystems) {
-      results.push(codeSystem.toFSH());
-    }
-    for (const valueSet of this.fshPackage.valueSets) {
-      results.push(valueSet.toFSH());
-    }
-    for (const instance of this.fshPackage.instances) {
-      results.push(instance.toFSH());
-    }
-    for (const invariant of this.fshPackage.invariants) {
-      results.push(invariant.toFSH());
-    }
-    for (const mapping of this.fshPackage.mappings) {
-      results.push(mapping.toFSH());
-    }
-    return new Map().set('resources.fsh', results.join(`${EOL}${EOL}`));
+  private groupAsSingleFile(): Map<string, Exportable[]> {
+    const results: Exportable[] = [];
+    results.push(...this.fshPackage.aliases);
+    results.push(...this.fshPackage.profiles);
+    results.push(...this.fshPackage.extensions);
+    results.push(...this.fshPackage.codeSystems);
+    results.push(...this.fshPackage.valueSets);
+    results.push(...this.fshPackage.instances);
+    results.push(...this.fshPackage.invariants);
+    results.push(...this.fshPackage.mappings);
+    return new Map().set('resources.fsh', results);
   }
 
-  private groupAsFilePerDefinition(): Map<string, string> {
-    const exports: Map<string, string> = new Map();
+  private groupAsFilePerDefinition(): Map<string, Exportable[]> {
+    const files: Map<string, Exportable[]> = new Map();
     // Aliases, still get grouped into one file
-    exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
+    files.set('aliases.fsh', this.fshPackage.aliases);
 
     // Other definitions are each placed in an individual file
     for (const invariant of this.fshPackage.invariants) {
-      exports.set(`${invariant.name}-Invariant.fsh`, invariant.toFSH());
+      files.set(`${invariant.name}-Invariant.fsh`, [invariant]);
     }
     for (const mapping of this.fshPackage.mappings) {
-      exports.set(`${mapping.name}-Mapping.fsh`, mapping.toFSH());
+      files.set(`${mapping.name}-Mapping.fsh`, [mapping]);
     }
     for (const profile of this.fshPackage.profiles) {
-      exports.set(`${profile.name}-Profile.fsh`, profile.toFSH());
+      files.set(`${profile.name}-Profile.fsh`, [profile]);
     }
     for (const extension of this.fshPackage.extensions) {
-      exports.set(`${extension.name}-Extension.fsh`, extension.toFSH());
+      files.set(`${extension.name}-Extension.fsh`, [extension]);
     }
     for (const codeSystem of this.fshPackage.codeSystems) {
-      exports.set(`${codeSystem.name}-CodeSystem.fsh`, codeSystem.toFSH());
+      files.set(`${codeSystem.name}-CodeSystem.fsh`, [codeSystem]);
     }
     for (const valueSet of this.fshPackage.valueSets) {
-      exports.set(`${valueSet.name}-ValueSet.fsh`, valueSet.toFSH());
+      files.set(`${valueSet.name}-ValueSet.fsh`, [valueSet]);
     }
     for (const instance of this.fshPackage.instances) {
-      exports.set(`${instance.name}-Instance.fsh`, instance.toFSH());
+      files.set(`${instance.name}-Instance.fsh`, [instance]);
     }
 
-    return exports;
+    return files;
   }
 
-  private groupByCategory(): Map<string, string> {
-    const exports: Map<string, string> = new Map();
-    exports.set('aliases.fsh', this.fshPackage.aliases.map(a => a.toFSH()).join(EOL));
-    exports.set(
-      'profiles.fsh',
-      this.fshPackage.profiles.map(profile => profile.toFSH()).join(`${EOL}${EOL}`)
-    );
-    exports.set(
-      'extensions.fsh',
-      this.fshPackage.extensions.map(extension => extension.toFSH()).join(`${EOL}${EOL}`)
-    );
-    exports.set(
-      'valueSets.fsh',
-      this.fshPackage.valueSets.map(valueSet => valueSet.toFSH()).join(`${EOL}${EOL}`)
-    );
-    exports.set(
-      'codeSystems.fsh',
-      this.fshPackage.codeSystems.map(codeSystem => codeSystem.toFSH()).join(`${EOL}${EOL}`)
-    );
-    exports.set(
-      'instances.fsh',
-      this.fshPackage.instances.map(instance => instance.toFSH()).join(`${EOL}${EOL}`)
-    );
-    exports.set(
-      'invariants.fsh',
-      this.fshPackage.invariants.map(invariant => invariant.toFSH()).join(`${EOL}${EOL}`)
-    );
-    exports.set(
-      'mappings.fsh',
-      this.fshPackage.mappings.map(mapping => mapping.toFSH()).join(`${EOL}${EOL}`)
-    );
-    return exports;
+  private groupByCategory(): Map<string, Exportable[]> {
+    const files: Map<string, Exportable[]> = new Map();
+    files.set('aliases.fsh', this.fshPackage.aliases);
+    files.set('profiles.fsh', this.fshPackage.profiles);
+    files.set('extensions.fsh', this.fshPackage.extensions);
+    files.set('valueSets.fsh', this.fshPackage.valueSets);
+    files.set('codeSystems.fsh', this.fshPackage.codeSystems);
+    files.set('instances.fsh', this.fshPackage.instances);
+    files.set('invariants.fsh', this.fshPackage.invariants);
+    files.set('mappings.fsh', this.fshPackage.mappings);
+    return files;
   }
 
-  private groupByType(): Map<string, string> {
-    const files: Map<string, string[]> = new Map();
+  private groupByType(): Map<string, Exportable[]> {
+    const files: Map<string, Exportable[]> = new Map();
 
     // Group profiles and examples of those profiles into individual files
     this.fshPackage.profiles.forEach(profile => {
-      files.set(`${profile.name}.fsh`, [profile.toFSH()]);
+      files.set(`${profile.name}.fsh`, [profile]);
     });
-    this.fshPackage.instances.forEach(instance => {
+
+    files.set('instances.fsh', []);
+
+    const [inlineInstances, nonInlineInstances] = partition(
+      this.fshPackage.instances,
+      i => i.usage === 'Inline'
+    );
+    // If a non-inline instance is an example of a profile, it is written to the file
+    // for that profile. Otherwise it is written to instances.fsh
+    nonInlineInstances.forEach(instance => {
       if (instance.usage === 'Example' && files.has(`${instance.instanceOf}.fsh`)) {
-        files.get(`${instance.instanceOf}.fsh`).push(instance.toFSH());
-      } else if (files.has('instances.fsh')) {
-        files.get('instances.fsh').push(instance.toFSH());
+        files.get(`${instance.instanceOf}.fsh`).push(instance);
       } else {
-        files.set('instances.fsh', [instance.toFSH()]);
+        files.get('instances.fsh').push(instance);
       }
+    });
+    // Inline instances are written to the file they are used in, if they are only used
+    // in one spot. Otherwise they go to instances.fsh
+    inlineInstances.forEach(instance => {
+      const usedIn = this.inlineInstanceUsedIn(instance, files);
+      usedIn.length === 1
+        ? files.get(usedIn[0]).push(instance)
+        : files.get('instances.fsh').push(instance);
+    });
+
+    // Invariants are written to the same file as the profile they are used in, if they
+    // are written in one spot. Otherwise they go to invariants.fsh.
+    files.set('invariants.fsh', []);
+    this.fshPackage.invariants.forEach(invariant => {
+      const usedIn = this.invariantUsedIn(invariant, files);
+      usedIn.length === 1
+        ? files.get(usedIn[0]).push(invariant)
+        : files.get('invariants.fsh').push(invariant);
     });
 
     // All other artifacts are grouped by category
-    files.set('aliases.fsh', [this.fshPackage.aliases.map(a => a.toFSH()).join(EOL)]);
-    files.set(
-      'extensions.fsh',
-      this.fshPackage.extensions.map(extension => extension.toFSH())
-    );
-    files.set('terminology.fsh', [
-      ...this.fshPackage.valueSets.map(valueSet => valueSet.toFSH()),
-      ...this.fshPackage.codeSystems.map(codeSystem => codeSystem.toFSH())
-    ]);
+    files.set('aliases.fsh', this.fshPackage.aliases);
+    files.set('extensions.fsh', this.fshPackage.extensions);
+    files.set('valueSets.fsh', this.fshPackage.valueSets);
+    files.set('codeSystems.fsh', this.fshPackage.codeSystems);
+    files.set('mappings.fsh', this.fshPackage.mappings);
 
-    files.set(
-      'invariants.fsh',
-      this.fshPackage.invariants.map(invariant => invariant.toFSH())
-    );
-    files.set(
-      'mappings.fsh',
-      this.fshPackage.mappings.map(mapping => mapping.toFSH())
-    );
+    return files;
+  }
 
-    const exports: Map<string, string> = new Map();
-    files.forEach((content, fileName) => exports.set(fileName, content.join(`${EOL}${EOL}`)));
-    return exports;
+  private inlineInstanceUsedIn(
+    inlineInstance: ExportableInstance,
+    files: Map<string, Exportable[]>
+  ): string[] {
+    const usedIn: string[] = [];
+    files.forEach((exportables, file) => {
+      exportables
+        .filter(exportable => exportable instanceof ExportableInstance)
+        .forEach((instance: ExportableInstance) => {
+          instance.rules.forEach(rule => {
+            if (
+              rule instanceof ExportableAssignmentRule &&
+              rule.isInstance &&
+              rule.value === inlineInstance.name
+            ) {
+              usedIn.push(file);
+            }
+          });
+        });
+    });
+    return usedIn;
+  }
+
+  private invariantUsedIn(
+    invariant: ExportableInvariant,
+    files: Map<string, Exportable[]>
+  ): string[] {
+    const usedIn: string[] = [];
+    files.forEach((exportables, file) => {
+      exportables
+        .filter(exportable => exportable instanceof ExportableProfile)
+        .forEach((profile: ExportableProfile) => {
+          profile.rules.forEach(rule => {
+            if (rule instanceof ExportableObeysRule && rule.keys.includes(invariant.name)) {
+              usedIn.push(file);
+            }
+          });
+        });
+    });
+    return usedIn;
   }
 }

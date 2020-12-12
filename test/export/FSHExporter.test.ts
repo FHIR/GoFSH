@@ -9,9 +9,12 @@ import {
   ExportableInvariant,
   ExportableMapping,
   ExportableInstance,
-  ExportableAlias
+  ExportableAlias,
+  ExportableAssignmentRule,
+  ExportableObeysRule
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
+import table from 'text-table';
 
 describe('FSHExporter', () => {
   let exporter: FSHExporter;
@@ -22,14 +25,14 @@ describe('FSHExporter', () => {
     exporter = new FSHExporter(myPackage);
   });
 
-  it('should log info messages with the number of exported entities', () => {
+  it('should log info messages with the number of exported entities and create index.txt', () => {
     myPackage.add(new ExportableProfile('FirstProfile'));
     myPackage.add(new ExportableProfile('SecondProfile'));
     myPackage.add(new ExportableCodeSystem('OnlyCodeSystem'));
     myPackage.add(new ExportableValueSet('OneOfThreeValueSets'));
     myPackage.add(new ExportableValueSet('TwoOfThreeValueSets'));
     myPackage.add(new ExportableValueSet('ThreeOfThreeValueSets'));
-    exporter.export('single-file');
+    const output = exporter.export('single-file');
     expect(loggerSpy.getMessageAtIndex(-7, 'info')).toBe('Exported 2 Profiles.');
     expect(loggerSpy.getMessageAtIndex(-6, 'info')).toBe('Exported 0 Extensions.');
     expect(loggerSpy.getMessageAtIndex(-5, 'info')).toBe('Exported 1 CodeSystem.');
@@ -37,6 +40,18 @@ describe('FSHExporter', () => {
     expect(loggerSpy.getMessageAtIndex(-3, 'info')).toBe('Exported 0 Instances.');
     expect(loggerSpy.getMessageAtIndex(-2, 'info')).toBe('Exported 0 Invariants.');
     expect(loggerSpy.getMessageAtIndex(-1, 'info')).toBe('Exported 0 Mappings.');
+
+    expect(output.get('index.txt')).toEqual(
+      table([
+        ['Name', 'Type', 'File'],
+        ['FirstProfile', 'Profile', 'resources.fsh'],
+        ['OneOfThreeValueSets', 'ValueSet', 'resources.fsh'],
+        ['OnlyCodeSystem', 'CodeSystem', 'resources.fsh'],
+        ['SecondProfile', 'Profile', 'resources.fsh'],
+        ['ThreeOfThreeValueSets', 'ValueSet', 'resources.fsh'],
+        ['TwoOfThreeValueSets', 'ValueSet', 'resources.fsh']
+      ])
+    );
   });
 
   it('should log warning when style is unrecognized', () => {
@@ -50,7 +65,13 @@ describe('FSHExporter', () => {
     const result = exporter.export('by-category');
     // Only the profiles.fsh file should be present in the map
     expect(result).toEqual(
-      new Map().set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
+      new Map().set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join('')).set(
+        'index.txt',
+        table([
+          ['Name', 'Type', 'File'],
+          ['SomeProfile', 'Profile', 'profiles.fsh']
+        ])
+      )
     );
   });
 
@@ -155,24 +176,34 @@ describe('FSHExporter', () => {
 
       const result = exporter.export('single-file');
       expect(result).toEqual(
-        new Map().set(
-          'resources.fsh',
-          [
-            'Profile: SomeProfile',
-            EOL,
-            'Id: SomeProfile',
-            EOL,
-            EOL,
-            'Extension: SomeExtension',
-            EOL,
-            'Id: SomeExtension',
-            EOL,
-            EOL,
-            'CodeSystem: SomeCodeSystem',
-            EOL,
-            'Id: SomeCodeSystem'
-          ].join('')
-        )
+        new Map()
+          .set(
+            'resources.fsh',
+            [
+              'Profile: SomeProfile',
+              EOL,
+              'Id: SomeProfile',
+              EOL,
+              EOL,
+              'Extension: SomeExtension',
+              EOL,
+              'Id: SomeExtension',
+              EOL,
+              EOL,
+              'CodeSystem: SomeCodeSystem',
+              EOL,
+              'Id: SomeCodeSystem'
+            ].join('')
+          )
+          .set(
+            'index.txt',
+            table([
+              ['Name', 'Type', 'File'],
+              ['SomeCodeSystem', 'CodeSystem', 'resources.fsh'],
+              ['SomeExtension', 'Extension', 'resources.fsh'],
+              ['SomeProfile', 'Profile', 'resources.fsh']
+            ])
+          )
       );
     });
   });
@@ -209,6 +240,19 @@ describe('FSHExporter', () => {
           )
           .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
           .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
+          .set(
+            'index.txt',
+            table([
+              ['Name', 'Type', 'File'],
+              ['SomeCodeSystem', 'CodeSystem', 'codeSystems.fsh'],
+              ['SomeExtension', 'Extension', 'extensions.fsh'],
+              ['SomeInstance', 'Instance', 'instances.fsh'],
+              ['SomeInvariant', 'Invariant', 'invariants.fsh'],
+              ['SomeMapping', 'Mapping', 'mappings.fsh'],
+              ['SomeProfile', 'Profile', 'profiles.fsh'],
+              ['SomeValueSet', 'ValueSet', 'valueSets.fsh']
+            ])
+          )
       );
     });
 
@@ -243,27 +287,86 @@ describe('FSHExporter', () => {
           )
           .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
           .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
+          .set(
+            'index.txt',
+            table([
+              ['Name', 'Type', 'File'],
+              ['SomeCodeSystem', 'CodeSystem', 'codeSystems.fsh'],
+              ['SomeExtension', 'Extension', 'extensions.fsh'],
+              ['SomeInstance', 'Instance', 'instances.fsh'],
+              ['SomeInvariant', 'Invariant', 'invariants.fsh'],
+              ['SomeMapping', 'Mapping', 'mappings.fsh'],
+              ['SomeProfile', 'Profile', 'profiles.fsh'],
+              ['SomeValueSet', 'ValueSet', 'valueSets.fsh']
+            ])
+          )
       );
     });
   });
 
   describe('#groupByType', () => {
     it('should export to multiple files grouped by type when style is "by-type"', () => {
-      myPackage.add(new ExportableProfile('SomeProfile'));
+      const profile1 = new ExportableProfile('SomeProfile');
+      myPackage.add(profile1);
+      const profile2 = new ExportableProfile('AnotherProfile');
+      myPackage.add(profile2);
       myPackage.add(new ExportableExtension('SomeExtension'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
+
       const instance = new ExportableInstance('SomeInstance');
       instance.instanceOf = 'SomeProfile';
       myPackage.add(instance);
+
+      const anotherInstance = new ExportableInstance('AnotherInstance');
+      anotherInstance.instanceOf = 'AnotherProfile';
+      myPackage.add(anotherInstance);
+
+      // Add one inline instance which is only used once
+      const inlineInstance1 = new ExportableInstance('SomeInlineInstance');
+      inlineInstance1.instanceOf = 'Patient';
+      inlineInstance1.usage = 'Inline';
+      myPackage.add(inlineInstance1);
+      const inlineInstance1Rule = new ExportableAssignmentRule('contained[0]');
+      inlineInstance1Rule.isInstance = true;
+      inlineInstance1Rule.value = 'SomeInlineInstance';
+      instance.rules.push(inlineInstance1Rule);
+
+      // And another which is used in several places
+      const inlineInstance2 = new ExportableInstance('AnotherInlineInstance');
+      inlineInstance2.instanceOf = 'Patient';
+      inlineInstance2.usage = 'Inline';
+      myPackage.add(inlineInstance2);
+      const inlineInstance2Rule = new ExportableAssignmentRule('contained[1]');
+      inlineInstance2Rule.isInstance = true;
+      inlineInstance2Rule.value = 'AnotherInlineInstance';
+      instance.rules.push(inlineInstance2Rule);
+      anotherInstance.rules.push(inlineInstance2Rule);
+
       const definitionalInstance = new ExportableInstance('DefinitionalInstance');
       definitionalInstance.instanceOf = 'ValueSet';
       definitionalInstance.usage = 'Definition';
       myPackage.add(definitionalInstance);
+
       const externalExampleInstance = new ExportableInstance('ExternalExampleInstance');
       externalExampleInstance.instanceOf = 'Patient';
       myPackage.add(externalExampleInstance);
-      myPackage.add(new ExportableInvariant('SomeInvariant'));
+
+      // Add one invariant that is used in one place
+      const invariant1 = new ExportableInvariant('SomeInvariant');
+      myPackage.add(invariant1);
+      const obeysRule1 = new ExportableObeysRule('foo');
+      obeysRule1.keys = [invariant1.name];
+      profile1.rules.push(obeysRule1);
+
+      // And another that is used in several places
+      const invariant2 = new ExportableInvariant('AnotherInvariant');
+      myPackage.add(invariant2);
+      const obeysRule2 = new ExportableObeysRule('foo');
+      obeysRule2.keys = [invariant2.name];
+      profile1.rules.push(obeysRule2);
+      profile2.rules.push(obeysRule2);
+
       myPackage.add(new ExportableMapping('SomeMapping'));
       myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
 
@@ -278,27 +381,56 @@ describe('FSHExporter', () => {
               EOL,
               'Id: SomeProfile',
               EOL,
+              '* foo obeys SomeInvariant',
+              EOL,
+              '* foo obeys AnotherInvariant',
+              EOL,
               EOL,
               'Instance: SomeInstance',
               EOL,
               'InstanceOf: SomeProfile',
               EOL,
-              'Usage: #example'
+              'Usage: #example',
+              EOL,
+              '* contained[0] = SomeInlineInstance',
+              EOL,
+              '* contained[1] = AnotherInlineInstance',
+              EOL,
+              EOL,
+              'Instance: SomeInlineInstance',
+              EOL,
+              'InstanceOf: Patient',
+              EOL,
+              'Usage: #inline',
+              EOL,
+              EOL,
+              'Invariant: SomeInvariant'
+            ].join('')
+          )
+          .set(
+            'AnotherProfile.fsh',
+            [
+              'Profile: AnotherProfile',
+              EOL,
+              'Id: AnotherProfile',
+              EOL,
+              '* foo obeys AnotherInvariant',
+              EOL,
+              EOL,
+              'Instance: AnotherInstance',
+              EOL,
+              'InstanceOf: AnotherProfile',
+              EOL,
+              'Usage: #example',
+              EOL,
+              '* contained[1] = AnotherInlineInstance'
             ].join('')
           )
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
+          .set('valueSets.fsh', ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join(''))
           .set(
-            'terminology.fsh',
-            [
-              'ValueSet: SomeValueSet',
-              EOL,
-              'Id: SomeValueSet',
-              EOL,
-              EOL,
-              'CodeSystem: SomeCodeSystem',
-              EOL,
-              'Id: SomeCodeSystem'
-            ].join('')
+            'codeSystems.fsh',
+            ['CodeSystem: SomeCodeSystem', EOL, 'Id: SomeCodeSystem'].join('')
           )
           .set(
             'instances.fsh',
@@ -314,11 +446,38 @@ describe('FSHExporter', () => {
               EOL,
               'InstanceOf: Patient',
               EOL,
-              'Usage: #example'
+              'Usage: #example',
+              EOL,
+              EOL,
+              'Instance: AnotherInlineInstance',
+              EOL,
+              'InstanceOf: Patient',
+              EOL,
+              'Usage: #inline'
             ].join('')
           )
-          .set('invariants.fsh', ['Invariant: SomeInvariant'].join(''))
+          .set('invariants.fsh', ['Invariant: AnotherInvariant'].join(''))
           .set('mappings.fsh', ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join(''))
+          .set(
+            'index.txt',
+            table([
+              ['Name', 'Type', 'File'],
+              ['AnotherInlineInstance', 'Instance', 'instances.fsh'],
+              ['AnotherInstance', 'Instance', 'AnotherProfile.fsh'],
+              ['AnotherInvariant', 'Invariant', 'invariants.fsh'],
+              ['AnotherProfile', 'Profile', 'AnotherProfile.fsh'],
+              ['DefinitionalInstance', 'Instance', 'instances.fsh'],
+              ['ExternalExampleInstance', 'Instance', 'instances.fsh'],
+              ['SomeCodeSystem', 'CodeSystem', 'codeSystems.fsh'],
+              ['SomeExtension', 'Extension', 'extensions.fsh'],
+              ['SomeInlineInstance', 'Instance', 'SomeProfile.fsh'],
+              ['SomeInstance', 'Instance', 'SomeProfile.fsh'],
+              ['SomeInvariant', 'Invariant', 'SomeProfile.fsh'],
+              ['SomeMapping', 'Mapping', 'mappings.fsh'],
+              ['SomeProfile', 'Profile', 'SomeProfile.fsh'],
+              ['SomeValueSet', 'ValueSet', 'valueSets.fsh']
+            ])
+          )
       );
     });
   });
@@ -360,6 +519,19 @@ describe('FSHExporter', () => {
             ['Instance: SomeInstance', EOL, 'InstanceOf: SomeProfile', EOL, 'Usage: #example'].join(
               ''
             )
+          )
+          .set(
+            'index.txt',
+            table([
+              ['Name', 'Type', 'File'],
+              ['SomeCodeSystem', 'CodeSystem', 'SomeCodeSystem-CodeSystem.fsh'],
+              ['SomeExtension', 'Extension', 'SomeExtension-Extension.fsh'],
+              ['SomeInstance', 'Instance', 'SomeInstance-Instance.fsh'],
+              ['SomeInvariant', 'Invariant', 'SomeInvariant-Invariant.fsh'],
+              ['SomeMapping', 'Mapping', 'SomeMapping-Mapping.fsh'],
+              ['SomeProfile', 'Profile', 'SomeProfile-Profile.fsh'],
+              ['SomeValueSet', 'ValueSet', 'SomeValueSet-ValueSet.fsh']
+            ])
           )
       );
     });
