@@ -11,7 +11,8 @@ import {
   ExportableInstance,
   ExportableAlias,
   ExportableAssignmentRule,
-  ExportableObeysRule
+  ExportableObeysRule,
+  ExportableCaretValueRule
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
 import table from 'text-table';
@@ -208,8 +209,8 @@ describe('FSHExporter', () => {
     });
   });
 
-  describe('#groupByCategory', () => {
-    it('should export to a multiple files grouped by category when style is "by-category"', () => {
+  describe('#groupByFSHType', () => {
+    it('should export to a multiple files grouped by category when style is "group-by-fsh-type"', () => {
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
@@ -221,7 +222,7 @@ describe('FSHExporter', () => {
       myPackage.add(new ExportableMapping('SomeMapping'));
       myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
 
-      const result = exporter.export('by-category');
+      const result = exporter.export('group-by-fsh-type');
       expect(result).toEqual(
         new Map()
           .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
@@ -304,8 +305,8 @@ describe('FSHExporter', () => {
     });
   });
 
-  describe('#groupByType', () => {
-    it('should export to multiple files grouped by type when style is "by-type"', () => {
+  describe('#groupByProfile', () => {
+    it('should export to multiple files grouped by type when style is "group-by-profile"', () => {
       const profile1 = new ExportableProfile('SomeProfile');
       myPackage.add(profile1);
       const profile2 = new ExportableProfile('AnotherProfile');
@@ -343,6 +344,17 @@ describe('FSHExporter', () => {
       instance.rules.push(inlineInstance2Rule);
       anotherInstance.rules.push(inlineInstance2Rule);
 
+      // Add an inline instance used on a profile
+      const inlineInstance3 = new ExportableInstance('YetAnotherInlineInstance');
+      inlineInstance3.instanceOf = 'Patient';
+      inlineInstance3.usage = 'Inline';
+      myPackage.add(inlineInstance3);
+      const inlineInstance3Rule = new ExportableCaretValueRule('');
+      inlineInstance3Rule.caretPath = 'contained[0]';
+      inlineInstance3Rule.isInstance = true;
+      inlineInstance3Rule.value = 'YetAnotherInlineInstance';
+      profile1.rules.push(inlineInstance3Rule);
+
       const definitionalInstance = new ExportableInstance('DefinitionalInstance');
       definitionalInstance.instanceOf = 'ValueSet';
       definitionalInstance.usage = 'Definition';
@@ -370,7 +382,7 @@ describe('FSHExporter', () => {
       myPackage.add(new ExportableMapping('SomeMapping'));
       myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
 
-      const result = exporter.export('by-type');
+      const result = exporter.export('group-by-profile');
       expect(result).toEqual(
         new Map()
           .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
@@ -380,6 +392,8 @@ describe('FSHExporter', () => {
               'Profile: SomeProfile',
               EOL,
               'Id: SomeProfile',
+              EOL,
+              '* ^contained[0] = YetAnotherInlineInstance',
               EOL,
               '* foo obeys SomeInvariant',
               EOL,
@@ -398,6 +412,13 @@ describe('FSHExporter', () => {
               EOL,
               EOL,
               'Instance: SomeInlineInstance',
+              EOL,
+              'InstanceOf: Patient',
+              EOL,
+              'Usage: #inline',
+              EOL,
+              EOL,
+              'Instance: YetAnotherInlineInstance',
               EOL,
               'InstanceOf: Patient',
               EOL,
@@ -475,7 +496,8 @@ describe('FSHExporter', () => {
               ['SomeInvariant', 'Invariant', 'SomeProfile.fsh'],
               ['SomeMapping', 'Mapping', 'mappings.fsh'],
               ['SomeProfile', 'Profile', 'SomeProfile.fsh'],
-              ['SomeValueSet', 'ValueSet', 'valueSets.fsh']
+              ['SomeValueSet', 'ValueSet', 'valueSets.fsh'],
+              ['YetAnotherInlineInstance', 'Instance', 'SomeProfile.fsh']
             ])
           )
       );

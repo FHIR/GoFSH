@@ -1,5 +1,6 @@
 import { ExportableCodeSystem } from './ExportableCodeSystem';
 import { ExportableExtension } from './ExportableExtension';
+import { ExportableInstance } from './ExportableInstance';
 import { ExportableInvariant } from './ExportableInvariant';
 import { ExportableMapping } from './ExportableMapping';
 import { ExportableProfile } from './ExportableProfile';
@@ -15,4 +16,5 @@ export type NamedExportable =
   | ExportableValueSet
   | ExportableCodeSystem
   | ExportableInvariant
-  | ExportableMapping;
+  | ExportableMapping
+  | ExportableInstance;

@@ -39,7 +39,7 @@ async function app() {
     )
     .option(
       '-s, --style <style>',
-      'specify how the output is organized into files: by-category (default), by-type, single-file, file-per-definition'
+      'specify how the output is organized into files: group-by-fsh-type (default), group-by-profile, single-file, file-per-definition'
     )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {

@@ -5,6 +5,8 @@ import {
   Exportable,
   ExportableAlias,
   ExportableAssignmentRule,
+  ExportableCaretValueRule,
+  ExportableExtension,
   ExportableInstance,
   ExportableInvariant,
   ExportableObeysRule,
@@ -23,11 +25,11 @@ export class FSHExporter {
       case 'single-file':
         files = this.groupAsSingleFile();
         break;
-      case 'by-category':
-        files = this.groupByCategory();
+      case 'group-by-fsh-type':
+        files = this.groupByFSHType();
         break;
-      case 'by-type':
-        files = this.groupByType();
+      case 'group-by-profile':
+        files = this.groupByProfile();
         break;
       case 'file-per-definition':
         files = this.groupAsFilePerDefinition();
@@ -36,7 +38,7 @@ export class FSHExporter {
         if (style != null) {
           logger.warn(`Unrecognized output style "${style}". Defaulting to "by-category" style.`);
         }
-        files = this.groupByCategory();
+        files = this.groupByFSHType();
     }
 
     logger.info(
@@ -90,7 +92,7 @@ export class FSHExporter {
         aliases.map(a => a.toFSH()).join(EOL),
         namedExportables.map(e => e.toFSH()).join(`${EOL}${EOL}`)
       ]
-        .join(EOL)
+        .join(`${EOL}${EOL}`)
         .trim();
       // Ignore empty files, and don't write them to index.txt
       if (!fileContent) {
@@ -155,7 +157,7 @@ export class FSHExporter {
     return files;
   }
 
-  private groupByCategory(): Map<string, Exportable[]> {
+  private groupByFSHType(): Map<string, Exportable[]> {
     const files: Map<string, Exportable[]> = new Map();
     files.set('aliases.fsh', this.fshPackage.aliases);
     files.set('profiles.fsh', this.fshPackage.profiles);
@@ -168,7 +170,7 @@ export class FSHExporter {
     return files;
   }
 
-  private groupByType(): Map<string, Exportable[]> {
+  private groupByProfile(): Map<string, Exportable[]> {
     const files: Map<string, Exportable[]> = new Map();
 
     // Group profiles and examples of those profiles into individual files
@@ -227,11 +229,17 @@ export class FSHExporter {
     const usedIn: string[] = [];
     files.forEach((exportables, file) => {
       exportables
-        .filter(exportable => exportable instanceof ExportableInstance)
-        .forEach((instance: ExportableInstance) => {
-          instance.rules.forEach(rule => {
+        .filter(
+          exportable =>
+            exportable instanceof ExportableInstance ||
+            exportable instanceof ExportableProfile ||
+            exportable instanceof ExportableExtension
+        )
+        .forEach((resource: ExportableInstance | ExportableProfile | ExportableExtension) => {
+          resource.rules.forEach(rule => {
             if (
-              rule instanceof ExportableAssignmentRule &&
+              (rule instanceof ExportableAssignmentRule ||
+                rule instanceof ExportableCaretValueRule) &&
               rule.isInstance &&
               rule.value === inlineInstance.name
             ) {
