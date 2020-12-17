@@ -37,6 +37,10 @@ async function app() {
       '-d, --dependency <dependency...>',
       'specify dependencies to be loaded using format dependencyId@version (FHIR R4 included by default)'
     )
+    .option(
+      '-s, --style <style>',
+      'specify how the output is organized into files: group-by-fsh-type (default), group-by-profile, single-file, file-per-definition'
+    )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -95,7 +99,7 @@ async function app() {
     process.exit(1);
   }
 
-  writeFSH(resources, outDir);
+  writeFSH(resources, outDir, program.style);
 
   logger.info(`Errors: ${stats.numError}`);
   logger.info(`Warnings: ${stats.numWarn}`);

@@ -13,8 +13,13 @@ import {
   getFhirProcessor
 } from '../../src/utils/Processing';
 import { Package } from '../../src/processor';
-import { ExportableAssignmentRule, ExportableConfiguration } from '../../src/exportable';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import {
+  ExportableConfiguration,
+  ExportableInstance,
+  ExportableProfile,
+  ExportableAssignmentRule
+} from '../../src/exportable';
 
 describe('Processing', () => {
   temp.track();
@@ -175,15 +180,34 @@ describe('Processing', () => {
 
     it('should write output to a file named resources.fsh in the output directory', () => {
       const resources = new Package();
-      writeFSH(resources, tempRoot);
+      resources.add(new ExportableProfile('Foo'));
+      writeFSH(resources, tempRoot, 'single-file');
       expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'resources.fsh'))).toBeTruthy();
+    });
+
+    it('should write output to files organized by category when style is by-category', () => {
+      const resources = new Package();
+      resources.add(new ExportableProfile('Foo'));
+      resources.add(new ExportableInstance('Bar'));
+      writeFSH(resources, tempRoot, 'by-category');
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'profiles.fsh'))).toBeTruthy();
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'instances.fsh'))).toBeTruthy();
+    });
+
+    it('should write output to files organized by category when style is undefined', () => {
+      const resources = new Package();
+      resources.add(new ExportableProfile('Foo'));
+      resources.add(new ExportableInstance('Bar'));
+      writeFSH(resources, tempRoot, undefined);
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'profiles.fsh'))).toBeTruthy();
+      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'instances.fsh'))).toBeTruthy();
     });
 
     it('should write configuration details to a file named sushi-config.yaml in the output directory', () => {
       const resources = new Package();
       const config = new ExportableConfiguration({ canonical: 'fakeCanonical', fhirVersion: [] });
       resources.add(config);
-      writeFSH(resources, tempRoot);
+      writeFSH(resources, tempRoot, 'single-file');
       expect(fs.existsSync(path.join(tempRoot, 'sushi-config.yaml'))).toBeTruthy();
     });
   });

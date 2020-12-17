@@ -44,14 +44,15 @@ export async function getResources(
   return resources;
 }
 
-export function writeFSH(resources: Package, outDir: string): void {
+export function writeFSH(resources: Package, outDir: string, style: string): void {
   const exporter = new FSHExporter(resources);
   try {
     const resourceDir = path.join(outDir, 'input', 'fsh');
     fs.ensureDirSync(resourceDir);
-    const outputPath = path.join(resourceDir, 'resources.fsh');
-    fs.writeFileSync(outputPath, exporter.export());
-    logger.info(`Wrote fsh to ${outputPath}.`);
+    exporter.export(style).forEach((content, name) => {
+      fs.writeFileSync(path.join(resourceDir, name), content);
+    });
+    logger.info(`Wrote fsh to ${resourceDir}.`);
     if (resources.configuration) {
       const configPath = path.join(outDir, 'sushi-config.yaml');
       fs.writeFileSync(configPath, resources.configuration.toFSH());

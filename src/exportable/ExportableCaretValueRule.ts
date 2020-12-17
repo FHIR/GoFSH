@@ -21,7 +21,7 @@ export class ExportableCaretValueRule extends fshrules.CaretValueRule implements
     } else if (typeof this.value === 'boolean' || typeof this.value === 'number') {
       value = this.value;
     } else if (typeof this.value === 'string') {
-      value = `"${this.value}"`;
+      value = this.isInstance ? this.value : `"${this.value}"`;
     }
     return `* ${this.path !== '' ? this.path + ' ' : ''}^${this.caretPath} = ${value}`;
   }

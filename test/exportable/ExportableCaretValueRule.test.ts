@@ -10,6 +10,15 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* ^short = "Important summary"');
   });
 
+  it('should export a caret rule assigning an instance', () => {
+    const rule = new ExportableCaretValueRule('');
+    rule.caretPath = 'contained[0]';
+    rule.isInstance = true;
+    rule.value = 'Foo';
+
+    expect(rule.toFSH()).toBe('* ^contained[0] = Foo');
+  });
+
   it('should export a caret rule with a path', () => {
     const rule = new ExportableCaretValueRule('value[x]');
     rule.caretPath = 'definition';
