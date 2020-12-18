@@ -151,7 +151,7 @@ describe('Processing', () => {
       expect(result.codeSystems).toHaveLength(0);
       expect(result.valueSets).toHaveLength(0);
       expect(result.extensions).toHaveLength(0);
-      expect(result.instances).toHaveLength(2); // Only bad-publisher-files/expansions.json processed (not bad-publisher-files/other/expansions.json)
+      expect(result.instances).toHaveLength(2); // Only bad-publisher-files/expansions.json processed (not bad-publisher-files/output/expansions.json)
       expect(result.invariants).toHaveLength(0);
       expect(result.mappings).toHaveLength(0);
     });
@@ -167,6 +167,51 @@ describe('Processing', () => {
       expect(result.valueSets).toHaveLength(0);
       expect(result.extensions).toHaveLength(0);
       expect(result.instances).toHaveLength(0); // output/expansions.json not processed
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
+    });
+
+    it('should not try to process temp files if temp is a child of specified path', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'temp-files');
+      const processor = await getFhirProcessor(inDir, loadTestDefinitions());
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(result.profiles).toHaveLength(1); // Only profile in root is processed (not the ones in temp)
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
+    });
+
+    it('should process temp files if temp is at the end of specified path', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'temp-files', 'temp');
+      const processor = await getFhirProcessor(inDir, loadTestDefinitions());
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(result.profiles).toHaveLength(2); // Profiles in temp are processed
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
+    });
+
+    it('should process temp files if temp is included in specified path', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'temp-files', 'temp', 'more-things');
+      const processor = await getFhirProcessor(inDir, loadTestDefinitions());
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(result.profiles).toHaveLength(1); // Profile in temp/more-things are processed
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
       expect(result.invariants).toHaveLength(0);
       expect(result.mappings).toHaveLength(0);
     });
