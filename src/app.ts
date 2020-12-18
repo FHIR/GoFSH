@@ -13,7 +13,7 @@ import {
   loadExternalDependencies,
   writeFSH
 } from './utils/Processing';
-import { logger, stats } from './utils';
+import { logger, stats, fshingTrip } from './utils';
 import { Package } from './processor';
 
 const FSH_VERSION = '0.13.x';
@@ -40,6 +40,11 @@ async function app() {
     .option(
       '-s, --style <style>',
       'specify how the output is organized into files: group-by-fsh-type (default), group-by-profile, single-file, file-per-definition'
+    )
+    .option(
+      '-f, --fshing-trip [use-local-sushi]',
+      'run SUSHI on the output of GoFSH and generate a comparison of the round trip results. ' +
+        'Add "use-local-sushi" after flag to use your locally installed version of SUSHI'
     )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
@@ -104,6 +109,10 @@ async function app() {
   logger.info(`Errors: ${stats.numError}`);
   logger.info(`Warnings: ${stats.numWarn}`);
   logger.info('Thank you for using goFSH.');
+
+  if (program.fshingTrip) {
+    fshingTrip(inDir, outDir, program.fshingTrip === 'use-local-sushi');
+  }
 
   process.exit(0);
 }
