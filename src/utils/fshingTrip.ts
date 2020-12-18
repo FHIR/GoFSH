@@ -8,7 +8,7 @@ import fs from 'fs-extra';
 
 import { getFilesRecursive, logger } from '.';
 
-export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean) {
+export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean): void {
   // Make a pretty box to let the user know we are going into SUSHI mode
   // NOTE: If we add a box to the end of GoFSH output, it may make sense to modify this
   // so we don't have double boxes
@@ -36,7 +36,7 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
 
   files.forEach(file => {
     const inputFilePath = inputFilesMap.get(file) ?? path.join(inDir, file);
-    const outputFilePath = outputFilesMap.get(file) ?? path.join(inDir, file);
+    const outputFilePath = outputFilesMap.get(file) ?? path.join(outDir, file);
     const inputFileJSON = fs.existsSync(inputFilePath) ? fs.readJSONSync(inputFilePath) : '';
     const outputFileJSON = fs.existsSync(outputFilePath) ? fs.readJSONSync(outputFilePath) : '';
 
@@ -67,8 +67,8 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
   );
 }
 
-function getFilesMap(inDir: string): Map<string, string> {
-  const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
+function getFilesMap(dir: string): Map<string, string> {
+  const files = getFilesRecursive(dir).filter(file => file.endsWith('.json'));
   const filesMap = new Map<string, string>();
   files.forEach(file => filesMap.set(path.basename(file), file));
   return filesMap;

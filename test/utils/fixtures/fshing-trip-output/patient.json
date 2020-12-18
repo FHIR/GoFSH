@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "profile": ["http://example.org/StructureDefinition/different-profile"]
+  },
+  "resourceType": "Patient",
+  "id": "some-patient"
+}
