@@ -2,7 +2,7 @@ import childProcess from 'child_process';
 import path from 'path';
 import temp from 'temp';
 import fs from 'fs-extra';
-// import { loggerSpy } from '../helpers/loggerSpy';
+import '../helpers/loggerSpy'; // side-effect: suppresses logs
 import { fshingTrip } from '../../src/utils';
 
 describe('fshingTrip', () => {

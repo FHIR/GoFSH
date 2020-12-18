@@ -59,12 +59,19 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
     }
     fs.appendFileSync(diffFile.fd, patch, { encoding: 'utf8' });
   });
-  execSync(
-    `npx diff2html -i file -s side -F fshing-trip-comparison.html --hwt ${path.join(
-      __dirname,
-      'template.html'
-    )} -- ${diffFile.path}`
-  );
+  try {
+    execSync(
+      `npx diff2html -i file -s side -F fshing-trip-comparison.html --hwt ${path.join(
+        __dirname,
+        'template.html'
+      )} -- ${diffFile.path}`
+    );
+    logger.info(
+      `Generated comparison file to ${path.join(process.cwd(), 'fshing-trip-comparison.html')}`
+    );
+  } catch (e) {
+    logger.error(`Comparison generation failed with error: ${e.message}`);
+  }
 }
 
 function getFilesMap(dir: string): Map<string, string> {
