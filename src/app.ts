@@ -43,8 +43,8 @@ async function app() {
     )
     .option(
       '-f, --fshing-trip [use-local-sushi]',
-      'run SUSHI on the output of GoFSH and generate a comparison of the round trip results. ' +
-        'Add "use-local-sushi" after flag to use your locally installed version of SUSHI'
+      'run SUSHI on the output of GoFSH and generate a comparison of the round trip results, ' +
+        'add "use-local-sushi" after flag to use your locally installed version of SUSHI'
     )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
