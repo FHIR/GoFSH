@@ -146,7 +146,22 @@ describe('Processing', () => {
       const processor = await getFhirProcessor(inDir, loadTestDefinitions());
       const config = processor.processConfig();
       const result = await getResources(processor, config);
+      const expansionsPath = path.join(
+        __dirname,
+        'fixtures',
+        'bad-publisher-files',
+        'output',
+        'expansions.json'
+      );
+      const escapedJSONPath = path.join(
+        __dirname,
+        'fixtures',
+        'bad-publisher-files',
+        'simple-profile.escaped.json'
+      );
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0); // simple-profile.escaped.json not processed
+      expect(loggerSpy.getMessageAtIndex(0, 'debug')).toMatch(`Skipping ${expansionsPath} file`);
+      expect(loggerSpy.getMessageAtIndex(1, 'debug')).toMatch(`Skipping ${escapedJSONPath} file`);
       expect(result.profiles).toHaveLength(2);
       expect(result.codeSystems).toHaveLength(0);
       expect(result.valueSets).toHaveLength(0);
@@ -161,7 +176,15 @@ describe('Processing', () => {
       const processor = await getFhirProcessor(inDir, loadTestDefinitions());
       const config = processor.processConfig();
       const result = await getResources(processor, config);
+      const expansionsPath = path.join(
+        __dirname,
+        'fixtures',
+        'bad-publisher-files',
+        'output',
+        'expansions.json'
+      );
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getFirstMessage('debug')).toMatch(`Skipping ${expansionsPath} file`);
       expect(result.profiles).toHaveLength(1);
       expect(result.codeSystems).toHaveLength(0);
       expect(result.valueSets).toHaveLength(0);
@@ -177,6 +200,7 @@ describe('Processing', () => {
       const config = processor.processConfig();
       const result = await getResources(processor, config);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getFirstMessage('debug')).toMatch(/Skipping temp folder/s);
       expect(result.profiles).toHaveLength(1); // Only profile in root is processed (not the ones in temp)
       expect(result.codeSystems).toHaveLength(0);
       expect(result.valueSets).toHaveLength(0);
@@ -192,6 +216,9 @@ describe('Processing', () => {
       const config = processor.processConfig();
       const result = await getResources(processor, config);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      loggerSpy.getAllMessages('debug').forEach(m => {
+        expect(m).not.toMatch(/Skipping temp folder/s);
+      });
       expect(result.profiles).toHaveLength(2); // Profiles in temp are processed
       expect(result.codeSystems).toHaveLength(0);
       expect(result.valueSets).toHaveLength(0);
@@ -207,6 +234,9 @@ describe('Processing', () => {
       const config = processor.processConfig();
       const result = await getResources(processor, config);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      loggerSpy.getAllMessages('debug').forEach(m => {
+        expect(m).not.toMatch(/Skipping temp folder/s);
+      });
       expect(result.profiles).toHaveLength(1); // Profile in temp/more-things are processed
       expect(result.codeSystems).toHaveLength(0);
       expect(result.valueSets).toHaveLength(0);

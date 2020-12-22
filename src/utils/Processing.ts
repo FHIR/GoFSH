@@ -99,22 +99,7 @@ export function loadExternalDependencies(
 }
 
 function getLakeOfFHIR(inDir: string): LakeOfFHIR {
-  // Don't process files in .git folder
-  // Don't process any files in a temp folder, unless the temp folder is used in inDir when running GoFSH
-  const tempDir = `${path.sep}temp${path.sep}`;
-  const gitDir = `${path.sep}.git${path.sep}`;
-  const tempInInDir = inDir.endsWith(`${path.sep}temp`) || inDir.includes(tempDir);
-  const relevantFiles = getFilesRecursive(inDir).filter(
-    file => (tempInInDir ? true : !file.includes(tempDir)) && !file.includes(gitDir)
-  );
-
-  // IG Publisher creates .escaped.json files that are not valid JSON
-  const files = relevantFiles.filter(
-    file =>
-      file.endsWith('.json') &&
-      !file.endsWith('.escaped.json') &&
-      !IGNORED_RESOURCE_LIKE_FILES.some(path => file.endsWith(path))
-  );
+  const files = getFilesRecursive(inDir).filter(file => file.endsWith('.json'));
   logger.info(`Found ${files.length} JSON files.`);
   const docs: WildFHIR[] = [];
   files.forEach(file => {
@@ -153,9 +138,24 @@ export function getIgPathFromIgIni(inDir: string): string {
 // thanks, peturv
 function getFilesRecursive(dir: string): string[] {
   if (fs.statSync(dir).isDirectory()) {
-    const ancestors = fs.readdirSync(dir, 'utf8').map(f => getFilesRecursive(path.join(dir, f)));
+    const ancestors = fs.readdirSync(dir, 'utf8').map(f => {
+      // Don't get any files in .git folder or in a child temp folder
+      if (f === 'temp' || f === '.git') {
+        logger.debug(`Skipping ${f} folder: ${path.join(dir, f)}`);
+        return [];
+      }
+      return getFilesRecursive(path.join(dir, f));
+    });
     return [].concat(...ancestors);
   } else {
+    // IG Publisher creates .escaped.json files that are not valid JSON
+    if (
+      dir.endsWith('.escaped.json') ||
+      IGNORED_RESOURCE_LIKE_FILES.some(path => dir.endsWith(path))
+    ) {
+      logger.debug(`Skipping ${dir} file`);
+      return [];
+    }
     return [dir];
   }
 }
