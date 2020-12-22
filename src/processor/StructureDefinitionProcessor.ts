@@ -20,7 +20,7 @@ import {
   MappingExtractor
 } from '../extractor';
 import { ProcessableElementDefinition } from '.';
-import { getAncestorElement } from '../utils';
+import { getAncestorSliceDefinition } from '../utils';
 
 export class StructureDefinitionProcessor {
   static process(
@@ -84,14 +84,28 @@ export class StructureDefinitionProcessor {
     newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fisher));
     // Then extract rules based on the differential elements
     elements.forEach(element => {
-      if (element.sliceName && getAncestorElement(element.id, input, fisher) == null) {
-        newRules.push(
-          ContainsRuleExtractor.process(element, input, fisher),
-          OnlyRuleExtractor.process(element),
-          AssignmentRuleExtractor.process(element),
-          BindingRuleExtractor.process(element),
-          ObeysRuleExtractor.process(element)
-        );
+      if (element.sliceName) {
+        if (getAncestorSliceDefinition(element, input, fisher)) {
+          // the slice name is already captured by the ancestor definition
+          element.processedPaths.push('sliceName');
+          newRules.push(
+            CardRuleExtractor.process(element, input, fisher),
+            OnlyRuleExtractor.process(element),
+            AssignmentRuleExtractor.process(element),
+            FlagRuleExtractor.process(element),
+            BindingRuleExtractor.process(element),
+            ObeysRuleExtractor.process(element)
+          );
+        } else {
+          // the new slice needs to be captured by a contains rule
+          newRules.push(
+            ContainsRuleExtractor.process(element, input, fisher),
+            OnlyRuleExtractor.process(element),
+            AssignmentRuleExtractor.process(element),
+            BindingRuleExtractor.process(element),
+            ObeysRuleExtractor.process(element)
+          );
+        }
       } else {
         newRules.push(
           CardRuleExtractor.process(element, input, fisher),

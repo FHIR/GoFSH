@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs-extra';
 import { fhirtypes, fhirdefs, fshtypes } from 'fsh-sushi';
 import { cloneDeep } from 'lodash';
 import {
@@ -5,7 +7,8 @@ import {
   getPath,
   getPathValuePairs,
   getCardinality,
-  getAncestorElement
+  getAncestorElement,
+  getAncestorSliceDefinition
 } from '../../src/utils';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 
@@ -246,6 +249,53 @@ describe('element', () => {
       foo.min = 2;
       vitals.differential.element.push(foo);
       expect(getCardinality('Observation.foo', vitals, defs)).toBeNull();
+    });
+  });
+
+  describe('#getAncestorSliceDefinition', () => {
+    let defs: fhirdefs.FHIRDefinitions;
+    let parentJson: any;
+    let childJson: any;
+
+    beforeAll(() => {
+      defs = loadTestDefinitions();
+      parentJson = JSON.parse(
+        fs.readFileSync(
+          path.join(__dirname, '..', 'processor', 'fixtures', 'parent-observation.json'),
+          'utf-8'
+        )
+      );
+      childJson = JSON.parse(
+        fs.readFileSync(
+          path.join(__dirname, '..', 'processor', 'fixtures', 'child-observation.json'),
+          'utf-8'
+        )
+      );
+      defs.add(parentJson);
+      defs.add(childJson);
+    });
+
+    it('should find a slice defined directly on an ancestor', () => {
+      const elementDef = ProcessableElementDefinition.fromJSON(childJson.snapshot.element[1]);
+      // element id: Observation.component.extension:conditionCode
+      const sliceDef = getAncestorSliceDefinition(elementDef, childJson, defs);
+      expect(sliceDef).toBeDefined();
+      expect(sliceDef).toEqual(parentJson.differential.element[1]);
+    });
+
+    it('should find a slice defined implicitly on an ancestor', () => {
+      const elementDef = ProcessableElementDefinition.fromJSON(childJson.differential.element[2]);
+      // element id: Observation.component:alcoholAbuse.extension:conditionCode
+      const sliceDef = getAncestorSliceDefinition(elementDef, childJson, defs);
+      expect(sliceDef).toBeDefined();
+      expect(sliceDef).toEqual(parentJson.differential.element[1]);
+    });
+
+    it('should return undefined when the slice is not defined by an ancestor', () => {
+      const elementDef = ProcessableElementDefinition.fromJSON(childJson.differential.element[1]);
+      // element id: Observation.component:alcoholAbuse
+      const sliceDef = getAncestorSliceDefinition(elementDef, childJson, defs);
+      expect(sliceDef).toBeUndefined();
     });
   });
 });
