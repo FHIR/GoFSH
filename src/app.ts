@@ -42,9 +42,12 @@ async function app() {
       'specify how the output is organized into files: group-by-fsh-type (default), group-by-profile, single-file, file-per-definition'
     )
     .option(
-      '-f, --fshing-trip [use-local-sushi]',
-      'run SUSHI on the output of GoFSH and generate a comparison of the round trip results, ' +
-        'add "use-local-sushi" after flag to use your locally installed version of SUSHI'
+      '-f, --fshing-trip',
+      'run SUSHI on the output of GoFSH and generate a comparison of the round trip results'
+    )
+    .option(
+      '-i, --installed-sushi',
+      'use the locally installed version of SUSHI when generating comparisons with the "-f" option'
     )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
@@ -111,7 +114,7 @@ async function app() {
   logger.info('Thank you for using goFSH.');
 
   if (program.fshingTrip) {
-    fshingTrip(inDir, outDir, program.fshingTrip === 'use-local-sushi');
+    fshingTrip(inDir, outDir, program.installedSushi);
   }
 
   process.exit(0);

@@ -38,13 +38,14 @@ $ gofsh --help
 Usage: goFSH [path-to-fhir-resources] [options]
 
 Options:
-  -o, --out <out>                     the path to the output folder
-  -l, --log-level <level>             specify the level of log messages: error, warn, info (default), debug
-  -d, --dependency <dependency...>    specify dependencies to be loaded using format dependencyId@version (FHIR R4 included by default)
-  -v, --version                       print goFSH version
-  -h, --help                          display help for command
-  -s, --style                         specify how the output is organized into files: group-by-fsh-type (default), group-by-profile, single-file, file-per-definition
-  -f, --fshing-trip [use-local-sushi] run SUSHI on the output of GoFSH and generate a comparison of the round trip results, add "use-local-sushi" after flag to use your locally installed version of SUSHI
+  -o, --out <out>                  the path to the output folder
+  -l, --log-level <level>          specify the level of log messages: error, warn, info (default), debug
+  -d, --dependency <dependency...> specify dependencies to be loaded using format dependencyId@version (FHIR R4 included by default)
+  -v, --version                    print goFSH version
+  -h, --help                       display help for command
+  -s, --style                      specify how the output is organized into files: group-by-fsh-type (default), group-by-profile, single-file, file-per-definition
+  -f, --fshing-trip                run SUSHI on the output of GoFSH and generate a comparison of the round trip results
+  -i, --installed-sushi            use the locally installed version of SUSHI when generating comparisons with the "-f" option
 ```
 
 # Installation for Developers
