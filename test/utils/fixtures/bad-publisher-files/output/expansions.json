@@ -1,0 +1,13 @@
+{
+  "resourceType": "Bundle",
+  "id": "123",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "ValueSet",
+        "id": "this-should-not-process"
+      }
+    }
+  ]
+}
