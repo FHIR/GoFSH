@@ -3,7 +3,6 @@ import { pickBy, mapKeys, flatMap, flatten as flat } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { fshifyString, removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
-import { StructureDefinition, ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
 
 // This function depends on the id of an element to construct the path.
 // Per the specification https://www.hl7.org/fhir/elementdefinition.html#id, we should
@@ -55,7 +54,7 @@ export function getFSHValue(
   fisher: utils.Fishable
 ): number | boolean | string | fshtypes.FshCode {
   const value = flatObject[key];
-  const definition = StructureDefinition.fromJSON(
+  const definition = fhirtypes.StructureDefinition.fromJSON(
     fisher.fishForFHIR(resourceType, utils.Type.Resource, utils.Type.Type)
   );
   // Finding element by path works without array information and _ from children of primitives

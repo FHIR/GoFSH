@@ -84,28 +84,16 @@ export class StructureDefinitionProcessor {
     newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fisher));
     // Then extract rules based on the differential elements
     elements.forEach(element => {
-      if (element.sliceName) {
-        if (getAncestorSliceDefinition(element, input, fisher)) {
-          // the slice name is already captured by the ancestor definition
-          element.processedPaths.push('sliceName');
-          newRules.push(
-            CardRuleExtractor.process(element, input, fisher),
-            OnlyRuleExtractor.process(element),
-            AssignmentRuleExtractor.process(element),
-            FlagRuleExtractor.process(element),
-            BindingRuleExtractor.process(element),
-            ObeysRuleExtractor.process(element)
-          );
-        } else {
-          // the new slice needs to be captured by a contains rule
-          newRules.push(
-            ContainsRuleExtractor.process(element, input, fisher),
-            OnlyRuleExtractor.process(element),
-            AssignmentRuleExtractor.process(element),
-            BindingRuleExtractor.process(element),
-            ObeysRuleExtractor.process(element)
-          );
-        }
+      const ancestorSliceDefinition = getAncestorSliceDefinition(element, input, fisher);
+      // if there is a slice, but no ancestor definition, capture with a contains rule
+      if (element.sliceName && ancestorSliceDefinition == null) {
+        newRules.push(
+          ContainsRuleExtractor.process(element, input, fisher),
+          OnlyRuleExtractor.process(element),
+          AssignmentRuleExtractor.process(element),
+          BindingRuleExtractor.process(element),
+          ObeysRuleExtractor.process(element)
+        );
       } else {
         newRules.push(
           CardRuleExtractor.process(element, input, fisher),
@@ -115,6 +103,10 @@ export class StructureDefinitionProcessor {
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
         );
+      }
+      // if there is a slice, and there is an ancestor definition, don't process the sliceName again
+      if (element.sliceName && ancestorSliceDefinition) {
+        element.processedPaths.push('sliceName');
       }
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
       // since it will convert any remaining fields to CaretValueRules
