@@ -85,6 +85,10 @@ export default {
                 new FshCode(rule.value.code, 'http://unitsofmeasure.org')
               );
               rulesToRemove.push(rules.indexOf(valueSibling), rules.indexOf(systemSibling));
+              if (unitSibling) {
+                rule.value.unit.display = unitSibling.value as string;
+                rulesToRemove.push(rules.indexOf(unitSibling));
+              }
             } else if (unitSibling) {
               rule.caretPath = basePath;
               rule.value.display = unitSibling.value.toString();
@@ -155,6 +159,10 @@ export default {
                 instance.rules.indexOf(valueSibling),
                 instance.rules.indexOf(systemSibling)
               );
+              if (unitSibling) {
+                rule.value.unit.display = unitSibling.value as string;
+                rulesToRemove.push(instance.rules.indexOf(unitSibling));
+              }
             } else if (unitSibling) {
               rule.path = basePath;
               rule.value.display = unitSibling.value.toString();
