@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { createTwoFilesPatch } from 'diff';
 import { execSync } from 'child_process';
 import temp from 'temp';
-import { union } from 'lodash';
+import { isEqual, union } from 'lodash';
 import fs from 'fs-extra';
 
 import { getFilesRecursive, logger } from '.';
@@ -39,6 +39,11 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
     const outputFilePath = outputFilesMap.get(file) ?? path.join(outDir, file);
     const inputFileJSON = fs.existsSync(inputFilePath) ? fs.readJSONSync(inputFilePath) : '';
     const outputFileJSON = fs.existsSync(outputFilePath) ? fs.readJSONSync(outputFilePath) : '';
+
+    // If two files are deeply equal, show no diff
+    if (isEqual(inputFileJSON, outputFileJSON)) {
+      return;
+    }
 
     // It is best to remove the snapshot, since otherwise it tends to align with the differential in the
     // diff, creating a pretty meaningless diff
