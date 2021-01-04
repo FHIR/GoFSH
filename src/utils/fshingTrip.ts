@@ -50,8 +50,8 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
     const patch = createTwoFilesPatch(
       path.relative(process.cwd(), inputFilePath),
       path.relative(process.cwd(), outputFilePath),
-      JSON.stringify(inputFileJSON, null, 2),
-      JSON.stringify(outputFileJSON, null, 2)
+      JSON.stringify(inputFileJSON, null, 2).replace(/^""$/, ''),
+      JSON.stringify(outputFileJSON, null, 2).replace(/^""$/, '')
     );
     if (!/@@/.test(patch)) {
       // No difference found
