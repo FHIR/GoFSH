@@ -38,7 +38,7 @@ describe('ExportableInvariant', () => {
 
     const expectedResult = [
       'Invariant: inv-3',
-      'Description: "Please do this.\\nPlease always do this with a \\\\ character."',
+      'Description: """Please do this.\nPlease always do this with a \\ character."""',
       'Severity: #warning',
       'Expression: "requirement.contains(\\"\\\\\\")"',
       'XPath: "f:requirement"'
