@@ -37,13 +37,15 @@ describe('ExportableProfile', () => {
   it('should export a profile with metadata that contains characters that are escaped in FSH', () => {
     const input = new ExportableProfile('NewlineProfile');
     input.id = 'newline-profile';
+    input.title = 'This title\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
     input.description =
       'This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
 
     const expectedResult = [
       'Profile: NewlineProfile',
       'Id: newline-profile',
-      'Description: "This description\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"'
+      'Title: "This title\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"',
+      'Description: """This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?"""'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);

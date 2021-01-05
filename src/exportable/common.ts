@@ -60,7 +60,13 @@ export function metadataToFSH(
     }
   }
   if (definition.description) {
-    resultLines.push(`Description: "${fshifyString(definition.description)}"`);
+    // Description can be a multiline string.
+    // If it contains newline characters, treat it as a multiline string.
+    if (definition.description.indexOf('\n') > -1) {
+      resultLines.push(`Description: """${definition.description}"""`);
+    } else {
+      resultLines.push(`Description: "${fshifyString(definition.description)}"`);
+    }
   }
   if (definition instanceof ExportableInvariant) {
     if (definition.severity) {

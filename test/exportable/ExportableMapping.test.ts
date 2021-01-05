@@ -34,13 +34,15 @@ describe('ExportableMapping', () => {
     const input = new ExportableMapping('NewLineMapping');
     input.id = 'new-line-mapping';
     input.target = 'http://crazy\\url.com';
+    input.title = 'This title\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
     input.description =
       'This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
 
     const expectedResult = [
       'Mapping: NewLineMapping',
       'Id: new-line-mapping',
-      'Description: "This description\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"',
+      'Title: "This title\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"',
+      'Description: """This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?"""',
       'Target: "http://crazy\\\\url.com"'
     ].join(EOL);
     const result = input.toFSH();

@@ -73,13 +73,15 @@ describe('ExportableExtension', () => {
   it('should export an extension with metadata that contains characters that are escaped in FSH', () => {
     const input = new ExportableExtension('NewlineExtension');
     input.id = 'newline-extension';
+    input.title = 'This title\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
     input.description =
       'This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
 
     const expectedResult = [
       'Extension: NewlineExtension',
       'Id: newline-extension',
-      'Description: "This description\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"'
+      'Title: "This title\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"',
+      'Description: """This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?"""'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);

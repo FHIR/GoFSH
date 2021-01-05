@@ -29,13 +29,15 @@ describe('ExportableCodeSystem', () => {
   it('should export a CodeSystem with metadata that contains characters that are escaped in FSH', () => {
     const input = new ExportableCodeSystem('NewlineCodeSystem');
     input.id = 'newline-code-system';
+    input.title = 'This title\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
     input.description =
       'This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?';
 
     const expectedResult = [
       'CodeSystem: NewlineCodeSystem',
       'Id: newline-code-system',
-      'Description: "This description\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"'
+      'Title: "This title\\nhas a newline in it. Is that \\\\not allowed\\\\? Is that \\"not okay\\"?"',
+      'Description: """This description\nhas a newline in it. Is that \\not allowed\\? Is that "not okay"?"""'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);
