@@ -28,7 +28,11 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
   }
   const inputFilesMap = getFilesMap(inDir);
   const outputFilesMap = getFilesMap(outDir);
-  const files = union(Array.from(inputFilesMap.keys()), Array.from(outputFilesMap.keys()));
+  const files = union(Array.from(inputFilesMap.keys()), Array.from(outputFilesMap.keys())).filter(
+    file =>
+      !['.index.json', 'ig-r4.json', 'package.json'].includes(file) &&
+      !file.endsWith('openapi.json')
+  );
   files.sort();
 
   temp.track();
@@ -40,13 +44,24 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
     let inputFileJSON = fs.existsSync(inputFilePath) ? fs.readJSONSync(inputFilePath) : '';
     const outputFileJSON = fs.existsSync(outputFilePath) ? fs.readJSONSync(outputFilePath) : '';
 
-    // When comparing input to output, ignore snapshot and generated text on input, since this
-    // will always differ from the output, and create unnecessary diffs
+    // When comparing input to output, ignore snapshot, generated text, generated dates, and
+    // root differential elements, since these will always differ from the output, and create
+    // unnecessary diffs
     const originalInputJSON = cloneDeep(inputFileJSON);
     delete inputFileJSON.snapshot;
     const generatedText = ['generated', 'extensions'].includes(inputFileJSON.text?.status);
     if (generatedText) {
       delete inputFileJSON.text;
+    }
+    const generatedDate = inputFileJSON.date && !outputFileJSON.date;
+    if (generatedDate) {
+      delete inputFileJSON.date;
+    }
+    const emptyRootDifferential =
+      inputFileJSON.differential?.element?.length &&
+      isEqual(Object.keys(inputFileJSON.differential.element[0]), ['id', 'path']);
+    if (emptyRootDifferential) {
+      inputFileJSON.differential.element.splice(0, 1);
     }
     // If two files are deeply equal, show no diff
     if (isEqual(inputFileJSON, outputFileJSON)) {
@@ -63,6 +78,14 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
     if (generatedText) {
       inputFileJSON.text =
         'NOTE: Generated text is ignored by GoFSH, so this element is omitted for sake of comparison';
+    }
+    if (generatedDate) {
+      inputFileJSON.date =
+        'NOTE: Generated date is ignored by GoFSH, so this element is omitted for sake of comparison';
+    }
+    if (emptyRootDifferential) {
+      inputFileJSON.differential.element[0] =
+        'NOTE: Root differential is ignored by GoFSH, so this element is omitted for sake of comparison';
     }
 
     const patch = createTwoFilesPatch(
