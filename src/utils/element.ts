@@ -1,9 +1,8 @@
 import { flatten } from 'flat';
-import { pickBy, mapKeys } from 'lodash';
+import { pickBy, mapKeys, flatMap, flatten as flat } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { fshifyString, removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
-import { ProcessableStructureDefinition } from '../processor';
-import { StructureDefinition, ElementDefinition } from 'fsh-sushi/dist/fhirtypes';
+import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
 
 // This function depends on the id of an element to construct the path.
 // Per the specification https://www.hl7.org/fhir/elementdefinition.html#id, we should
@@ -55,7 +54,7 @@ export function getFSHValue(
   fisher: utils.Fishable
 ): number | boolean | string | fshtypes.FshCode {
   const value = flatObject[key];
-  const definition = StructureDefinition.fromJSON(
+  const definition = fhirtypes.StructureDefinition.fromJSON(
     fisher.fishForFHIR(resourceType, utils.Type.Resource, utils.Type.Type)
   );
   // Finding element by path works without array information and _ from children of primitives
@@ -127,4 +126,54 @@ export function getCardinality(
     currentStructDef = fisher.fishForFHIR(currentStructDef.baseDefinition);
   }
   return min != null && max != null ? { min, max } : null;
+}
+
+export function getAncestorSliceDefinition(
+  element: ProcessableElementDefinition,
+  sd: ProcessableStructureDefinition,
+  fisher: utils.Fishable
+) {
+  // slices may be defined in various ways.
+  // for example, the slice Z at path:
+  // alpha[X].beta[Y].gamma[Z]
+  // may be defined in any of the following ways:
+  // alpha.beta.gamma[Z]
+  // alpha[X].beta.gamma[Z]
+  // alpha.beta[Y].gamma[Z]
+  // alpha[X].beta[Y].gamma[Z]
+  // we can use getAncestorElement to help us out here.
+  if (element.sliceName) {
+    const idParts = element.id.split('.');
+    // if there are slices earlier in the id,
+    // check both the slice and list element.
+    const idPartVariations = [
+      ...idParts.slice(0, -1).map(part => {
+        if (part.indexOf(':') > -1) {
+          return [part, part.split(':')[0]];
+        } else {
+          return [part];
+        }
+      }),
+      idParts.slice(-1)
+    ];
+    // the set of ids to check is the cartesian product of all the id variations
+    const idsToCheck = cartesian(...idPartVariations);
+    for (const id of idsToCheck) {
+      const ancestorElement = getAncestorElement(id.join('.'), sd, fisher);
+      if (ancestorElement) {
+        return ancestorElement;
+      }
+    }
+  }
+}
+
+// adapted from https://stackoverflow.com/questions/12303989/cartesian-product-of-multiple-arrays-in-javascript#43053803
+function cartesian(...sublists: any[][]) {
+  return sublists.reduce((prevList, curList) => {
+    return flatMap(prevList, prevElement => {
+      return curList.map(curElement => {
+        return flat([prevElement, curElement]);
+      });
+    });
+  });
 }
