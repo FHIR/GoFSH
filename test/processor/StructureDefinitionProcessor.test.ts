@@ -18,12 +18,18 @@ import {
 } from '../../src/exportable';
 import '../helpers/loggerSpy'; // suppresses console logging
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { ContainsRuleExtractor } from '../../src/extractor';
 
 describe('StructureDefinitionProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
     defs = loadTestDefinitions();
+    defs.add(
+      JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'parent-observation.json'), 'utf-8')
+      )
+    );
   });
 
   describe('#process', () => {
@@ -36,6 +42,38 @@ describe('StructureDefinitionProcessor', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(ExportableProfile);
       expect(result[0].name).toBe('SimpleProfile');
+    });
+
+    it('should not create contains rules for slices that are not new', () => {
+      const containsExtractorSpy = jest.spyOn(ContainsRuleExtractor, 'process');
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'child-observation.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableProfile);
+      // ChildObservation contains a differential element for:
+      // Observation.component:alcoholAbuse.extension:conditionCode
+      // and snapshot elements for:
+      // Observation.component.extension:conditionCode
+      // Observation.component:alcoholAbuse.extension
+      // Observation.component.extension:conditionCode is in the snapshot because ParentObservation has already defined it.
+      // therefore, there should not be a contains rule for Observation.component:alcoholAbuse.extension:conditionCode on ChildObservation
+      const containsRule = result[0].rules.find(
+        rule =>
+          rule instanceof ExportableContainsRule &&
+          rule.path === 'component[alcoholAbuse].extension'
+      );
+      expect(containsRule).toBeUndefined();
+      // in fact, for this element, we should not have even called ContainsRuleExtractor,
+      expect(containsExtractorSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'Observation.component:alcoholAbuse.extension:conditionCode'
+        }),
+        expect.anything(),
+        expect.anything()
+      );
     });
 
     it('should convert the simplest Extension', () => {

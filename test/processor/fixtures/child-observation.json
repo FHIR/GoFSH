@@ -1,0 +1,299 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "ChildObservation",
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-category",
+      "valueString": "Clinical.Diagnostics"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-security-category",
+      "valueCode": "patient"
+    }
+  ],
+  "url": "http://example.org/StructureDefinition/ChildObservation",
+  "version": "1.0.0",
+  "name": "ChildObservation",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "workflow",
+      "uri": "http://hl7.org/fhir/workflow",
+      "name": "Workflow Pattern"
+    },
+    {
+      "identity": "sct-concept",
+      "uri": "http://snomed.info/conceptdomain",
+      "name": "SNOMED CT Concept Domain Binding"
+    },
+    {
+      "identity": "v2",
+      "uri": "http://hl7.org/v2",
+      "name": "HL7 v2 Mapping"
+    },
+    {
+      "identity": "rim",
+      "uri": "http://hl7.org/v3",
+      "name": "RIM Mapping"
+    },
+    {
+      "identity": "w5",
+      "uri": "http://hl7.org/fhir/fivews",
+      "name": "FiveWs Pattern Mapping"
+    },
+    {
+      "identity": "sct-attr",
+      "uri": "http://snomed.org/attributebinding",
+      "name": "SNOMED CT Attribute Binding"
+    }
+  ],
+  "kind": "resource",
+  "abstract": false,
+  "type": "Observation",
+  "baseDefinition": "http://example.org/StructureDefinition/ParentObservation",
+  "derivation": "constraint",
+  "snapshot": {
+    "element": [
+      {
+        "id": "Observation.component",
+        "path": "Observation.component",
+        "slicing": {
+          "discriminator": [{ "type": "pattern", "path": "code" }],
+          "description": "Slice based on the component.code pattern",
+          "rules": "open"
+        },
+        "short": "Component results",
+        "definition": "Some observations have multiple component observations.  These component observations are expressed as separate code value pairs that share the same attributes.  Examples include systolic and diastolic component observations for blood pressure measurement and multiple component observations for genetics observations.",
+        "comment": "For a discussion on the ways Observations can be assembled in groups together see [Notes](http://hl7.org/fhir/R4/observation.html#notes) below.",
+        "requirements": "Component observations share the same attributes in the Observation resource as the primary observation and are always treated a part of a single observation (they are not separable).   However, the reference range for the primary observation value is not inherited by the component values and is required when appropriate for each component observation.",
+        "min": 0,
+        "max": "*",
+        "base": { "path": "Observation.component", "min": 0, "max": "*" },
+        "type": [{ "code": "BackboneElement" }],
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children",
+            "expression": "hasValue() or (children().count() > id.count())",
+            "xpath": "@value|f:*|h:div",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          }
+        ],
+        "mustSupport": true,
+        "isModifier": false,
+        "isSummary": true,
+        "mapping": [
+          { "identity": "v2", "map": "containment by OBX-4?" },
+          { "identity": "rim", "map": "outBoundRelationship[typeCode=COMP]" }
+        ]
+      },
+      {
+        "id": "Observation.component.extension:conditionCode",
+        "path": "Observation.component.extension",
+        "sliceName": "conditionCode",
+        "short": "Comorbid Condition Code",
+        "definition": "An extension for representing the condition code corresponding to the named comorbid condition.",
+        "min": 0,
+        "max": "*",
+        "base": { "path": "Element.extension", "min": 0, "max": "*" },
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-comorbid-condition-code"
+            ]
+          }
+        ],
+        "condition": ["ele-1"],
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children",
+            "expression": "hasValue() or (children().count() > id.count())",
+            "xpath": "@value|f:*|h:div",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          },
+          {
+            "key": "ext-1",
+            "severity": "error",
+            "human": "Must have either extensions or value[x], not both",
+            "expression": "extension.exists() != value.exists()",
+            "xpath": "exists(f:extension)!=exists(f:*[starts-with(local-name(.), 'value')])",
+            "source": "http://hl7.org/fhir/StructureDefinition/Extension"
+          }
+        ],
+        "mustSupport": true,
+        "isModifier": false
+      },
+      {
+        "id": "Observation.component:alcoholAbuse",
+        "path": "Observation.component",
+        "sliceName": "alcoholAbuse",
+        "short": "Alcohol Abuse Comorbidity",
+        "definition": "Component representing the presence or absence of the named comorbidity with optional condition code(s) or reference to the actual condition(s).",
+        "comment": "For a discussion on the ways Observations can be assembled in groups together see [Notes](http://hl7.org/fhir/R4/observation.html#notes) below.",
+        "requirements": "Component observations share the same attributes in the Observation resource as the primary observation and are always treated a part of a single observation (they are not separable).   However, the reference range for the primary observation value is not inherited by the component values and is required when appropriate for each component observation.",
+        "min": 0,
+        "max": "1",
+        "base": { "path": "Observation.component", "min": 0, "max": "*" },
+        "type": [{ "code": "BackboneElement" }],
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children",
+            "expression": "hasValue() or (children().count() > id.count())",
+            "xpath": "@value|f:*|h:div",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          }
+        ],
+        "isModifier": false,
+        "isSummary": true,
+        "mapping": [
+          { "identity": "v2", "map": "containment by OBX-4?" },
+          { "identity": "rim", "map": "outBoundRelationship[typeCode=COMP]" }
+        ]
+      },
+      {
+        "id": "Observation.component:alcoholAbuse.extension",
+        "path": "Observation.component.extension",
+        "slicing": {
+          "discriminator": [{ "type": "value", "path": "url" }],
+          "ordered": false,
+          "rules": "open"
+        },
+        "short": "Extension",
+        "definition": "An Extension",
+        "min": 0,
+        "max": "*",
+        "base": { "path": "Element.extension", "min": 0, "max": "*" },
+        "type": [{ "code": "Extension" }],
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children",
+            "expression": "hasValue() or (children().count() > id.count())",
+            "xpath": "@value|f:*|h:div",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          },
+          {
+            "key": "ext-1",
+            "severity": "error",
+            "human": "Must have either extensions or value[x], not both",
+            "expression": "extension.exists() != value.exists()",
+            "xpath": "exists(f:extension)!=exists(f:*[starts-with(local-name(.), \"value\")])",
+            "source": "http://hl7.org/fhir/StructureDefinition/Extension"
+          }
+        ],
+        "isModifier": false,
+        "isSummary": false
+      },
+      {
+        "id": "Observation.component:alcoholAbuse.extension:conditionCode",
+        "path": "Observation.component.extension",
+        "sliceName": "conditionCode",
+        "short": "Comorbid Condition Code",
+        "definition": "An extension for representing the condition code corresponding to the named comorbid condition.",
+        "min": 0,
+        "max": "*",
+        "base": { "path": "Element.extension", "min": 0, "max": "*" },
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-comorbid-condition-code"
+            ]
+          }
+        ],
+        "condition": ["ele-1"],
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children",
+            "expression": "hasValue() or (children().count() > id.count())",
+            "xpath": "@value|f:*|h:div",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          },
+          {
+            "key": "ext-1",
+            "severity": "error",
+            "human": "Must have either extensions or value[x], not both",
+            "expression": "extension.exists() != value.exists()",
+            "xpath": "exists(f:extension)!=exists(f:*[starts-with(local-name(.), 'value')])",
+            "source": "http://hl7.org/fhir/StructureDefinition/Extension"
+          }
+        ],
+        "isModifier": false
+      },
+      {
+        "id": "Observation.component:alcoholAbuse.extension:conditionCode.value[x]",
+        "path": "Observation.component.extension.value[x]",
+        "short": "Value of extension",
+        "definition": "Value of extension - must be one of a constrained set of the data types (see [Extensibility](http://hl7.org/fhir/R4/extensibility.html) for a list).",
+        "min": 0,
+        "max": "1",
+        "base": { "path": "Extension.value[x]", "min": 0, "max": "1" },
+        "type": [{ "code": "CodeableConcept" }],
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children",
+            "expression": "hasValue() or (children().count() > id.count())",
+            "xpath": "@value|f:*|h:div",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          }
+        ],
+        "isModifier": false,
+        "isSummary": false,
+        "binding": {
+          "strength": "extensible",
+          "valueSet": "http://hl7.org/fhir/us/mcode/ValueSet/elixhauser-alcohol-abuse-vs"
+        },
+        "mapping": [{ "identity": "rim", "map": "N/A" }]
+      }
+    ]
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.component",
+        "path": "Observation.component",
+        "slicing": {
+          "discriminator": [
+            {
+              "type": "value"
+            }
+          ]
+        }
+      },
+      {
+        "id": "Observation.component:alcoholAbuse",
+        "path": "Observation.component",
+        "sliceName": "alcoholAbuse",
+        "short": "Alcohol Abuse Comorbidity",
+        "definition": "Component representing the presence or absence of the named comorbidity with optional condition code(s) or reference to the actual condition(s).",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "Observation.component:alcoholAbuse.extension:conditionCode",
+        "path": "Observation.component.extension",
+        "sliceName": "conditionCode"
+      },
+      {
+        "id": "Observation.component:alcoholAbuse.extension:conditionCode.value[x]",
+        "path": "Observation.component.extension.value[x]",
+        "binding": {
+          "strength": "extensible",
+          "valueSet": "http://hl7.org/fhir/us/mcode/ValueSet/elixhauser-alcohol-abuse-vs"
+        }
+      }
+    ]
+  }
+}
