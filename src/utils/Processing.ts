@@ -136,7 +136,7 @@ export function getIgPathFromIgIni(inDir: string): string {
 }
 
 // thanks, peturv
-function getFilesRecursive(dir: string): string[] {
+export function getFilesRecursive(dir: string): string[] {
   if (fs.statSync(dir).isDirectory()) {
     const ancestors = fs.readdirSync(dir, 'utf8').map(f => {
       // Don't get any files in .git folder or in a child temp folder
