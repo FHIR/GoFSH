@@ -7,6 +7,7 @@ import { fshingTrip } from '../../src/utils';
 
 describe('fshingTrip', () => {
   let execSyncSpy: jest.SpyInstance;
+  let execFileSyncSpy: jest.SpyInstance;
   let consoleSpy: jest.SpyInstance;
   let trackSpy: jest.SpyInstance;
   let openSyncSpy: jest.SpyInstance;
@@ -14,6 +15,7 @@ describe('fshingTrip', () => {
 
   beforeAll(() => {
     execSyncSpy = jest.spyOn(childProcess, 'execSync').mockImplementation();
+    execFileSyncSpy = jest.spyOn(childProcess, 'execFileSync').mockImplementation();
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     trackSpy = jest.spyOn(temp, 'track').mockImplementation();
     openSyncSpy = jest.spyOn(temp, 'openSync').mockImplementation(() => {
@@ -24,6 +26,7 @@ describe('fshingTrip', () => {
 
   beforeEach(() => {
     execSyncSpy.mockClear();
+    execFileSyncSpy.mockClear();
     consoleSpy.mockClear();
     trackSpy.mockClear();
     openSyncSpy.mockClear();
@@ -36,7 +39,7 @@ describe('fshingTrip', () => {
       path.join(__dirname, 'fixtures', 'fshing-trip-output'),
       false
     );
-    expect(execSyncSpy).toHaveBeenCalledTimes(2);
+    expect(execSyncSpy).toHaveBeenCalledTimes(1);
     expect(execSyncSpy.mock.calls[0][0]).toBe(
       `npx sushi ${path.join(__dirname, 'fixtures', 'fshing-trip-output')}`
     );
@@ -48,7 +51,7 @@ describe('fshingTrip', () => {
       path.join(__dirname, 'fixtures', 'fshing-trip-output'),
       true
     );
-    expect(execSyncSpy).toHaveBeenCalledTimes(2);
+    expect(execSyncSpy).toHaveBeenCalledTimes(1);
     expect(execSyncSpy.mock.calls[0][0]).toBe(
       `sushi ${path.join(__dirname, 'fixtures', 'fshing-trip-output')}`
     );
@@ -60,7 +63,7 @@ describe('fshingTrip', () => {
       path.join(__dirname, 'fixtures', 'fshing-trip-output'),
       false
     );
-    expect(execSyncSpy).toHaveBeenCalledTimes(2);
+    expect(execSyncSpy).toHaveBeenCalledTimes(1);
     expect(execSyncSpy.mock.calls[0][0]).toBe(
       `npx sushi ${path.join(__dirname, 'fixtures', 'fshing-trip-output')}`
     );
@@ -71,15 +74,23 @@ describe('fshingTrip', () => {
     expect(appendFileSyncSpy.mock.calls[0][1]).toMatch(/observation\.json/);
     expect(appendFileSyncSpy.mock.calls[1][1]).toMatch(/profiled-patient.*different-profile/s);
     expect(appendFileSyncSpy.mock.calls[2][1]).toMatch(/practitioner\.json/);
-    expect(execSyncSpy.mock.calls[1][0]).toBe(
-      `npx diff2html -i file -s side -F fshing-trip-comparison.html --hwt ${path.join(
-        __dirname,
-        '..',
-        '..',
-        'src',
-        'utils',
-        'template.html'
-      )} -- foo.diff`
-    );
+    expect(execFileSyncSpy).toHaveBeenCalledTimes(1);
+    expect(execFileSyncSpy.mock.calls[0]).toEqual([
+      'npx',
+      [
+        'diff2html-cli',
+        '-i',
+        'file',
+        '-s',
+        'side',
+        '-F',
+        'fshing-trip-comparison.html',
+        '--hwt',
+        path.join(__dirname, '..', '..', 'src', 'utils', 'template.html'),
+        '--',
+        'foo.diff'
+      ],
+      { cwd: path.join(__dirname, 'fixtures', 'fshing-trip-output'), shell: true }
+    ]);
   });
 });

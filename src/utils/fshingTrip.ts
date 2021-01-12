@@ -1,19 +1,14 @@
 import path from 'path';
 import chalk from 'chalk';
 import { createTwoFilesPatch } from 'diff';
-import { execSync, execFile } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import temp from 'temp';
 import { cloneDeep, isEqual, union } from 'lodash';
 import fs from 'fs-extra';
 
 import { getFilesRecursive, logger } from '.';
-import util from 'util';
 
-export async function fshingTrip(
-  inDir: string,
-  outDir: string,
-  useLocalSUSHI: boolean
-): Promise<void> {
+export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean) {
   // Make a pretty box to let the user know we are going into SUSHI mode
   // NOTE: If we add a box to the end of GoFSH output, it may make sense to modify this
   // so we don't have double boxes
@@ -106,7 +101,7 @@ export async function fshingTrip(
     fs.appendFileSync(diffFile.fd, patch, { encoding: 'utf8' });
   });
   try {
-    await util.promisify(execFile)(
+    execFileSync(
       'npx',
       [
         'diff2html-cli',
