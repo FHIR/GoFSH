@@ -1,14 +1,19 @@
 import path from 'path';
 import chalk from 'chalk';
 import { createTwoFilesPatch } from 'diff';
-import { execSync } from 'child_process';
+import { execSync, execFile } from 'child_process';
 import temp from 'temp';
 import { cloneDeep, isEqual, union } from 'lodash';
 import fs from 'fs-extra';
 
 import { getFilesRecursive, logger } from '.';
+import util from 'util';
 
-export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean): void {
+export async function fshingTrip(
+  inDir: string,
+  outDir: string,
+  useLocalSUSHI: boolean
+): Promise<void> {
   // Make a pretty box to let the user know we are going into SUSHI mode
   // NOTE: If we add a box to the end of GoFSH output, it may make sense to modify this
   // so we don't have double boxes
@@ -101,12 +106,22 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
     fs.appendFileSync(diffFile.fd, patch, { encoding: 'utf8' });
   });
   try {
-    execSync(
-      `npx diff2html -i file -s side -F fshing-trip-comparison.html --hwt ${path.join(
-        __dirname,
-        'template.html'
-      )} -- ${diffFile.path}`,
-      { cwd: outDir }
+    await util.promisify(execFile)(
+      'npx',
+      [
+        'diff2html-cli',
+        '-i',
+        'file',
+        '-s',
+        'side',
+        '-F',
+        'fshing-trip-comparison.html',
+        '--hwt',
+        path.join(__dirname, 'template.html'),
+        '--',
+        diffFile.path
+      ],
+      { cwd: outDir, shell: true }
     );
     logger.info(`Generated comparison file to ${path.join(outDir, 'fshing-trip-comparison.html')}`);
   } catch (e) {

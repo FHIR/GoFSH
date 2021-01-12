@@ -114,7 +114,7 @@ async function app() {
   logger.info('Thank you for using goFSH.');
 
   if (program.fshingTrip) {
-    fshingTrip(inDir, outDir, program.installedSushi);
+    await fshingTrip(inDir, outDir, program.installedSushi);
   }
 
   process.exit(0);
