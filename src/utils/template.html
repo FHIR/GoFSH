@@ -4,18 +4,15 @@
     <meta charset="utf-8" />
     <title>FSHing Trip Comparison</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/github.min.css" />
-
-    <!--diff2html-css-->
-
-    <!--diff2html-js-ui-->
-
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const targetElement = document.getElementById('diff');
         const diff2htmlUi = new Diff2HtmlUI(targetElement);
-        //diff2html-fileListToggle
-        //diff2html-synchronisedScroll
-        //diff2html-highlightCode
+        diff2htmlUi.fileListToggle(false);
+        diff2htmlUi.synchronisedScroll();
+        diff2htmlUi.highlightCode();
         const diffs = document.getElementsByClassName('d2h-file-wrapper');
         for (const diff of diffs) {
           diff.innerHTML = `
