@@ -1,6 +1,7 @@
 import path from 'path';
 import chalk from 'chalk';
 import { createTwoFilesPatch } from 'diff';
+import * as Diff2html from 'diff2html';
 import { execSync } from 'child_process';
 import temp from 'temp';
 import { cloneDeep, isEqual, union } from 'lodash';
@@ -101,14 +102,12 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
     fs.appendFileSync(diffFile.fd, patch, { encoding: 'utf8' });
   });
   try {
-    execSync(
-      `npx diff2html -i file -s side -F fshing-trip-comparison.html --hwt ${path.join(
-        __dirname,
-        'template.html'
-      )} -- ${diffFile.path}`,
-      { cwd: outDir }
-    );
-    logger.info(`Generated comparison file to ${path.join(outDir, 'fshing-trip-comparison.html')}`);
+    const diffJson = Diff2html.parse(fs.readFileSync(diffFile.path, 'utf-8'));
+    const diffHtml = Diff2html.html(diffJson, { outputFormat: 'side-by-side', drawFileList: true });
+    const template = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf-8');
+    const resultFile = path.join(outDir, 'fshing-trip-comparison.html');
+    fs.writeFileSync(resultFile, template.replace('<!--diff2html-diff-->', diffHtml), 'utf-8');
+    logger.info(`Generated comparison file to ${resultFile}`);
   } catch (e) {
     logger.error(`Comparison generation failed with error: ${e.message}`);
   }
