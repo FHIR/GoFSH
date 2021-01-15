@@ -11,13 +11,12 @@ import { getFilesRecursive, logger } from '.';
 
 export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean): void {
   // Make a pretty box to let the user know we are going into SUSHI mode
-  // NOTE: If we add a box to the end of GoFSH output, it may make sense to modify this
-  // so we don't have double boxes
-  const clr = chalk.green;
+  const clr = chalk.rgb(77, 166, 255);
+  // prettier-ignore
   [
-    clr('╔═════════════════════════════════════════════════════════════════╗'),
+    clr('╔'  + '═════════════════════════════════════════════════════════════════' +     '╗'),
     clr('║') + '             Generating round trip results via SUSHI             ' + clr('║'),
-    clr('╚═════════════════════════════════════════════════════════════════╝')
+    clr('╚'  + '═════════════════════════════════════════════════════════════════' +     '╝')
   ].forEach(line => console.log(line));
 
   // If we run with "npx", then the version GoFSH depends on will be used. Otherwise if the

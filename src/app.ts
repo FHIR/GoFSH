@@ -3,17 +3,23 @@
 import path from 'path';
 import fs from 'fs-extra';
 import program from 'commander';
+import chalk from 'chalk';
+import { pad, padStart, padEnd } from 'lodash';
 import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
-
 import {
   ensureOutputDir,
   getInputDir,
   getFhirProcessor,
   getResources,
   loadExternalDependencies,
-  writeFSH
-} from './utils/Processing';
-import { logger, stats, fshingTrip } from './utils';
+  writeFSH,
+  logger,
+  stats,
+  fshingTrip,
+  getRandomPun,
+  getRandomSeaCreatures,
+  getRandomSeaCreaturesStat
+} from './utils';
 import { Package } from './processor';
 
 const FSH_VERSION = '0.13.x';
@@ -99,19 +105,52 @@ async function app() {
 
   await Promise.all(dependencyDefs);
 
-  let resources: Package;
+  let pkg: Package;
   try {
-    resources = await getResources(processor, config);
+    pkg = await getResources(processor, config);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);
   }
 
-  writeFSH(resources, outDir, program.style);
+  writeFSH(pkg, outDir, program.style);
 
-  logger.info(`Errors: ${stats.numError}`);
-  logger.info(`Warnings: ${stats.numWarn}`);
-  logger.info('Thank you for using goFSH.');
+  const proNum = pad(pkg.profiles.length.toString(), 12);
+  const extNum = pad(pkg.extensions.length.toString(), 13);
+  const vsNum = pad(pkg.valueSets.length.toString(), 12);
+  const csNum = pad(pkg.codeSystems.length.toString(), 13);
+  const instNum = pad(pkg.instances.length.toString(), 12);
+  const invNum = pad(pkg.invariants.length.toString(), 13);
+  const mapNum = pad(pkg.mappings.length.toString(), 12);
+  const errNumMsg = pad(`${stats.numError} Error${stats.numError !== 1 ? 's' : ''}`, 12);
+  const wrnNumMsg = padStart(`${stats.numWarn} Warning${stats.numWarn !== 1 ? 's' : ''}`, 12);
+  const creatures = pad(getRandomSeaCreatures(), 13);
+  const creatrStat = pad(getRandomSeaCreaturesStat(stats.numError, stats.numWarn), 13);
+  const aWittyMessageInvolvingABadFishPun = padEnd(getRandomPun(stats.numError, stats.numWarn), 37);
+  const clr =
+    stats.numError > 0 ? chalk.red : stats.numWarn > 0 ? chalk.rgb(179, 98, 0) : chalk.green;
+
+  // prettier-ignore
+  const results = [
+    clr('╔'  + '═════════════════════════ GoFSH RESULTS ═════════════════════════' +     '╗'),
+    clr('║') + ' ╭──────────────┬───────────────┬──────────────┬───────────────╮ ' + clr('║'),
+    clr('║') + ' │   Profiles   │  Extensions   │  ValueSets   │  CodeSystems  │ ' + clr('║'),
+    clr('║') + ' ├──────────────┼───────────────┼──────────────┼───────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${ proNum  } │ ${  extNum  } │ ${  vsNum  } │ ${  csNum   } │ ` + clr('║'),
+    clr('║') + ' ╰──────────────┴───────────────┴──────────────┴───────────────╯ ' + clr('║'),
+    clr('║') + ' ╭──────────────┬───────────────┬──────────────┬───────────────╮ ' + clr('║'),
+    clr('║') + ` │  Instances   │  Invariants   │   Mappings   │ ${creatures } │ ` + clr('║'),
+    clr('║') + ' ├──────────────┼───────────────┼──────────────┼───────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${ instNum } │ ${  invNum  } │ ${ mapNum  } │ ${creatrStat} │ ` + clr('║'),
+    clr('║') + ' ╰──────────────┴───────────────┴──────────────┴───────────────╯ ' + clr('║'),
+    clr('║') + '                                                                 ' + clr('║'),
+    clr('╠'  + '═════════════════════════════════════════════════════════════════' +     '╣'),
+    clr('║') + ` ${aWittyMessageInvolvingABadFishPun } ${errNumMsg} ${wrnNumMsg} ` + clr('║'),
+    clr('╚'  + '═════════════════════════════════════════════════════════════════' +     '╝')
+  ];
+
+  console.log();
+  results.forEach(r => console.log(r));
 
   if (program.fshingTrip) {
     fshingTrip(inDir, outDir, program.installedSushi);

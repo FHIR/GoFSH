@@ -26,7 +26,7 @@ describe('FSHExporter', () => {
     exporter = new FSHExporter(myPackage);
   });
 
-  it('should log info messages with the number of exported entities and create index.txt', () => {
+  it('should create index.txt', () => {
     myPackage.add(new ExportableProfile('FirstProfile'));
     myPackage.add(new ExportableProfile('SecondProfile'));
     myPackage.add(new ExportableCodeSystem('OnlyCodeSystem'));
@@ -34,13 +34,6 @@ describe('FSHExporter', () => {
     myPackage.add(new ExportableValueSet('TwoOfThreeValueSets'));
     myPackage.add(new ExportableValueSet('ThreeOfThreeValueSets'));
     const output = exporter.export('single-file');
-    expect(loggerSpy.getMessageAtIndex(-7, 'info')).toBe('Exported 2 Profiles.');
-    expect(loggerSpy.getMessageAtIndex(-6, 'info')).toBe('Exported 0 Extensions.');
-    expect(loggerSpy.getMessageAtIndex(-5, 'info')).toBe('Exported 1 CodeSystem.');
-    expect(loggerSpy.getMessageAtIndex(-4, 'info')).toBe('Exported 3 ValueSets.');
-    expect(loggerSpy.getMessageAtIndex(-3, 'info')).toBe('Exported 0 Instances.');
-    expect(loggerSpy.getMessageAtIndex(-2, 'info')).toBe('Exported 0 Invariants.');
-    expect(loggerSpy.getMessageAtIndex(-1, 'info')).toBe('Exported 0 Mappings.');
 
     expect(output.get('index.txt')).toEqual(
       table([

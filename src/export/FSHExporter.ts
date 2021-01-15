@@ -41,42 +41,6 @@ export class FSHExporter {
         files = this.groupByFSHType();
     }
 
-    logger.info(
-      `Exported ${this.fshPackage.profiles.length} Profile${
-        this.fshPackage.profiles.length == 1 ? '' : 's'
-      }.`
-    );
-    logger.info(
-      `Exported ${this.fshPackage.extensions.length} Extension${
-        this.fshPackage.extensions.length == 1 ? '' : 's'
-      }.`
-    );
-    logger.info(
-      `Exported ${this.fshPackage.codeSystems.length} CodeSystem${
-        this.fshPackage.codeSystems.length == 1 ? '' : 's'
-      }.`
-    );
-    logger.info(
-      `Exported ${this.fshPackage.valueSets.length} ValueSet${
-        this.fshPackage.valueSets.length == 1 ? '' : 's'
-      }.`
-    );
-    logger.info(
-      `Exported ${this.fshPackage.instances.length} Instance${
-        this.fshPackage.instances.length == 1 ? '' : 's'
-      }.`
-    );
-    logger.info(
-      `Exported ${this.fshPackage.invariants.length} Invariant${
-        this.fshPackage.invariants.length == 1 ? '' : 's'
-      }.`
-    );
-    logger.info(
-      `Exported ${this.fshPackage.mappings.length} Mapping${
-        this.fshPackage.mappings.length == 1 ? '' : 's'
-      }.`
-    );
-
     const writtenFiles: Map<string, string> = new Map();
 
     const index: string[][] = [];
