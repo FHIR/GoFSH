@@ -14,9 +14,9 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
   const clr = chalk.rgb(77, 166, 255);
   // prettier-ignore
   [
-    clr('╔═════════════════════════════════════════════════════════════════════════════════════════╗'),
-    clr('║') + '                         Generating round trip results via SUSHI                         ' + clr('║'),
-    clr('╚═════════════════════════════════════════════════════════════════════════════════════════╝')
+    clr('╔'  + '═════════════════════════════════════════════════════════════════' +     '╗'),
+    clr('║') + '             Generating round trip results via SUSHI             ' + clr('║'),
+    clr('╚'  + '═════════════════════════════════════════════════════════════════' +     '╝')
   ].forEach(line => console.log(line));
 
   // If we run with "npx", then the version GoFSH depends on will be used. Otherwise if the

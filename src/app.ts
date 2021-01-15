@@ -6,16 +6,20 @@ import program from 'commander';
 import chalk from 'chalk';
 import { pad, padStart, padEnd } from 'lodash';
 import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
-
 import {
   ensureOutputDir,
   getInputDir,
   getFhirProcessor,
   getResources,
   loadExternalDependencies,
-  writeFSH
-} from './utils/Processing';
-import { logger, stats, fshingTrip, getRandomPun } from './utils';
+  writeFSH,
+  logger,
+  stats,
+  fshingTrip,
+  getRandomPun,
+  getRandomSeaCreatures,
+  getRandomSeaCreaturesStat
+} from './utils';
 import { Package } from './processor';
 
 const FSH_VERSION = '0.13.x';
@@ -111,33 +115,38 @@ async function app() {
 
   writeFSH(pkg, outDir, program.style);
 
-  const prNum = pad(pkg.profiles.length.toString(), 8);
-  const extnNum = pad(pkg.extensions.length.toString(), 10);
-  const vstNum = pad(pkg.valueSets.length.toString(), 9);
-  const cdsysNum = pad(pkg.codeSystems.length.toString(), 11);
-  const insNum = pad(pkg.instances.length.toString(), 9);
-  const invrNum = pad(pkg.invariants.length.toString(), 10);
-  const mpNum = pad(pkg.mappings.length.toString(), 8);
-  const errorNumMsg = pad(`${stats.numError} Error${stats.numError !== 1 ? 's' : ''}`, 13);
-  const wrNumMsg = padStart(`${stats.numWarn} Warning${stats.numWarn !== 1 ? 's' : ''}`, 12);
-
-  const aWittyMessageInvolvingABadFishPun = padEnd(getRandomPun(stats.numError, stats.numWarn), 60);
+  const proNum = pad(pkg.profiles.length.toString(), 12);
+  const extNum = pad(pkg.extensions.length.toString(), 13);
+  const vsNum = pad(pkg.valueSets.length.toString(), 12);
+  const csNum = pad(pkg.codeSystems.length.toString(), 13);
+  const instNum = pad(pkg.instances.length.toString(), 12);
+  const invNum = pad(pkg.invariants.length.toString(), 13);
+  const mapNum = pad(pkg.mappings.length.toString(), 12);
+  const errNumMsg = pad(`${stats.numError} Error${stats.numError !== 1 ? 's' : ''}`, 12);
+  const wrnNumMsg = padStart(`${stats.numWarn} Warning${stats.numWarn !== 1 ? 's' : ''}`, 12);
+  const creatures = pad(getRandomSeaCreatures(), 13);
+  const creatrStat = pad(getRandomSeaCreaturesStat(stats.numError, stats.numWarn), 13);
+  const aWittyMessageInvolvingABadFishPun = padEnd(getRandomPun(stats.numError, stats.numWarn), 37);
   const clr =
     stats.numError > 0 ? chalk.red : stats.numWarn > 0 ? chalk.rgb(179, 98, 0) : chalk.green;
 
   // prettier-ignore
   const results = [
-    // NOTE: Doing some funky things w/ strings on some lines to keep overall alignment in the code
-    clr('╔' + '════════════════════════════════════ GoFSH RESULTS ══════════════════════════════════════' + '' + '╗'),
-    clr('║') + ' ╭──────────┬────────────┬───────────┬─────────────┬───────────┬────────────┬──────────╮ ' + clr('║'),
-    clr('║') + ' │ Profiles │ Extensions │ ValueSets │ CodeSystems │ Instances │ Invariants │ Mappings │ ' + clr('║'),
-    clr('║') + ' ├──────────┼────────────┼───────────┼─────────────┼───────────┼────────────┼──────────┤ ' + clr('║'),
-    clr('║') + ` │ ${prNum} │ ${extnNum} │ ${vstNum} │ ${cdsysNum} │ ${insNum} │ ${invrNum} │ ${mpNum} │ ` + clr('║'),
-    clr('║') + ' ╰──────────┴────────────┴───────────┴─────────────┴───────────┴────────────┴──────────╯ ' + clr('║'),
-    clr('║' + '                                                                                         ' + '' + '║'),
-    clr('╠' + '═════════════════════════════════════════════════════════════════════════════════════════' + '' + '╣'),
-    clr('║') + ` ${            aWittyMessageInvolvingABadFishPun            } ${errorNumMsg} ${wrNumMsg} ` + clr('║'),
-    clr('╚' + '═════════════════════════════════════════════════════════════════════════════════════════' + '' + '╝')
+    clr('╔'  + '═════════════════════════ GoFSH RESULTS ═════════════════════════' +     '╗'),
+    clr('║') + ' ╭──────────────┬───────────────┬──────────────┬───────────────╮ ' + clr('║'),
+    clr('║') + ' │   Profiles   │  Extensions   │  ValueSets   │  CodeSystems  │ ' + clr('║'),
+    clr('║') + ' ├──────────────┼───────────────┼──────────────┼───────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${ proNum  } │ ${  extNum  } │ ${  vsNum  } │ ${  csNum   } │ ` + clr('║'),
+    clr('║') + ' ╰──────────────┴───────────────┴──────────────┴───────────────╯ ' + clr('║'),
+    clr('║') + ' ╭──────────────┬───────────────┬──────────────┬───────────────╮ ' + clr('║'),
+    clr('║') + ` │  Instances   │  Invariants   │   Mappings   │ ${creatures } │ ` + clr('║'),
+    clr('║') + ' ├──────────────┼───────────────┼──────────────┼───────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${ instNum } │ ${  invNum  } │ ${ mapNum  } │ ${creatrStat} │ ` + clr('║'),
+    clr('║') + ' ╰──────────────┴───────────────┴──────────────┴───────────────╯ ' + clr('║'),
+    clr('║') + '                                                                 ' + clr('║'),
+    clr('╠'  + '═════════════════════════════════════════════════════════════════' +     '╣'),
+    clr('║') + ` ${aWittyMessageInvolvingABadFishPun } ${errNumMsg} ${wrnNumMsg} ` + clr('║'),
+    clr('╚'  + '═════════════════════════════════════════════════════════════════' +     '╝')
   ];
 
   console.log();
