@@ -72,7 +72,13 @@ export class FHIRProcessor {
   outputCount(fhirArr: WildFHIR[], index: number, type: string) {
     if (index == fhirArr.length - 1) {
       process.stdout.write('\x1b[A\r');
-      logger.info(`Processed ${fhirArr.length} ${type}s`.padEnd(45));
+      let finalMessage = `Processed ${fhirArr.length} ${type}`;
+      if (fhirArr.length === 1) {
+        logger.info(finalMessage.padEnd(45));
+      } else {
+        finalMessage = finalMessage.concat('s');
+        logger.info(finalMessage.padEnd(45));
+      }
     } else if ((index + 1) % 5 == 0) {
       // We want the logger to overwite the previous count
       process.stdout.write('\x1b[A\r');
