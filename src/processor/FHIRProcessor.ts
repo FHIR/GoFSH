@@ -6,7 +6,8 @@ import {
   ValueSetProcessor,
   ConfigurationProcessor,
   Package,
-  LakeOfFHIR
+  LakeOfFHIR,
+  WildFHIR
 } from '.';
 import { ExportableConfiguration } from '../exportable';
 import { ConfigurationExtractor } from '../extractor';
@@ -67,13 +68,27 @@ export class FHIRProcessor {
     return config;
   }
 
+  // Outputs a counter for each resource type being processed
+  outputCount(fhirArr: WildFHIR[], index: number, type: string) {
+    if (index == fhirArr.length - 1) {
+      process.stdout.write('\x1b[A\r');
+      logger.info(`Processed ${fhirArr.length} ${type}s`.padEnd(45));
+    } else if ((index + 1) % 5 == 0) {
+      // We want the logger to overwite the previous count
+      process.stdout.write('\x1b[A\r');
+      logger.info(`Processed ${index + 1} of ${fhirArr.length} ${type}s...\r`);
+    }
+  }
+
   process(config: ExportableConfiguration): Package {
     const resources = new Package();
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
       this.lake.getAllImplementationGuides()[0];
     resources.add(config);
-    this.lake.getAllStructureDefinitions().forEach(wild => {
+    const structureDefs = this.lake.getAllStructureDefinitions();
+    logger.info('Processing StructureDefinitions...');
+    structureDefs.forEach((wild, index) => {
       try {
         StructureDefinitionProcessor.process(
           wild.content,
@@ -82,27 +97,37 @@ export class FHIRProcessor {
         ).forEach(resource => {
           resources.add(resource);
         });
+        this.outputCount(structureDefs, index, 'StructureDefinition');
       } catch (ex) {
         logger.error(`Could not process StructureDefinition at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllCodeSystems(false).forEach(wild => {
+    const codeSystems = this.lake.getAllCodeSystems(false);
+    logger.info('Processing CodeSystems...');
+    codeSystems.forEach((wild, index) => {
       try {
         resources.add(CodeSystemProcessor.process(wild.content, this.fisher));
+        this.outputCount(codeSystems, index, 'CodeSystem');
       } catch (ex) {
         logger.error(`Could not process CodeSystem at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllValueSets(false).forEach(wild => {
+    const valueSets = this.lake.getAllValueSets(false);
+    logger.info('Processing ValueSets...');
+    valueSets.forEach((wild, index) => {
       try {
         resources.add(ValueSetProcessor.process(wild.content, this.fisher));
+        this.outputCount(valueSets, index, 'ValueSet');
       } catch (ex) {
         logger.error(`Could not process ValueSet at ${wild.path}: ${ex.message}`);
       }
     });
-    this.lake.getAllInstances(true).forEach(wild => {
+    const instances = this.lake.getAllInstances(true);
+    logger.info('Processing Instances...');
+    instances.forEach((wild, index) => {
       try {
         resources.add(InstanceProcessor.process(wild.content, igForConfig?.content, this.fisher));
+        this.outputCount(instances, index, 'Instance');
       } catch (ex) {
         logger.error(`Could not process Instance at ${wild.path}: ${ex.message}`);
       }
