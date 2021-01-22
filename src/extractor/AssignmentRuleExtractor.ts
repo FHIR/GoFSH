@@ -5,7 +5,7 @@ import { getPath } from '../utils';
 import { fshifyString } from '../exportable/common';
 
 export class AssignmentRuleExtractor {
-  static process(input: ProcessableElementDefinition): ExportableAssignmentRule | null {
+  static process(input: ProcessableElementDefinition): ExportableAssignmentRule[] {
     // check for fixedSomething or patternSomething
     // pattern and fixed are mutually exclusive
     // these are on one-type elements, so if our SD has value[x],
@@ -31,7 +31,7 @@ export class AssignmentRuleExtractor {
           assignmentRule.value = matchingValue;
         }
         input.processedPaths.push(matchingKey);
-        return assignmentRule;
+        return [assignmentRule];
       } else {
         if (matchingKey.endsWith('Coding') && isCoding(matchingValue)) {
           assignmentRule.value = new fshtypes.FshCode(
@@ -44,7 +44,7 @@ export class AssignmentRuleExtractor {
             `${matchingKey}.system`,
             `${matchingKey}.display`
           );
-          return assignmentRule;
+          return [assignmentRule];
         } else if (matchingKey.endsWith('CodeableConcept') && isCodeableConcept(matchingValue)) {
           assignmentRule.value = new fshtypes.FshCode(
             matchingValue.coding[0].code,
@@ -58,21 +58,30 @@ export class AssignmentRuleExtractor {
             `${matchingKey}.coding[0].system`,
             `${matchingKey}.coding[0].display`
           );
-          return assignmentRule;
+          return [assignmentRule];
         } else if (matchingKey.endsWith('Quantity') && isQuantity(matchingValue)) {
           const unit = new fshtypes.FshCode(
             matchingValue.code,
             matchingValue.system,
             matchingValue.unit
           );
-          assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
           input.processedPaths.push(
             `${matchingKey}.value`,
             `${matchingKey}.code`,
             `${matchingKey}.system`,
             `${matchingKey}.unit`
           );
-          return assignmentRule;
+          // if system is http://unitsofmeasure.org, we can build a FshQuantity.
+          // otherwise, multiple assignments will be necessary.
+          if (matchingValue.system === 'http://unitsofmeasure.org') {
+            assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
+            return [assignmentRule];
+          } else {
+            assignmentRule.value = unit;
+            const valueRule = new ExportableAssignmentRule(`${assignmentRule.path}.value`);
+            valueRule.value = matchingValue.value;
+            return [assignmentRule, valueRule];
+          }
         } else if (matchingKey.endsWith('Ratio') && isRatio(matchingValue)) {
           const numeratorUnits = new fshtypes.FshCode(
             matchingValue.numerator.code,
@@ -84,10 +93,6 @@ export class AssignmentRuleExtractor {
             matchingValue.denominator.system,
             matchingValue.denominator.unit
           );
-          assignmentRule.value = new fshtypes.FshRatio(
-            new fshtypes.FshQuantity(matchingValue.numerator.value, numeratorUnits),
-            new fshtypes.FshQuantity(matchingValue.denominator.value, denominatorUnits)
-          );
           input.processedPaths.push(
             `${matchingKey}.numerator.value`,
             `${matchingKey}.numerator.code`,
@@ -98,14 +103,68 @@ export class AssignmentRuleExtractor {
             `${matchingKey}.denominator.system`,
             `${matchingKey}.denominator.unit`
           );
-          return assignmentRule;
+          // if system is http://unitsofmeasure.org for both numerator and denominator, we can build a FshRatio.
+          // otherwise, multiple assignments will be necessary.
+          if (
+            matchingValue.numerator.system === 'http://unitsofmeasure.org' &&
+            matchingValue.denominator.system === 'http://unitsofmeasure.org'
+          ) {
+            assignmentRule.value = new fshtypes.FshRatio(
+              new fshtypes.FshQuantity(matchingValue.numerator.value, numeratorUnits),
+              new fshtypes.FshQuantity(matchingValue.denominator.value, denominatorUnits)
+            );
+            return [assignmentRule];
+          } else {
+            const composedRules: ExportableAssignmentRule[] = [];
+            if (matchingValue.numerator.system === 'http://unitsofmeasure.org') {
+              const numeratorRule = new ExportableAssignmentRule(
+                `${assignmentRule.path}.numerator`
+              );
+              numeratorRule.value = new fshtypes.FshQuantity(
+                matchingValue.numerator.value,
+                numeratorUnits
+              );
+              composedRules.push(numeratorRule);
+            } else {
+              const numeratorQuantityRule = new ExportableAssignmentRule(
+                `${assignmentRule.path}.numerator`
+              );
+              numeratorQuantityRule.value = numeratorUnits;
+              const numeratorValueRule = new ExportableAssignmentRule(
+                `${assignmentRule.path}.numerator.value`
+              );
+              numeratorValueRule.value = matchingValue.numerator.value;
+              composedRules.push(numeratorQuantityRule, numeratorValueRule);
+            }
+            if (matchingValue.denominator.system === 'http://unitsofmeasure.org') {
+              const denominatorRule = new ExportableAssignmentRule(
+                `${assignmentRule.path}.denominator`
+              );
+              denominatorRule.value = new fshtypes.FshQuantity(
+                matchingValue.denominator.value,
+                denominatorUnits
+              );
+              composedRules.push(denominatorRule);
+            } else {
+              const denominatorQuantityRule = new ExportableAssignmentRule(
+                `${assignmentRule.path}.denominator`
+              );
+              denominatorQuantityRule.value = denominatorUnits;
+              const denominatorValueRule = new ExportableAssignmentRule(
+                `${assignmentRule.path}.denominator.value`
+              );
+              denominatorValueRule.value = matchingValue.denominator.value;
+              composedRules.push(denominatorQuantityRule, denominatorValueRule);
+            }
+            return composedRules;
+          }
         } else if (matchingKey.endsWith('Reference') && isReference(matchingValue)) {
           assignmentRule.value = new fshtypes.FshReference(
             matchingValue.reference,
             matchingValue.display ? fshifyString(matchingValue.display) : undefined
           );
           input.processedPaths.push(`${matchingKey}.reference`, `${matchingKey}.display`);
-          return assignmentRule;
+          return [assignmentRule];
         } else {
           // NOTE: temporarily disabling this block until Instances are properly supported
           // TODO: properly support instances and re-enable this block
@@ -119,7 +178,7 @@ export class AssignmentRuleExtractor {
         }
       }
     }
-    return null;
+    return [];
   }
 }
 
