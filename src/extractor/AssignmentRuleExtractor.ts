@@ -59,28 +59,51 @@ export class AssignmentRuleExtractor {
             `${matchingKey}.coding[0].display`
           );
           return [assignmentRule];
-        } else if (matchingKey.endsWith('Quantity') && isQuantity(matchingValue)) {
-          const unit = new fshtypes.FshCode(
-            matchingValue.code,
-            matchingValue.system,
-            matchingValue.unit
-          );
-          input.processedPaths.push(
-            `${matchingKey}.value`,
-            `${matchingKey}.code`,
-            `${matchingKey}.system`,
-            `${matchingKey}.unit`
-          );
-          // if system is http://unitsofmeasure.org, we can build a FshQuantity.
-          // otherwise, multiple assignments will be necessary.
-          if (matchingValue.system === 'http://unitsofmeasure.org') {
-            assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
-            return [assignmentRule];
+        } else if (matchingKey.endsWith('Quantity')) {
+          if (isQuantity(matchingValue)) {
+            input.processedPaths.push(
+              `${matchingKey}.value`,
+              `${matchingKey}.code`,
+              `${matchingKey}.system`,
+              `${matchingKey}.unit`
+            );
+            const unit = new fshtypes.FshCode(
+              matchingValue.code,
+              matchingValue.system,
+              matchingValue.unit
+            );
+            // if system is http://unitsofmeasure.org, we can build a FshQuantity.
+            // otherwise, multiple assignments will be necessary.
+            if (matchingValue.system === 'http://unitsofmeasure.org') {
+              assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
+              return [assignmentRule];
+            } else {
+              assignmentRule.value = unit;
+              const valueRule = new ExportableAssignmentRule(`${assignmentRule.path}.value`);
+              valueRule.value = matchingValue.value;
+              return [assignmentRule, valueRule];
+            }
           } else {
-            assignmentRule.value = unit;
-            const valueRule = new ExportableAssignmentRule(`${assignmentRule.path}.value`);
-            valueRule.value = matchingValue.value;
-            return [assignmentRule, valueRule];
+            // we have something on patternQuantity that isn't expressible as a FshQuantity.
+            // that's okay! we can still do good things here with whatever we have.
+            // if we have a code, we can at least make a FshCode.
+            // if we don't have a code, these will have to become caret rules.
+            if ('code' in matchingValue) {
+              input.processedPaths.push(
+                `${matchingKey}.value`,
+                `${matchingKey}.code`,
+                `${matchingKey}.system`,
+                `${matchingKey}.unit`
+              );
+              assignmentRule.value = new fshtypes.FshCode(
+                matchingValue.code,
+                matchingValue.system,
+                'unit' in matchingValue ? matchingValue.unit : undefined
+              );
+              return [assignmentRule];
+            } else {
+              return [];
+            }
           }
         } else if (matchingKey.endsWith('Ratio') && isRatio(matchingValue)) {
           const numeratorUnits = new fshtypes.FshCode(

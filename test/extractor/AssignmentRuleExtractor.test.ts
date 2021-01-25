@@ -159,6 +159,21 @@ describe('AssignmentRuleExtractor', () => {
       expect(element.processedPaths).toContain('patternQuantity.unit');
     });
 
+    it('should extract an assigned value rule with a fixed Quantity value that does not have quantity.value', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
+      delete element.patternQuantity.value;
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('valueQuantity');
+      expectedRule.value = new fshtypes.FshCode('GW', 'http://unitsofmeasure.org');
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toHaveLength(4);
+      expect(element.processedPaths).toContain('patternQuantity.value');
+      expect(element.processedPaths).toContain('patternQuantity.code');
+      expect(element.processedPaths).toContain('patternQuantity.system');
+      expect(element.processedPaths).toContain('patternQuantity.unit');
+    });
+
     it('should extract assigned value rules with a fixed Quantity value that does not use UCUM units', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
       element.patternQuantity.system = 'http://other-units.org';
