@@ -105,6 +105,22 @@ export function fshifyString(input: string): string {
     .replace(/\t/g, '\\t');
 }
 
+// Places general Quantity-setting rules ahead of Quantity.unit setting rules
+export function switchQuantityRules(
+  resource: ExportableExtension | ExportableProfile | ExportableInstance
+): void {
+  const seenRules = new Map();
+  resource.rules.forEach((rule, index) => {
+    if (!seenRules.has(rule.path)) seenRules.set(rule.path, index);
+    const unitRulePath = rule.path.concat('.unit');
+    if (seenRules.has(unitRulePath)) {
+      const unitRuleIndex = seenRules.get(unitRulePath);
+      resource.rules.splice(unitRuleIndex, 0, rule);
+      delete resource.rules[index + 1];
+    }
+  });
+}
+
 // Removes the underscore on paths of children of primitive elements
 export function removeUnderscoreForPrimitiveChildPath(input: string): string {
   return input

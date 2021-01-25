@@ -1,10 +1,13 @@
+import { fshtypes } from 'fsh-sushi';
 import { EOL } from 'os';
 import {
   ExportableExtension,
   ExportableCardRule,
   ExportableFlagRule,
   ExportableBindingRule,
-  ExportableObeysRule
+  ExportableObeysRule,
+  ExportableOnlyRule,
+  ExportableAssignmentRule
 } from '../../src/exportable';
 
 describe('ExportableExtension', () => {
@@ -118,6 +121,39 @@ describe('ExportableExtension', () => {
       '* obeys myx-1 and myx-2'
     ].join(EOL);
     const result = input.toFSH();
+    expect(result).toBe(expectedResult);
+  });
+
+  it('should call switchQuantityRules upon export', () => {
+    const childExtension = new ExportableExtension('ChildExtension');
+    childExtension.id = 'child-extension';
+
+    const onlyRule = new ExportableOnlyRule('value[x]');
+    onlyRule.types = [{ type: 'Quantity' }];
+    childExtension.rules.push(onlyRule);
+
+    const unitRule = new ExportableAssignmentRule('valueQuantity.unit');
+    unitRule.value = 'lb';
+    childExtension.rules.push(unitRule);
+
+    const statusRule = new ExportableAssignmentRule('status');
+    statusRule.value = new fshtypes.FshCode('preliminary');
+    childExtension.rules.push(statusRule);
+
+    const quantityRule = new ExportableAssignmentRule('valueQuantity');
+    quantityRule.value = new fshtypes.FshQuantity(82, new fshtypes.FshCode('[lb_av]'));
+    childExtension.rules.push(quantityRule);
+
+    const expectedResult = [
+      'Extension: ChildExtension',
+      'Id: child-extension',
+      '* value[x] only Quantity',
+      "* valueQuantity = 82 '[lb_av]'",
+      '* valueQuantity.unit = "lb"',
+      '* status = #preliminary',
+      ''
+    ].join(EOL);
+    const result = childExtension.toFSH();
     expect(result).toBe(expectedResult);
   });
 });

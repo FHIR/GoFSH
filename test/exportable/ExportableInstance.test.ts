@@ -51,4 +51,33 @@ describe('ExportableInstance', () => {
     ].join(EOL);
     expect(exInstance.toFSH()).toBe(expectedResult);
   });
+
+  it('should call switchQuantityRules upon export', () => {
+    const testObservation = new ExportableInstance('TestObservation');
+    testObservation.instanceOf = 'Observation';
+
+    const unitRule = new ExportableAssignmentRule('valueQuantity.unit');
+    unitRule.value = 'lb';
+    testObservation.rules.push(unitRule);
+
+    const statusRule = new ExportableAssignmentRule('status');
+    statusRule.value = new fshtypes.FshCode('preliminary');
+    testObservation.rules.push(statusRule);
+
+    const quantityRule = new ExportableAssignmentRule('valueQuantity');
+    quantityRule.value = new fshtypes.FshQuantity(82, new fshtypes.FshCode('[lb_av]'));
+    testObservation.rules.push(quantityRule);
+
+    const expectedResult = [
+      'Instance: TestObservation',
+      'InstanceOf: Observation',
+      'Usage: #example',
+      "* valueQuantity = 82 '[lb_av]'",
+      '* valueQuantity.unit = "lb"',
+      '* status = #preliminary',
+      ''
+    ].join(EOL);
+    const result = testObservation.toFSH();
+    expect(result).toBe(expectedResult);
+  });
 });
