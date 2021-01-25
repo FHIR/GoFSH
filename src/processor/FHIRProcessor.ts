@@ -96,7 +96,7 @@ export class FHIRProcessor {
       this.lake.getAllImplementationGuides()[0];
     resources.add(config);
     const structureDefs = this.lake.getAllStructureDefinitions();
-    logger.info('Processing StructureDefinitions...');
+    if (structureDefs.length > 0) logger.info('Processing StructureDefinitions...');
     structureDefs.forEach((wild, index) => {
       try {
         StructureDefinitionProcessor.process(
@@ -112,7 +112,7 @@ export class FHIRProcessor {
       }
     });
     const codeSystems = this.lake.getAllCodeSystems(false);
-    logger.info('Processing CodeSystems...');
+    if (codeSystems.length > 0) logger.info('Processing CodeSystems...');
     codeSystems.forEach((wild, index) => {
       try {
         resources.add(CodeSystemProcessor.process(wild.content, this.fisher));
@@ -122,7 +122,7 @@ export class FHIRProcessor {
       }
     });
     const valueSets = this.lake.getAllValueSets(false);
-    logger.info('Processing ValueSets...');
+    if (valueSets.length > 0) logger.info('Processing ValueSets...');
     valueSets.forEach((wild, index) => {
       try {
         resources.add(ValueSetProcessor.process(wild.content, this.fisher));
@@ -132,7 +132,7 @@ export class FHIRProcessor {
       }
     });
     const instances = this.lake.getAllInstances(true);
-    logger.info('Processing Instances...');
+    if (instances.length > 0) logger.info('Processing Instances...');
     instances.forEach((wild, index) => {
       try {
         resources.add(InstanceProcessor.process(wild.content, igForConfig?.content, this.fisher));
