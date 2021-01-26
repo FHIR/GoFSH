@@ -322,6 +322,54 @@ describe('AssignmentRuleExtractor', () => {
       expect(element.processedPaths).toContain('patternRatio.denominator.unit');
     });
 
+    it('should extract assigned value rules when the numerator quantity does not contain a value property', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
+      delete element.patternRatio.numerator.value;
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedNumeratorRule = new ExportableAssignmentRule('valueRatio.numerator');
+      expectedNumeratorRule.value = new fshtypes.FshCode('cm', 'http://unitsofmeasure.org');
+      const expectedDenominatorRule = new ExportableAssignmentRule('valueRatio.denominator');
+      expectedDenominatorRule.value = new fshtypes.FshQuantity(
+        1,
+        new fshtypes.FshCode('s', 'http://unitsofmeasure.org')
+      );
+      expect(assignmentRules).toHaveLength(2);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedNumeratorRule);
+      expect(assignmentRules[1]).toEqual<ExportableAssignmentRule>(expectedDenominatorRule);
+      expect(element.processedPaths).toContain('patternRatio.numerator.value');
+      expect(element.processedPaths).toContain('patternRatio.numerator.code');
+      expect(element.processedPaths).toContain('patternRatio.numerator.system');
+      expect(element.processedPaths).toContain('patternRatio.numerator.unit');
+      expect(element.processedPaths).toContain('patternRatio.denominator.value');
+      expect(element.processedPaths).toContain('patternRatio.denominator.code');
+      expect(element.processedPaths).toContain('patternRatio.denominator.system');
+      expect(element.processedPaths).toContain('patternRatio.denominator.unit');
+    });
+
+    it('should extract assigned value rules when the denominator quantity does not contain a value property', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
+      delete element.patternRatio.denominator.value;
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedNumeratorRule = new ExportableAssignmentRule('valueRatio.numerator');
+      expectedNumeratorRule.value = new fshtypes.FshQuantity(
+        5,
+        new fshtypes.FshCode('cm', 'http://unitsofmeasure.org')
+      );
+      const expectedDenominatorRule = new ExportableAssignmentRule('valueRatio.denominator');
+      expectedDenominatorRule.value = new fshtypes.FshCode('s', 'http://unitsofmeasure.org');
+      expect(assignmentRules).toHaveLength(2);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedNumeratorRule);
+      expect(assignmentRules[1]).toEqual<ExportableAssignmentRule>(expectedDenominatorRule);
+      expect(element.processedPaths).toContain('patternRatio.numerator.value');
+      expect(element.processedPaths).toContain('patternRatio.numerator.code');
+      expect(element.processedPaths).toContain('patternRatio.numerator.system');
+      expect(element.processedPaths).toContain('patternRatio.numerator.unit');
+      expect(element.processedPaths).toContain('patternRatio.denominator.value');
+      expect(element.processedPaths).toContain('patternRatio.denominator.code');
+      expect(element.processedPaths).toContain('patternRatio.denominator.system');
+      expect(element.processedPaths).toContain('patternRatio.denominator.unit');
+    });
+
     it('should extract an assigned value rule with a fixed Reference value', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
       const assignmentRules = AssignmentRuleExtractor.process(element);

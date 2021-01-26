@@ -60,126 +60,55 @@ export class AssignmentRuleExtractor {
           );
           return [assignmentRule];
         } else if (matchingKey.endsWith('Quantity')) {
-          if (isQuantity(matchingValue)) {
-            input.processedPaths.push(
-              `${matchingKey}.value`,
-              `${matchingKey}.code`,
-              `${matchingKey}.system`,
-              `${matchingKey}.unit`
+          return AssignmentRuleExtractor.buildRulesForQuantity(
+            assignmentRule,
+            input,
+            matchingKey,
+            matchingValue
+          );
+        } else if (matchingKey.endsWith('Ratio')) {
+          let numeratorRules: ExportableAssignmentRule[];
+          let denominatorRules: ExportableAssignmentRule[];
+          if ('numerator' in matchingValue) {
+            const startingNumerator = new ExportableAssignmentRule(
+              `${assignmentRule.path}.numerator`
             );
-            const unit = new fshtypes.FshCode(
-              matchingValue.code,
-              matchingValue.system,
-              matchingValue.unit
+            startingNumerator.exactly = assignmentRule.exactly;
+            numeratorRules = AssignmentRuleExtractor.buildRulesForQuantity(
+              startingNumerator,
+              input,
+              `${matchingKey}.numerator`,
+              matchingValue.numerator
             );
-            // if system is http://unitsofmeasure.org, we can build a FshQuantity.
-            // otherwise, multiple assignments will be necessary.
-            if (matchingValue.system === 'http://unitsofmeasure.org') {
-              assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
-              return [assignmentRule];
-            } else {
-              assignmentRule.value = unit;
-              const valueRule = new ExportableAssignmentRule(`${assignmentRule.path}.value`);
-              valueRule.value = matchingValue.value;
-              return [assignmentRule, valueRule];
-            }
-          } else {
-            // we have something on patternQuantity that isn't expressible as a FshQuantity.
-            // that's okay! we can still do good things here with whatever we have.
-            // if we have a code, we can at least make a FshCode.
-            // if we don't have a code, these will have to become caret rules.
-            if ('code' in matchingValue) {
-              input.processedPaths.push(
-                `${matchingKey}.value`,
-                `${matchingKey}.code`,
-                `${matchingKey}.system`,
-                `${matchingKey}.unit`
-              );
-              assignmentRule.value = new fshtypes.FshCode(
-                matchingValue.code,
-                matchingValue.system,
-                'unit' in matchingValue ? matchingValue.unit : undefined
-              );
-              return [assignmentRule];
-            } else {
-              return [];
-            }
           }
-        } else if (matchingKey.endsWith('Ratio') && isRatio(matchingValue)) {
-          const numeratorUnits = new fshtypes.FshCode(
-            matchingValue.numerator.code,
-            matchingValue.numerator.system,
-            matchingValue.numerator.unit
-          );
-          const denominatorUnits = new fshtypes.FshCode(
-            matchingValue.denominator.code,
-            matchingValue.denominator.system,
-            matchingValue.denominator.unit
-          );
-          input.processedPaths.push(
-            `${matchingKey}.numerator.value`,
-            `${matchingKey}.numerator.code`,
-            `${matchingKey}.numerator.system`,
-            `${matchingKey}.numerator.unit`,
-            `${matchingKey}.denominator.value`,
-            `${matchingKey}.denominator.code`,
-            `${matchingKey}.denominator.system`,
-            `${matchingKey}.denominator.unit`
-          );
-          // if system is http://unitsofmeasure.org for both numerator and denominator, we can build a FshRatio.
-          // otherwise, multiple assignments will be necessary.
+          if ('denominator' in matchingValue) {
+            const startingDenominator = new ExportableAssignmentRule(
+              `${assignmentRule.path}.denominator`
+            );
+            startingDenominator.exactly = assignmentRule.exactly;
+            denominatorRules = AssignmentRuleExtractor.buildRulesForQuantity(
+              startingDenominator,
+              input,
+              `${matchingKey}.denominator`,
+              matchingValue.denominator
+            );
+          }
+          // if numerator and denominator are representable by a single quantity,
+          // we can combine them into a ratio.
+          // otherwise, return both rule lists concatenated together.
           if (
-            matchingValue.numerator.system === 'http://unitsofmeasure.org' &&
-            matchingValue.denominator.system === 'http://unitsofmeasure.org'
+            numeratorRules.length === 1 &&
+            numeratorRules[0].value instanceof fshtypes.FshQuantity &&
+            denominatorRules.length === 1 &&
+            denominatorRules[0].value instanceof fshtypes.FshQuantity
           ) {
             assignmentRule.value = new fshtypes.FshRatio(
-              new fshtypes.FshQuantity(matchingValue.numerator.value, numeratorUnits),
-              new fshtypes.FshQuantity(matchingValue.denominator.value, denominatorUnits)
+              numeratorRules[0].value,
+              denominatorRules[0].value
             );
             return [assignmentRule];
           } else {
-            const composedRules: ExportableAssignmentRule[] = [];
-            if (matchingValue.numerator.system === 'http://unitsofmeasure.org') {
-              const numeratorRule = new ExportableAssignmentRule(
-                `${assignmentRule.path}.numerator`
-              );
-              numeratorRule.value = new fshtypes.FshQuantity(
-                matchingValue.numerator.value,
-                numeratorUnits
-              );
-              composedRules.push(numeratorRule);
-            } else {
-              const numeratorQuantityRule = new ExportableAssignmentRule(
-                `${assignmentRule.path}.numerator`
-              );
-              numeratorQuantityRule.value = numeratorUnits;
-              const numeratorValueRule = new ExportableAssignmentRule(
-                `${assignmentRule.path}.numerator.value`
-              );
-              numeratorValueRule.value = matchingValue.numerator.value;
-              composedRules.push(numeratorQuantityRule, numeratorValueRule);
-            }
-            if (matchingValue.denominator.system === 'http://unitsofmeasure.org') {
-              const denominatorRule = new ExportableAssignmentRule(
-                `${assignmentRule.path}.denominator`
-              );
-              denominatorRule.value = new fshtypes.FshQuantity(
-                matchingValue.denominator.value,
-                denominatorUnits
-              );
-              composedRules.push(denominatorRule);
-            } else {
-              const denominatorQuantityRule = new ExportableAssignmentRule(
-                `${assignmentRule.path}.denominator`
-              );
-              denominatorQuantityRule.value = denominatorUnits;
-              const denominatorValueRule = new ExportableAssignmentRule(
-                `${assignmentRule.path}.denominator.value`
-              );
-              denominatorValueRule.value = matchingValue.denominator.value;
-              composedRules.push(denominatorQuantityRule, denominatorValueRule);
-            }
-            return composedRules;
+            return [...numeratorRules, ...denominatorRules];
           }
         } else if (matchingKey.endsWith('Reference') && isReference(matchingValue)) {
           assignmentRule.value = new fshtypes.FshReference(
@@ -203,6 +132,60 @@ export class AssignmentRuleExtractor {
     }
     return [];
   }
+
+  private static buildRulesForQuantity(
+    assignmentRule: ExportableAssignmentRule,
+    input: ProcessableElementDefinition,
+    matchingKey: string,
+    matchingValue: any
+  ): ExportableAssignmentRule[] {
+    if (isQuantity(matchingValue)) {
+      input.processedPaths.push(
+        `${matchingKey}.value`,
+        `${matchingKey}.code`,
+        `${matchingKey}.system`,
+        `${matchingKey}.unit`
+      );
+      const unit = new fshtypes.FshCode(
+        matchingValue.code,
+        matchingValue.system,
+        matchingValue.unit
+      );
+      // if system is http://unitsofmeasure.org, we can build a FshQuantity.
+      // otherwise, multiple assignments will be necessary.
+      if (matchingValue.system === 'http://unitsofmeasure.org') {
+        assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
+        return [assignmentRule];
+      } else {
+        assignmentRule.value = unit;
+        const valueRule = new ExportableAssignmentRule(`${assignmentRule.path}.value`);
+        valueRule.value = matchingValue.value;
+        valueRule.exactly = assignmentRule.exactly;
+        return [assignmentRule, valueRule];
+      }
+    } else {
+      // we have something on patternQuantity that isn't expressible as a FshQuantity.
+      // that's okay! we can still do good things here with whatever we have.
+      // if we have a code, we can at least make a FshCode.
+      // if we don't have a code, these will have to become caret rules.
+      if ('code' in matchingValue) {
+        input.processedPaths.push(
+          `${matchingKey}.value`,
+          `${matchingKey}.code`,
+          `${matchingKey}.system`,
+          `${matchingKey}.unit`
+        );
+        assignmentRule.value = new fshtypes.FshCode(
+          matchingValue.code,
+          matchingValue.system,
+          'unit' in matchingValue ? matchingValue.unit : undefined
+        );
+        return [assignmentRule];
+      } else {
+        return [];
+      }
+    }
+  }
 }
 
 type primitiveValueTypes = number | string | boolean;
@@ -221,15 +204,6 @@ function isCodeableConcept(value: any): value is fhirtypes.CodeableConcept {
 
 function isQuantity(value: any): value is fhirtypes.Quantity {
   return 'value' in value && 'code' in value;
-}
-
-function isRatio(value: any): value is fhirtypes.Ratio {
-  return (
-    'numerator' in value &&
-    'denominator' in value &&
-    isQuantity(value.numerator) &&
-    isQuantity(value.denominator)
-  );
 }
 
 // An AssignmentRule for a Reference needs the 'reference' element.
