@@ -24,7 +24,8 @@ export class ConfigurationProcessor {
     const config: fshtypes.Configuration = {
       canonical: input.url.replace(/\/ImplementationGuide\/[^/]+$/, ''),
       fhirVersion: input.fhirVersion,
-      FSHOnly: true
+      FSHOnly: true,
+      applyExtensionMetadataToRoot: false
     };
     // id, name, status, version, and dependencies are the optional configuration properties.
     config.id = input.id;
