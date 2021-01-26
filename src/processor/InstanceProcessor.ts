@@ -11,6 +11,7 @@ export class InstanceProcessor {
       (resource: fhirtypes.ImplementationGuideDefinitionResource) =>
         resource.reference?.reference === `${input.resourceType}/${input.id}`
     );
+    target.name = `${target.name}-of-${target.instanceOf}`;
     if (resource) {
       if (resource.name) {
         target.title = resource.name;

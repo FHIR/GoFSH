@@ -1,7 +1,11 @@
+import path from 'path';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { Package } from '../../../src/processor/Package';
 import { ExportableInstance } from '../../../src/exportable';
+import { MasterFisher } from '../../../src/utils';
+import { loadTestDefinitions, stockLake } from '../../helpers';
 import optimizer from '../../../src/optimizer/plugins/SimplifyInstanceNameOptimizer';
+import ResolveInstanceOfURLsOptimizer from '../../../src/optimizer/plugins/ResolveInstanceOfURLsOptimizer';
 
 describe('optimizer', () => {
   describe('#simplify_instance_names', () => {
@@ -9,16 +13,19 @@ describe('optimizer', () => {
       expect(optimizer.name).toBe('simplify_instance_names');
       expect(optimizer.description).toBeDefined();
       expect(optimizer.runBefore).toBeUndefined();
-      expect(optimizer.runAfter).toBeDefined();
+      expect(optimizer.runAfter).toEqual([ResolveInstanceOfURLsOptimizer.name]);
     });
 
     it('should make instance names unique', () => {
       const instance1 = new ExportableInstance('MyExample');
       instance1.instanceOf = 'Condition';
+      instance1.name = 'MyExample-of-Condition';
       const instance2 = new ExportableInstance('MyExample');
       instance2.instanceOf = 'Patient';
+      instance2.name = 'MyExample-of-Patient';
       const instance3 = new ExportableInstance('MyObservationExample');
       instance3.instanceOf = 'Observation';
+      instance3.name = 'MyObservationExample-of-Observation';
       const myPackage = new Package();
       myPackage.add(instance1);
       myPackage.add(instance2);
@@ -27,18 +34,46 @@ describe('optimizer', () => {
 
       const expectedInstance1 = new ExportableInstance('MyExample');
       expectedInstance1.instanceOf = 'Condition';
-      expectedInstance1.name = 'MyExample-for-Condition'; // Name includes additional info because it conflicts
+      expectedInstance1.name = 'MyExample-of-Condition'; // No name simplification since it will conflict with other instances
       const expectedInstance2 = new ExportableInstance('MyExample');
       expectedInstance2.instanceOf = 'Patient';
-      expectedInstance2.name = 'MyExample-for-Patient'; // Name includes additional info because it conflicts
+      expectedInstance2.name = 'MyExample-of-Patient'; // No name simplification since it will conflict with other instances
       const expectedInstance3 = new ExportableInstance('MyObservationExample');
       expectedInstance3.instanceOf = 'Observation';
-      expectedInstance3.name = 'MyObservationExample'; // Name does not include additional info because it does not conflict
+      expectedInstance3.name = 'MyObservationExample'; // Name simplification since it didn't conflict with any other instances
       expect(myPackage.instances).toEqual([
         expectedInstance1,
         expectedInstance2,
         expectedInstance3
       ]);
+    });
+
+    it('should simplify names with aliased InstanceOf', () => {
+      const defs = loadTestDefinitions();
+      const lake = stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      const fisher = new MasterFisher(lake, defs);
+
+      const instance1 = new ExportableInstance('MyExample');
+      instance1.instanceOf = 'http://hl7.org/fhir/us/foo/StructureDefinition/foo-profile';
+      instance1.name = 'MyExample-of-http://hl7.org/fhir/us/foo/StructureDefinition/foo-profile';
+      const instance2 = new ExportableInstance('MyExample');
+      instance2.instanceOf = 'http://hl7.org/fhir/us/foo/StructureDefinition/bar-profile';
+      instance2.name = 'MyExample-of-http://hl7.org/fhir/us/foo/StructureDefinition/bar-profile';
+      const myPackage = new Package();
+      myPackage.add(instance1);
+      myPackage.add(instance2);
+
+      // Resolve InstanceOf URLs first, then simplify Instance names to check they are updated according to the alias
+      ResolveInstanceOfURLsOptimizer.optimize(myPackage, fisher);
+      optimizer.optimize(myPackage);
+
+      const expectedInstance1 = new ExportableInstance('MyExample');
+      expectedInstance1.instanceOf = '$foo-profile';
+      expectedInstance1.name = 'MyExample-of-$foo-profile';
+      const expectedInstance2 = new ExportableInstance('MyExample');
+      expectedInstance2.instanceOf = '$bar-profile';
+      expectedInstance2.name = 'MyExample-of-$bar-profile';
+      expect(myPackage.instances).toEqual([expectedInstance1, expectedInstance2]);
     });
   });
 });
