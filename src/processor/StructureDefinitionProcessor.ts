@@ -90,7 +90,7 @@ export class StructureDefinitionProcessor {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
-          AssignmentRuleExtractor.process(element),
+          ...AssignmentRuleExtractor.process(element),
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
         );
@@ -98,7 +98,7 @@ export class StructureDefinitionProcessor {
         newRules.push(
           CardRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
-          AssignmentRuleExtractor.process(element),
+          ...AssignmentRuleExtractor.process(element),
           FlagRuleExtractor.process(element),
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)

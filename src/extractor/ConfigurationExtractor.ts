@@ -12,7 +12,8 @@ export class ConfigurationExtractor {
     const config = new ExportableConfiguration({
       canonical: canonical,
       fhirVersion: [fhirVersion],
-      FSHOnly: true
+      FSHOnly: true,
+      applyExtensionMetadataToRoot: false
     });
     // infer name and id using canonical
     Object.assign(config.config, ConfigurationExtractor.inferNameAndId(canonical));

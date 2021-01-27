@@ -11,7 +11,8 @@ export class ExportableConfiguration implements Exportable {
     yaml.contents = YAML.createNode({
       canonical: this.config.canonical,
       fhirVersion: this.config.fhirVersion[0],
-      FSHOnly: this.config.FSHOnly
+      FSHOnly: this.config.FSHOnly,
+      applyExtensionMetadataToRoot: this.config.applyExtensionMetadataToRoot
     });
     // id, name, status, version, and dependencies are the optional configuration properties.
     if (this.config.id) {
