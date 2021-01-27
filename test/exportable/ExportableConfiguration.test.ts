@@ -8,7 +8,8 @@ describe('ExportableConfiguration', () => {
       const config = new ExportableConfiguration({
         canonical: 'http://example.org/test/package',
         fhirVersion: ['4.0.1'],
-        FSHOnly: true
+        FSHOnly: true,
+        applyExtensionMetadataToRoot: false
       });
       result = config.toFSH();
     });
@@ -23,6 +24,10 @@ describe('ExportableConfiguration', () => {
 
     it('should include the FSHOnly flag', () => {
       expect(result).toMatch(/^FSHOnly: true/m);
+    });
+
+    it('should include the applyExtensionMetadataToRoot flag and set it to false', () => {
+      expect(result).toMatch(/^applyExtensionMetadataToRoot: false/m);
     });
 
     it('should not include optional fields not present in the configuration', () => {
@@ -41,6 +46,7 @@ describe('ExportableConfiguration', () => {
         canonical: 'http://example.org/test/package',
         fhirVersion: ['4.0.1'],
         FSHOnly: true,
+        applyExtensionMetadataToRoot: false,
         id: 'a.special.package',
         name: 'SpecialTestPackage',
         status: 'active',

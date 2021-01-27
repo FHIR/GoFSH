@@ -47,6 +47,7 @@ describe('ConfigurationExtractor', () => {
       expect(result.config.canonical).toBe('http://sample.org');
       expect(result.config.fhirVersion).toEqual(['4.0.1']);
       expect(result.config.FSHOnly).toBe(true);
+      expect(result.config.applyExtensionMetadataToRoot).toBe(false);
     });
 
     it('should return a configuration with elements inferred from the canonical', () => {
