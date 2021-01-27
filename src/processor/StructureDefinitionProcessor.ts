@@ -21,6 +21,7 @@ import {
 } from '../extractor';
 import { ProcessableElementDefinition } from '.';
 import { getAncestorSliceDefinition } from '../utils';
+import { switchQuantityRules } from './common';
 
 export class StructureDefinitionProcessor {
   static process(
@@ -115,6 +116,7 @@ export class StructureDefinitionProcessor {
       newRules.push(...CaretValueRuleExtractor.process(element, fisher));
     });
     target.rules = compact(newRules);
+    switchQuantityRules(target.rules);
   }
 
   static extractInvariants(

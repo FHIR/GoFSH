@@ -1,13 +1,10 @@
-import { fshtypes } from 'fsh-sushi';
 import { EOL } from 'os';
 import {
   ExportableProfile,
   ExportableCardRule,
   ExportableFlagRule,
   ExportableBindingRule,
-  ExportableObeysRule,
-  ExportableOnlyRule,
-  ExportableAssignmentRule
+  ExportableObeysRule
 } from '../../src/exportable';
 
 describe('ExportableProfile', () => {
@@ -87,41 +84,6 @@ describe('ExportableProfile', () => {
       '* contact obeys myp-1'
     ].join(EOL);
     const result = input.toFSH();
-    expect(result).toBe(expectedResult);
-  });
-
-  it('should call switchQuantityRules upon export', () => {
-    const childObservation = new ExportableProfile('ChildObservation');
-    childObservation.parent = 'Observation';
-    childObservation.id = 'child-observation';
-
-    const onlyRule = new ExportableOnlyRule('value[x]');
-    onlyRule.types = [{ type: 'Quantity' }];
-    childObservation.rules.push(onlyRule);
-
-    const unitRule = new ExportableAssignmentRule('valueQuantity.unit');
-    unitRule.value = 'lb';
-    childObservation.rules.push(unitRule);
-
-    const statusRule = new ExportableAssignmentRule('status');
-    statusRule.value = new fshtypes.FshCode('preliminary');
-    childObservation.rules.push(statusRule);
-
-    const quantityRule = new ExportableAssignmentRule('valueQuantity');
-    quantityRule.value = new fshtypes.FshQuantity(82, new fshtypes.FshCode('[lb_av]'));
-    childObservation.rules.push(quantityRule);
-
-    const expectedResult = [
-      'Profile: ChildObservation',
-      'Parent: Observation',
-      'Id: child-observation',
-      '* value[x] only Quantity',
-      "* valueQuantity = 82 '[lb_av]'",
-      '* valueQuantity.unit = "lb"',
-      '* status = #preliminary',
-      ''
-    ].join(EOL);
-    const result = childObservation.toFSH();
     expect(result).toBe(expectedResult);
   });
 });
