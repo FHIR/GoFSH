@@ -24,6 +24,26 @@ const incrementCounts = format(info => {
   return info;
 });
 
+const trackErrorsAndWarnings = format(info => {
+  if (!errorsAndWarnings.shouldTrack) {
+    return info;
+  }
+  if (info.level === 'error') {
+    errorsAndWarnings.errors.push({
+      message: info.message,
+      location: info.location,
+      input: info.file
+    });
+  } else if (info.level === 'warn') {
+    errorsAndWarnings.warnings.push({
+      message: info.message,
+      location: info.location,
+      input: info.file
+    });
+  }
+  return info;
+});
+
 const printer = printf(info => {
   let level;
   switch (info.level) {
@@ -47,7 +67,7 @@ const printer = printf(info => {
 });
 
 export const logger = createLogger({
-  format: combine(incrementCounts(), printer),
+  format: combine(incrementCounts(), trackErrorsAndWarnings(), printer),
   transports: [new transports.Console()]
 });
 
@@ -65,4 +85,17 @@ class LoggerStats {
   }
 }
 
+export class ErrorsAndWarnings {
+  public errors: { message: string; location?: string; input?: string }[] = [];
+  public warnings: { message: string; location?: string; input?: string }[] = [];
+  public shouldTrack = false;
+
+  reset(): void {
+    this.errors = [];
+    this.warnings = [];
+    this.shouldTrack = false;
+  }
+}
+
 export const stats = new LoggerStats();
+export const errorsAndWarnings = new ErrorsAndWarnings();

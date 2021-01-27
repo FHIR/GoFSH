@@ -3,7 +3,7 @@ import path from 'path';
 import ini from 'ini';
 import { fhirdefs } from 'fsh-sushi';
 import { logger } from './GoFSHLogger';
-import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR } from '../processor';
+import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR, FHIRResource } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { loadOptimizers } from '../optimizer';
 import { MasterFisher } from '../utils';
@@ -105,13 +105,7 @@ function getLakeOfFHIR(inDir: string): LakeOfFHIR {
   files.forEach(file => {
     try {
       const content = fs.readJSONSync(file);
-      // First do a very baseline check to ensure this is a FHIR Resource
-      if (typeof content !== 'object' || content.resourceType == null) {
-        logger.debug(`Skipping non-FHIR JSON file: ${file}`);
-      } else if (/^http:\/\/hl7.org\/fhir\/comparison\//.test(content.url)) {
-        // The IG Publisher creates weird "Intersection" and "Union" SD files, so this check filters them out
-        logger.debug(`Skipping temporary "comparison" file created by IG Publisher: ${file}`);
-      } else {
+      if (isProcessableContent(content, file)) {
         docs.push(new WildFHIR(content, file));
       }
     } catch (ex) {
@@ -119,6 +113,19 @@ function getLakeOfFHIR(inDir: string): LakeOfFHIR {
     }
   });
   return new LakeOfFHIR(docs);
+}
+
+export function isProcessableContent(content: any, source?: string): content is FHIRResource {
+  if (typeof content !== 'object' || content.resourceType == null) {
+    logger.debug(`Skipping non-FHIR input: ${source}`);
+    return false;
+  } else if (/^http:\/\/hl7.org\/fhir\/comparison\//.test(content.url)) {
+    // The IG Publisher creates weird "Intersection" and "Union" SD files, so this check filters them out
+    logger.debug(`Skipping temporary "comparison" resource created by IG Publisher: ${source}`);
+    return false;
+  } else {
+    return true;
+  }
 }
 
 export function getIgPathFromIgIni(inDir: string): string {

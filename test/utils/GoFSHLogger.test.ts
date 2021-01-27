@@ -1,4 +1,4 @@
-import { logger, stats } from '../../src/utils/GoFSHLogger';
+import { errorsAndWarnings, logger, stats } from '../../src/utils/GoFSHLogger';
 
 // The MUTE_LOGS strategy and unit tests in this file are copied
 // from fsh-sushi, since goFSH's logger has the same requirements.
@@ -12,6 +12,7 @@ describe('GoFSHLogger', () => {
 
   beforeEach(() => {
     stats.reset();
+    errorsAndWarnings.reset();
     if (MUTE_LOGS) {
       originalWriteFn = logger.transports[0]['write'];
       logger.transports[0]['write'] = jest.fn(() => true);
@@ -75,5 +76,33 @@ describe('GoFSHLogger', () => {
     expect(stats.numInfo).toBe(0);
     expect(stats.numWarn).toBe(0);
     expect(stats.numError).toBe(0);
+  });
+
+  it('should not track errors and warnings by default', () => {
+    logger.warn('warn1');
+    expect(errorsAndWarnings.errors).toHaveLength(0);
+    expect(errorsAndWarnings.warnings).toHaveLength(0);
+  });
+
+  it('should track errors and warnings when shouldTrack is true', () => {
+    errorsAndWarnings.shouldTrack = true;
+    logger.error('error1');
+    logger.warn('warn1');
+    expect(errorsAndWarnings.errors[0].message).toEqual('error1');
+    expect(errorsAndWarnings.warnings[0].message).toEqual('warn1');
+  });
+
+  it('should reset errorsAndWarnings', () => {
+    errorsAndWarnings.shouldTrack = true;
+    logger.error('error1');
+    logger.warn('warn1');
+    expect(errorsAndWarnings.errors[0].message).toEqual('error1');
+    expect(errorsAndWarnings.warnings[0].message).toEqual('warn1');
+    errorsAndWarnings.reset();
+    logger.error('error1');
+    logger.warn('warn1');
+    // Nothing tracked since reset makes shouldTrack false
+    expect(errorsAndWarnings.errors).toHaveLength(0);
+    expect(errorsAndWarnings.warnings).toHaveLength(0);
   });
 });
