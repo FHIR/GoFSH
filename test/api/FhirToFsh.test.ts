@@ -39,7 +39,8 @@ describe('fhirToFsh', () => {
       canonical: 'http://sample.org',
       fhirVersion: ['4.0.1'],
       id: 'sample',
-      name: 'Sample'
+      name: 'Sample',
+      applyExtensionMetadataToRoot: false
     };
   });
 
