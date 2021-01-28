@@ -3,7 +3,7 @@ import { fhirtypes, utils } from 'fsh-sushi';
 import { ExportableAssignmentRule, ExportableInstance } from '../exportable';
 import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { getFSHValue, getPathValuePairs, logger } from '../utils';
-import { switchQuantityRules } from './common';
+import { switchQuantityRules } from '.';
 
 export class InstanceProcessor {
   static extractKeywords(input: any, target: ExportableInstance, implementationGuide: any): void {

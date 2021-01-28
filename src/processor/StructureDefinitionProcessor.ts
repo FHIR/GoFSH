@@ -19,9 +19,8 @@ import {
   InvariantExtractor,
   MappingExtractor
 } from '../extractor';
-import { ProcessableElementDefinition } from '.';
+import { ProcessableElementDefinition, switchQuantityRules } from '.';
 import { getAncestorSliceDefinition } from '../utils';
-import { switchQuantityRules } from './common';
 
 export class StructureDefinitionProcessor {
   static process(

@@ -1,11 +1,17 @@
-import { ExportableAssignmentRule, ExportableSdRule } from '../exportable';
+import {
+  ExportableAssignmentRule,
+  ExportableCaretValueRule,
+  ExportableSdRule
+} from '../exportable';
 
 // Places general Quantity-setting rules ahead of Quantity.unit setting rules
 export function switchQuantityRules(rules: ExportableSdRule[]): void {
   const seenRules = new Map();
   rules.forEach((rule, index) => {
-    if (!seenRules.has(rule.path) && rule instanceof ExportableAssignmentRule)
-      seenRules.set(rule.path, index);
+    if (!(rule instanceof ExportableAssignmentRule || rule instanceof ExportableCaretValueRule)) {
+      return;
+    }
+    if (!seenRules.has(rule.path)) seenRules.set(rule.path, index);
     const unitRulePath = rule.path.concat('.unit');
     if (seenRules.has(unitRulePath)) {
       const unitRuleIndex = seenRules.get(unitRulePath);
