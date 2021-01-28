@@ -84,7 +84,7 @@ export async function fhirToFsh(
 
   // Default to exporting as a single string
   return {
-    fsh: new FSHExporter(pkg).apiExport(options.style ?? 'string'),
+    fsh: new FSHExporter(pkg).apiExport(options.style === 'map' ? 'map' : 'string'),
     configuration: configuration.config,
     errors: errorsAndWarnings.errors,
     warnings: errorsAndWarnings.warnings

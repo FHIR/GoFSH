@@ -147,6 +147,21 @@ describe('fhirToFsh', () => {
     expect(results.configuration).toEqual(defaultConfig);
   });
 
+  it('should export FHIR JSON using the "string" style when an unexpected style is given', async () => {
+    const results = await fhirToFsh([
+      {
+        resourceType: 'StructureDefinition',
+        name: 'Foo',
+        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient'
+      },
+      { style: 'boo' }
+    ]);
+    expect(results.errors).toHaveLength(0);
+    expect(results.warnings).toHaveLength(0);
+    expect(results.fsh).toEqual(['Profile: Foo', 'Parent: Patient', 'Id: Foo'].join(EOL));
+    expect(results.configuration).toEqual(defaultConfig);
+  });
+
   it('should export FHIR JSON using the "string" style explicitly ', async () => {
     const results = await fhirToFsh(
       [
