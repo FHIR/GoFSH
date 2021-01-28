@@ -24,7 +24,8 @@ describe('InstanceProcessor', () => {
     );
     const result = InstanceProcessor.process(input, simpleIg, defs);
     expect(result).toBeInstanceOf(ExportableInstance);
-    expect(result.name).toBe('simple-patient');
+    expect(result.name).toBe('simple-patient-of-Patient');
+    expect(result.id).toBe('simple-patient');
     expect(result.instanceOf).toBe('Patient');
     expect(result.usage).toBe('Example');
   });
@@ -35,7 +36,10 @@ describe('InstanceProcessor', () => {
     );
     const result = InstanceProcessor.process(input, simpleIg, defs);
     expect(result).toBeInstanceOf(ExportableInstance);
-    expect(result.name).toBe('profiled-patient');
+    expect(result.name).toBe(
+      'profiled-patient-of-http://example.org/StructureDefinition/profiled-patient'
+    );
+    expect(result.id).toBe('profiled-patient');
     expect(result.instanceOf).toBe('http://example.org/StructureDefinition/profiled-patient');
     expect(result.usage).toBe('Example');
   });
@@ -46,7 +50,8 @@ describe('InstanceProcessor', () => {
     );
     const result = InstanceProcessor.process(input, simpleIg, defs);
     expect(result).toBeInstanceOf(ExportableInstance);
-    expect(result.name).toBe('my.value-set');
+    expect(result.name).toBe('my.value-set-of-ValueSet');
+    expect(result.id).toBe('my.value-set');
     expect(result.instanceOf).toBe('ValueSet');
     expect(result.usage).toBe('Definition');
   });
@@ -67,7 +72,8 @@ describe('InstanceProcessor', () => {
     };
     const result = InstanceProcessor.process(input, simpleIg, defs);
     expect(result).toBeInstanceOf(ExportableInstance);
-    expect(result.name).toBe('my.value-set');
+    expect(result.name).toBe('my.value-set-of-ValueSet');
+    expect(result.id).toBe('my.value-set');
     expect(result.instanceOf).toBe('ValueSet');
     expect(result.usage).toBe('Example');
     expect(result.title).toBe('My Title');
@@ -89,7 +95,8 @@ describe('InstanceProcessor', () => {
     };
     const result = InstanceProcessor.process(input, simpleIg, defs);
     expect(result).toBeInstanceOf(ExportableInstance);
-    expect(result.name).toBe('my.value-set');
+    expect(result.name).toBe('my.value-set-of-ValueSet');
+    expect(result.id).toBe('my.value-set');
     expect(result.instanceOf).toBe('ValueSet');
     expect(result.usage).toBe('Definition');
     expect(result.title).toBe('My Title');
@@ -103,7 +110,10 @@ describe('InstanceProcessor', () => {
       );
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
-      expect(result.name).toBe('complex-patient');
+      expect(result.name).toBe(
+        'complex-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+      );
+      expect(result.id).toBe('complex-patient');
       expect(result.rules).toHaveLength(21); // One rule for every value set since there are no optimizations for things like codes
 
       const genderAssignmentRule = new ExportableAssignmentRule('gender');
@@ -121,7 +131,10 @@ describe('InstanceProcessor', () => {
       );
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
-      expect(result.name).toBe('complex-patient');
+      expect(result.name).toBe(
+        'complex-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+      );
+      expect(result.id).toBe('complex-patient');
       expect(result.rules).toHaveLength(21); // One rule for every value set since there are no optimizations for things like codes
 
       const ombCategoryUrl = new ExportableAssignmentRule('extension[0].extension[0].url');
@@ -186,7 +199,10 @@ describe('InstanceProcessor', () => {
       );
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
-      expect(result.name).toBe('complex-patient');
+      expect(result.name).toBe(
+        'complex-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+      );
+      expect(result.id).toBe('complex-patient');
 
       const countryExtensionUrl = new ExportableAssignmentRule(
         'address[0].country.extension[0].url'
@@ -206,7 +222,8 @@ describe('InstanceProcessor', () => {
       );
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
-      expect(result.name).toBe('simple-bundle');
+      expect(result.name).toBe('simple-bundle-of-Bundle');
+      expect(result.id).toBe('simple-bundle');
 
       const status = new ExportableAssignmentRule('entry[0].resource.status');
       status.value = new fshtypes.FshCode('final');
@@ -219,7 +236,8 @@ describe('InstanceProcessor', () => {
       );
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
-      expect(result.name).toBe('patient-with-contained');
+      expect(result.name).toBe('patient-with-contained-of-Patient');
+      expect(result.id).toBe('patient-with-contained');
 
       const status = new ExportableAssignmentRule('contained[0].status');
       status.value = new fshtypes.FshCode('final');
@@ -235,7 +253,10 @@ describe('InstanceProcessor', () => {
       );
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
-      expect(result.name).toBe('invalid-patient-parent');
+      expect(result.name).toBe(
+        'invalid-patient-parent-of-http://hl7.org/fhir/us/core/StructureDefinition/fake-parent'
+      );
+      expect(result.id).toBe('invalid-patient-parent');
       expect(loggerSpy.getAllMessages()).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found/s);
       expect(result.rules).toHaveLength(2); // Add rules after using ResourceType as parent
@@ -253,7 +274,10 @@ describe('InstanceProcessor', () => {
       input.resourceType = 'FakePatient';
       const result = InstanceProcessor.process(input, simpleIg, defs);
       expect(result).toBeInstanceOf(ExportableInstance);
-      expect(result.name).toBe('invalid-patient-parent');
+      expect(result.name).toBe(
+        'invalid-patient-parent-of-http://hl7.org/fhir/us/core/StructureDefinition/fake-parent'
+      );
+      expect(result.id).toBe('invalid-patient-parent');
       expect(loggerSpy.getAllMessages()).toHaveLength(2);
       expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found/s);
       expect(loggerSpy.getLastMessage('error')).toMatch(/Definition of ResourceType not found/s);

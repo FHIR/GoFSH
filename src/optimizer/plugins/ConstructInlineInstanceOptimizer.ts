@@ -61,7 +61,7 @@ export default {
             rule.path === `${basePath}.id` &&
             isNaN(parseInt(rule.value as string)) &&
             ![...pkg.instances, ...inlineInstances].find(
-              instance => instance.name === ((rule as ExportableAssignmentRule).value as string)
+              instance => instance.id === ((rule as ExportableAssignmentRule).value as string)
             )
           ) {
             id = rule.value as string;
@@ -127,7 +127,7 @@ function duplicatesExistingInstance(
       ?.value as string) ?? instance.id;
 
   const duplicatedInstance = existingInstances.find(
-    i => i.name === instanceId && i.instanceOf === instance.instanceOf
+    i => i.id === instanceId && i.instanceOf === instance.instanceOf
   );
 
   // We need to ignore generated text rules, since these will be later removed anyway, and will not match
