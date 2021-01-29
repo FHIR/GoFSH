@@ -551,4 +551,104 @@ describe('FSHExporter', () => {
       );
     });
   });
+
+  describe('#apiExport', () => {
+    it('should export to a string when style is "string"', () => {
+      myPackage.aliases.push(new ExportableAlias('SomeAlias', 'http://test.com'));
+      myPackage.add(new ExportableProfile('SomeProfile'));
+      myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
+      myPackage.add(new ExportableValueSet('SomeValueSet'));
+      const instance = new ExportableInstance('SomeInstance');
+      instance.instanceOf = 'SomeProfile';
+      myPackage.add(instance);
+      myPackage.add(new ExportableInvariant('SomeInvariant'));
+      myPackage.add(new ExportableMapping('SomeMapping'));
+
+      expect(exporter.apiExport('string')).toEqual(
+        [
+          'Alias: SomeAlias = http://test.com',
+          EOL,
+          EOL,
+          'Profile: SomeProfile',
+          EOL,
+          'Id: SomeProfile',
+          EOL,
+          EOL,
+          'Extension: SomeExtension',
+          EOL,
+          'Id: SomeExtension',
+          EOL,
+          EOL,
+          'CodeSystem: SomeCodeSystem',
+          EOL,
+          'Id: SomeCodeSystem',
+          EOL,
+          EOL,
+          'ValueSet: SomeValueSet',
+          EOL,
+          'Id: SomeValueSet',
+          EOL,
+          EOL,
+          'Instance: SomeInstance',
+          EOL,
+          'InstanceOf: SomeProfile',
+          EOL,
+          'Usage: #example',
+          EOL,
+          EOL,
+          'Invariant: SomeInvariant',
+          EOL,
+          EOL,
+          'Mapping: SomeMapping',
+          EOL,
+          'Id: SomeMapping'
+        ].join('')
+      );
+    });
+
+    it('should export to a map when style is "map"', () => {
+      myPackage.aliases.push(new ExportableAlias('SomeAlias', 'http://test.com'));
+      myPackage.add(new ExportableProfile('SomeProfile'));
+      myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
+      myPackage.add(new ExportableValueSet('SomeValueSet'));
+      const instance = new ExportableInstance('SomeInstance');
+      instance.instanceOf = 'SomeProfile';
+      myPackage.add(instance);
+      myPackage.add(new ExportableInvariant('SomeInvariant'));
+      myPackage.add(new ExportableMapping('SomeMapping'));
+
+      expect(exporter.apiExport('map')).toEqual({
+        aliases: ['Alias: SomeAlias = http://test.com'].join(''),
+        invariants: new Map().set('SomeInvariant', ['Invariant: SomeInvariant'].join('')),
+        mappings: new Map().set(
+          'SomeMapping',
+          ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join('')
+        ),
+        profiles: new Map().set(
+          'SomeProfile',
+          ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join('')
+        ),
+        extensions: new Map().set(
+          'SomeExtension',
+          ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join('')
+        ),
+        codeSystems: new Map().set(
+          'SomeCodeSystem',
+          ['CodeSystem: SomeCodeSystem', EOL, 'Id: SomeCodeSystem'].join('')
+        ),
+        valueSets: new Map().set(
+          'SomeValueSet',
+          ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join('')
+        ),
+        instances: new Map().set(
+          'SomeInstance',
+          ['Instance: SomeInstance', EOL, 'InstanceOf: SomeProfile', EOL, 'Usage: #example'].join(
+            ''
+          )
+        )
+      });
+    });
+  });
 });

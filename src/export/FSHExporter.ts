@@ -15,6 +15,7 @@ import {
 } from '../exportable';
 import { Package } from '../processor';
 import { logger } from '../utils';
+import { fshMap, exportStyle } from '../api';
 
 export class FSHExporter {
   constructor(public readonly fshPackage: Package) {}
@@ -45,28 +46,22 @@ export class FSHExporter {
 
     const index: string[][] = [];
     files.forEach((exportables, file) => {
-      // Aliases are each their own "exportable", but should be joined together
-      // by a single EOL, not double EOLs, and they should not be written in index.txt
-      // so they are handled separately
-      const [aliases, namedExportables] = partition(
-        exportables,
-        exportable => exportable instanceof ExportableAlias
-      );
-      const fileContent = [
-        aliases.map(a => a.toFSH()).join(EOL),
-        namedExportables.map(e => e.toFSH()).join(`${EOL}${EOL}`)
-      ]
-        .join(`${EOL}${EOL}`)
-        .trim();
+      const fileContent = this.writeExportableGroup(exportables);
       // Ignore empty files, and don't write them to index.txt
       if (!fileContent) {
         return;
       }
       writtenFiles.set(file, fileContent);
-      namedExportables.forEach((exportable: NamedExportable) => {
-        // The index will have the name, FSH type, and file of the entity
-        index.push([exportable.name, exportable.constructor.name.replace('Exportable', ''), file]);
-      });
+      exportables
+        .filter(e => !(e instanceof ExportableAlias))
+        .forEach((exportable: NamedExportable) => {
+          // The index will have the name, FSH type, and file of the entity
+          index.push([
+            exportable.name,
+            exportable.constructor.name.replace('Exportable', ''),
+            file
+          ]);
+        });
     });
 
     // Alphabetically sort the index by the name of the entity
@@ -75,6 +70,71 @@ export class FSHExporter {
     writtenFiles.set('index.txt', table(index));
 
     return writtenFiles;
+  }
+
+  apiExport(exportType: exportStyle): string | fshMap {
+    if (exportType === 'string') {
+      return this.writeExportableGroup([
+        ...this.fshPackage.aliases,
+        ...this.fshPackage.profiles,
+        ...this.fshPackage.extensions,
+        ...this.fshPackage.codeSystems,
+        ...this.fshPackage.valueSets,
+        ...this.fshPackage.instances,
+        ...this.fshPackage.invariants,
+        ...this.fshPackage.mappings
+      ]);
+    } else if (exportType === 'map') {
+      const fshMap = {
+        aliases: '',
+        invariants: new Map(),
+        mappings: new Map(),
+        profiles: new Map(),
+        extensions: new Map(),
+        codeSystems: new Map(),
+        valueSets: new Map(),
+        instances: new Map()
+      };
+      fshMap.aliases = this.writeExportableGroup(this.fshPackage.aliases);
+      for (const invariant of this.fshPackage.invariants) {
+        fshMap.invariants.set(invariant.name, invariant.toFSH());
+      }
+      for (const mapping of this.fshPackage.mappings) {
+        fshMap.mappings.set(mapping.name, mapping.toFSH());
+      }
+      for (const profile of this.fshPackage.profiles) {
+        fshMap.profiles.set(profile.name, profile.toFSH());
+      }
+      for (const extension of this.fshPackage.extensions) {
+        fshMap.extensions.set(extension.name, extension.toFSH());
+      }
+      for (const codeSystem of this.fshPackage.codeSystems) {
+        fshMap.codeSystems.set(codeSystem.name, codeSystem.toFSH());
+      }
+      for (const valueSet of this.fshPackage.valueSets) {
+        fshMap.valueSets.set(valueSet.name, valueSet.toFSH());
+      }
+      for (const instance of this.fshPackage.instances) {
+        fshMap.instances.set(instance.name, instance.toFSH());
+      }
+      return fshMap;
+    }
+  }
+
+  private writeExportableGroup(exportables: Exportable[]): string {
+    // Aliases are each their own "exportable", but should be joined together
+    // by a single EOL, not double EOLs, and they should not be written in index.txt
+    // so they are handled separately
+    const [aliases, namedExportables] = partition(
+      exportables,
+      exportable => exportable instanceof ExportableAlias
+    );
+    return [
+      aliases.map(a => a.toFSH()).join(EOL),
+      namedExportables.map(e => e.toFSH()).join(`${EOL}${EOL}`)
+    ]
+      .join(`${EOL}${EOL}`)
+      .trim();
   }
 
   private groupAsSingleFile(): Map<string, Exportable[]> {

@@ -127,10 +127,10 @@ describe('Processing', () => {
       const config = processor.processConfig();
       const result = await getResources(processor, config);
       expect(loggerSpy.getMessageAtIndex(0, 'debug')).toMatch(
-        /Skipping non-FHIR JSON file: .*non-fhir\.json/
+        /Skipping non-FHIR input: .*non-fhir\.json/
       );
       expect(loggerSpy.getMessageAtIndex(1, 'debug')).toMatch(
-        /Skipping temporary "comparison" file created by IG Publisher: .*sd-us-core-observation-lab-mcode-cancer-disease-status-intersection\.json/
+        /Skipping temporary "comparison" resource created by IG Publisher: .*sd-us-core-observation-lab-mcode-cancer-disease-status-intersection\.json/
       );
       expect(result.profiles).toHaveLength(1);
       expect(result.codeSystems).toHaveLength(0);
