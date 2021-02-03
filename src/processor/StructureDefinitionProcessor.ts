@@ -1,5 +1,5 @@
 import compact from 'lodash/compact';
-import { fhirtypes, utils } from 'fsh-sushi';
+import { fhirtypes, utils, fshtypes } from 'fsh-sushi';
 import {
   ExportableSdRule,
   ExportableInvariant,
@@ -26,6 +26,7 @@ export class StructureDefinitionProcessor {
   static process(
     input: any,
     fisher: utils.Fishable,
+    config: fshtypes.Configuration,
     existingInvariants: ExportableInvariant[] = []
   ):
     | [ExportableProfile | ExportableExtension, ...(ExportableInvariant | ExportableMapping)[]]
@@ -47,7 +48,7 @@ export class StructureDefinitionProcessor {
         existingInvariants
       );
       const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fisher);
-      StructureDefinitionProcessor.extractRules(input, elements, sd, fisher);
+      StructureDefinitionProcessor.extractRules(input, elements, sd, fisher, config);
       // TODO: Destructuring an array with invariants and mappings is required for TypeScript 3.0
       // With TypeScript 4.0, we should update to return the following line, which is more clear:
       // return [sd, ...invariants, ...mappings];
@@ -77,11 +78,12 @@ export class StructureDefinitionProcessor {
     input: ProcessableStructureDefinition,
     elements: ProcessableElementDefinition[],
     target: ConstrainableEntity,
-    fisher: utils.Fishable
+    fisher: utils.Fishable,
+    config: fshtypes.Configuration
   ): void {
     const newRules: ExportableSdRule[] = [];
     // First extract the top-level caret rules from the StructureDefinition
-    newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fisher));
+    newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fisher, config));
     // Then extract rules based on the differential elements
     elements.forEach(element => {
       const ancestorSliceDefinition = getAncestorSliceDefinition(element, input, fisher);

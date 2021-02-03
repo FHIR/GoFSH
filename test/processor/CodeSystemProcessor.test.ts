@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirdefs } from 'fsh-sushi';
+import { fhirdefs, fshtypes } from 'fsh-sushi';
 import { CodeSystemProcessor } from '../../src/processor';
 import {
   ExportableCodeSystem,
@@ -11,16 +11,21 @@ import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('CodeSystemProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
+  let config: fshtypes.Configuration;
 
   beforeAll(() => {
     defs = loadTestDefinitions();
+    config = {
+      canonical: 'http://example.org/tests',
+      fhirVersion: ['4.0.1']
+    };
   });
   describe('#process', () => {
     it('should convert the simplest CodeSystem', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-codesystem.json'), 'utf-8')
       );
-      const result = CodeSystemProcessor.process(input, defs);
+      const result = CodeSystemProcessor.process(input, defs, config);
       expect(result).toBeInstanceOf(ExportableCodeSystem);
       expect(result.name).toBe('SimpleCodeSystem');
     });
@@ -29,7 +34,7 @@ describe('CodeSystemProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-codesystem.json'), 'utf-8')
       );
-      const result = CodeSystemProcessor.process(input, defs);
+      const result = CodeSystemProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -40,7 +45,7 @@ describe('CodeSystemProcessor', () => {
           'utf-8'
         )
       );
-      const result = CodeSystemProcessor.process(input, defs);
+      const result = CodeSystemProcessor.process(input, defs, config);
       expect(result).toBeInstanceOf(ExportableCodeSystem);
       expect(result.name).toBe('MyCodeSystem');
       expect(result.id).toBe('my.code-system');
@@ -54,7 +59,7 @@ describe('CodeSystemProcessor', () => {
         language: 'fr',
         value: 'diner-dangereux'
       };
-      const result = CodeSystemProcessor.process(input, defs);
+      const result = CodeSystemProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -66,7 +71,7 @@ describe('CodeSystemProcessor', () => {
         code: 'healthy',
         valueCode: 'sometimes'
       };
-      const result = CodeSystemProcessor.process(input, defs);
+      const result = CodeSystemProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -78,7 +83,7 @@ describe('CodeSystemProcessor', () => {
         code: 'breakfast2',
         display: 'Second breakfast'
       };
-      const result = CodeSystemProcessor.process(input, defs);
+      const result = CodeSystemProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
   });
@@ -103,7 +108,7 @@ describe('CodeSystemProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
       );
       const workingCodeSystem = new ExportableCodeSystem('MyCodeSystem');
-      CodeSystemProcessor.extractRules(input, workingCodeSystem, defs);
+      CodeSystemProcessor.extractRules(input, workingCodeSystem, defs, config);
       expect(workingCodeSystem.rules).toHaveLength(4);
       expect(workingCodeSystem.rules).toEqual(
         expect.arrayContaining([
@@ -125,11 +130,11 @@ describe('CodeSystemProcessor', () => {
       );
 
       const targetCodeSystem = new ExportableCodeSystem('MyValueSet');
-      CodeSystemProcessor.extractRules(input, targetCodeSystem, defs);
+      CodeSystemProcessor.extractRules(input, targetCodeSystem, defs, config);
       expect(targetCodeSystem.rules).toHaveLength(0);
 
       input.experimental = true;
-      CodeSystemProcessor.extractRules(input, targetCodeSystem, defs);
+      CodeSystemProcessor.extractRules(input, targetCodeSystem, defs, config);
       const experimentalRule = new ExportableCaretValueRule('');
       experimentalRule.caretPath = 'experimental';
       experimentalRule.value = true;

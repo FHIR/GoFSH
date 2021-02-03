@@ -1,6 +1,6 @@
 import { capitalize, compact, difference } from 'lodash';
 import { flatten } from 'flat';
-import { utils, fhirtypes } from 'fsh-sushi';
+import { utils, fhirtypes, fshtypes } from 'fsh-sushi';
 import { ExportableCodeSystem, ExportableConceptRule } from '../exportable';
 import { CaretValueRuleExtractor } from '../extractor';
 
@@ -22,24 +22,31 @@ export class CodeSystemProcessor {
   static extractRules(
     input: ProcessableCodeSystem,
     target: ExportableCodeSystem,
-    fisher: utils.Fishable
+    fisher: utils.Fishable,
+    config: fshtypes.Configuration
   ): void {
     const newRules: ExportableCodeSystem['rules'] = [];
-    newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
+    newRules.push(
+      ...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType, config)
+    );
     input.concept?.forEach((concept: any) => {
       newRules.push(new ExportableConceptRule(concept.code, concept.display, concept.definition));
     });
     target.rules = compact(newRules);
   }
 
-  static process(input: any, fisher: utils.Fishable): ExportableCodeSystem {
+  static process(
+    input: any,
+    fisher: utils.Fishable,
+    config: fshtypes.Configuration
+  ): ExportableCodeSystem {
     // It must be representable using the FSH CodeSystem syntax
     if (this.isProcessableCodeSystem(input)) {
       // Prefer name (which is optional), otherwise create a reasonable name from the id with only allowable characters
       const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
       const codeSystem = new ExportableCodeSystem(name);
       CodeSystemProcessor.extractKeywords(input, codeSystem);
-      CodeSystemProcessor.extractRules(input, codeSystem, fisher);
+      CodeSystemProcessor.extractRules(input, codeSystem, fisher, config);
       return codeSystem;
     }
   }

@@ -13,16 +13,21 @@ const { FshCode } = fshtypes;
 
 describe('ValueSetProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
+  let config: fshtypes.Configuration;
 
   beforeAll(() => {
     defs = loadTestDefinitions();
+    config = {
+      canonical: 'http://hl7.org/fhir/sushi-test',
+      fhirVersion: ['4.0.1']
+    };
   });
   describe('#process', () => {
     it('should convert the simplest ValueSet', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-valueset.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeInstanceOf(ExportableValueSet);
       expect(result.name).toBe('SimpleValueSet');
     });
@@ -31,7 +36,7 @@ describe('ValueSetProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-valueset.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -42,7 +47,7 @@ describe('ValueSetProcessor', () => {
       input.compose.include[0].concept[0].designation = {
         value: 'ourse'
       };
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -53,7 +58,7 @@ describe('ValueSetProcessor', () => {
       input.compose.exclude[0].concept[0].designation = {
         value: 'chatte'
       };
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -62,7 +67,7 @@ describe('ValueSetProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
       input.compose.include[0].id = 'some-id';
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -73,7 +78,7 @@ describe('ValueSetProcessor', () => {
       input.compose.include[0]._system = {
         extension: {}
       };
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
     });
 
@@ -81,7 +86,7 @@ describe('ValueSetProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-valueset-with-id.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeInstanceOf(ExportableValueSet);
       expect(result.name).toBe('MyValueSet');
       expect(result.id).toBe('my.value-set');
@@ -91,7 +96,7 @@ describe('ValueSetProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
-      const result = ValueSetProcessor.process(input, defs);
+      const result = ValueSetProcessor.process(input, defs, config);
       expect(result.rules.length).toBeGreaterThan(0);
     });
   });
@@ -117,7 +122,7 @@ describe('ValueSetProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
       const workingValueSet = new ExportableValueSet('ComposedValueSet');
-      ValueSetProcessor.extractRules(input, workingValueSet, defs);
+      ValueSetProcessor.extractRules(input, workingValueSet, defs, config);
 
       const rules = workingValueSet.rules;
       expect(rules).toHaveLength(8);
@@ -190,14 +195,14 @@ describe('ValueSetProcessor', () => {
 
       // Initially it should not have any caret rules
       const targetValueSet = new ExportableValueSet('MyValueSet');
-      ValueSetProcessor.extractRules(input, targetValueSet, defs);
+      ValueSetProcessor.extractRules(input, targetValueSet, defs, config);
       expect(targetValueSet.rules).toHaveLength(3);
       targetValueSet.rules.forEach(r => {
         expect(r).not.toBeInstanceOf(ExportableCaretValueRule);
       });
 
       input.experimental = true;
-      ValueSetProcessor.extractRules(input, targetValueSet, defs);
+      ValueSetProcessor.extractRules(input, targetValueSet, defs, config);
       const experimentalRule = new ExportableCaretValueRule('');
       experimentalRule.caretPath = 'experimental';
       experimentalRule.value = true;

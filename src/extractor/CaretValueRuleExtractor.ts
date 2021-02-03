@@ -1,4 +1,4 @@
-import { utils } from 'fsh-sushi';
+import { fshtypes, utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
 import { ProcessableElementDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
@@ -27,7 +27,8 @@ export class CaretValueRuleExtractor {
 
   static processStructureDefinition(
     input: any,
-    fisher: utils.Fishable
+    fisher: utils.Fishable,
+    config: fshtypes.Configuration
   ): ExportableCaretValueRule[] {
     // Clone the input so we can modify it for simpler comparison
     const sd = cloneDeep(input);
@@ -110,6 +111,11 @@ export class CaretValueRuleExtractor {
     const flatParent = getPathValuePairs(parent);
     Object.keys(flatSD).forEach(key => {
       if (flatParent[key] == null || !isEqual(flatSD[key], flatParent[key])) {
+        if (key === 'url') {
+          const existingUrl = input.url;
+          const generatedUrl = `${config.canonical}/StructureDefinition/${input.id}`;
+          if (existingUrl === generatedUrl) return;
+        }
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
         caretValueRule.value = getFSHValue(key, flatSD, 'StructureDefinition', fisher);
@@ -123,7 +129,8 @@ export class CaretValueRuleExtractor {
   static processResource(
     input: any,
     fisher: utils.Fishable,
-    resourceType: 'ValueSet' | 'CodeSystem'
+    resourceType: 'ValueSet' | 'CodeSystem',
+    config: fshtypes.Configuration
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
     const flatVS = getPathValuePairs(input);
@@ -135,6 +142,11 @@ export class CaretValueRuleExtractor {
           )
       )
       .forEach(key => {
+        if (key === 'url') {
+          const existingUrl = input.url;
+          const generatedUrl = `${config.canonical}/${resourceType}/${input.id}`;
+          if (existingUrl === generatedUrl) return;
+        }
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
         caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
@@ -148,18 +160,16 @@ const RESOURCE_IGNORED_PROPERTIES = {
   ValueSet: [
     'resourceType',
     'id',
-    'url',
     'name',
     'title',
     'description',
     'compose.include',
     'compose.exclude'
   ],
-  CodeSystem: ['resourceType', 'id', 'url', 'name', 'title', 'description', 'concept'],
+  CodeSystem: ['resourceType', 'id', 'name', 'title', 'description', 'concept'],
   StructureDefinition: [
     'resourceType',
     'id',
-    'url', // NOTE: For now, we assume URL matches canonical and is generated
     'name',
     'title',
     'description',
