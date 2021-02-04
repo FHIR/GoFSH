@@ -46,6 +46,7 @@ describe('CaretValueRuleExtractor', () => {
       const caretRules = CaretValueRuleExtractor.processStructureDefinition(urlSD, defs, config);
       expect(caretRules).toHaveLength(1);
       expect(caretRules[0].caretPath).toEqual('url');
+      expect(caretRules[0].value).toEqual('http://diferenturl.com');
     });
 
     it('should extract a single top-level caret value rule', () => {
@@ -451,6 +452,7 @@ describe('CaretValueRuleExtractor', () => {
       );
       expect(caretRules).toHaveLength(1);
       expect(caretRules[0].caretPath).toEqual('url');
+      expect(caretRules[0].value).toEqual('http://diferenturl.com');
     });
 
     it('should extract ValueSet caret rules when non keyword-based properties have changed', () => {
@@ -497,6 +499,7 @@ describe('CaretValueRuleExtractor', () => {
       );
       expect(caretRules).toHaveLength(1);
       expect(caretRules[0].caretPath).toEqual('url');
+      expect(caretRules[0].value).toEqual('http://diferenturl.com');
     });
 
     it('should extract CodeSystem caret rules when non keyword-based properties have changed', () => {
