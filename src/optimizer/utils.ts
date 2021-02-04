@@ -55,7 +55,7 @@ export function resolveURL(
   // NOTE: Testing against a regex from FHIR because some FHIR core definitions have names that are
   // invalid against the spec!  Good heavens!
   if (
-    def?.name.match(/^[A-Z]([A-Za-z0-9_]){0,254}$/) &&
+    def?.name?.match(/^[A-Z]([A-Za-z0-9_]){0,254}$/) &&
     fisher.fishForMetadata(def.name, ...types).url === url
   ) {
     return def.name;
