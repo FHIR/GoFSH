@@ -1,6 +1,6 @@
 {
   "resourceType": "StructureDefinition",
-  "id": "observation-with-caret",
+  "id": "observation-with-caret-plain",
   "extension": [
     {
       "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-category",
@@ -89,7 +89,10 @@
       {
         "id": "Observation.category",
         "path": "Observation.category",
-        "alias": ["foo", "bar"]
+        "alias": [
+          "foo",
+          "bar"
+        ]
       },
       {
         "id": "Observation.code",

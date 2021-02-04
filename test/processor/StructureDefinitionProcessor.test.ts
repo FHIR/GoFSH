@@ -22,6 +22,7 @@ import { ContainsRuleExtractor } from '../../src/extractor';
 
 describe('StructureDefinitionProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
+  let config: fshtypes.Configuration;
 
   beforeAll(() => {
     defs = loadTestDefinitions();
@@ -30,6 +31,10 @@ describe('StructureDefinitionProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'parent-observation.json'), 'utf-8')
       )
     );
+    config = {
+      canonical: 'http://hl7.org/fhir/sushi-test',
+      fhirVersion: ['4.0.1']
+    };
   });
 
   describe('#process', () => {
@@ -37,7 +42,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-profile.json'), 'utf-8')
       );
-      const result = StructureDefinitionProcessor.process(input, defs);
+      const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(ExportableProfile);
@@ -49,7 +54,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'child-observation.json'), 'utf-8')
       );
-      const result = StructureDefinitionProcessor.process(input, defs);
+      const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(ExportableProfile);
@@ -80,7 +85,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-extension.json'), 'utf-8')
       );
-      const result = StructureDefinitionProcessor.process(input, defs);
+      const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(ExportableExtension);
@@ -92,7 +97,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'big-profile.json'), 'utf-8')
       );
-      const [profile] = StructureDefinitionProcessor.process(input, defs);
+      const [profile] = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(profile).toBeInstanceOf(ExportableProfile);
       expect(profile.name).toBe('BigProfile');
@@ -103,7 +108,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-profile.json'), 'utf-8')
       );
-      const result = StructureDefinitionProcessor.process(input, defs);
+      const result = StructureDefinitionProcessor.process(input, defs, config);
       const profiles = result.filter(resource => resource instanceof ExportableProfile);
       const invariants = result.filter(resource => resource instanceof ExportableInvariant);
 
@@ -115,7 +120,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'reused-invariant-profile.json'), 'utf-8')
       );
-      const result = StructureDefinitionProcessor.process(input, defs);
+      const result = StructureDefinitionProcessor.process(input, defs, config);
       const invariants = result.filter(resource => resource instanceof ExportableInvariant);
       const profile = result.find(
         resource => resource instanceof ExportableProfile
@@ -144,7 +149,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-profile.json'), 'utf-8')
       );
-      const result = StructureDefinitionProcessor.process(input, defs);
+      const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(0);
     });
@@ -153,7 +158,7 @@ describe('StructureDefinitionProcessor', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-extension.json'), 'utf-8')
       );
-      const result = StructureDefinitionProcessor.process(input, defs);
+      const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(0);
     });
@@ -216,7 +221,7 @@ describe('StructureDefinitionProcessor', () => {
         'mapping[0].language'
       );
       const workingProfile = new ExportableProfile('MyObservation');
-      StructureDefinitionProcessor.extractRules(input, elements, workingProfile, defs);
+      StructureDefinitionProcessor.extractRules(input, elements, workingProfile, defs, config);
       const cardRule = new ExportableCardRule('valueString');
       cardRule.min = 1;
       const assignmentRule = new ExportableAssignmentRule('valueString');
@@ -243,7 +248,7 @@ describe('StructureDefinitionProcessor', () => {
           return ProcessableElementDefinition.fromJSON(rawElement, false);
         }) ?? [];
       const workingExtension = new ExportableExtension('MyExtension');
-      StructureDefinitionProcessor.extractRules(input, elements, workingExtension, defs);
+      StructureDefinitionProcessor.extractRules(input, elements, workingExtension, defs, config);
       const assignmentRule = new ExportableAssignmentRule('url');
       assignmentRule.value = 'https://go.fsh/StructureDefinition/my-extension';
       assignmentRule.exactly = true;
@@ -261,7 +266,7 @@ describe('StructureDefinitionProcessor', () => {
           return ProcessableElementDefinition.fromJSON(rawElement, false);
         }) ?? [];
       const workingProfile = new ExportableProfile('MyObservation');
-      StructureDefinitionProcessor.extractRules(input, elements, workingProfile, defs);
+      StructureDefinitionProcessor.extractRules(input, elements, workingProfile, defs, config);
       const containsRule = new ExportableContainsRule('category');
       containsRule.items = [{ name: 'Foo' }];
       const cardRule = new ExportableCardRule('category[Foo]');
@@ -281,7 +286,7 @@ describe('StructureDefinitionProcessor', () => {
           return ProcessableElementDefinition.fromJSON(rawElement, false);
         }) ?? [];
       const workingProfile = new ExportableProfile('MyObservation');
-      StructureDefinitionProcessor.extractRules(input, elements, workingProfile, defs);
+      StructureDefinitionProcessor.extractRules(input, elements, workingProfile, defs, config);
       const cardRule = new ExportableCardRule('category[VSCat]');
       cardRule.min = 1;
       cardRule.max = '1';

@@ -102,6 +102,7 @@ export class FHIRProcessor {
         StructureDefinitionProcessor.process(
           wild.content,
           this.fisher,
+          config.config,
           resources.invariants
         ).forEach(resource => {
           resources.add(resource);
@@ -115,7 +116,7 @@ export class FHIRProcessor {
     if (codeSystems.length > 0) logger.info('Processing CodeSystems...');
     codeSystems.forEach((wild, index) => {
       try {
-        resources.add(CodeSystemProcessor.process(wild.content, this.fisher));
+        resources.add(CodeSystemProcessor.process(wild.content, this.fisher, config.config));
         this.outputCount(codeSystems, index, 'CodeSystem');
       } catch (ex) {
         logger.error(`Could not process CodeSystem at ${wild.path}: ${ex.message}`);
@@ -125,7 +126,7 @@ export class FHIRProcessor {
     if (valueSets.length > 0) logger.info('Processing ValueSets...');
     valueSets.forEach((wild, index) => {
       try {
-        resources.add(ValueSetProcessor.process(wild.content, this.fisher));
+        resources.add(ValueSetProcessor.process(wild.content, this.fisher, config.config));
         this.outputCount(valueSets, index, 'ValueSet');
       } catch (ex) {
         logger.error(`Could not process ValueSet at ${wild.path}: ${ex.message}`);

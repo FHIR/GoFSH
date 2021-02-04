@@ -1,4 +1,4 @@
-import { utils, fhirtypes } from 'fsh-sushi';
+import { utils, fhirtypes, fshtypes } from 'fsh-sushi';
 import { capitalize, compact, difference } from 'lodash';
 import { flatten } from 'flat';
 import { ExportableValueSet } from '../exportable';
@@ -37,10 +37,13 @@ export class ValueSetProcessor {
   static extractRules(
     input: ProcessableValueSet,
     target: ExportableValueSet,
-    fisher: utils.Fishable
+    fisher: utils.Fishable,
+    config: fshtypes.Configuration
   ): void {
     const newRules: ExportableValueSet['rules'] = [];
-    newRules.push(...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType));
+    newRules.push(
+      ...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType, config)
+    );
     if (input.compose) {
       input.compose.include?.forEach((vsComponent: any) => {
         newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, true));
@@ -54,14 +57,18 @@ export class ValueSetProcessor {
     target.rules = compact(newRules);
   }
 
-  static process(input: any, fisher: utils.Fishable): ExportableValueSet {
+  static process(
+    input: any,
+    fisher: utils.Fishable,
+    config: fshtypes.Configuration
+  ): ExportableValueSet {
     // It must be representable using the FSH ValueSet syntax
     if (ValueSetProcessor.isProcessableValueSet(input)) {
       // Prefer name (which is optional), otherwise create a reasonable name from the id with only allowable characters
       const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
       const valueSet = new ExportableValueSet(name);
       ValueSetProcessor.extractKeywords(input, valueSet);
-      ValueSetProcessor.extractRules(input, valueSet, fisher);
+      ValueSetProcessor.extractRules(input, valueSet, fisher, config);
       return valueSet;
     }
   }

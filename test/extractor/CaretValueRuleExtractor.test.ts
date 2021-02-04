@@ -12,10 +12,15 @@ describe('CaretValueRuleExtractor', () => {
   let looseSD: any;
   let looseVS: any;
   let looseCS: any;
+  let config: fshtypes.Configuration;
   let defs: fhirdefs.FHIRDefinitions;
 
   beforeAll(() => {
     defs = loadTestDefinitions();
+    config = {
+      canonical: 'http://hl7.org/fhir/sushi-test',
+      fhirVersion: ['4.0.1']
+    };
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'caret-value-profile.json'), 'utf-8').trim()
     );
@@ -31,14 +36,23 @@ describe('CaretValueRuleExtractor', () => {
 
   describe('StructureDefinition', () => {
     it('should not extract any SD caret rules when only keyword-based properties have changed', () => {
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(looseSD, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(looseSD, defs, config);
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should extract a url-setting caret rules when a non-standard url is included on a StructureDefinition', () => {
+      const urlSD = cloneDeep(looseSD);
+      urlSD.url = 'http://diferenturl.com';
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(urlSD, defs, config);
+      expect(caretRules).toHaveLength(1);
+      expect(caretRules[0].caretPath).toEqual('url');
+      expect(caretRules[0].value).toEqual('http://diferenturl.com');
     });
 
     it('should extract a single top-level caret value rule', () => {
       const sd = cloneDeep(looseSD);
       sd.version = '1.2.3';
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule = new ExportableCaretValueRule('');
       expectedRule.caretPath = 'version';
       expectedRule.value = '1.2.3';
@@ -49,7 +63,7 @@ describe('CaretValueRuleExtractor', () => {
       const sd = cloneDeep(looseSD);
       sd.version = '1.2.3';
       sd.experimental = true;
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'version';
       expectedRule1.value = '1.2.3';
@@ -65,7 +79,7 @@ describe('CaretValueRuleExtractor', () => {
     it('should extract array caret value rules', () => {
       const sd = cloneDeep(looseSD);
       sd.contextInvariant = ['foo-1', 'foo-2'];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'contextInvariant[0]';
       expectedRule1.value = 'foo-1';
@@ -87,7 +101,7 @@ describe('CaretValueRuleExtractor', () => {
           value: 'baz'
         }
       ];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'identifier[0].system';
       expectedRule1.value = 'http://foo.org/ids';
@@ -111,7 +125,7 @@ describe('CaretValueRuleExtractor', () => {
     it('should convert a FHIR code string to a FSH code when extracting', () => {
       const sd = cloneDeep(looseSD);
       sd.status = 'draft';
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule = new ExportableCaretValueRule('');
       expectedRule.caretPath = 'status';
       expectedRule.value = new fshtypes.FshCode('draft');
@@ -134,7 +148,7 @@ describe('CaretValueRuleExtractor', () => {
           expression: 'Baz'
         }
       ];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
     });
 
@@ -151,7 +165,7 @@ describe('CaretValueRuleExtractor', () => {
           expression: 'Baz'
         }
       ];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
     });
 
@@ -175,7 +189,7 @@ describe('CaretValueRuleExtractor', () => {
           expression: 'SomethingFancyAndNew'
         }
       ];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'context[3].type';
       expectedRule1.value = new fshtypes.FshCode('element');
@@ -201,7 +215,7 @@ describe('CaretValueRuleExtractor', () => {
           expression: 'Baz'
         }
       ];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'context[1].type';
       expectedRule1.value = new fshtypes.FshCode('fhirpath');
@@ -240,7 +254,7 @@ describe('CaretValueRuleExtractor', () => {
           valueCode: 'bar'
         }
       ];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRules: ExportableCaretValueRule[] = [];
       let n = -1;
       // extension[0]
@@ -328,7 +342,7 @@ describe('CaretValueRuleExtractor', () => {
           valueCode: 'oo'
         }
       ];
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRules: ExportableCaretValueRule[] = [];
       let n = -1;
       // extension[0]
@@ -387,14 +401,14 @@ describe('CaretValueRuleExtractor', () => {
         status: 'generated',
         div: '<div>Foo!</div'
       };
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
     });
 
     it('should export a caret rule for "cleared" properties, even if it is the same as the parent', () => {
       const sd = cloneDeep(looseSD);
       sd.publisher = 'Health Level Seven International (Orders and Observations)';
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       const expectedRule = new ExportableCaretValueRule('');
       expectedRule.caretPath = 'publisher';
       expectedRule.value = 'Health Level Seven International (Orders and Observations)';
@@ -405,7 +419,7 @@ describe('CaretValueRuleExtractor', () => {
       const sd = cloneDeep(looseSD);
       sd.baseDefinition = 'http://i.dont.exist.org/';
       sd.publisher = 'Acme, Inc.';
-      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs);
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
         /Cannot reliably export .* ObservationWithCaret .* http:\/\/i\.dont\.exist\.org\//
       );
@@ -421,9 +435,24 @@ describe('CaretValueRuleExtractor', () => {
       const caretRules = CaretValueRuleExtractor.processResource(
         looseVS,
         defs,
-        looseVS.resourceType
+        looseVS.resourceType,
+        config
       );
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should extract a url-setting caret rule when a non-standard url is included on a ValueSet', () => {
+      const urlVS = cloneDeep(looseVS);
+      urlVS.url = 'http://diferenturl.com';
+      const caretRules = CaretValueRuleExtractor.processResource(
+        urlVS,
+        defs,
+        urlVS.resourceType,
+        config
+      );
+      expect(caretRules).toHaveLength(1);
+      expect(caretRules[0].caretPath).toEqual('url');
+      expect(caretRules[0].value).toEqual('http://diferenturl.com');
     });
 
     it('should extract ValueSet caret rules when non keyword-based properties have changed', () => {
@@ -431,7 +460,7 @@ describe('CaretValueRuleExtractor', () => {
       vs.status = 'active';
       vs.compose.inactive = true;
       vs.identifier = { value: 'foo' };
-      const caretRules = CaretValueRuleExtractor.processResource(vs, defs, vs.resourceType);
+      const caretRules = CaretValueRuleExtractor.processResource(vs, defs, vs.resourceType, config);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'status';
       expectedRule1.value = new fshtypes.FshCode('active');
@@ -453,9 +482,24 @@ describe('CaretValueRuleExtractor', () => {
       const caretRules = CaretValueRuleExtractor.processResource(
         looseCS,
         defs,
-        looseCS.resourceType
+        looseCS.resourceType,
+        config
       );
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should extract a url-setting caret rule when a non-standard url is included on a CodeSystem', () => {
+      const urlCS = cloneDeep(looseCS);
+      urlCS.url = 'http://diferenturl.com';
+      const caretRules = CaretValueRuleExtractor.processResource(
+        urlCS,
+        defs,
+        urlCS.resourceType,
+        config
+      );
+      expect(caretRules).toHaveLength(1);
+      expect(caretRules[0].caretPath).toEqual('url');
+      expect(caretRules[0].value).toEqual('http://diferenturl.com');
     });
 
     it('should extract CodeSystem caret rules when non keyword-based properties have changed', () => {
@@ -463,7 +507,7 @@ describe('CaretValueRuleExtractor', () => {
       cs.status = 'active';
       cs.experimental = true;
       cs.identifier = { value: 'foo' };
-      const caretRules = CaretValueRuleExtractor.processResource(cs, defs, cs.resourceType);
+      const caretRules = CaretValueRuleExtractor.processResource(cs, defs, cs.resourceType, config);
       const expectedRule1 = new ExportableCaretValueRule('');
       expectedRule1.caretPath = 'status';
       expectedRule1.value = new fshtypes.FshCode('active');
