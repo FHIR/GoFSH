@@ -111,10 +111,8 @@ export class CaretValueRuleExtractor {
     const flatParent = getPathValuePairs(parent);
     Object.keys(flatSD).forEach(key => {
       if (flatParent[key] == null || !isEqual(flatSD[key], flatParent[key])) {
-        if (key === 'url') {
-          const existingUrl = input.url;
-          const generatedUrl = `${config.canonical}/StructureDefinition/${input.id}`;
-          if (existingUrl === generatedUrl) return;
+        if (key === 'url' && this.isStandardURL('StructureDefinition', config, input)) {
+          return;
         }
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
@@ -142,10 +140,8 @@ export class CaretValueRuleExtractor {
           )
       )
       .forEach(key => {
-        if (key === 'url') {
-          const existingUrl = input.url;
-          const generatedUrl = `${config.canonical}/${resourceType}/${input.id}`;
-          if (existingUrl === generatedUrl) return;
+        if (key === 'url' && this.isStandardURL(resourceType, config, input)) {
+          return;
         }
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
@@ -153,6 +149,10 @@ export class CaretValueRuleExtractor {
         caretValueRules.push(caretValueRule);
       });
     return caretValueRules;
+  }
+
+  static isStandardURL(resourceType: string, config: fshtypes.Configuration, input: any): boolean {
+    return input.url == `${config.canonical}/${resourceType}/${input.id}`;
   }
 }
 
