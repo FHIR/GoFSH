@@ -308,7 +308,7 @@ describe('StructureDefinitionProcessor', () => {
       expect(input.differential.element[2].path).toEqual('Extension.valueQuantity');
 
       const workingExtension = new ExportableExtension('MyExtension');
-      StructureDefinitionProcessor.extractRules(input, elements, workingExtension, defs);
+      StructureDefinitionProcessor.extractRules(input, elements, workingExtension, defs, config);
 
       expect(workingExtension.rules[5].path).toEqual('valueQuantity');
       expect(workingExtension.rules[6].path).toEqual('valueQuantity.unit');
