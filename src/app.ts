@@ -87,6 +87,11 @@ async function app() {
     process.exit(1);
   }
 
+  if (!outDir) {
+    logger.info('Exiting.');
+    process.exit(1);
+  }
+
   // Load dependencies
   const defs = new fhirdefs.FHIRDefinitions();
 

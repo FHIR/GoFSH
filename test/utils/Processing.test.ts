@@ -56,7 +56,7 @@ describe('Processing', () => {
 
     beforeAll(() => {
       tempRoot = temp.mkdirSync('gofsh-test');
-      keyInSpy = jest.spyOn(readlineSync, 'keyInYNStrict');
+      keyInSpy = jest.spyOn(readlineSync, 'keyInSelect');
     });
 
     afterAll(() => {
@@ -77,24 +77,32 @@ describe('Processing', () => {
       expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
     });
 
-    it('should empty the provided output directory when the user responds yes', () => {
-      const output = path.join(tempRoot, 'my-fsh');
+    it('should empty the provided output directory when the user responds delete', () => {
+      const output = path.join(tempRoot, 'my-fsh-del');
       fs.createFileSync(path.join(output, 'something.json'));
-      keyInSpy.mockImplementationOnce(() => true);
+      keyInSpy.mockImplementationOnce(() => 0);
       const result = ensureOutputDir(output);
       expect(result).toBe(output);
       expect(fs.existsSync(result)).toBeTruthy();
       expect(fs.readdirSync(result)).toHaveLength(0);
     });
 
-    it('should not empty the provided output directory when the user responds no', () => {
-      const output = path.join(tempRoot, 'my-fsh');
+    it('should not empty the provided output directory when the user responds continue', () => {
+      const output = path.join(tempRoot, 'my-fsh-con');
       fs.createFileSync(path.join(output, 'something.json'));
-      keyInSpy.mockImplementationOnce(() => false);
+      keyInSpy.mockImplementationOnce(() => 1);
       const result = ensureOutputDir(output);
       expect(result).toBe(output);
       expect(fs.existsSync(result)).toBeTruthy();
       expect(fs.readdirSync(result)).toHaveLength(1);
+    });
+
+    it('should return undefined when the user responds quit', () => {
+      const output = path.join(tempRoot, 'my-fsh-quit');
+      fs.createFileSync(path.join(output, 'something.json'));
+      keyInSpy.mockImplementationOnce(() => 2);
+      const result = ensureOutputDir(output);
+      expect(result).toBeUndefined();
     });
   });
 

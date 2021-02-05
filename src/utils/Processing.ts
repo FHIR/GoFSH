@@ -19,12 +19,15 @@ export function getInputDir(input = '.'): string {
 export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   fs.ensureDirSync(output);
   if (fs.readdirSync(output).length > 0) {
-    if (
-      readlineSync.keyInYNStrict(
-        `Output directory ${output} contains files. Delete these before proceeding?`
-      )
-    ) {
+    const continuationOption = readlineSync.keyInSelect(
+      ['Delete', 'Continue', 'Quit'],
+      `Output directory ${output} contains files. Delete these before proceeding?`,
+      { cancel: false }
+    );
+    if (continuationOption === 0) {
       fs.emptyDirSync(output);
+    } else if (continuationOption === 2) {
+      return;
     }
   }
 
