@@ -17,8 +17,12 @@ export function getInputDir(input = '.'): string {
 
 export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   try {
-    fs.ensureDirSync(output);
-  } catch (err) {}
+    fs.emptyDirSync(output);
+  } catch (err) {
+    logger.error(
+      `Could not guarantee output directory ${output} is present and empty: ${err.message}`
+    );
+  }
   logger.info(`Using output directory: ${output}`);
   return output;
 }

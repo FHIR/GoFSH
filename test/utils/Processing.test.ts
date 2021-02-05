@@ -73,6 +73,15 @@ describe('Processing', () => {
       expect(fs.existsSync(result)).toBeTruthy();
       expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
     });
+
+    it('should empty the provided output directory', () => {
+      const output = path.join(tempRoot, 'my-fsh');
+      fs.createFileSync(path.join(output, 'something.json'));
+      const result = ensureOutputDir(output);
+      expect(result).toBe(output);
+      expect(fs.existsSync(result)).toBeTruthy();
+      expect(fs.readdirSync(result)).toHaveLength(0);
+    });
   });
 
   describe('getResources', () => {
