@@ -21,7 +21,8 @@
   },
   "types": "dist/app.d.ts",
   "files": [
-    "dist/**/*.{js,json,d.ts}"
+    "dist/**/*.{js,json,d.ts}",
+    "dist/utils/template.html"
   ],
   "contributors": [
     "Julia Afeltra <jafeltra@mitre.org>",
