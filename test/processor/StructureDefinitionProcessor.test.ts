@@ -293,6 +293,26 @@ describe('StructureDefinitionProcessor', () => {
 
       expect(workingProfile.rules).toEqual([cardRule]);
     });
+
+    it('should run switchQuantityRules while extracting rules', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'extension-with-rules.json'), 'utf-8')
+      );
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+
+      // Within the input JSON valueQuantity.unit is set prior to valueQuantity as a whole
+      expect(input.differential.element[1].path).toEqual('Extension.valueQuantity.unit');
+      expect(input.differential.element[2].path).toEqual('Extension.valueQuantity');
+
+      const workingExtension = new ExportableExtension('MyExtension');
+      StructureDefinitionProcessor.extractRules(input, elements, workingExtension, defs, config);
+
+      expect(workingExtension.rules[5].path).toEqual('valueQuantity');
+      expect(workingExtension.rules[6].path).toEqual('valueQuantity.unit');
+    });
   });
 
   describe('#extractInvariants', () => {

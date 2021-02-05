@@ -19,7 +19,7 @@ import {
   InvariantExtractor,
   MappingExtractor
 } from '../extractor';
-import { ProcessableElementDefinition } from '.';
+import { ProcessableElementDefinition, switchQuantityRules } from '.';
 import { getAncestorSliceDefinition } from '../utils';
 
 export class StructureDefinitionProcessor {
@@ -115,6 +115,7 @@ export class StructureDefinitionProcessor {
       newRules.push(...CaretValueRuleExtractor.process(element, fisher));
     });
     target.rules = compact(newRules);
+    switchQuantityRules(target.rules);
   }
 
   static extractInvariants(
