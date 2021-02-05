@@ -56,7 +56,7 @@ describe('Processing', () => {
 
     beforeAll(() => {
       tempRoot = temp.mkdirSync('gofsh-test');
-      keyInSpy = jest.spyOn(readlineSync, 'keyInSelect');
+      keyInSpy = jest.spyOn(readlineSync, 'keyIn');
     });
 
     afterAll(() => {
@@ -80,7 +80,7 @@ describe('Processing', () => {
     it('should empty the provided output directory when the user responds delete', () => {
       const output = path.join(tempRoot, 'my-fsh-del');
       fs.createFileSync(path.join(output, 'something.json'));
-      keyInSpy.mockImplementationOnce(() => 0);
+      keyInSpy.mockImplementationOnce(() => 'D');
       const result = ensureOutputDir(output);
       expect(result).toBe(output);
       expect(fs.existsSync(result)).toBeTruthy();
@@ -90,7 +90,7 @@ describe('Processing', () => {
     it('should not empty the provided output directory when the user responds continue', () => {
       const output = path.join(tempRoot, 'my-fsh-con');
       fs.createFileSync(path.join(output, 'something.json'));
-      keyInSpy.mockImplementationOnce(() => 1);
+      keyInSpy.mockImplementationOnce(() => 'C');
       const result = ensureOutputDir(output);
       expect(result).toBe(output);
       expect(fs.existsSync(result)).toBeTruthy();
@@ -100,7 +100,7 @@ describe('Processing', () => {
     it('should return undefined when the user responds quit', () => {
       const output = path.join(tempRoot, 'my-fsh-quit');
       fs.createFileSync(path.join(output, 'something.json'));
-      keyInSpy.mockImplementationOnce(() => 2);
+      keyInSpy.mockImplementationOnce(() => 'Q');
       const result = ensureOutputDir(output);
       expect(result).toBeUndefined();
     });

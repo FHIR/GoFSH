@@ -17,21 +17,27 @@ export function getInputDir(input = '.'): string {
 }
 
 export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
+  logger.info(`Using output directory: ${output}`);
+
   fs.ensureDirSync(output);
   if (fs.readdirSync(output).length > 0) {
-    const continuationOption = readlineSync.keyInSelect(
-      ['Delete', 'Continue', 'Quit'],
-      `Output directory ${output} contains files. Delete these before proceeding?`,
-      { cancel: false }
+    const continuationOption = readlineSync.keyIn(
+      [
+        `Output directory ${output} contains files. How would you like to proceed?`,
+        '- [D]elete',
+        '- [C]ontinue',
+        '- [Q]uit',
+        'Choose one [D,C,Q]: '
+      ].join('\n'),
+      { limit: 'DCQ', cancel: false }
     );
-    if (continuationOption === 0) {
+    if (/[Dd]/.test(continuationOption)) {
       fs.emptyDirSync(output);
-    } else if (continuationOption === 2) {
+    } else if (/[Qq]/.test(continuationOption)) {
       return;
     }
   }
 
-  logger.info(`Using output directory: ${output}`);
   return output;
 }
 export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions) {
