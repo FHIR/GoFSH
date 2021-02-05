@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import temp from 'temp';
+import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
 import {
@@ -51,9 +52,11 @@ describe('Processing', () => {
 
   describe('ensureOutputDir', () => {
     let tempRoot: string;
+    let keyInSpy: jest.SpyInstance;
 
     beforeAll(() => {
       tempRoot = temp.mkdirSync('gofsh-test');
+      keyInSpy = jest.spyOn(readlineSync, 'keyInYNStrict');
     });
 
     afterAll(() => {
@@ -74,13 +77,24 @@ describe('Processing', () => {
       expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
     });
 
-    it('should empty the provided output directory', () => {
+    it('should empty the provided output directory when the user responds yes', () => {
       const output = path.join(tempRoot, 'my-fsh');
       fs.createFileSync(path.join(output, 'something.json'));
+      keyInSpy.mockImplementationOnce(() => true);
       const result = ensureOutputDir(output);
       expect(result).toBe(output);
       expect(fs.existsSync(result)).toBeTruthy();
       expect(fs.readdirSync(result)).toHaveLength(0);
+    });
+
+    it('should not empty the provided output directory when the user responds no', () => {
+      const output = path.join(tempRoot, 'my-fsh');
+      fs.createFileSync(path.join(output, 'something.json'));
+      keyInSpy.mockImplementationOnce(() => false);
+      const result = ensureOutputDir(output);
+      expect(result).toBe(output);
+      expect(fs.existsSync(result)).toBeTruthy();
+      expect(fs.readdirSync(result)).toHaveLength(1);
     });
   });
 

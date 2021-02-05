@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import ini from 'ini';
+import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
 import { logger } from './GoFSHLogger';
 import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR, FHIRResource } from '../processor';
@@ -16,13 +17,17 @@ export function getInputDir(input = '.'): string {
 }
 
 export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
-  try {
-    fs.emptyDirSync(output);
-  } catch (err) {
-    logger.error(
-      `Could not guarantee output directory ${output} is present and empty: ${err.message}`
-    );
+  fs.ensureDirSync(output);
+  if (fs.readdirSync(output).length > 0) {
+    if (
+      readlineSync.keyInYNStrict(
+        `Output directory ${output} contains files. Delete these before proceeding?`
+      )
+    ) {
+      fs.emptyDirSync(output);
+    }
   }
+
   logger.info(`Using output directory: ${output}`);
   return output;
 }

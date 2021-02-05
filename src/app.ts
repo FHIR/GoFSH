@@ -79,6 +79,14 @@ async function app() {
 
   inDir = getInputDir(inDir);
 
+  let outDir: string;
+  try {
+    outDir = ensureOutputDir(program.out);
+  } catch (err) {
+    logger.error(`Could not use output directory: ${err.message}`);
+    process.exit(1);
+  }
+
   // Load dependencies
   const defs = new fhirdefs.FHIRDefinitions();
 
@@ -94,14 +102,6 @@ async function app() {
     (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
   );
   const dependencyDefs = loadExternalDependencies(defs, allDependencies);
-
-  let outDir: string;
-  try {
-    outDir = ensureOutputDir(program.out);
-  } catch (err) {
-    logger.error(`Could not use output directory: ${err.message}`);
-    process.exit(1);
-  }
 
   await Promise.all(dependencyDefs);
 
