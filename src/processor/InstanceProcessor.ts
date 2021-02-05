@@ -3,7 +3,7 @@ import { fhirtypes, utils } from 'fsh-sushi';
 import { ExportableAssignmentRule, ExportableInstance } from '../exportable';
 import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { getFSHValue, getPathValuePairs, logger } from '../utils';
-import { switchQuantityRulesOnInstances } from '.';
+import { switchQuantityRules } from '.';
 
 export class InstanceProcessor {
   static extractKeywords(input: any, target: ExportableInstance, implementationGuide: any): void {
@@ -86,7 +86,7 @@ export class InstanceProcessor {
       newRules.push(assignmentRule);
     });
     target.rules = compact(newRules);
-    switchQuantityRulesOnInstances(target.rules);
+    switchQuantityRules(target.rules); // TODO: Once STU 2 features are enabled this can be removed
   }
 
   static process(input: any, implementationGuide: any, fisher: utils.Fishable): ExportableInstance {
