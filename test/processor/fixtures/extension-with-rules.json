@@ -1,0 +1,46 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "complex-type",
+  "type": "Extension",
+  "name": "RulesExtension",
+  "url": "https://demo.org/StructureDefinition/RulesExtension",
+  "differential": {
+    "element": [
+      {
+        "id": "Extension.value[x]",
+        "path": "Extension.value[x]",
+        "slicing": {
+          "discriminator": [
+            {
+              "type": "type",
+              "path": "$this"
+            }
+          ],
+          "ordered": false,
+          "rules": "open"
+        },
+        "type": [
+          {
+            "code": "Quantity"
+          }
+        ]
+      },
+      {
+        "id": "Extension.valueQuantity.unit",
+        "path": "Extension.valueQuantity.unit",
+        "patternString": "%"
+      },
+      {
+        "id": "Extension.valueQuantity",
+        "path": "Extension.valueQuantity",
+        "min": 0,
+        "max": "1",
+        "patternQuantity": {
+          "value": 82,
+          "code": "%",
+          "system": "http://unitsofmeasure.org"
+        }
+      }
+    ]
+  }
+}

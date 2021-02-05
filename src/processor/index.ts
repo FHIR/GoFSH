@@ -9,3 +9,4 @@ export * from './ConfigurationProcessor';
 export * from './InstanceProcessor';
 export * from './LakeOfFHIR';
 export * from './WildFHIR';
+export * from './common';
