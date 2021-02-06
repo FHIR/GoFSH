@@ -90,13 +90,10 @@ async function app() {
   const dependencies = program.dependency?.map((dep: string) => dep.trim());
 
   // Load FhirProcessor and config object
-  const processor = getFhirProcessor(
-    inDir,
-    defs,
-    ['json-only', 'xml-only', 'json-and-xml'].includes(program.fileType)
-      ? program.fileType
-      : 'json-only'
-  );
+  const fileType = ['json-only', 'xml-only', 'json-and-xml'].includes(program.fileType)
+    ? program.fileType
+    : 'json-only';
+  const processor = getFhirProcessor(inDir, defs, fileType);
   const config = processor.processConfig(dependencies);
 
   // Load dependencies from config for GoFSH processing
@@ -163,6 +160,14 @@ async function app() {
   results.forEach(r => console.log(r));
 
   if (program.fshingTrip) {
+    if (fileType === 'xml-only') {
+      logger.error('FSHing Trip is not supported for XML inputs.');
+      process.exit(1);
+    } else if (fileType === 'json-and-xml') {
+      logger.warn(
+        'FSHing Trip is not supported for XML inputs. Comparisons will only be generated for JSON input files.'
+      );
+    }
     fshingTrip(inDir, outDir, program.installedSushi);
   }
 
