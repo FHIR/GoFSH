@@ -55,6 +55,10 @@ async function app() {
       '-i, --installed-sushi',
       'use the locally installed version of SUSHI when generating comparisons with the "-f" option'
     )
+    .option(
+      '-t, --file-type <type>',
+      'specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml'
+    )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -86,7 +90,13 @@ async function app() {
   const dependencies = program.dependency?.map((dep: string) => dep.trim());
 
   // Load FhirProcessor and config object
-  const processor = getFhirProcessor(inDir, defs);
+  const processor = getFhirProcessor(
+    inDir,
+    defs,
+    ['json-only', 'xml-only', 'json-and-xml'].includes(program.fileType)
+      ? program.fileType
+      : 'json-only'
+  );
   const config = processor.processConfig(dependencies);
 
   // Load dependencies from config for GoFSH processing
