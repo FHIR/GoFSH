@@ -16,8 +16,8 @@ export const SEA_CREATURES = [
 ];
 
 // Actions must be 10 characters or less
-export const GOOD_ACTIONS = ['adopted', 'cuddled', 'hugged'];
-export const BAD_ACTIONS = ['harmed', 'insulted', 'lost'];
+export const GOOD_ACTIONS = ['adopted', 'cuddled', 'hugged', 'satisfied', 'contented'];
+export const BAD_ACTIONS = ['vexed', 'insulted', 'displeased', 'irritated', 'confused'];
 
 export function getRandomSeaCreatures(): string {
   return sample(SEA_CREATURES);
