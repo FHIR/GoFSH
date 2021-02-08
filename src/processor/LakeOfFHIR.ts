@@ -1,11 +1,13 @@
 import { fhirdefs, utils } from 'fsh-sushi';
+import { uniqWith } from 'lodash';
 import { CodeSystemProcessor } from './CodeSystemProcessor';
 import { ValueSetProcessor } from './ValueSetProcessor';
 import { WildFHIR } from './WildFHIR';
+import { logger } from '../utils';
 
 // Like FSHTank in SUSHI, but it doesn't contain FSH, it contains FHIR.  And who ever heard of a tank of FHIR?  But a lake of FHIR...
 export class LakeOfFHIR implements utils.Fishable {
-  constructor(public readonly docs: WildFHIR[]) {}
+  constructor(public docs: WildFHIR[]) {}
 
   /**
    * Gets all structure definitions (profiles and extensions) in the lake
@@ -94,5 +96,23 @@ export class LakeOfFHIR implements utils.Fishable {
     const defs = new fhirdefs.FHIRDefinitions();
     this.docs.forEach(d => defs.add(d.content));
     return defs.fishForMetadata(item, ...types);
+  }
+
+  /**
+   * Removes any definitions from this.docs that have the same resourceType and id as a previous definition.
+   * Logs an error when it finds a duplicate
+   */
+  removeDuplicateDefinitions() {
+    this.docs = uniqWith(this.docs, (a, b) => {
+      const isDuplicate =
+        a.content.id === b.content.id && a.content.resourceType === b.content.resourceType;
+      if (isDuplicate) {
+        logger.error(
+          `Encountered a definition with the same resourceType and id as a previous definition: file "${a.path}" has resourceType ${a.content.resourceType} and id ${a.content.id}. ` +
+            'FHIR definitions should have unique resourceType and id. The duplicate will not be processed by GoFSH.'
+        );
+      }
+      return isDuplicate;
+    });
   }
 }

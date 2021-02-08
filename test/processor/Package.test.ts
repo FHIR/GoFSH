@@ -88,55 +88,62 @@ describe('Package', () => {
       );
     });
 
-    it('should log an error and not add duplicate named exports to the corresponding arrays', () => {
+    it('should log an error and add duplicate named exports to the corresponding arrays', () => {
       const myProfile = new ExportableProfile('MyProfile');
       const myDupProfile = new ExportableProfile('MyProfile');
       myPackage.add(myProfile);
       myPackage.add(myDupProfile);
-      expect(myPackage.profiles).toHaveLength(1);
+      expect(myPackage.profiles).toHaveLength(2);
       expect(myPackage.profiles[0]).toBe(myProfile);
+      expect(myPackage.profiles[1]).toBe(myDupProfile);
 
       const myExtension = new ExportableExtension('MyExtension');
       const myDupExtension = new ExportableExtension('MyExtension');
       myPackage.add(myExtension);
       myPackage.add(myDupExtension);
-      expect(myPackage.extensions).toHaveLength(1);
+      expect(myPackage.extensions).toHaveLength(2);
       expect(myPackage.extensions[0]).toBe(myExtension);
+      expect(myPackage.extensions[1]).toBe(myDupExtension);
 
       const myInstance = new ExportableInstance('MyInstance');
       const myDupInstance = new ExportableInstance('MyInstance');
       myPackage.add(myInstance);
       myPackage.add(myDupInstance);
-      expect(myPackage.instances).toHaveLength(1);
+      expect(myPackage.instances).toHaveLength(2);
       expect(myPackage.instances[0]).toBe(myInstance);
+      expect(myPackage.instances[1]).toBe(myDupInstance);
 
       const myValueSet = new ExportableValueSet('MyValueSet');
       const myDupValueSet = new ExportableValueSet('MyValueSet');
       myPackage.add(myValueSet);
       myPackage.add(myDupValueSet);
-      expect(myPackage.valueSets).toHaveLength(1);
+      expect(myPackage.valueSets).toHaveLength(2);
       expect(myPackage.valueSets[0]).toBe(myValueSet);
+      expect(myPackage.valueSets[1]).toBe(myDupValueSet);
 
       const myCodeSystem = new ExportableCodeSystem('MyCodeSystem');
       const myDupCodeSystem = new ExportableCodeSystem('MyCodeSystem');
       myPackage.add(myCodeSystem);
       myPackage.add(myDupCodeSystem);
-      expect(myPackage.codeSystems).toHaveLength(1);
+      expect(myPackage.codeSystems).toHaveLength(2);
       expect(myPackage.codeSystems[0]).toBe(myCodeSystem);
+      expect(myPackage.codeSystems[1]).toBe(myDupCodeSystem);
 
       const myInvariant = new ExportableInvariant('inv-1');
       const myDupInvariant = new ExportableInvariant('inv-1');
       myPackage.add(myInvariant);
       myPackage.add(myDupInvariant);
-      expect(myPackage.invariants).toHaveLength(1);
+      expect(myPackage.invariants).toHaveLength(2);
       expect(myPackage.invariants[0]).toBe(myInvariant);
+      expect(myPackage.invariants[1]).toBe(myDupInvariant);
 
       const myMapping = new ExportableMapping('MyMapping');
       const myDupMapping = new ExportableMapping('MyMapping');
       myPackage.add(myMapping);
       myPackage.add(myDupMapping);
-      expect(myPackage.mappings).toHaveLength(1);
+      expect(myPackage.mappings).toHaveLength(2);
       expect(myPackage.mappings[0]).toBe(myMapping);
+      expect(myPackage.mappings[1]).toBe(myDupMapping);
 
       expect(loggerSpy.getAllMessages('error')).toHaveLength(7);
       expect(loggerSpy.getMessageAtIndex(0, 'error')).toMatch(

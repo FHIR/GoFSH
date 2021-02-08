@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { utils } from 'fsh-sushi';
 import { LakeOfFHIR, WildFHIR } from '../../src/processor';
+import { loggerSpy } from '../helpers/loggerSpy';
 
 describe('LakeOfHIR', () => {
   let lake: LakeOfFHIR;
@@ -19,6 +20,10 @@ describe('LakeOfHIR', () => {
         'unsupported-codesystem.json'
       )
     );
+  });
+
+  beforeEach(() => {
+    loggerSpy.reset();
   });
 
   describe('#constructor', () => {
@@ -336,6 +341,43 @@ describe('LakeOfHIR', () => {
           utils.Type.CodeSystem
         )
       ).toBeUndefined();
+    });
+  });
+
+  describe('#removeDuplicateDefinitions', () => {
+    beforeAll(() => {
+      lake = new LakeOfFHIR(
+        getWildFHIRs(
+          'simple-profile.json',
+          'simple-profile.json',
+          'simple-extension.json',
+          'simple-codesystem.json',
+          'simple-valueset.json',
+          'simple-ig.json',
+          'rocky-balboa.json',
+          'unsupported-valueset.json',
+          'unsupported-codesystem.json'
+        )
+      );
+    });
+
+    it('should log an error and remove definitions with the same resourceType and id as a previous definition', () => {
+      const results = lake.getAllStructureDefinitions();
+      expect(results).toHaveLength(3);
+      expect(results[0].content.id).toBe('simple.profile');
+      expect(results[1].content.id).toBe('simple.profile');
+      expect(results[2].content.id).toBe('simple.extension');
+
+      lake.removeDuplicateDefinitions();
+      const noDupResults = lake.getAllStructureDefinitions();
+      expect(noDupResults).toHaveLength(2);
+      expect(noDupResults[0].content.id).toBe('simple.profile');
+      expect(noDupResults[1].content.id).toBe('simple.extension');
+
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        /Encountered a definition with the same resourceType and id as a previous definition/
+      );
     });
   });
 });

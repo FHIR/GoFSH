@@ -24,6 +24,7 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
 }
 export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions) {
   const lake = getLakeOfFHIR(inDir);
+  lake.removeDuplicateDefinitions();
   const igIniIgPath = getIgPathFromIgIni(inDir);
   const fisher = new MasterFisher(lake, defs);
   return new FHIRProcessor(lake, fisher, igIniIgPath);
