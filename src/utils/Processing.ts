@@ -43,8 +43,10 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
 
   return output;
 }
+
 export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions, fileType: string) {
   const lake = getLakeOfFHIR(inDir, fileType);
+  lake.removeDuplicateDefinitions();
   const igIniIgPath = getIgPathFromIgIni(inDir);
   const fisher = new MasterFisher(lake, defs);
   return new FHIRProcessor(lake, fisher, igIniIgPath);

@@ -1,4 +1,5 @@
 {
   "resourceType": "StructureDefinition",
+  "id": "AnotherResource",
   "name": "AnotherResource"
 }
