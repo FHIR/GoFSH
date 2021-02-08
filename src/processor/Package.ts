@@ -7,7 +7,8 @@ import {
   ExportableInvariant,
   ExportableConfiguration,
   ExportableMapping,
-  ExportableAlias
+  ExportableAlias,
+  NamedExportable
 } from '../exportable';
 import { logger } from '../utils';
 
@@ -36,18 +37,25 @@ export class Package {
       | ExportableMapping
   ) {
     if (resource instanceof ExportableProfile) {
+      checkDuplicateDefinition(this.profiles, resource, 'profile');
       this.profiles.push(resource);
     } else if (resource instanceof ExportableExtension) {
+      checkDuplicateDefinition(this.extensions, resource, 'extension');
       this.extensions.push(resource);
     } else if (resource instanceof ExportableInstance) {
+      checkDuplicateDefinition(this.instances, resource, 'instance');
       this.instances.push(resource);
     } else if (resource instanceof ExportableValueSet) {
+      checkDuplicateDefinition(this.valueSets, resource, 'value set');
       this.valueSets.push(resource);
     } else if (resource instanceof ExportableCodeSystem) {
+      checkDuplicateDefinition(this.codeSystems, resource, 'code system');
       this.codeSystems.push(resource);
     } else if (resource instanceof ExportableInvariant) {
+      checkDuplicateDefinition(this.invariants, resource, 'invariant');
       this.invariants.push(resource);
     } else if (resource instanceof ExportableMapping) {
+      checkDuplicateDefinition(this.mappings, resource, 'mapping');
       this.mappings.push(resource);
     } else if (resource instanceof ExportableConfiguration) {
       if (this.configuration) {
@@ -59,4 +67,23 @@ export class Package {
       }
     }
   }
+}
+
+// When we call this function, we have already removed definitions that had the same resourceType and id
+// We have also already tried to de-deduplicate the name if we can (for example, Instances add the InstanceOf information to their name)
+// At this point, if a definition has the same name as another, the definition or the resulting FSH will need to be
+// changed by hand in order for SUSHI to process it without errors.
+// Log an error that there will be a definition with the same name written to FSH files.
+function checkDuplicateDefinition(
+  array: NamedExportable[],
+  resource: NamedExportable,
+  type: string
+): boolean {
+  if (array.find(e => e.name === resource.name)) {
+    logger.error(
+      `Encountered ${type} with a duplicate name, ${resource.name}, which GoFSH cannot make unique. Fix the source file to resolve this error or update the resulting FSH definition.`
+    );
+    return true;
+  }
+  return false;
 }

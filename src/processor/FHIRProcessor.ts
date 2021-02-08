@@ -71,8 +71,9 @@ export class FHIRProcessor {
   // Outputs a counter for each resource type being processed
   outputCount(fhirArr: WildFHIR[], index: number, type: string) {
     if (index == fhirArr.length - 1) {
-      // We want the logger to overwite the previous count
-      process.stdout.write('\x1b[A\r');
+      // Ideally, we want the logger to overwrite the previous count,
+      // but since we've encountered issues, we'll remove it for now
+      // process.stdout.write('\x1b[A\r');
       let finalMessage = `Processed ${fhirArr.length} ${type}`;
       if (fhirArr.length === 1) {
         logger.info(finalMessage.padEnd(45));
@@ -83,8 +84,9 @@ export class FHIRProcessor {
         return;
       }
     } else if ((index + 1) % 5 == 0) {
-      // We want the logger to overwite the previous count
-      process.stdout.write('\x1b[A\r');
+      // Ideally, we want the logger to overwrite the previous count
+      // but since we've encountered issues, we'll remove it for now
+      // process.stdout.write('\x1b[A\r');
       logger.info(`Processed ${index + 1} of ${fhirArr.length} ${type}s...\r`);
     }
   }
