@@ -111,11 +111,12 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
   if (fileType === 'json-only') {
     logger.info(`Found ${jsonFiles.length} JSON files.`);
     loadPrimaryFiles(jsonFiles, docs);
-    const nonDuplicateXMLFile = findNonDuplicateSecondaryFile(xmlFiles, docs);
-    if (nonDuplicateXMLFile) {
+    const nonDuplicateXMLFiles = findNonDuplicateSecondaryFiles(xmlFiles, docs);
+    if (nonDuplicateXMLFiles.length > 0) {
       // We only find the first non-duplicate file and warn on it, because warnings for every non-duplicate may be annoying
       logger.warn(
-        `The XML definition at ${nonDuplicateXMLFile} will be ignored since GoFSH is running in "json-only" mode.` +
+        `${nonDuplicateXMLFiles.length} XML definition(s) found without corresponding JSON definitions (for example, ${nonDuplicateXMLFiles[0]}).` +
+          ' These definitions will be ignored since GoFSH is running in "json-only" mode.' +
           ' To process XML definitions along with JSON, set the "-t" flag to "json-and-xml".' +
           ' To process only XML definitions, set the "-t" flag to "xml-only".'
       );
@@ -123,11 +124,12 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
   } else if (fileType === 'xml-only') {
     logger.info(`Found ${xmlFiles.length} XML files.`);
     loadPrimaryFiles(xmlFiles, docs);
-    const nonDuplicateJSONFile = findNonDuplicateSecondaryFile(jsonFiles, docs);
-    if (nonDuplicateJSONFile) {
+    const nonDuplicateJSONFiles = findNonDuplicateSecondaryFiles(jsonFiles, docs);
+    if (nonDuplicateJSONFiles.length > 0) {
       // We only find the first non-duplicate file and warn on it, because warnings for every non-duplicate may be annoying
       logger.warn(
-        `The JSON definition at ${nonDuplicateJSONFile} will be ignored since GoFSH is running in "xml-only" mode.` +
+        `${nonDuplicateJSONFiles.length} JSON definition(s) found without corresponding XML definitions (for example, ${nonDuplicateJSONFiles[0]}).` +
+          ' These definitions will be ignored since GoFSH is running in "xml-only" mode.' +
           ' To process JSON definitions along with XML, set the "-t" flag to "json-and-xml".' +
           ' To process only JSON definitions, set the "-t" flag to "json-only", or leave it unset.'
       );
@@ -155,8 +157,8 @@ function loadPrimaryFiles(files: string[], docs: WildFHIR[]) {
   });
 }
 
-function findNonDuplicateSecondaryFile(files: string[], docs: WildFHIR[]): string {
-  return files.find(file => {
+function findNonDuplicateSecondaryFiles(files: string[], docs: WildFHIR[]): string[] {
+  return files.filter(file => {
     try {
       const content = readJSONorXML(file);
       return (

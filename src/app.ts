@@ -90,9 +90,14 @@ async function app() {
   const dependencies = program.dependency?.map((dep: string) => dep.trim());
 
   // Load FhirProcessor and config object
-  const fileType = ['json-only', 'xml-only', 'json-and-xml'].includes(program.fileType)
-    ? program.fileType
-    : 'json-only';
+  const fileType = program.fileType?.toLowerCase() ?? 'json-only';
+  if (!['json-only', 'xml-only', 'json-and-xml'].includes(fileType)) {
+    logger.error(
+      `Unsupported "file-type" option: ${fileType}. Valid options are "json-only", "xml-only", and "json-and-xml".`
+    );
+    process.exit(1);
+  }
+
   const processor = getFhirProcessor(inDir, defs, fileType);
   const config = processor.processConfig(dependencies);
 

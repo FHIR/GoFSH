@@ -458,9 +458,7 @@ describe('Processing', () => {
       expect(lake.docs[0].content.id).toBe('json-observation');
       expect(lake.docs[1].content.id).toBe('json-patient');
       expect(loggerSpy.getLastMessage('info')).toMatch(/Found 2 JSON files\./);
-      expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /The XML definition at .*observation\.xml will be ignored/
-      );
+      expect(loggerSpy.getLastMessage('warn')).toMatch(/2 XML definition\(s\).*observation\.xml/);
     });
 
     it('should load JSON in "json-only" mode from a directory containing JSON and non-FHIR XML', () => {
@@ -496,9 +494,7 @@ describe('Processing', () => {
       expect(lake.docs[0].content.id).toBe('xml-observation');
       expect(lake.docs[1].content.id).toBe('xml-patient');
       expect(loggerSpy.getLastMessage('info')).toMatch(/Found 2 XML files\./);
-      expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /The JSON definition at .*observation\.json will be ignored/
-      );
+      expect(loggerSpy.getLastMessage('warn')).toMatch(/2 JSON definition\(s\).*observation\.json/);
     });
 
     it('should load XML and JSON in "json-and-xml" mode', () => {
