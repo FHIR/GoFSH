@@ -376,7 +376,7 @@ describe('LakeOfHIR', () => {
 
       expect(loggerSpy.getAllMessages('error')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('error')).toMatch(
-        /Encountered a definition with the same resourceType and id as a previous definition/
+        /Encountered 1 definition\(s\) with the same resourceType and id as a previous definition./
       );
     });
   });
