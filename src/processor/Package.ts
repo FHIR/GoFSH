@@ -7,7 +7,8 @@ import {
   ExportableInvariant,
   ExportableConfiguration,
   ExportableMapping,
-  ExportableAlias
+  ExportableAlias,
+  NamedExportable
 } from '../exportable';
 import { logger } from '../utils';
 
@@ -36,19 +37,33 @@ export class Package {
       | ExportableMapping
   ) {
     if (resource instanceof ExportableProfile) {
-      this.profiles.push(resource);
+      if (!isDuplicateDefinition(this.profiles, resource, 'profile')) {
+        this.profiles.push(resource);
+      }
     } else if (resource instanceof ExportableExtension) {
-      this.extensions.push(resource);
+      if (!isDuplicateDefinition(this.extensions, resource, 'extension')) {
+        this.extensions.push(resource);
+      }
     } else if (resource instanceof ExportableInstance) {
-      this.instances.push(resource);
+      if (!isDuplicateDefinition(this.instances, resource, 'instance')) {
+        this.instances.push(resource);
+      }
     } else if (resource instanceof ExportableValueSet) {
-      this.valueSets.push(resource);
+      if (!isDuplicateDefinition(this.valueSets, resource, 'value set')) {
+        this.valueSets.push(resource);
+      }
     } else if (resource instanceof ExportableCodeSystem) {
-      this.codeSystems.push(resource);
+      if (!isDuplicateDefinition(this.codeSystems, resource, 'code system')) {
+        this.codeSystems.push(resource);
+      }
     } else if (resource instanceof ExportableInvariant) {
-      this.invariants.push(resource);
+      if (!isDuplicateDefinition(this.invariants, resource, 'invariant')) {
+        this.invariants.push(resource);
+      }
     } else if (resource instanceof ExportableMapping) {
-      this.mappings.push(resource);
+      if (!isDuplicateDefinition(this.mappings, resource, 'mapping')) {
+        this.mappings.push(resource);
+      }
     } else if (resource instanceof ExportableConfiguration) {
       if (this.configuration) {
         logger.warn(
@@ -59,4 +74,18 @@ export class Package {
       }
     }
   }
+}
+
+function isDuplicateDefinition(
+  array: NamedExportable[],
+  resource: NamedExportable,
+  type: string
+): boolean {
+  if (array.find(e => e.name === resource.name)) {
+    logger.error(
+      `Encountered ${type} with a duplicate name, ${resource.name}, which GoFSH cannot make unique. Fix the source file to resolve this error. The definition will still be written to a .fsh file.`
+    );
+    return true;
+  }
+  return false;
 }
