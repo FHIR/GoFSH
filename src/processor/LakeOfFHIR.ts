@@ -103,21 +103,19 @@ export class LakeOfFHIR implements utils.Fishable {
    * Logs an error when it finds a duplicate
    */
   removeDuplicateDefinitions() {
-    let dupNum = 0;
     const dupPaths: string[] = [];
     this.docs = uniqWith(this.docs, (a, b) => {
       const isDuplicate =
         a.content.id === b.content.id && a.content.resourceType === b.content.resourceType;
       if (isDuplicate) {
-        dupNum++;
         dupPaths.push(`${a.path} (${a.content.resourceType}/${a.content.id}) matches ${b.path}`);
       }
       return isDuplicate;
     });
 
-    if (dupNum > 0) {
+    if (dupPaths.length > 0) {
       logger.error(
-        `Encountered ${dupNum} definition(s) with the same resourceType and id as a previous definition. ` +
+        `Encountered ${dupPaths.length} definition(s) with the same resourceType and id as a previous definition. ` +
           'FHIR definitions should have unique resourceType and id. The following duplicate definitions will not be processed by GoFSH:' +
           `\n  - ${dupPaths.join('\n  - ')}`
       );
