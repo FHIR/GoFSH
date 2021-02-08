@@ -55,6 +55,10 @@ async function app() {
       '-i, --installed-sushi',
       'use the locally installed version of SUSHI when generating comparisons with the "-f" option'
     )
+    .option(
+      '-t, --file-type <type>',
+      'specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml'
+    )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -99,7 +103,15 @@ async function app() {
   const dependencies = program.dependency?.map((dep: string) => dep.trim());
 
   // Load FhirProcessor and config object
-  const processor = getFhirProcessor(inDir, defs);
+  const fileType = program.fileType?.toLowerCase() ?? 'json-only';
+  if (!['json-only', 'xml-only', 'json-and-xml'].includes(fileType)) {
+    logger.error(
+      `Unsupported "file-type" option: ${fileType}. Valid options are "json-only", "xml-only", and "json-and-xml".`
+    );
+    process.exit(1);
+  }
+
+  const processor = getFhirProcessor(inDir, defs, fileType);
   const config = processor.processConfig(dependencies);
 
   // Load dependencies from config for GoFSH processing
@@ -158,6 +170,14 @@ async function app() {
   results.forEach(r => console.log(r));
 
   if (program.fshingTrip) {
+    if (fileType === 'xml-only') {
+      logger.error('FSHing Trip is not supported for XML inputs.');
+      process.exit(1);
+    } else if (fileType === 'json-and-xml') {
+      logger.warn(
+        'FSHing Trip is not supported for XML inputs. Comparisons will only be generated for JSON input files.'
+      );
+    }
     fshingTrip(inDir, outDir, program.installedSushi);
   }
 
