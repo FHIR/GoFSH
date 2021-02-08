@@ -226,7 +226,8 @@ export function getFilesRecursive(dir: string): string[] {
     if (
       dir.endsWith('.escaped.json') ||
       dir.endsWith('-spreadsheet.xml') ||
-      IGNORED_RESOURCE_LIKE_FILES.some(path => dir.endsWith(path))
+      IGNORED_RESOURCE_LIKE_FILES.some(path => dir.endsWith(path)) ||
+      IGNORED_NON_RESOURCE_DIRECTORIES.some(path => dir.includes(path))
     ) {
       logger.debug(`Skipping ${dir} file`);
       return [];
@@ -246,4 +247,15 @@ const IGNORED_RESOURCE_LIKE_FILES = [
   `template${path.sep}onGenerate-validation.json`,
   `template${path.sep}ongenerate-validation-igqa.json`,
   `template${path.sep}ongenerate-validation-jira.json`
+];
+
+// Certain directories are common in IG Publisher output, but don't contain any FHIR, and processing
+// them will only create confusing errors, so we ignore these directories
+const IGNORED_NON_RESOURCE_DIRECTORIES = [
+  `input${path.sep}includes`,
+  `input${path.sep}pagecontent`,
+  `input${path.sep}pages`,
+  `input${path.sep}intro-notes`,
+  `input${path.sep}images`,
+  `input${path.sep}images-source`
 ];
