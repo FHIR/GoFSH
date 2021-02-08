@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import temp from 'temp';
+import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
 import {
@@ -52,9 +53,11 @@ describe('Processing', () => {
 
   describe('ensureOutputDir', () => {
     let tempRoot: string;
+    let keyInSpy: jest.SpyInstance;
 
     beforeAll(() => {
       tempRoot = temp.mkdirSync('gofsh-test');
+      keyInSpy = jest.spyOn(readlineSync, 'keyIn');
     });
 
     afterAll(() => {
@@ -73,6 +76,34 @@ describe('Processing', () => {
       expect(result).toBe(output);
       expect(fs.existsSync(result)).toBeTruthy();
       expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
+    });
+
+    it('should empty the provided output directory when the user responds delete', () => {
+      const output = path.join(tempRoot, 'my-fsh-del');
+      fs.createFileSync(path.join(output, 'something.json'));
+      keyInSpy.mockImplementationOnce(() => 'D');
+      const result = ensureOutputDir(output);
+      expect(result).toBe(output);
+      expect(fs.existsSync(result)).toBeTruthy();
+      expect(fs.readdirSync(result)).toHaveLength(0);
+    });
+
+    it('should not empty the provided output directory when the user responds continue', () => {
+      const output = path.join(tempRoot, 'my-fsh-con');
+      fs.createFileSync(path.join(output, 'something.json'));
+      keyInSpy.mockImplementationOnce(() => 'C');
+      const result = ensureOutputDir(output);
+      expect(result).toBe(output);
+      expect(fs.existsSync(result)).toBeTruthy();
+      expect(fs.readdirSync(result)).toHaveLength(1);
+    });
+
+    it('should return undefined when the user responds quit', () => {
+      const output = path.join(tempRoot, 'my-fsh-quit');
+      fs.createFileSync(path.join(output, 'something.json'));
+      keyInSpy.mockImplementationOnce(() => 'Q');
+      const result = ensureOutputDir(output);
+      expect(result).toBeUndefined();
     });
   });
 
