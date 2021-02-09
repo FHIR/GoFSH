@@ -139,10 +139,30 @@
         "path": "Observation.referenceRange",
         "constraint": [
           {
-            "id": "Yes, constraints can have ids",
+            "id": "yesconstraintscanhaveids",
             "key" : "foo-1",
             "severity" : "error",
             "human" : "It must foo"
+          },
+          {
+            "key" : "foo-2",
+            "severity" : "error",
+            "human" : "It still must foo"
+          }
+        ]
+      },
+      {
+        "id": "Observation.hasMember",
+        "path": "Observation.hasMember",
+        "mapping": [
+          {
+            "identity" : "middle-earth",
+            "map" : "mordor"
+          },
+          {
+            "id": "inthewardrobe",
+            "identity" : "narnia",
+            "map" : "lamppost"
           }
         ]
       }

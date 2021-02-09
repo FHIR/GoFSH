@@ -49,6 +49,32 @@ export class CaretValueRuleExtractor {
           );
         }
       }
+
+      // Fix mapping[n] indices for all the same reasons and with all the same behaviors as for constraint above.
+      // Unfortunately, it's just different enough that extracting a common function would only add complexity.
+      const mappingMatch = key.match(/mapping\[(\d+)]/);
+      if (mappingMatch) {
+        let newIndex: number;
+        if (structDef?.snapshot?.element?.length > 0) {
+          const diffMapping = inputJSON.mapping[parseInt(mappingMatch[1])];
+          const snapElement = structDef.snapshot.element.find(el => el.id === inputJSON.id);
+          // Unlike constraint, which has guaranteed unique keys, we need to compare mapping as a whole to find a match
+          newIndex = (snapElement?.mapping as any[])?.findIndex(m => isEqual(m, diffMapping));
+        }
+        if (newIndex != null) {
+          caretValueRule.caretPath = key.replace(mappingMatch[0], `mapping[${newIndex}]`);
+        } else {
+          caretValueRule.comment =
+            `WARNING: The mapping index in the following rule (e.g., ${mappingMatch[0]}) may be incorrect.\n` +
+            "Please compare with the mapping array in the original definition's snapshot and adjust as necessary.";
+          logger.warn(
+            `Could not calculate correct mapping index relative to the snapshot for the following path in ${structDef.name}: ` +
+              `${path} ^${key}. To resolve this issue, run GoFSH on definitions that include valid snapshots; otherwise check and fix ` +
+              'mapping indices in the generated FSH files as necessary.'
+          );
+        }
+      }
+
       caretValueRules.push(caretValueRule);
     });
     return caretValueRules;

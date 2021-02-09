@@ -626,21 +626,21 @@ describe('CaretValueRuleExtractor', () => {
       const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
       const expectedRule = new ExportableCaretValueRule('referenceRange');
       expectedRule.caretPath = 'constraint[2].id';
-      expectedRule.value = 'Yes, constraints can have ids';
+      expectedRule.value = 'yesconstraintscanhaveids';
       // The other constraint properties (key, severity, etc) will create rules too, but they'd
       // normally be processed paths anyway, and we only need one rule to test what we need to test
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule);
       expect(loggerSpy.getAllLogs('warn')).toHaveLength(0);
     });
 
-    it('should log a warning and write a comment when it can fix constraint indices due to no snapshot', () => {
+    it('should log a warning and write a comment when it cannot fix constraint indices due to no snapshot', () => {
       const sd = cloneDeep(looseSD);
       const element = ProcessableElementDefinition.fromJSON(sd.differential.element[9]);
       // SD already has no snapshot, so we're all set
       const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
       const expectedRule = new ExportableCaretValueRule('referenceRange');
       expectedRule.caretPath = 'constraint[0].id';
-      expectedRule.value = 'Yes, constraints can have ids';
+      expectedRule.value = 'yesconstraintscanhaveids';
       expectedRule.comment =
         'WARNING: The constraint index in the following rule (e.g., constraint[0]) may be incorrect.\n' +
         "Please compare with the constraint array in the original definition's snapshot and adjust as necessary.";
@@ -649,6 +649,63 @@ describe('CaretValueRuleExtractor', () => {
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule);
       expect(loggerSpy.getFirstMessage('warn')).toMatch(
         /Could not calculate correct constraint index.*ObservationWithCaret: referenceRange \^constraint\[0]\.id/
+      );
+    });
+
+    it('should correct mapping indices when the snapshot is available', () => {
+      const sd = cloneDeep(looseSD);
+      const element = ProcessableElementDefinition.fromJSON(sd.differential.element[10]);
+      // Add the corresponding snapshot element so GoFSH can find the right index
+      sd.snapshot = { element: [] };
+      sd.snapshot.element.push({
+        id: element.id,
+        path: element.path,
+        mapping: [
+          {
+            identity: 'v2',
+            map: 'Relationships established by OBX-4 usage'
+          },
+          {
+            identity: 'rim',
+            map: 'outBoundRelationship'
+          },
+          {
+            identity: 'middle-earth',
+            map: 'mordor'
+          },
+          {
+            id: 'inthewardrobe',
+            identity: 'narnia',
+            map: 'lamppost'
+          }
+        ]
+      });
+      const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
+      const expectedRule = new ExportableCaretValueRule('hasMember');
+      expectedRule.caretPath = 'mapping[3].id';
+      expectedRule.value = 'inthewardrobe';
+      // The other constraint properties (identity, map, etc) will create rules too, but they'd
+      // normally be processed paths anyway, and we only need one rule to test what we need to test
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule);
+      expect(loggerSpy.getAllLogs('warn')).toHaveLength(0);
+    });
+
+    it('should log a warning and write a comment when it cannot fix mapping indices due to no snapshot', () => {
+      const sd = cloneDeep(looseSD);
+      const element = ProcessableElementDefinition.fromJSON(sd.differential.element[10]);
+      // SD already has no snapshot, so we're all set
+      const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
+      const expectedRule = new ExportableCaretValueRule('hasMember');
+      expectedRule.caretPath = 'mapping[1].id';
+      expectedRule.value = 'inthewardrobe';
+      expectedRule.comment =
+        'WARNING: The mapping index in the following rule (e.g., mapping[1]) may be incorrect.\n' +
+        "Please compare with the mapping array in the original definition's snapshot and adjust as necessary.";
+      // The other constraint properties (identity, map, etc) will create rules too, but they'd
+      // normally be processed paths anyway, and we only need one rule to test what we need to test
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule);
+      expect(loggerSpy.getMessageAtIndex(2, 'warn')).toMatch(
+        /Could not calculate correct mapping index.*ObservationWithCaret: hasMember \^mapping\[1]\.id/
       );
     });
 
