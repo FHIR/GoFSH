@@ -165,7 +165,12 @@ export class CaretValueRuleExtractor {
     const flatSD = getPathValuePairs(sd);
     const flatParent = getPathValuePairs(parent);
     Object.keys(flatSD).forEach(key => {
-      if (flatParent[key] == null || !isEqual(flatSD[key], flatParent[key])) {
+      if (
+        flatParent[key] == null ||
+        !isEqual(flatSD[key], flatParent[key]) ||
+        // SUSHI always sets status to active, so if it isn't active, we need a caret rule
+        (key === 'status' && flatSD[key] !== 'active')
+      ) {
         if (key === 'url' && this.isStandardURL('StructureDefinition', config, input)) {
           return;
         }

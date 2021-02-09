@@ -1,0 +1,8 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "caret-value-profile-draft",
+  "url": "http://hl7.org/fhir/sushi-test/StructureDefinition/caret-value-profile-draft",
+  "status": "draft",
+  "type": "BodyStructure",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/BodyStructure"
+}

@@ -12,6 +12,7 @@ describe('CaretValueRuleExtractor', () => {
   let looseSD: any;
   let looseVS: any;
   let looseCS: any;
+  let looseBSSD: any;
   let config: fshtypes.Configuration;
   let defs: fhirdefs.FHIRDefinitions;
 
@@ -30,6 +31,11 @@ describe('CaretValueRuleExtractor', () => {
     looseCS = JSON.parse(
       fs
         .readFileSync(path.join(__dirname, 'fixtures', 'caret-value-codeSystem.json'), 'utf-8')
+        .trim()
+    );
+    looseBSSD = JSON.parse(
+      fs
+        .readFileSync(path.join(__dirname, 'fixtures', 'caret-value-profile-draft.json'), 'utf-8')
         .trim()
     );
   });
@@ -60,6 +66,16 @@ describe('CaretValueRuleExtractor', () => {
       const expectedRule = new ExportableCaretValueRule('');
       expectedRule.caretPath = 'version';
       expectedRule.value = '1.2.3';
+      expect(caretRules).toEqual<ExportableCaretValueRule[]>([expectedRule]);
+    });
+
+    it('should always extract a caret value rule for status when it is not "active"', () => {
+      const sd = cloneDeep(looseBSSD);
+      sd.status = 'draft';
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
+      const expectedRule = new ExportableCaretValueRule('');
+      expectedRule.caretPath = 'status';
+      expectedRule.value = new fshtypes.FshCode('draft');
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([expectedRule]);
     });
 
