@@ -1,7 +1,9 @@
 import { fhirtypes, fshrules, fshtypes } from 'fsh-sushi';
+import { EOL } from 'os';
 import { ExportableRule } from '.';
 
 export class ExportableCaretValueRule extends fshrules.CaretValueRule implements ExportableRule {
+  comment: string;
   constructor(path: string) {
     super(path);
   }
@@ -23,6 +25,11 @@ export class ExportableCaretValueRule extends fshrules.CaretValueRule implements
     } else if (typeof this.value === 'string') {
       value = this.isInstance ? this.value : `"${this.value}"`;
     }
-    return `* ${this.path !== '' ? this.path + ' ' : ''}^${this.caretPath} = ${value}`;
+    const lines: string[] = [];
+    if (this.comment) {
+      lines.push(...this.comment.split('\n').map(c => `// ${c}`));
+    }
+    lines.push(`* ${this.path !== '' ? this.path + ' ' : ''}^${this.caretPath} = ${value}`);
+    return lines.join(EOL);
   }
 }

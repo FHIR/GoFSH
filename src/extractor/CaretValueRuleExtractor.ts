@@ -1,17 +1,18 @@
 import { fshtypes, utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
-import { ProcessableElementDefinition } from '../processor';
+import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
 import { getFSHValue, getPath, getPathValuePairs, logger } from '../utils';
 
 export class CaretValueRuleExtractor {
   static process(
     input: ProcessableElementDefinition,
+    structDef: ProcessableStructureDefinition,
     fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     // Convert to json to remove extra private properties on fhirtypes.ElementDefinition
     const path = getPath(input);
-    const inputJSON = input.toJSON();
+    const inputJSON = input.toJSON() as any;
     input.processedPaths.push('id', 'path');
     const flatElement = getPathValuePairs(inputJSON);
     const caretValueRules: ExportableCaretValueRule[] = [];
@@ -20,6 +21,60 @@ export class CaretValueRuleExtractor {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
       caretValueRule.value = getFSHValue(key, flatElement, 'ElementDefinition', fisher);
+
+      // Fix constraint[n] indices if applicable. This is necessary because GoFSH will use constraint indices relative
+      // to the constraint array in the differential, which may be a *subset* of the constraint array in the snapshot.
+      // SUSHI, however, processes indices relative to the constraint array in the snapshot, so we need to adjust for
+      // what SUSHI expects. If we can't adjust (due to missing snapshot), log a warning and comment the FSH.
+      const constraintMatch = key.match(/constraint\[(\d+)]/);
+      if (constraintMatch) {
+        let newIndex: number;
+        if (structDef?.snapshot?.element?.length > 0) {
+          const diffConstraint = inputJSON.constraint[parseInt(constraintMatch[1])];
+          const snapElement = structDef.snapshot.element.find(el => el.id === inputJSON.id);
+          newIndex = (snapElement?.constraint as any[])?.findIndex(
+            c => c.key === diffConstraint.key
+          );
+        }
+        if (newIndex != null) {
+          caretValueRule.caretPath = key.replace(constraintMatch[0], `constraint[${newIndex}]`);
+        } else {
+          caretValueRule.comment =
+            `WARNING: The constraint index in the following rule (e.g., ${constraintMatch[0]}) may be incorrect.\n` +
+            "Please compare with the constraint array in the original definition's snapshot and adjust as necessary.";
+          logger.warn(
+            `Could not calculate correct constraint index relative to the snapshot for the following path in ${structDef.name}: ` +
+              `${path} ^${key}. To resolve this issue, run GoFSH on definitions that include valid snapshots; otherwise check and fix ` +
+              'constraint indices in the generated FSH files as necessary.'
+          );
+        }
+      }
+
+      // Fix mapping[n] indices for all the same reasons and with all the same behaviors as for constraint above.
+      // Unfortunately, it's just different enough that extracting a common function would only add complexity.
+      const mappingMatch = key.match(/mapping\[(\d+)]/);
+      if (mappingMatch) {
+        let newIndex: number;
+        if (structDef?.snapshot?.element?.length > 0) {
+          const diffMapping = inputJSON.mapping[parseInt(mappingMatch[1])];
+          const snapElement = structDef.snapshot.element.find(el => el.id === inputJSON.id);
+          // Unlike constraint, which has guaranteed unique keys, we need to compare mapping as a whole to find a match
+          newIndex = (snapElement?.mapping as any[])?.findIndex(m => isEqual(m, diffMapping));
+        }
+        if (newIndex != null) {
+          caretValueRule.caretPath = key.replace(mappingMatch[0], `mapping[${newIndex}]`);
+        } else {
+          caretValueRule.comment =
+            `WARNING: The mapping index in the following rule (e.g., ${mappingMatch[0]}) may be incorrect.\n` +
+            "Please compare with the mapping array in the original definition's snapshot and adjust as necessary.";
+          logger.warn(
+            `Could not calculate correct mapping index relative to the snapshot for the following path in ${structDef.name}: ` +
+              `${path} ^${key}. To resolve this issue, run GoFSH on definitions that include valid snapshots; otherwise check and fix ` +
+              'mapping indices in the generated FSH files as necessary.'
+          );
+        }
+      }
+
       caretValueRules.push(caretValueRule);
     });
     return caretValueRules;
@@ -83,7 +138,7 @@ export class CaretValueRuleExtractor {
     // 3. If SD array is same length as parent array, but some elements differ, or if SD array
     //    is larger than the parent array:
     //    a. if extension or modifier extension, output caret rules for the whole array, because
-    //       SUSHI modifies those arrays itself before applying rules, so the indexes might be off
+    //       SUSHI modifies those arrays itself before applying rules, so the indices might be off
     //    b. otherwise output caret rules only for changed/added elements
     // To accomplish this, it's easier to manipulate the sd and parent JSON before flattening.
     // NOTE: This is only concerned w/ arrays at the top-level.

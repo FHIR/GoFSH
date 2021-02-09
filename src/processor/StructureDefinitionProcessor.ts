@@ -44,6 +44,7 @@ export class StructureDefinitionProcessor {
         }) ?? [];
       StructureDefinitionProcessor.extractKeywords(input, sd);
       const invariants = StructureDefinitionProcessor.extractInvariants(
+        input,
         elements,
         existingInvariants
       );
@@ -112,20 +113,21 @@ export class StructureDefinitionProcessor {
       }
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
       // since it will convert any remaining fields to CaretValueRules
-      newRules.push(...CaretValueRuleExtractor.process(element, fisher));
+      newRules.push(...CaretValueRuleExtractor.process(element, input, fisher));
     });
     target.rules = compact(newRules);
     switchQuantityRules(target.rules);
   }
 
   static extractInvariants(
+    input: ProcessableStructureDefinition,
     elements: ProcessableElementDefinition[],
     existingInvariants: ExportableInvariant[]
   ): ExportableInvariant[] {
     const invariants: ExportableInvariant[] = [];
     elements.forEach(element => {
       invariants.push(
-        ...InvariantExtractor.process(element, [...existingInvariants, ...invariants])
+        ...InvariantExtractor.process(element, input, [...existingInvariants, ...invariants])
       );
     });
     return invariants;
@@ -149,6 +151,7 @@ export interface ProcessableStructureDefinition {
   resourceType: string;
   type?: string;
   id?: string;
+  url?: string;
   title?: string;
   description?: string;
   baseDefinition?: string;

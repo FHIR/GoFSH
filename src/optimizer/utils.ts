@@ -158,7 +158,7 @@ function getTypesForPath(
   }
   if (instanceOfDef?.resourceType === 'StructureDefinition') {
     const instanceOfSD = fhirtypes.StructureDefinition.fromJSON(instanceOfDef);
-    // NOTE: Normalize the path to remove indexes and/or slice references
+    // NOTE: Normalize the path to remove indices and/or slice references
     const element = instanceOfSD.findElementByPath(path.replace(/\[[^\]]+\]/g, ''), fisher);
     return element?.type;
   }

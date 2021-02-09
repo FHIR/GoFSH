@@ -128,18 +128,21 @@ describe('StructureDefinitionProcessor', () => {
       const onlyInvariant = new ExportableInvariant('myo-1');
       onlyInvariant.description = 'First appearance of invariant with key myo-1.';
       onlyInvariant.severity = new fshtypes.FshCode('warning');
+      const obeysRule = new ExportableObeysRule('note');
+      obeysRule.keys = ['myo-1'];
       const constraintKey = new ExportableCaretValueRule('method');
-      constraintKey.caretPath = 'constraint[0].key';
+      constraintKey.caretPath = 'constraint[1].key';
       constraintKey.value = 'myo-1';
       const constraintSeverity = new ExportableCaretValueRule('method');
-      constraintSeverity.caretPath = 'constraint[0].severity';
+      constraintSeverity.caretPath = 'constraint[1].severity';
       constraintSeverity.value = new fshtypes.FshCode('warning');
       const constraintHuman = new ExportableCaretValueRule('method');
-      constraintHuman.caretPath = 'constraint[0].human';
+      constraintHuman.caretPath = 'constraint[1].human';
       constraintHuman.value = 'Second appearance of invariant with key myo-1.';
 
       expect(invariants).toHaveLength(1);
       expect(invariants).toContainEqual(onlyInvariant);
+      expect(profile.rules).toContainEqual(obeysRule);
       expect(profile.rules).toContainEqual(constraintKey);
       expect(profile.rules).toContainEqual(constraintSeverity);
       expect(profile.rules).toContainEqual(constraintHuman);
@@ -327,7 +330,7 @@ describe('StructureDefinitionProcessor', () => {
         input.differential?.element?.map(rawElement => {
           return ProcessableElementDefinition.fromJSON(rawElement, false);
         }) ?? [];
-      const result = StructureDefinitionProcessor.extractInvariants(elements, []);
+      const result = StructureDefinitionProcessor.extractInvariants(input, elements, []);
 
       expect(result).toHaveLength(4);
     });

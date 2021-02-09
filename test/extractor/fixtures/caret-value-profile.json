@@ -133,6 +133,38 @@
         "id": "Observation.dataAbsentReason.coding.code",
         "path": "Observation.dataAbsentReason.coding.code",
         "fixedCode": "foo"
+      },
+      {
+        "id": "Observation.referenceRange",
+        "path": "Observation.referenceRange",
+        "constraint": [
+          {
+            "id": "yesconstraintscanhaveids",
+            "key" : "foo-1",
+            "severity" : "error",
+            "human" : "It must foo"
+          },
+          {
+            "key" : "foo-2",
+            "severity" : "error",
+            "human" : "It still must foo"
+          }
+        ]
+      },
+      {
+        "id": "Observation.hasMember",
+        "path": "Observation.hasMember",
+        "mapping": [
+          {
+            "identity" : "middle-earth",
+            "map" : "mordor"
+          },
+          {
+            "id": "inthewardrobe",
+            "identity" : "narnia",
+            "map" : "lamppost"
+          }
+        ]
       }
     ]
   }

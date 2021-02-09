@@ -65,9 +65,17 @@ describe('Processing', () => {
     });
 
     it('should use a directory named gofsh as a default when no directory is provided', () => {
-      const result = ensureOutputDir(undefined);
-      expect(result).toBe('gofsh');
-      expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
+      // First change working directory so we don't create/modify gofsh folder in the project
+      const cwd = process.cwd();
+      try {
+        process.chdir(tempRoot);
+        const result = ensureOutputDir(undefined);
+        expect(result).toBe('gofsh');
+        expect(loggerSpy.getLastMessage('info')).toBe(`Using output directory: ${result}`);
+      } finally {
+        // now change it back
+        process.chdir(cwd);
+      }
     });
 
     it('should use the provided directory when one is given', () => {
