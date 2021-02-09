@@ -133,6 +133,18 @@
         "id": "Observation.dataAbsentReason.coding.code",
         "path": "Observation.dataAbsentReason.coding.code",
         "fixedCode": "foo"
+      },
+      {
+        "id": "Observation.referenceRange",
+        "path": "Observation.referenceRange",
+        "constraint": [
+          {
+            "id": "Yes, constraints can have ids",
+            "key" : "foo-1",
+            "severity" : "error",
+            "human" : "It must foo"
+          }
+        ]
       }
     ]
   }

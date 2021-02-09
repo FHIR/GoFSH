@@ -34,6 +34,10 @@ describe('CaretValueRuleExtractor', () => {
     );
   });
 
+  beforeEach(() => {
+    loggerSpy.reset();
+  });
+
   describe('StructureDefinition', () => {
     it('should not extract any SD caret rules when only keyword-based properties have changed', () => {
       const caretRules = CaretValueRuleExtractor.processStructureDefinition(looseSD, defs, config);
@@ -527,7 +531,7 @@ describe('CaretValueRuleExtractor', () => {
   describe('Elements', () => {
     it('should extract a single top-level caret value rule', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule = new ExportableCaretValueRule('identifier');
       expectedRule.caretPath = 'short';
       expectedRule.value = 'foo';
@@ -536,7 +540,7 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should extract multiple top-level caret value rules', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule1 = new ExportableCaretValueRule('basedOn');
       expectedRule1.caretPath = 'short';
       expectedRule1.value = 'foo';
@@ -548,7 +552,7 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should extract a single nested path caret value rule', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule = new ExportableCaretValueRule('partOf');
       expectedRule.caretPath = 'base.path';
       expectedRule.value = 'foo';
@@ -557,7 +561,7 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should extract multiple nested path caret value rules', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule1 = new ExportableCaretValueRule('status');
       expectedRule1.caretPath = 'base.path';
       expectedRule1.value = 'foo';
@@ -575,7 +579,7 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should extract array caret value rules', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[4]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule1 = new ExportableCaretValueRule('category');
       expectedRule1.caretPath = 'alias[0]';
       expectedRule1.value = 'foo';
@@ -587,9 +591,70 @@ describe('CaretValueRuleExtractor', () => {
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
     });
 
+    it('should correct constraint indices when the snapshot is available', () => {
+      const sd = cloneDeep(looseSD);
+      const element = ProcessableElementDefinition.fromJSON(sd.differential.element[9]);
+      // Add the corresponding snapshot element so GoFSH can find the right index
+      sd.snapshot = { element: [] };
+      sd.snapshot.element.push({
+        id: element.id,
+        path: element.path,
+        constraint: [
+          {
+            key: 'ele-1',
+            severity: 'error',
+            human: 'All FHIR elements must have a @value or children',
+            expression: 'hasValue() or (children().count() > id.count())',
+            xpath: '@value|f:*|h:div',
+            source: 'http://hl7.org/fhir/StructureDefinition/Element'
+          },
+          {
+            key: 'obs-3',
+            severity: 'error',
+            human: 'Must have at least a low or a high or text',
+            expression: 'low.exists() or high.exists() or text.exists()',
+            xpath: '(exists(f:low) or exists(f:high)or exists(f:text))'
+          },
+          {
+            id: 'Yes, constraints can have ids',
+            key: 'foo-1',
+            severity: 'error',
+            human: 'It must foo'
+          }
+        ]
+      });
+      const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
+      const expectedRule = new ExportableCaretValueRule('referenceRange');
+      expectedRule.caretPath = 'constraint[2].id';
+      expectedRule.value = 'Yes, constraints can have ids';
+      // The other constraint properties (key, severity, etc) will create rules too, but they'd
+      // normally be processed paths anyway, and we only need one rule to test what we need to test
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule);
+      expect(loggerSpy.getAllLogs('warn')).toHaveLength(0);
+    });
+
+    it('should log a warning and write a comment when it can fix constraint indices due to no snapshot', () => {
+      const sd = cloneDeep(looseSD);
+      const element = ProcessableElementDefinition.fromJSON(sd.differential.element[9]);
+      // SD already has no snapshot, so we're all set
+      const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
+      const expectedRule = new ExportableCaretValueRule('referenceRange');
+      expectedRule.caretPath = 'constraint[0].id';
+      expectedRule.value = 'Yes, constraints can have ids';
+      expectedRule.comment =
+        'WARNING: The constraint index in the following rule (e.g., constraint[0]) may be incorrect.\n' +
+        "Please compare with the constraint array in the original definition's snapshot and adjust as necessary.";
+      // The other constraint properties (key, severity, etc) will create rules too, but they'd
+      // normally be processed paths anyway, and we only need one rule to test what we need to test
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule);
+      expect(loggerSpy.getFirstMessage('warn')).toMatch(
+        /Could not calculate correct constraint index.*ObservationWithCaret: referenceRange \^constraint\[0]\.id/
+      );
+    });
+
     it('should extract array caret value rules with children', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[5]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule1 = new ExportableCaretValueRule('code');
       expectedRule1.caretPath = 'code[0].system';
       expectedRule1.value = 'http://foo.com';
@@ -603,7 +668,7 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should convert a FHIR code string to a FSH code when extracting', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[8]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule = new ExportableCaretValueRule('dataAbsentReason.coding.code');
       expectedRule.caretPath = 'fixedCode';
       expectedRule.value = new fshtypes.FshCode('foo');
@@ -613,7 +678,7 @@ describe('CaretValueRuleExtractor', () => {
 
     it('should return no rules when the element only has id and path', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[6]);
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       expect(caretRules).toEqual([]);
     });
 
@@ -627,7 +692,7 @@ describe('CaretValueRuleExtractor', () => {
         'type[1].targetProfile[1]'
       ];
 
-      const caretRules = CaretValueRuleExtractor.process(element, defs);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule1 = new ExportableCaretValueRule('focus');
       expectedRule1.caretPath = 'short';
       expectedRule1.value = 'foo';

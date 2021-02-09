@@ -112,7 +112,7 @@ export class StructureDefinitionProcessor {
       }
       // NOTE: CaretValueExtractor for elements can only run once other Extractors have finished,
       // since it will convert any remaining fields to CaretValueRules
-      newRules.push(...CaretValueRuleExtractor.process(element, fisher));
+      newRules.push(...CaretValueRuleExtractor.process(element, input, fisher));
     });
     target.rules = compact(newRules);
     switchQuantityRules(target.rules);

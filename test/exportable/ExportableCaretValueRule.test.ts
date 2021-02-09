@@ -1,4 +1,5 @@
 import { fhirtypes, fshtypes } from 'fsh-sushi';
+import { EOL } from 'os';
 import { ExportableCaretValueRule } from '../../src/exportable';
 
 describe('ExportableCaretValueRule', () => {
@@ -8,6 +9,21 @@ describe('ExportableCaretValueRule', () => {
     rule.value = 'Important summary';
 
     expect(rule.toFSH()).toBe('* ^short = "Important summary"');
+  });
+
+  it('should export a caret rule with comments', () => {
+    const rule = new ExportableCaretValueRule('');
+    rule.comment = 'I have something really important to tell you...\nJust kidding!';
+    rule.caretPath = 'short';
+    rule.value = 'Important summary';
+
+    expect(rule.toFSH()).toBe(
+      [
+        '// I have something really important to tell you...',
+        '// Just kidding!',
+        '* ^short = "Important summary"'
+      ].join(EOL)
+    );
   });
 
   it('should export a caret rule assigning an instance', () => {
