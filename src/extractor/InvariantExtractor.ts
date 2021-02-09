@@ -1,11 +1,12 @@
 import { fshtypes } from 'fsh-sushi';
 import { isEqual } from 'lodash';
 import { ExportableInvariant } from '../exportable/ExportableInvariant';
-import { ProcessableElementDefinition } from '../processor';
+import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 
 export class InvariantExtractor {
   static process(
     input: ProcessableElementDefinition,
+    structDef: ProcessableStructureDefinition,
     existingInvariants: ExportableInvariant[]
   ): ExportableInvariant[] {
     const invariants: ExportableInvariant[] = [];
@@ -29,6 +30,10 @@ export class InvariantExtractor {
         if (constraint.xpath) {
           invariant.xpath = constraint.xpath;
           constraintPaths.push(`constraint[${i}].xpath`);
+        }
+        // SUSHI autopopulates source to the current SD URL, so as long as it matches, mark that path as processed
+        if (constraint.source == null || constraint.source === structDef.url) {
+          constraintPaths.push(`constraint[${i}].source`);
         }
 
         // if an invariant with this key already exists, don't make a new invariant with the same key.

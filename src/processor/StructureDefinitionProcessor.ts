@@ -44,6 +44,7 @@ export class StructureDefinitionProcessor {
         }) ?? [];
       StructureDefinitionProcessor.extractKeywords(input, sd);
       const invariants = StructureDefinitionProcessor.extractInvariants(
+        input,
         elements,
         existingInvariants
       );
@@ -119,13 +120,14 @@ export class StructureDefinitionProcessor {
   }
 
   static extractInvariants(
+    input: ProcessableStructureDefinition,
     elements: ProcessableElementDefinition[],
     existingInvariants: ExportableInvariant[]
   ): ExportableInvariant[] {
     const invariants: ExportableInvariant[] = [];
     elements.forEach(element => {
       invariants.push(
-        ...InvariantExtractor.process(element, [...existingInvariants, ...invariants])
+        ...InvariantExtractor.process(element, input, [...existingInvariants, ...invariants])
       );
     });
     return invariants;
@@ -149,6 +151,7 @@ export interface ProcessableStructureDefinition {
   resourceType: string;
   type?: string;
   id?: string;
+  url?: string;
   title?: string;
   description?: string;
   baseDefinition?: string;

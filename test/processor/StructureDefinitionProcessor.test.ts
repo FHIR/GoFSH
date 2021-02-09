@@ -330,7 +330,7 @@ describe('StructureDefinitionProcessor', () => {
         input.differential?.element?.map(rawElement => {
           return ProcessableElementDefinition.fromJSON(rawElement, false);
         }) ?? [];
-      const result = StructureDefinitionProcessor.extractInvariants(elements, []);
+      const result = StructureDefinitionProcessor.extractInvariants(input, elements, []);
 
       expect(result).toHaveLength(4);
     });
