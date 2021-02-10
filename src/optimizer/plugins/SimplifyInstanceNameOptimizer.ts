@@ -1,5 +1,6 @@
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
+import { ExportableAssignmentRule } from '../../exportable';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
 
 export default {
@@ -20,6 +21,13 @@ export default {
           // If the instance name isn't simplified, the InstanceOf information is present
           // If it does not end with the current InstanceOf, an alias was used, and we should use that
           instance.name = `${instance.id}-of-${instance.instanceOf}`;
+        }
+
+        if (instance.id != null && instance.id !== instance.name) {
+          // add a rule to set the id so it is not lost
+          const idRule = new ExportableAssignmentRule('id');
+          idRule.value = instance.id;
+          instance.rules.unshift(idRule);
         }
       });
   }
