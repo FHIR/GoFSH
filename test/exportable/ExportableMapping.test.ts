@@ -10,6 +10,20 @@ describe('ExportableMapping', () => {
     expect(result).toBe(expectedResult);
   });
 
+  it('should export a Mapping with comments', () => {
+    const input = new ExportableMapping('SimpleMapping');
+    input.fshComment = 'I have something really important to tell you...\nGot you again!';
+
+    const expectedResult = [
+      '// I have something really important to tell you...',
+      '// Got you again!',
+      'Mapping: SimpleMapping',
+      'Id: SimpleMapping'
+    ].join(EOL);
+    const result = input.toFSH();
+    expect(result).toBe(expectedResult);
+  });
+
   it('should export a Mapping with additional metadata', () => {
     const input = new ExportableMapping('MetaMapping');
     input.id = 'meta-mapping';

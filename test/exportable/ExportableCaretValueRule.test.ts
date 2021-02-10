@@ -13,7 +13,7 @@ describe('ExportableCaretValueRule', () => {
 
   it('should export a caret rule with comments', () => {
     const rule = new ExportableCaretValueRule('');
-    rule.comment = 'I have something really important to tell you...\nJust kidding!';
+    rule.fshComment = 'I have something really important to tell you...\nJust kidding!';
     rule.caretPath = 'short';
     rule.value = 'Important summary';
 

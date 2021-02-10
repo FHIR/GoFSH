@@ -127,13 +127,7 @@
       },
       {
         "id": "Observation.status",
-        "path": "Observation.status",
-        "mapping": [
-          {
-            "identity": "RogueMapping",
-            "map": "Observation.notReal"
-          }
-        ]
+        "path": "Observation.status"
       },
       {
         "id": "Observation.note",
