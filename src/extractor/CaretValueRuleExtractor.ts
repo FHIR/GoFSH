@@ -31,7 +31,7 @@ export class CaretValueRuleExtractor {
         let newIndex: number;
         if (structDef?.snapshot?.element?.length > 0) {
           const diffConstraint = inputJSON.constraint[parseInt(constraintMatch[1])];
-          const snapElement = structDef.snapshot.element.find(el => el.id === inputJSON.id);
+          const snapElement = findMatchingSnapshot(inputJSON.id, structDef);
           newIndex = (snapElement?.constraint as any[])?.findIndex(
             c => c.key === diffConstraint.key
           );
@@ -57,7 +57,7 @@ export class CaretValueRuleExtractor {
         let newIndex: number;
         if (structDef?.snapshot?.element?.length > 0) {
           const diffMapping = inputJSON.mapping[parseInt(mappingMatch[1])];
-          const snapElement = structDef.snapshot.element.find(el => el.id === inputJSON.id);
+          const snapElement = findMatchingSnapshot(inputJSON.id, structDef);
           // Unlike constraint, which has guaranteed unique keys, we need to compare mapping as a whole to find a match
           newIndex = (snapElement?.mapping as any[])?.findIndex(m => isEqual(m, diffMapping));
         }
@@ -214,6 +214,27 @@ export class CaretValueRuleExtractor {
   static isStandardURL(resourceType: string, config: fshtypes.Configuration, input: any): boolean {
     return input.url == `${config.canonical}/${resourceType}/${input.id}`;
   }
+}
+
+function findMatchingSnapshot(differentialId: string, structDef: ProcessableStructureDefinition) {
+  return structDef.snapshot?.element.find(el => {
+    if (el.id === differentialId) {
+      return true;
+    } else if (el.id?.indexOf('[x]:') > 0) {
+      // We may not have matched due to the alternate syntax for choices.  E.g., if the differential id is
+      // Observation.valueQuantity but the snapshot id is Observation.value[x]:valueQuantity. Get the corresponding
+      // alternate syntax for the id and test against that. See: https://blog.fire.ly/2019/09/13/type-slicing-in-fhir-r4/
+      const elIdAltSyntax = (el.id as string)
+        ?.split('.')
+        .map(p => {
+          const i = p.indexOf('[x]:');
+          return i > -1 ? p.slice(i + 4) : p;
+        })
+        .join('.');
+      return elIdAltSyntax === differentialId;
+    }
+    return false;
+  });
 }
 
 const RESOURCE_IGNORED_PROPERTIES = {

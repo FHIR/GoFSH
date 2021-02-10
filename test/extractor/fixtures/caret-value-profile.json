@@ -165,6 +165,18 @@
             "map" : "lamppost"
           }
         ]
+      },
+      {
+        "id": "Observation.component.valueQuantity",
+        "path": "Observation.component.valueQuantity",
+        "constraint": [
+          {
+            "id": "yesconstraintscanhaveids",
+            "key" : "foo-3",
+            "severity" : "error",
+            "human" : "It must choose to foo"
+          }
+        ]
       }
     ]
   }
