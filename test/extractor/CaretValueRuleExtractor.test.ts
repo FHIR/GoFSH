@@ -632,7 +632,7 @@ describe('CaretValueRuleExtractor', () => {
             xpath: '(exists(f:low) or exists(f:high)or exists(f:text))'
           },
           {
-            id: 'Yes, constraints can have ids',
+            id: 'yesconstraintscanhaveids',
             key: 'foo-1',
             severity: 'error',
             human: 'It must foo'
@@ -642,6 +642,41 @@ describe('CaretValueRuleExtractor', () => {
       const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
       const expectedRule = new ExportableCaretValueRule('referenceRange');
       expectedRule.caretPath = 'constraint[2].id';
+      expectedRule.value = 'yesconstraintscanhaveids';
+      // The other constraint properties (key, severity, etc) will create rules too, but they'd
+      // normally be processed paths anyway, and we only need one rule to test what we need to test
+      expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule);
+      expect(loggerSpy.getAllLogs('warn')).toHaveLength(0);
+    });
+
+    it('should correct constraint indices when the snapshot is available (value[x])', () => {
+      const sd = cloneDeep(looseSD);
+      const element = ProcessableElementDefinition.fromJSON(sd.differential.element[11]);
+      // Add the corresponding snapshot element so GoFSH can find the right index
+      sd.snapshot = { element: [] };
+      sd.snapshot.element.push({
+        id: 'Observation.component.value[x]:valueQuantity',
+        path: 'Observation.component.value[x]',
+        constraint: [
+          {
+            key: 'ele-1',
+            severity: 'error',
+            human: 'All FHIR elements must have a @value or children',
+            expression: 'hasValue() or (children().count() > id.count())',
+            xpath: '@value|f:*|h:div',
+            source: 'http://hl7.org/fhir/StructureDefinition/Element'
+          },
+          {
+            id: 'yesconstraintscanhaveids',
+            key: 'foo-3',
+            severity: 'error',
+            human: 'It must choose to foo'
+          }
+        ]
+      });
+      const caretRules = CaretValueRuleExtractor.process(element, sd, defs);
+      const expectedRule = new ExportableCaretValueRule('component.valueQuantity');
+      expectedRule.caretPath = 'constraint[1].id';
       expectedRule.value = 'yesconstraintscanhaveids';
       // The other constraint properties (key, severity, etc) will create rules too, but they'd
       // normally be processed paths anyway, and we only need one rule to test what we need to test
