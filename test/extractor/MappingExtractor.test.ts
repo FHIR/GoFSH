@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { cloneDeep } from 'lodash';
 import { fhirdefs, fshtypes } from 'fsh-sushi';
+import { loggerSpy } from '../helpers/loggerSpy';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 import { MappingExtractor } from '../../src/extractor';
 import { ExportableMapping, ExportableMappingRule } from '../../src/exportable';
@@ -19,6 +21,10 @@ describe('MappingExtractor', () => {
     elements = looseSD.differential.element.map(rawElement => {
       return ProcessableElementDefinition.fromJSON(rawElement, false);
     });
+  });
+
+  beforeEach(() => {
+    loggerSpy.reset();
   });
 
   it('should extract mappings with rules from a single element', () => {
@@ -91,19 +97,33 @@ describe('MappingExtractor', () => {
     expect(element.processedPaths).toContain('mapping[4].map');
   });
 
-  it('should not extract mappings that do not exist on the top level structure definition', () => {
-    const element = elements[3]; // Observation.status
-    const mappings = MappingExtractor.process(looseSD, elements, defs);
-    const unexpectedMapping = new ExportableMapping('RogueMapping');
-    unexpectedMapping.source = 'MyObservation';
+  it('should create missing top-level mappings when necessary', () => {
+    const sdClone = cloneDeep(looseSD);
+    const elClone = cloneDeep(elements);
+    const element = elClone[3]; // Observation.status
+    // Add the rogue mapping to the element
+    element.mapping = [{ identity: 'RogueMapping', map: 'Observation.rogue' }];
+    const mappings = MappingExtractor.process(sdClone, elClone, defs);
+    const expectedMapping = new ExportableMapping('RogueMapping-for-MyObservation');
+    expectedMapping.id = 'RogueMapping';
+    expectedMapping.source = 'MyObservation';
+    expectedMapping.fshComment =
+      'WARNING: The following Mapping may be incomplete since the original MyObservation\n' +
+      'StructureDefinition was missing the mapping entry for RogueMapping.\n' +
+      'Please review this and add the following properties as necessary: Target, Title, Description';
     const mappingRule = new ExportableMappingRule('status');
-    mappingRule.map = 'Observation.notReal';
-    unexpectedMapping.rules.push(mappingRule);
+    mappingRule.map = 'Observation.rogue';
+    expectedMapping.rules.push(mappingRule);
 
-    expect(mappings).toHaveLength(4); // Only the four mappings in the SD mapping list are created
-    expect(mappings).not.toContainEqual(unexpectedMapping); // No RogueMapping made
+    expect(mappings).toHaveLength(5); // The additional RogueMapping is now created
+    expect(mappings).toContainEqual(expectedMapping);
 
-    expect(element.processedPaths).toHaveLength(0); // No paths marked as processed on element
+    expect(element.processedPaths).toContain('mapping[0].identity');
+    expect(element.processedPaths).toContain('mapping[0].map');
+
+    expect(loggerSpy.getFirstMessage('warn')).toMatch(
+      /Element in MyObservation references .* RogueMapping\.  GoFSH has created a new Mapping named RogueMapping-for-MyObservation\./
+    );
   });
 
   it('should not extract unchanged mappings that exist on the parent', () => {
