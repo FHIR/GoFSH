@@ -692,7 +692,7 @@ describe('CaretValueRuleExtractor', () => {
       const expectedRule = new ExportableCaretValueRule('referenceRange');
       expectedRule.caretPath = 'constraint[0].id';
       expectedRule.value = 'yesconstraintscanhaveids';
-      expectedRule.comment =
+      expectedRule.fshComment =
         'WARNING: The constraint index in the following rule (e.g., constraint[0]) may be incorrect.\n' +
         "Please compare with the constraint array in the original definition's snapshot and adjust as necessary.";
       // The other constraint properties (key, severity, etc) will create rules too, but they'd
@@ -749,7 +749,7 @@ describe('CaretValueRuleExtractor', () => {
       const expectedRule = new ExportableCaretValueRule('hasMember');
       expectedRule.caretPath = 'mapping[1].id';
       expectedRule.value = 'inthewardrobe';
-      expectedRule.comment =
+      expectedRule.fshComment =
         'WARNING: The mapping index in the following rule (e.g., mapping[1]) may be incorrect.\n' +
         "Please compare with the mapping array in the original definition's snapshot and adjust as necessary.";
       // The other constraint properties (identity, map, etc) will create rules too, but they'd

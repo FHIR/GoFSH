@@ -4,6 +4,7 @@ import { Exportable, ExportableMappingRule, ExportableInsertRule } from '.';
 import { metadataToFSH } from './common';
 
 export class ExportableMapping extends fshtypes.Mapping implements Exportable {
+  fshComment: string;
   rules: (ExportableMappingRule | ExportableInsertRule)[];
 
   constructor(name: string) {
@@ -11,8 +12,16 @@ export class ExportableMapping extends fshtypes.Mapping implements Exportable {
   }
 
   toFSH(): string {
+    let fshComments = '';
+    if (this.fshComment) {
+      fshComments =
+        this.fshComment
+          .split('\n')
+          .map(c => `// ${c}`)
+          .join(EOL) + EOL;
+    }
     const metadataFSH = metadataToFSH(this);
     const rulesFSH = this.rules.map(r => r.toFSH()).join(EOL);
-    return `${metadataFSH}${rulesFSH.length ? EOL + rulesFSH : ''}`;
+    return `${fshComments}${metadataFSH}${rulesFSH.length ? EOL + rulesFSH : ''}`;
   }
 }

@@ -39,7 +39,7 @@ export class CaretValueRuleExtractor {
         if (newIndex != null) {
           caretValueRule.caretPath = key.replace(constraintMatch[0], `constraint[${newIndex}]`);
         } else {
-          caretValueRule.comment =
+          caretValueRule.fshComment =
             `WARNING: The constraint index in the following rule (e.g., ${constraintMatch[0]}) may be incorrect.\n` +
             "Please compare with the constraint array in the original definition's snapshot and adjust as necessary.";
           logger.warn(
@@ -64,7 +64,7 @@ export class CaretValueRuleExtractor {
         if (newIndex != null) {
           caretValueRule.caretPath = key.replace(mappingMatch[0], `mapping[${newIndex}]`);
         } else {
-          caretValueRule.comment =
+          caretValueRule.fshComment =
             `WARNING: The mapping index in the following rule (e.g., ${mappingMatch[0]}) may be incorrect.\n` +
             "Please compare with the mapping array in the original definition's snapshot and adjust as necessary.";
           logger.warn(

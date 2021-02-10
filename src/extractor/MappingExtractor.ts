@@ -6,7 +6,7 @@ import {
   ProcessableStructureDefinition,
   StructureDefinitionProcessor
 } from '../processor';
-import { getPath } from '../utils';
+import { getPath, logger } from '../utils';
 
 export class MappingExtractor {
   static process(
@@ -37,7 +37,7 @@ export class MappingExtractor {
         return ProcessableElementDefinition.fromJSON(rawElement, false);
       }) ?? [];
 
-    const parentMappings = this.extractMappings(parent, parentSDElements);
+    const parentMappings = this.extractMappings(parent, parentSDElements, true);
 
     // Only return mappings that are new to the profile or inherited mappings with new MappingRules
     const newMappings: ExportableMapping[] = [];
@@ -57,28 +57,52 @@ export class MappingExtractor {
 
   static extractMappings(
     sd: ProcessableStructureDefinition,
-    elements: ProcessableElementDefinition[]
+    elements: ProcessableElementDefinition[],
+    processingParent = false
   ): ExportableMapping[] {
     const mappings = (sd.mapping || []).map(m => {
-      const mapping = new ExportableMapping(m.identity);
+      const mapping = new ExportableMapping(`${m.identity}-for-${sd.name}`);
+      mapping.id = m.identity;
       mapping.source = sd.name;
-      mapping.name = `${mapping.id}-for-${mapping.source}`;
       if (m.name) mapping.title = m.name;
       if (m.uri) mapping.target = m.uri;
       if (m.comment) mapping.description = m.comment;
       return mapping;
     });
     elements.forEach(element => {
-      this.extractRules(element, mappings);
+      this.extractRules(element, sd, mappings, processingParent);
     });
     return mappings;
   }
 
-  static extractRules(element: ProcessableElementDefinition, mappings: ExportableMapping[]) {
+  static extractRules(
+    element: ProcessableElementDefinition,
+    sd: ProcessableStructureDefinition,
+    mappings: ExportableMapping[],
+    processingParent = false
+  ) {
     element.mapping?.forEach((mapping, i) => {
-      // Mappings are created at SD, so should always find a match at this point
-      const matchingMapping = mappings.find(m => m.id === mapping.identity);
-      matchingMapping?.rules.push(this.processMappingRule(element, mapping, i));
+      let matchingMapping = mappings.find(m => m.id === mapping.identity);
+      if (matchingMapping == null) {
+        // There should always be a matching mapping, but some IGs seem to be missing some top-level mappings
+        // (I'm looking at you US Core 3.1.1).  When a mapping is missing, create one on the fly, but log
+        // a warning and write a comment.
+        matchingMapping = new ExportableMapping(`${mapping.identity}-for-${sd.name}`);
+        matchingMapping.id = mapping.identity;
+        matchingMapping.source = sd.name;
+        if (!processingParent) {
+          matchingMapping.fshComment =
+            `WARNING: The following Mapping may be incomplete since the original ${sd.name}\n` +
+            `StructureDefinition was missing the mapping entry for ${matchingMapping.id}.\n` +
+            'Please review this and add the following properties as necessary: Target, Title, Description';
+          logger.warn(
+            `Element in ${sd.name} references undefined SD-level mapping: ${matchingMapping.id}.  GoFSH has created a new Mapping named ` +
+              `${matchingMapping.name}. Please review and edit the Mapping in your FSH files to provide additional information.`
+          );
+        }
+        mappings.push(matchingMapping);
+      }
+      matchingMapping.rules.push(this.processMappingRule(element, mapping, i));
     });
   }
 
