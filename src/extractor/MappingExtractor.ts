@@ -64,7 +64,6 @@ export class MappingExtractor {
       const mapping = new ExportableMapping(`${m.identity}-for-${sd.name}`);
       mapping.id = m.identity;
       mapping.source = sd.name;
-      mapping.name = `${mapping.id}-for-${mapping.source}`;
       if (m.name) mapping.title = m.name;
       if (m.uri) mapping.target = m.uri;
       if (m.comment) mapping.description = m.comment;
