@@ -345,23 +345,11 @@ describe('LakeOfHIR', () => {
   });
 
   describe('#removeDuplicateDefinitions', () => {
-    beforeAll(() => {
-      lake = new LakeOfFHIR(
-        getWildFHIRs(
-          'simple-profile.json',
-          'simple-profile.json',
-          'simple-extension.json',
-          'simple-codesystem.json',
-          'simple-valueset.json',
-          'simple-ig.json',
-          'rocky-balboa.json',
-          'unsupported-valueset.json',
-          'unsupported-codesystem.json'
-        )
-      );
-    });
-
     it('should log an error and remove definitions with the same resourceType and id as a previous definition', () => {
+      lake = new LakeOfFHIR(
+        getWildFHIRs('simple-profile.json', 'simple-profile.json', 'simple-extension.json')
+      );
+
       const results = lake.getAllStructureDefinitions();
       expect(results).toHaveLength(3);
       expect(results[0].content.id).toBe('simple.profile');
@@ -375,6 +363,80 @@ describe('LakeOfHIR', () => {
       expect(noDupResults[1].content.id).toBe('simple.extension');
 
       expect(loggerSpy.getAllMessages('error')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        /Encountered 1 definition\(s\) with the same resourceType and id as a previous definition./
+      );
+    });
+  });
+
+  describe('#assignMissingIds', () => {
+    it('should log a warning and set a missing id based on name', () => {
+      lake = new LakeOfFHIR(getWildFHIRs('big-profile.json', 'small-extension.json'));
+
+      const results = lake.getAllStructureDefinitions();
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBeUndefined();
+      expect(results[1].content.id).toBeUndefined();
+
+      lake.assignMissingIds();
+      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      const noDupResults = lake.getAllStructureDefinitions();
+      expect(noDupResults).toHaveLength(2);
+      expect(noDupResults[0].content.id).toBe('BigProfile');
+      expect(noDupResults[1].content.id).toBe('SmallExtension');
+
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Encountered 2 definition\(s\) that were missing an id/
+      );
+    });
+
+    it('should log a warning and set a missing id based on a counter if no name if available', () => {
+      lake = new LakeOfFHIR(getWildFHIRs('nameless-profile.json', 'nameless-extension.json'));
+
+      const results = lake.getAllStructureDefinitions();
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBeUndefined();
+      expect(results[1].content.id).toBeUndefined();
+
+      lake.assignMissingIds();
+      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      const noDupResults = lake.getAllStructureDefinitions();
+      expect(noDupResults).toHaveLength(2);
+      expect(noDupResults[0].content.id).toBe('id-0');
+      expect(noDupResults[1].content.id).toBe('id-1');
+
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Encountered 2 definition\(s\) that were missing an id/
+      );
+    });
+
+    it('should log a warning for setting an id and log an error if it sets to a duplicate id', () => {
+      lake = new LakeOfFHIR(
+        getWildFHIRs('big-profile.json', 'big-profile.json', 'small-extension.json')
+      );
+
+      const results = lake.getAllStructureDefinitions();
+      expect(results).toHaveLength(3);
+      expect(results[0].content.id).toBeUndefined();
+      expect(results[1].content.id).toBeUndefined();
+      expect(results[2].content.id).toBeUndefined();
+
+      lake.assignMissingIds();
+      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      const noDupResults = lake.getAllStructureDefinitions();
+      expect(noDupResults).toHaveLength(2);
+      expect(noDupResults[0].content.id).toBe('BigProfile');
+      expect(noDupResults[1].content.id).toBe('SmallExtension');
+
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Encountered 3 definition\(s\) that were missing an id/
+      );
       expect(loggerSpy.getLastMessage('error')).toMatch(
         /Encountered 1 definition\(s\) with the same resourceType and id as a previous definition./
       );

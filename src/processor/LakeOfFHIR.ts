@@ -121,4 +121,27 @@ export class LakeOfFHIR implements utils.Fishable {
       );
     }
   }
+
+  /**
+   * All definitions should have a resourceType and id. If any definition is missing an id,
+   * we add one either based on the name or with a simple counter.
+   * Logs a warning if it finds any definitions without an id
+   */
+  assignMissingIds() {
+    const createdIdPaths: string[] = [];
+    let generatedId = 0;
+    this.docs.forEach(d => {
+      if (d.content.id == null) {
+        d.content.id = d.content.name ?? `id-${generatedId++}`;
+        createdIdPaths.push(`${d.path} (${d.content.resourceType}/${d.content.id})`);
+      }
+    });
+
+    if (createdIdPaths.length > 0) {
+      logger.warn(
+        `Encountered ${createdIdPaths.length} definition(s) that were missing an id. GoFSH created ids for the following:` +
+          `\n  - ${createdIdPaths.join('\n  - ')}`
+      );
+    }
+  }
 }
