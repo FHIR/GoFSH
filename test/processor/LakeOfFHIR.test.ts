@@ -426,7 +426,7 @@ describe('LakeOfHIR', () => {
       expect(results[2].content.id).toBeUndefined();
 
       lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      lake.removeDuplicateDefinitions(); // Run to ensure we only remove true duplicates
       const noDupResults = lake.getAllStructureDefinitions();
       expect(noDupResults).toHaveLength(2);
       expect(noDupResults[0].content.id).toBe('BigProfile');
@@ -439,6 +439,28 @@ describe('LakeOfHIR', () => {
       );
       expect(loggerSpy.getLastMessage('error')).toMatch(
         /Encountered 1 definition\(s\) with the same resourceType and id as a previous definition./
+      );
+    });
+
+    it('should not create an id that matches an existing id', () => {
+      lake = new LakeOfFHIR(getWildFHIRs('profile-with-id0.json', 'nameless-profile.json'));
+
+      const results = lake.getAllStructureDefinitions();
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBe('id-0');
+      expect(results[1].content.id).toBeUndefined();
+
+      lake.assignMissingIds();
+      lake.removeDuplicateDefinitions(); // Run to ensure we don't remove these as duplicates
+      const noDupResults = lake.getAllStructureDefinitions();
+      expect(noDupResults).toHaveLength(2);
+      expect(noDupResults[0].content.id).toBe('id-0');
+      expect(noDupResults[1].content.id).toBe('id-1');
+
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Encountered 1 definition\(s\) that were missing an id/
       );
     });
   });

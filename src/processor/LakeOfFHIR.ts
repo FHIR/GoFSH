@@ -130,9 +130,18 @@ export class LakeOfFHIR implements utils.Fishable {
   assignMissingIds() {
     const createdIdPaths: string[] = [];
     let generatedId = 0;
-    this.docs.forEach(d => {
+    this.docs.forEach((d, index) => {
       if (d.content.id == null) {
-        d.content.id = d.content.name ?? `id-${generatedId++}`;
+        // Try to be smart and set the id to the existing name
+        d.content.id = d.content.name;
+        if (d.content.id == null) {
+          // If there is no existing name, generate an id with a counter
+          d.content.id = `id-${generatedId++}`;
+          // If another definition happen to have the same id as the one we just generated with a counter, increase the counter
+          while (this.docs.some((a, i) => a.content.id === d.content.id && index !== i)) {
+            d.content.id = `id-${generatedId++}`;
+          }
+        }
         createdIdPaths.push(`${d.path} (${d.content.resourceType}/${d.content.id})`);
       }
     });
