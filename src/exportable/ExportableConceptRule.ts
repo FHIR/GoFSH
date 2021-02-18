@@ -8,7 +8,7 @@ export class ExportableConceptRule extends fshrules.ConceptRule implements Expor
   }
 
   toFSH(): string {
-    let line = `* #${this.code}`;
+    let line = `* #${this.code.includes(' ') ? `"${this.code}"` : this.code}`;
     if (this.display) {
       line += ` "${fshifyString(this.display)}"`;
     }
