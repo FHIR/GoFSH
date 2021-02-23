@@ -370,20 +370,25 @@ describe('LakeOfHIR', () => {
   });
 
   describe('#assignMissingIds', () => {
-    it('should log a warning and set a missing id based on name', () => {
-      lake = new LakeOfFHIR(getWildFHIRs('big-profile.json', 'small-extension.json'));
+    it('should log a warning and set a missing id based on name for Conformance and Terminology instances', () => {
+      lake = new LakeOfFHIR(
+        getWildFHIRs(
+          'simple-message-definition-missing-id.json',
+          'simple-capability-statement-missing-id.json'
+        )
+      );
 
-      const results = lake.getAllStructureDefinitions();
+      const results = lake.getAllInstances();
       expect(results).toHaveLength(2);
       expect(results[0].content.id).toBeUndefined();
       expect(results[1].content.id).toBeUndefined();
 
       lake.assignMissingIds();
       lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
-      const noDupResults = lake.getAllStructureDefinitions();
+      const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
-      expect(noDupResults[0].content.id).toBe('BigProfile');
-      expect(noDupResults[1].content.id).toBe('SmallExtension');
+      expect(noDupResults[0].content.id).toBe('Example-Message-Definition');
+      expect(noDupResults[1].content.id).toBe('Base-FHIR-Capability-Statement');
 
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
@@ -392,21 +397,116 @@ describe('LakeOfHIR', () => {
       );
     });
 
-    it('should log a warning and set a missing id based on a counter if no name if available', () => {
-      lake = new LakeOfFHIR(getWildFHIRs('nameless-profile.json', 'nameless-extension.json'));
+    it('should log a warning and set a missing id based on a counter if no name if available on Conformance and Terminology instances', () => {
+      lake = new LakeOfFHIR(
+        getWildFHIRs(
+          'simple-message-definition-missing-id-name.json',
+          'simple-capability-statement-missing-id-name.json'
+        )
+      );
 
-      const results = lake.getAllStructureDefinitions();
+      const results = lake.getAllInstances();
       expect(results).toHaveLength(2);
       expect(results[0].content.id).toBeUndefined();
       expect(results[1].content.id).toBeUndefined();
 
       lake.assignMissingIds();
       lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
-      const noDupResults = lake.getAllStructureDefinitions();
+      const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
-      expect(noDupResults[0].content.id).toBe('id-0');
-      expect(noDupResults[1].content.id).toBe('id-1');
+      expect(noDupResults[0].content.id).toBe('GOFSH-GENERATED-ID-0');
+      expect(noDupResults[1].content.id).toBe('GOFSH-GENERATED-ID-1');
 
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Encountered 2 definition\(s\) that were missing an id/
+      );
+    });
+
+    it('should log a warning and set a missing id based on a counter for all other instances', () => {
+      lake = new LakeOfFHIR(getWildFHIRs('patient-missing-id.json')); // Has a name, but it should not be used for id
+
+      const results = lake.getAllInstances();
+      expect(results).toHaveLength(1);
+      expect(results[0].content.id).toBeUndefined();
+
+      lake.assignMissingIds();
+      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      const noDupResults = lake.getAllInstances();
+      expect(noDupResults).toHaveLength(1);
+      expect(noDupResults[0].content.id).toBe('GOFSH-GENERATED-ID-0'); // Generates an id, does not use the name of the definition
+
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Encountered 1 definition\(s\) that were missing an id/
+      );
+    });
+
+    it('should not set a missing id on StructureDefinition, ValueSet, and CodeSystem definitions and should not remove them as duplicates', () => {
+      lake = new LakeOfFHIR(
+        getWildFHIRs(
+          'small-profile.json',
+          'small-extension.json',
+          'concept-codesystem.json',
+          'simple-valueset-missing-id.json'
+        )
+      );
+
+      const resultsSDs = lake.getAllStructureDefinitions();
+      const resultsCSs = lake.getAllCodeSystems();
+      const resultsVSs = lake.getAllValueSets();
+      const results = [...resultsSDs, ...resultsCSs, ...resultsVSs];
+      expect(results).toHaveLength(4);
+      expect(results[0].content.id).toBeUndefined();
+      expect(results[1].content.id).toBeUndefined();
+      expect(results[2].content.id).toBeUndefined();
+      expect(results[3].content.id).toBeUndefined();
+
+      lake.assignMissingIds();
+      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      const noDupResultsSDs = lake.getAllStructureDefinitions();
+      const noDupResultsCSs = lake.getAllCodeSystems();
+      const noDupResultsVSs = lake.getAllValueSets();
+      const noDupResults = [...noDupResultsSDs, ...noDupResultsCSs, ...noDupResultsVSs];
+
+      // None have been removed as duplicate and no id is added
+      expect(noDupResults).toHaveLength(4);
+      expect(noDupResults[0].content.id).toBeUndefined();
+      expect(noDupResults[1].content.id).toBeUndefined();
+      expect(noDupResults[2].content.id).toBeUndefined();
+      expect(noDupResults[3].content.id).toBeUndefined();
+
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+    });
+
+    it('should log a warning and set a missing id on CodeSystem and ValueSet definitions that will be treated as instances', () => {
+      lake = new LakeOfFHIR(
+        getWildFHIRs(
+          'unsupported-codesystem-missing-id.json',
+          'unsupported-valueset-missing-id.json'
+        )
+      );
+
+      const resultsCSs = lake.getAllCodeSystems();
+      const resultsVSs = lake.getAllValueSets();
+      const results = [...resultsCSs, ...resultsVSs];
+      expect(results).toHaveLength(2);
+      expect(results[0].content.id).toBeUndefined();
+      expect(results[1].content.id).toBeUndefined();
+
+      lake.assignMissingIds();
+      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      const noDupResultsCSs = lake.getAllCodeSystems();
+      const noDupResultsVSs = lake.getAllValueSets();
+      const noDupResults = [...noDupResultsCSs, ...noDupResultsVSs];
+
+      // None have been removed as duplicate and no id is added
+      expect(noDupResults).toHaveLength(2);
+      expect(noDupResults[0].content.id).toBe('UnsupportedCodeSystem');
+      expect(noDupResults[1].content.id).toBe('UnsupportedValueSet');
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
@@ -416,10 +516,14 @@ describe('LakeOfHIR', () => {
 
     it('should log a warning for setting an id and log an error if it sets to a duplicate id', () => {
       lake = new LakeOfFHIR(
-        getWildFHIRs('big-profile.json', 'big-profile.json', 'small-extension.json')
+        getWildFHIRs(
+          'simple-message-definition-missing-id.json',
+          'simple-message-definition-missing-id.json',
+          'simple-capability-statement-missing-id.json'
+        )
       );
 
-      const results = lake.getAllStructureDefinitions();
+      const results = lake.getAllInstances();
       expect(results).toHaveLength(3);
       expect(results[0].content.id).toBeUndefined();
       expect(results[1].content.id).toBeUndefined();
@@ -427,10 +531,10 @@ describe('LakeOfHIR', () => {
 
       lake.assignMissingIds();
       lake.removeDuplicateDefinitions(); // Run to ensure we only remove true duplicates
-      const noDupResults = lake.getAllStructureDefinitions();
+      const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
-      expect(noDupResults[0].content.id).toBe('BigProfile');
-      expect(noDupResults[1].content.id).toBe('SmallExtension');
+      expect(noDupResults[0].content.id).toBe('Example-Message-Definition');
+      expect(noDupResults[1].content.id).toBe('Base-FHIR-Capability-Statement');
 
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(1);
@@ -443,19 +547,21 @@ describe('LakeOfHIR', () => {
     });
 
     it('should not create an id that matches an existing id', () => {
-      lake = new LakeOfFHIR(getWildFHIRs('profile-with-id0.json', 'nameless-profile.json'));
+      lake = new LakeOfFHIR(
+        getWildFHIRs('patient-with-generated-id0.json', 'patient-missing-id.json')
+      );
 
-      const results = lake.getAllStructureDefinitions();
+      const results = lake.getAllInstances();
       expect(results).toHaveLength(2);
-      expect(results[0].content.id).toBe('id-0');
+      expect(results[0].content.id).toBe('GOFSH-GENERATED-ID-0');
       expect(results[1].content.id).toBeUndefined();
 
       lake.assignMissingIds();
       lake.removeDuplicateDefinitions(); // Run to ensure we don't remove these as duplicates
-      const noDupResults = lake.getAllStructureDefinitions();
+      const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
-      expect(noDupResults[0].content.id).toBe('id-0');
-      expect(noDupResults[1].content.id).toBe('id-1');
+      expect(noDupResults[0].content.id).toBe('GOFSH-GENERATED-ID-0');
+      expect(noDupResults[1].content.id).toBe('GOFSH-GENERATED-ID-1');
 
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);

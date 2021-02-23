@@ -57,7 +57,7 @@ export class FSHExporter {
         .forEach((exportable: NamedExportable) => {
           // The index will have the name, FSH type, and file of the entity
           index.push([
-            exportable.name ?? exportable.id,
+            exportable.name,
             exportable.constructor.name.replace('Exportable', ''),
             file
           ]);

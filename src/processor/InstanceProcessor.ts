@@ -98,7 +98,7 @@ export class InstanceProcessor {
 }
 
 // List of Conformance and Terminology resources from http://hl7.org/fhir/R4/resourcelist.html
-const CONFORMANCE_AND_TERMINOLOGY_RESOURCES = new Set([
+export const CONFORMANCE_AND_TERMINOLOGY_RESOURCES = new Set([
   'CapabilityStatement',
   'StructureDefinition',
   'ImplementationGuide',

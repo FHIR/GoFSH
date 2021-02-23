@@ -1,6 +1,8 @@
 import { fhirdefs, utils } from 'fsh-sushi';
 import { uniqWith } from 'lodash';
 import { CodeSystemProcessor } from './CodeSystemProcessor';
+import { CONFORMANCE_AND_TERMINOLOGY_RESOURCES } from './InstanceProcessor';
+import { StructureDefinitionProcessor } from './StructureDefinitionProcessor';
 import { ValueSetProcessor } from './ValueSetProcessor';
 import { WildFHIR } from './WildFHIR';
 import { logger } from '../utils';
@@ -99,14 +101,17 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   /**
-   * Removes any definitions from this.docs that have the same resourceType and id as a previous definition.
+   * Removes any definitions from this.docs that have the same resourceType and id as
+   * a previous definition, as long as there is a defined id.
    * Logs an error when it finds a duplicate
    */
   removeDuplicateDefinitions() {
     const dupPaths: string[] = [];
     this.docs = uniqWith(this.docs, (a, b) => {
       const isDuplicate =
-        a.content.id === b.content.id && a.content.resourceType === b.content.resourceType;
+        a.content.id != null &&
+        a.content.id === b.content.id &&
+        a.content.resourceType === b.content.resourceType;
       if (isDuplicate) {
         dupPaths.push(`${a.path} (${a.content.resourceType}/${a.content.id}) matches ${b.path}`);
       }
@@ -123,23 +128,32 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   /**
-   * All definitions should have a resourceType and id. If any definition is missing an id,
-   * we add one either based on the name or with a simple counter.
-   * Logs a warning if it finds any definitions without an id
+   * All definitions that will be Instances should have a resourceType and id.
+   * If any Instance is missing an id, we add one.
+   * If the instance is a conformance or terminology resource, we try to base the id off the name if it is available.
+   * If there is no name or if it is any other type of resource, we add a clearly generated id with a counter.
+   * Log a warning if it finds any definitions without an id
    */
   assignMissingIds() {
     const createdIdPaths: string[] = [];
     let generatedId = 0;
     this.docs.forEach((d, index) => {
-      if (d.content.id == null) {
-        // Try to be smart and set the id to the existing name
-        d.content.id = d.content.name;
+      const isSpecialFSHType =
+        StructureDefinitionProcessor.isProcessableStructureDefinition(d.content) ||
+        CodeSystemProcessor.isProcessableCodeSystem(d.content) ||
+        ValueSetProcessor.isProcessableValueSet(d.content);
+      if (d.content.id == null && !isSpecialFSHType) {
+        if (CONFORMANCE_AND_TERMINOLOGY_RESOURCES.has(d.content.resourceType)) {
+          // Try to be smart and set the id to the existing name
+          d.content.id = d.content.name?.replace(/_/g, '-').slice(0, 64); // Turn a valid name into a valid id
+        }
+
         if (d.content.id == null) {
-          // If there is no existing name, generate an id with a counter
-          d.content.id = `id-${generatedId++}`;
+          // If a Conformance/Terminology instance didn't have a name or if this any other resourceType, generate an id with a counter
+          d.content.id = `GOFSH-GENERATED-ID-${generatedId++}`;
           // If another definition happen to have the same id as the one we just generated with a counter, increase the counter
           while (this.docs.some((a, i) => a.content.id === d.content.id && index !== i)) {
-            d.content.id = `id-${generatedId++}`;
+            d.content.id = `GOFSH-GENERATED-ID-${generatedId++}`;
           }
         }
         createdIdPaths.push(`${d.path} (${d.content.resourceType}/${d.content.id})`);
