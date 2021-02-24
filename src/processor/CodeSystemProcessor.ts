@@ -3,6 +3,7 @@ import { flatten } from 'flat';
 import { utils, fhirtypes, fshtypes } from 'fsh-sushi';
 import { ExportableCodeSystem, ExportableConceptRule } from '../exportable';
 import { CaretValueRuleExtractor } from '../extractor';
+import { makeNameSushiSafe } from './common';
 
 const SUPPORTED_CONCEPT_PATHS = ['code', 'display', 'definition'];
 
@@ -47,6 +48,7 @@ export class CodeSystemProcessor {
       const codeSystem = new ExportableCodeSystem(name);
       CodeSystemProcessor.extractKeywords(input, codeSystem);
       CodeSystemProcessor.extractRules(input, codeSystem, fisher, config);
+      makeNameSushiSafe(codeSystem);
       return codeSystem;
     }
   }

@@ -8,6 +8,7 @@ import {
   ExportableCaretValueRule
 } from '../../src/exportable';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { loggerSpy } from '../helpers/loggerSpy';
 
 describe('CodeSystemProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
@@ -20,6 +21,11 @@ describe('CodeSystemProcessor', () => {
       fhirVersion: ['4.0.1']
     };
   });
+
+  beforeEach(() => {
+    loggerSpy.reset();
+  });
+
   describe('#process', () => {
     it('should convert the simplest CodeSystem', () => {
       const input = JSON.parse(
@@ -49,6 +55,25 @@ describe('CodeSystemProcessor', () => {
       expect(result).toBeInstanceOf(ExportableCodeSystem);
       expect(result.name).toBe('MyCodeSystem');
       expect(result.id).toBe('my.code-system');
+    });
+
+    it('should convert a CodeSystem whose name includes whitespace', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-codesystem.json'), 'utf-8')
+      );
+      input.name = 'Simple\nCodeSystem';
+      const result = CodeSystemProcessor.process(input, defs, config);
+
+      const expectedNameRule = new ExportableCaretValueRule('');
+      expectedNameRule.caretPath = 'name';
+      expectedNameRule.value = 'Simple\nCodeSystem';
+
+      expect(result).toBeInstanceOf(ExportableCodeSystem);
+      expect(result.name).toBe('Simple_CodeSystem');
+      expect(result.rules).toContainEqual(expectedNameRule);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'CodeSystem with id simple.codesystem has name with whitespace. Converting whitespace to underscores.'
+      );
     });
 
     it('should not convert a CodeSystem with a concept designation', () => {

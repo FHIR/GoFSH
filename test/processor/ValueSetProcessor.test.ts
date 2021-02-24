@@ -9,6 +9,7 @@ import {
   ExportableValueSetConceptComponentRule
 } from '../../src/exportable';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { loggerSpy } from '../helpers/loggerSpy';
 const { FshCode } = fshtypes;
 
 describe('ValueSetProcessor', () => {
@@ -22,6 +23,11 @@ describe('ValueSetProcessor', () => {
       fhirVersion: ['4.0.1']
     };
   });
+
+  beforeEach(() => {
+    loggerSpy.reset();
+  });
+
   describe('#process', () => {
     it('should convert the simplest ValueSet', () => {
       const input = JSON.parse(
@@ -38,6 +44,25 @@ describe('ValueSetProcessor', () => {
       );
       const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
+    });
+
+    it('should convert a ValueSet whose name includes whitespace', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-valueset.json'), 'utf-8')
+      );
+      input.name = 'Simple\tValue\t\tSet';
+      const result = ValueSetProcessor.process(input, defs, config);
+
+      const expectedNameRule = new ExportableCaretValueRule('');
+      expectedNameRule.caretPath = 'name';
+      expectedNameRule.value = 'Simple\tValue\t\tSet';
+
+      expect(result).toBeInstanceOf(ExportableValueSet);
+      expect(result.name).toBe('Simple_Value__Set');
+      expect(result.rules).toContainEqual(expectedNameRule);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'ValueSet with id simple.valueset has name with whitespace. Converting whitespace to underscores.'
+      );
     });
 
     it('should not convert a ValueSet with an included concept designation', () => {
