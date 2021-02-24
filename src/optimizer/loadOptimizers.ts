@@ -20,7 +20,9 @@ export async function loadOptimizers(
     relativePath = `./${relativePath}`;
   }
 
+  // Import optimizers from the specified folder
   const Optimizers: { property: OptimizerPlugin } = await import(relativePath);
+
   const optimizers = Object.values(Optimizers).filter(
     // Remove non-optimizers
     o =>
@@ -28,7 +30,7 @@ export async function loadOptimizers(
       typeof o?.description === 'string' &&
       typeof o?.optimize === 'function'
   );
-  logger.debug(`Loaded ${optimizers.length} optimizers`);
+  logger.debug(`Loaded ${optimizers.length} optimizers from ${path.join(__dirname, 'plugins')}`);
   // Sort them using a topological sort to get them in dependency order
   // See: https://www.npmjs.com/package/toposort#sorting-dependencies
   const nodes: string[] = [];
