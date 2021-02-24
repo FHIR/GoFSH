@@ -1,0 +1,8 @@
+{
+  "resourceType": "CapabilityStatement",
+  "name" : "Base_FHIR_Capability_Statement",
+  "status": "draft",
+  "date": "2019-11-01T09:29:23+11:00",
+  "kind": "capability",
+  "fhirVersion": "4.0.1"
+}

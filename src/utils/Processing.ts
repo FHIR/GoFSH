@@ -46,7 +46,12 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
 
 export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions, fileType: string) {
   const lake = getLakeOfFHIR(inDir, fileType);
+
+  // Assign any missing ids where we can before filtering out duplicates so that all
+  // the definitions with the same resourceType without an id don't get filtered out.
+  lake.assignMissingIds();
   lake.removeDuplicateDefinitions();
+
   const igIniIgPath = getIgPathFromIgIni(inDir);
   const fisher = new MasterFisher(lake, defs);
   return new FHIRProcessor(lake, fisher, igIniIgPath);

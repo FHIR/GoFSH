@@ -1,0 +1,10 @@
+{
+  "resourceType": "MessageDefinition",
+  "name": "Example_Message_Definition",
+  "status": "draft",
+  "date": "2016-11-09",
+  "eventCoding": {
+    "system": "http://example.org/fhir/message-events",
+    "code": "admin-notify"
+  }
+}
