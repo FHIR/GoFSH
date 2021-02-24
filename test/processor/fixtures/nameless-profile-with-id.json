@@ -1,0 +1,6 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "my.profile-1",
+  "kind": "resource",
+  "type": "Resource"
+}
