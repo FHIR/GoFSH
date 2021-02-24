@@ -2,8 +2,13 @@ import { pullAt } from 'lodash';
 import {
   ExportableAssignmentRule,
   ExportableCaretValueRule,
-  ExportableSdRule
+  ExportableSdRule,
+  ExportableProfile,
+  ExportableExtension,
+  ExportableValueSet,
+  ExportableCodeSystem
 } from '../exportable';
+import { logger } from '../utils';
 
 // Places general Quantity-setting rules ahead of Quantity.unit setting rules
 export function switchQuantityRules(rules: ExportableSdRule[]): void {
@@ -30,4 +35,27 @@ export function switchQuantityRules(rules: ExportableSdRule[]): void {
       }
     }
   });
+}
+
+export function makeNameSushiSafe(
+  entity: ExportableProfile | ExportableExtension | ExportableValueSet | ExportableCodeSystem
+) {
+  if (/\s/.test(entity.name)) {
+    let entityType: string;
+    if (entity instanceof ExportableProfile || entity instanceof ExportableExtension) {
+      entityType = 'StructureDefinition';
+    } else if (entity instanceof ExportableValueSet) {
+      entityType = 'ValueSet';
+    } else {
+      entityType = 'CodeSystem';
+    }
+    logger.warn(
+      `${entityType} with id ${entity.id} has name with whitespace. Converting whitespace to underscores.`
+    );
+    const nameRule = new ExportableCaretValueRule('');
+    nameRule.caretPath = 'name';
+    nameRule.value = entity.name;
+    entity.name = entity.name.replace(/\s/g, '_');
+    entity.rules.unshift(nameRule);
+  }
 }

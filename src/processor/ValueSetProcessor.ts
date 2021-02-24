@@ -7,6 +7,7 @@ import {
   ValueSetFilterComponentRuleExtractor,
   CaretValueRuleExtractor
 } from '../extractor';
+import { makeNameSushiSafe } from './common';
 
 const SUPPORTED_COMPONENT_PATHS = [
   'system',
@@ -69,6 +70,7 @@ export class ValueSetProcessor {
       const valueSet = new ExportableValueSet(name);
       ValueSetProcessor.extractKeywords(input, valueSet);
       ValueSetProcessor.extractRules(input, valueSet, fisher, config);
+      makeNameSushiSafe(valueSet);
       return valueSet;
     }
   }
