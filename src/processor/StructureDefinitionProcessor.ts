@@ -19,7 +19,7 @@ import {
   InvariantExtractor,
   MappingExtractor
 } from '../extractor';
-import { ProcessableElementDefinition, switchQuantityRules } from '.';
+import { ProcessableElementDefinition, switchQuantityRules, makeNameSushiSafe } from '.';
 import { getAncestorSliceDefinition } from '../utils';
 
 export class StructureDefinitionProcessor {
@@ -50,6 +50,7 @@ export class StructureDefinitionProcessor {
       );
       const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fisher);
       StructureDefinitionProcessor.extractRules(input, elements, sd, fisher, config);
+      makeNameSushiSafe(sd);
       // TODO: Destructuring an array with invariants and mappings is required for TypeScript 3.0
       // With TypeScript 4.0, we should update to return the following line, which is more clear:
       // return [sd, ...invariants, ...mappings];
