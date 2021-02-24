@@ -16,7 +16,7 @@ import {
   ExportableContainsRule,
   ExportableInvariant
 } from '../../src/exportable';
-import '../helpers/loggerSpy'; // suppresses console logging
+import { loggerSpy } from '../helpers/loggerSpy';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { ContainsRuleExtractor } from '../../src/extractor';
 
@@ -35,6 +35,10 @@ describe('StructureDefinitionProcessor', () => {
       canonical: 'http://hl7.org/fhir/sushi-test',
       fhirVersion: ['4.0.1']
     };
+  });
+
+  beforeEach(() => {
+    loggerSpy.reset();
   });
 
   describe('#process', () => {
@@ -148,13 +152,26 @@ describe('StructureDefinitionProcessor', () => {
       expect(profile.rules).toContainEqual(constraintHuman);
     });
 
-    it('should not convert a Profile without a name', () => {
+    it('should not convert a Profile without a name or id', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-profile.json'), 'utf-8')
       );
       const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(0);
+    });
+
+    // NOTE: name is required on StructureDefinitions. This case is designed to do our best to handle invalid FHIR.
+    it('should not convert a Profile without a name but with an id', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-profile-with-id.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableProfile);
+      expect(result[0].name).toBe('MyProfile1');
+      expect(result[0].id).toBe('my.profile-1');
     });
 
     it('should not convert an Extension without a name', () => {
@@ -164,6 +181,26 @@ describe('StructureDefinitionProcessor', () => {
       const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(0);
+    });
+
+    it('should convert a Profile whose name includes whitespace', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-profile.json'), 'utf-8')
+      );
+      input.name = 'Simple Profile';
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      const expectedNameRule = new ExportableCaretValueRule('');
+      expectedNameRule.caretPath = 'name';
+      expectedNameRule.value = 'Simple Profile';
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableProfile);
+      expect(result[0].name).toBe('Simple_Profile');
+      expect(result[0].rules).toContainEqual(expectedNameRule);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'StructureDefinition with id simple.profile has name with whitespace. Converting whitespace to underscores.'
+      );
     });
   });
 

@@ -1,4 +1,4 @@
-import compact from 'lodash/compact';
+import { capitalize, compact } from 'lodash';
 import { fhirtypes, utils, fshtypes } from 'fsh-sushi';
 import {
   ExportableSdRule,
@@ -19,7 +19,7 @@ import {
   InvariantExtractor,
   MappingExtractor
 } from '../extractor';
-import { ProcessableElementDefinition, switchQuantityRules } from '.';
+import { ProcessableElementDefinition, switchQuantityRules, makeNameSushiSafe } from '.';
 import { getAncestorSliceDefinition } from '../utils';
 
 export class StructureDefinitionProcessor {
@@ -33,10 +33,12 @@ export class StructureDefinitionProcessor {
     | [] {
     if (StructureDefinitionProcessor.isProcessableStructureDefinition(input)) {
       let sd: ExportableProfile | ExportableExtension;
+      // Prefer name (which is required). If we happen to get invalid FHIR, create a reasonable name from the id with only allowable characters
+      const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
       if (input.type === 'Extension') {
-        sd = new ExportableExtension(input.name);
+        sd = new ExportableExtension(name);
       } else {
-        sd = new ExportableProfile(input.name);
+        sd = new ExportableProfile(name);
       }
       const elements =
         input.differential?.element?.map(rawElement => {
@@ -50,6 +52,7 @@ export class StructureDefinitionProcessor {
       );
       const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fisher);
       StructureDefinitionProcessor.extractRules(input, elements, sd, fisher, config);
+      makeNameSushiSafe(sd);
       // TODO: Destructuring an array with invariants and mappings is required for TypeScript 3.0
       // With TypeScript 4.0, we should update to return the following line, which is more clear:
       // return [sd, ...invariants, ...mappings];
@@ -59,8 +62,7 @@ export class StructureDefinitionProcessor {
   }
 
   static extractKeywords(input: ProcessableStructureDefinition, target: ConstrainableEntity): void {
-    // Usually name is already set (by constructor), but it doesn't hurt to be sure
-    target.name = input.name;
+    // Name is already set (by constructor) based on input.name or input.id
     if (input.id) {
       target.id = input.id;
     }
@@ -142,7 +144,7 @@ export class StructureDefinitionProcessor {
   }
 
   static isProcessableStructureDefinition(input: any): input is ProcessableStructureDefinition {
-    return input.name != null && input.resourceType != null;
+    return input.resourceType === 'StructureDefinition' && (input.name != null || input.id != null);
   }
 }
 
