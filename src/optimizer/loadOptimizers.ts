@@ -21,6 +21,7 @@ export async function loadOptimizers(
   }
 
   // Import optimizers from the specified folder
+  // relativePath is placed in a dynamic string to allow for FSHOnline compatibility
   const Optimizers: { property: OptimizerPlugin } = await import(`${relativePath}`);
 
   const optimizers = Object.values(Optimizers).filter(
