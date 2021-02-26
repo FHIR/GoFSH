@@ -21,7 +21,7 @@ export async function loadOptimizers(
   }
 
   // Import optimizers from the specified folder
-  const Optimizers: { property: OptimizerPlugin } = await import(relativePath);
+  const Optimizers: { property: OptimizerPlugin } = await import(`${relativePath}`);
 
   const optimizers = Object.values(Optimizers).filter(
     // Remove non-optimizers
