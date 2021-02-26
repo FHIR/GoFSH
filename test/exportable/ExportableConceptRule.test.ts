@@ -47,4 +47,24 @@ describe('ExportableConceptRule', () => {
     const result = rule.toFSH();
     expect(result).toBe(expectedResult);
   });
+
+  it('should export a ConceptRule with a code that has spaces', () => {
+    const rule = new ExportableConceptRule('foo with a space');
+    rule.display = 'bar';
+    rule.definition = 'baz';
+
+    const expectedResult = '* #"foo with a space" "bar" "baz"';
+    const result = rule.toFSH();
+    expect(result).toBe(expectedResult);
+  });
+
+  it('should export a ConceptRule with a code that has tabs', () => {
+    const rule = new ExportableConceptRule('foo\twith\ta\ttab');
+    rule.display = 'bar';
+    rule.definition = 'baz';
+
+    const expectedResult = '* #"foo\twith\ta\ttab" "bar" "baz"';
+    const result = rule.toFSH();
+    expect(result).toBe(expectedResult);
+  });
 });
