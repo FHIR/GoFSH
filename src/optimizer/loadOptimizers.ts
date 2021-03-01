@@ -1,8 +1,5 @@
 import { OptimizerPlugin } from './OptimizerPlugin';
-
-import fs from 'fs-extra';
 import path from 'path';
-import { uniq } from 'lodash';
 import toposort from 'toposort';
 import { logger } from '../utils/GoFSHLogger';
 
@@ -23,22 +20,11 @@ export async function loadOptimizers(
     relativePath = `./${relativePath}`;
   }
 
-  // read the plugins folder, filter to only .ts/.js files, and map to unique module paths (without extensions)
-  const optimizerModules = uniq(
-    fs
-      .readdirSync(folder, { withFileTypes: true })
-      .filter(f => f.isFile() && /^[^.]+.*\.(t|j)s$/.test(f.name))
-      .map(f => `${relativePath}/${f.name.match(/^([^.]+)/)[1]}`)
-  );
+  // Import optimizers from the specified folder
+  // relativePath is placed in a dynamic string to allow for FSHOnline compatibility
+  const Optimizers: { property: OptimizerPlugin } = await import(`${relativePath}`);
 
-  const optimizers = (
-    await Promise.all(
-      // map to a set of promises that each resolve to the default export of the dynamically imported module
-      optimizerModules.map(async m => {
-        return (await import(m))?.default as OptimizerPlugin;
-      })
-    )
-  ).filter(
+  const optimizers = Object.values(Optimizers).filter(
     // Remove non-optimizers
     o =>
       typeof o?.name === 'string' &&
@@ -46,7 +32,6 @@ export async function loadOptimizers(
       typeof o?.optimize === 'function'
   );
   logger.debug(`Loaded ${optimizers.length} optimizers from ${path.join(__dirname, 'plugins')}`);
-
   // Sort them using a topological sort to get them in dependency order
   // See: https://www.npmjs.com/package/toposort#sorting-dependencies
   const nodes: string[] = [];
