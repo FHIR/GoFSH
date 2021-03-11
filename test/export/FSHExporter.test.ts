@@ -662,8 +662,8 @@ describe('FSHExporter', () => {
         '{"aliases":"","invariants":{},"mappings":{},"profiles":{"TestProfile":"Profile: TestProfile\\nId: TestProfile"},"extensions":{},"codeSystems":{},"valueSets":{},"instances":{"TestInstance":"Instance: TestInstance\\nInstanceOf: TestProfile\\nUsage: #example"}}';
       const exportedMap = exporter.apiExport('map');
 
-      expect(JSON.stringify(exportedMap).replace(/(\r\n|\n|\r)/gm, '')).toEqual(
-        serializedString.replace(/(\r\n|\n|\r)/gm, '')
+      expect(JSON.stringify(exportedMap).replace(/(\\r\\n|\\n|\\r)/gm, '')).toEqual(
+        serializedString.replace(/(\\r\\n|\\n|\\r)/gm, '')
       );
     });
   });
