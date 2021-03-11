@@ -15,7 +15,7 @@ import {
 } from '../exportable';
 import { Package } from '../processor';
 import { logger } from '../utils';
-import { fshMap, exportStyle } from '../api';
+import { fshMap, exportStyle, ResourceMap } from '../api';
 
 export class FSHExporter {
   constructor(public readonly fshPackage: Package) {}
@@ -87,13 +87,13 @@ export class FSHExporter {
     } else if (exportType === 'map') {
       const fshMap = {
         aliases: '',
-        invariants: new Map(),
-        mappings: new Map(),
-        profiles: new Map(),
-        extensions: new Map(),
-        codeSystems: new Map(),
-        valueSets: new Map(),
-        instances: new Map()
+        invariants: new ResourceMap(),
+        mappings: new ResourceMap(),
+        profiles: new ResourceMap(),
+        extensions: new ResourceMap(),
+        codeSystems: new ResourceMap(),
+        valueSets: new ResourceMap(),
+        instances: new ResourceMap()
       };
       fshMap.aliases = this.writeExportableGroup(this.fshPackage.aliases);
       for (const invariant of this.fshPackage.invariants) {
