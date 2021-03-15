@@ -16,6 +16,7 @@ import {
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
 import table from 'text-table';
+import { ResourceMap } from '../../src/api';
 
 describe('FSHExporter', () => {
   let exporter: FSHExporter;
@@ -621,34 +622,49 @@ describe('FSHExporter', () => {
 
       expect(exporter.apiExport('map')).toEqual({
         aliases: ['Alias: SomeAlias = http://test.com'].join(''),
-        invariants: new Map().set('SomeInvariant', ['Invariant: SomeInvariant'].join('')),
-        mappings: new Map().set(
+        invariants: new ResourceMap().set('SomeInvariant', ['Invariant: SomeInvariant'].join('')),
+        mappings: new ResourceMap().set(
           'SomeMapping',
           ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join('')
         ),
-        profiles: new Map().set(
+        profiles: new ResourceMap().set(
           'SomeProfile',
           ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join('')
         ),
-        extensions: new Map().set(
+        extensions: new ResourceMap().set(
           'SomeExtension',
           ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join('')
         ),
-        codeSystems: new Map().set(
+        codeSystems: new ResourceMap().set(
           'SomeCodeSystem',
           ['CodeSystem: SomeCodeSystem', EOL, 'Id: SomeCodeSystem'].join('')
         ),
-        valueSets: new Map().set(
+        valueSets: new ResourceMap().set(
           'SomeValueSet',
           ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join('')
         ),
-        instances: new Map().set(
+        instances: new ResourceMap().set(
           'SomeInstance',
           ['Instance: SomeInstance', EOL, 'InstanceOf: SomeProfile', EOL, 'Usage: #example'].join(
             ''
           )
         )
       });
+    });
+
+    it('should export to a map than can be serialized by JSON.stringify()', () => {
+      myPackage.add(new ExportableProfile('TestProfile'));
+      const instance = new ExportableInstance('TestInstance');
+      instance.instanceOf = 'TestProfile';
+      myPackage.add(instance);
+
+      const serializedString =
+        '{"aliases":"","invariants":{},"mappings":{},"profiles":{"TestProfile":"Profile: TestProfile\\nId: TestProfile"},"extensions":{},"codeSystems":{},"valueSets":{},"instances":{"TestInstance":"Instance: TestInstance\\nInstanceOf: TestProfile\\nUsage: #example"}}';
+      const exportedMap = exporter.apiExport('map');
+
+      expect(JSON.stringify(exportedMap).replace(/(\\r\\n|\\n|\\r)/gm, '')).toEqual(
+        serializedString.replace(/(\\r\\n|\\n|\\r)/gm, '')
+      );
     });
   });
 });

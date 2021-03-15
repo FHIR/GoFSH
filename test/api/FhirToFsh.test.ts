@@ -3,7 +3,7 @@ import path from 'path';
 import * as processing from '../../src/utils/Processing';
 import { fshtypes } from 'fsh-sushi';
 import { logger } from '../../src/utils';
-import { fhirToFsh } from '../../src/api';
+import { fhirToFsh, ResourceMap } from '../../src/api';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { EOL } from 'os';
 describe('fhirToFsh', () => {
@@ -193,17 +193,17 @@ describe('fhirToFsh', () => {
     );
     expect(results.errors).toHaveLength(0);
     expect(results.warnings).toHaveLength(0);
-    const expectedProfileMap = new Map();
+    const expectedProfileMap = new ResourceMap();
     expectedProfileMap.set('Foo', ['Profile: Foo', 'Parent: Patient', 'Id: Foo'].join(EOL));
     expect(results.fsh).toEqual({
       profiles: expectedProfileMap,
       aliases: '',
-      invariants: new Map(),
-      mappings: new Map(),
-      extensions: new Map(),
-      codeSystems: new Map(),
-      valueSets: new Map(),
-      instances: new Map()
+      invariants: new ResourceMap(),
+      mappings: new ResourceMap(),
+      extensions: new ResourceMap(),
+      codeSystems: new ResourceMap(),
+      valueSets: new ResourceMap(),
+      instances: new ResourceMap()
     });
     expect(results.configuration).toEqual(defaultConfig);
   });

@@ -93,14 +93,25 @@ export async function fhirToFsh(
 
 export type fshMap = {
   aliases: string;
-  invariants: Map<string, string>;
-  mappings: Map<string, string>;
-  profiles: Map<string, string>;
-  extensions: Map<string, string>;
-  codeSystems: Map<string, string>;
-  valueSets: Map<string, string>;
-  instances: Map<string, string>;
+  invariants: ResourceMap;
+  mappings: ResourceMap;
+  profiles: ResourceMap;
+  extensions: ResourceMap;
+  codeSystems: ResourceMap;
+  valueSets: ResourceMap;
+  instances: ResourceMap;
 };
+
+// An extended class with a custom toJSON method is needed, as JSON.stringify() cannot serialize regular Maps
+export class ResourceMap extends Map<string, string> {
+  toJSON(): Record<string, any> {
+    const returnObj: { [key: string]: string } = {};
+    this.forEach((value, key) => {
+      returnObj[key] = value;
+    });
+    return returnObj;
+  }
+}
 
 type fhirToFshOptions = {
   dependencies?: string[];
