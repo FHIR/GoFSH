@@ -1,3 +1,4 @@
+import AddReferenceKeywordOptimizer from './AddReferenceKeywordOptimizer';
 import CombineCardAndFlagRulesOptimizer from './CombineCardAndFlagRulesOptimizer';
 import CombineCodingAndQuantityValuesOptimizer from './CombineCodingAndQuantityValuesOptimizer';
 import CombineContainsRulesOptimizer from './CombineContainsRulesOptimizer';
@@ -20,6 +21,7 @@ import SimplifyInstanceNameOptimizer from './SimplifyInstanceNameOptimizer';
 import SimplifyMappingNamesOptimizer from './SimplifyMappingNamesOptimizer';
 
 export {
+  AddReferenceKeywordOptimizer,
   CombineCardAndFlagRulesOptimizer,
   CombineCodingAndQuantityValuesOptimizer,
   CombineContainsRulesOptimizer,
