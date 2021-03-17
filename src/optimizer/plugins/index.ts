@@ -15,6 +15,7 @@ import ResolveBindingRuleURLsOptimizer from './ResolveBindingRuleURLsOptimizer';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
 import ResolveOnlyRuleURLsOptimizer from './ResolveOnlyRuleURLsOptimizer';
 import ResolveParentURLsOptimizer from './ResolveParentURLsOptimizer';
+import ResolveReferenceAssignmentsOptimizer from './ResolveReferenceAssignmentsOptimizer';
 import ResolveValueRuleURLsOptimizer from './ResolveValueRuleURLsOptimizer';
 import ResolveValueSetComponentRuleURLsOptimizer from './ResolveValueSetComponentRuleURLsOptimizer';
 import SimplifyInstanceNameOptimizer from './SimplifyInstanceNameOptimizer';
@@ -38,6 +39,7 @@ export {
   ResolveInstanceOfURLsOptimizer,
   ResolveOnlyRuleURLsOptimizer,
   ResolveParentURLsOptimizer,
+  ResolveReferenceAssignmentsOptimizer,
   ResolveValueRuleURLsOptimizer,
   ResolveValueSetComponentRuleURLsOptimizer,
   SimplifyInstanceNameOptimizer,

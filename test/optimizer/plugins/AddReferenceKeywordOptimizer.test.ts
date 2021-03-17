@@ -1,5 +1,3 @@
-import path from 'path';
-import { cloneDeep } from 'lodash';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { Package } from '../../../src/processor';
 import { ExportableAssignmentRule, ExportableInstance } from '../../../src/exportable';
@@ -25,7 +23,7 @@ describe('optimizer', () => {
       expect(optimizer.runAfter).toBeUndefined();
     });
 
-    it('add the Reference keyword on a reference rule', () => {
+    it('should add the Reference keyword on a reference rule', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Patient';
       const referenceRule = new ExportableAssignmentRule('generalPractitioner.reference');
@@ -35,12 +33,12 @@ describe('optimizer', () => {
       myPackage.add(instance);
       optimizer.optimize(myPackage, fisher);
 
-      const expectedRule = cloneDeep(referenceRule);
+      const expectedRule = new ExportableAssignmentRule('generalPractitioner');
       expectedRule.value = new fshtypes.FshReference('Practitioner/Bar');
       expect(instance.rules).toEqual([expectedRule]);
     });
 
-    it('add the Reference keyword on a reference rule and find a corresponding display', () => {
+    it('should add the Reference keyword on a reference rule and find a corresponding display', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Patient';
       const referenceRule = new ExportableAssignmentRule('generalPractitioner.reference');
@@ -52,14 +50,14 @@ describe('optimizer', () => {
       myPackage.add(instance);
       optimizer.optimize(myPackage, fisher);
 
-      const expectedRule = cloneDeep(referenceRule);
+      const expectedRule = new ExportableAssignmentRule('generalPractitioner');
       expectedRule.value = new fshtypes.FshReference('Practitioner/Bar');
       expectedRule.value.display = 'Display value';
       // Note the display rule is removed
       expect(instance.rules).toEqual([expectedRule]);
     });
 
-    it('add the Reference keyword on multiple reference rules and find the corresponding displays', () => {
+    it('should add the Reference keyword on multiple reference rules and find the corresponding displays', () => {
       const instance = new ExportableInstance('Foo');
 
       instance.instanceOf = 'Patient';
@@ -82,18 +80,18 @@ describe('optimizer', () => {
       myPackage.add(instance);
       optimizer.optimize(myPackage, fisher);
 
-      const expectedRule1 = cloneDeep(referenceRule1);
+      const expectedRule1 = new ExportableAssignmentRule('generalPractitioner[0]');
       expectedRule1.value = new fshtypes.FshReference('Practitioner/Bar1');
       expectedRule1.value.display = 'Display value 1';
 
-      const expectedRule2 = cloneDeep(referenceRule2);
+      const expectedRule2 = new ExportableAssignmentRule('generalPractitioner[1]');
       expectedRule2.value = new fshtypes.FshReference('Practitioner/Bar2');
       expectedRule2.value.display = 'Display value 2';
 
       expect(instance.rules).toEqual([expectedRule1, nameRule, expectedRule2]);
     });
 
-    it('not add the Reference keyword on a reference rule when the instanceOf type cannot be found', () => {
+    it('should not add the Reference keyword on a reference rule when the instanceOf type cannot be found', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'http://example.org/StructureDefinition/my-patient-profile';
       const referenceRule = new ExportableAssignmentRule('generalPractitioner.reference');
@@ -107,7 +105,7 @@ describe('optimizer', () => {
       expect(instance.rules).toEqual([referenceRule]);
     });
 
-    it('not add the Reference keyword on a reference rule when the type cannot be verified', () => {
+    it('should not add the Reference keyword on a reference rule when the type cannot be verified', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Patient';
       const referenceRule = new ExportableAssignmentRule('nonsense.reference');

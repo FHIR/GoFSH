@@ -11,9 +11,9 @@ export default {
   description: 'Adds the "Reference" keyword to instances where applicable',
 
   optimize(pkg: Package, fisher: MasterFisher): void {
-    let sd: fhirtypes.StructureDefinition;
     pkg.instances.forEach(instance => {
       const rulesToRemove: number[] = [];
+      let sd: fhirtypes.StructureDefinition;
 
       instance.rules
         .filter(rule => rule instanceof ExportableAssignmentRule)
@@ -39,7 +39,9 @@ export default {
                   matchingDisplayRuleIndex
                 ] as ExportableAssignmentRule).value as string;
               }
-              (instance.rules[i] as ExportableAssignmentRule).value = reference;
+              const newReferenceRule = new ExportableAssignmentRule(parentPath);
+              newReferenceRule.value = reference;
+              instance.rules[i] = newReferenceRule;
             }
           }
         });
