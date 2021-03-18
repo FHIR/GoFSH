@@ -21,7 +21,11 @@ export class MasterFisher implements utils.Fishable {
       utils.Type.Type
     );
     if (json) {
-      return fhirtypes.StructureDefinition.fromJSON(json);
+      // It is possible we can't parse the json, most likely if it doesn't have a snapshot
+      // if that is the case we don't want actual errors, just return nothing
+      try {
+        return fhirtypes.StructureDefinition.fromJSON(json);
+      } catch {}
     }
   }
 
