@@ -303,7 +303,7 @@ describe('Processing', () => {
       const result = await getResources(processor, config);
       expect(result.instances).toHaveLength(2);
       const bundle = result.instances.find(i => i.id === 'foo');
-      const inlineInstanceRule = new ExportableAssignmentRule('entry[0].resource');
+      const inlineInstanceRule = new ExportableAssignmentRule('entry.resource');
       inlineInstanceRule.isInstance = true;
       inlineInstanceRule.value = 'bar';
       expect(bundle.rules).toContainEqual(inlineInstanceRule);
