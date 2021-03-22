@@ -3,8 +3,6 @@ import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import { ExportableCaretValueRule } from '../../exportable';
 
-const singletonArrayElements: Map<string, fhirtypes.PathPart[]> = new Map();
-
 export default {
   name: 'simplify_array_indexing',
   description: 'Replace numeric indices with soft indexing',
@@ -23,7 +21,8 @@ export default {
       const pathMap: Map<string, number> = new Map();
       const caretPathMap: Map<string, Map<string, number>> = new Map();
       const ruleArr: fshrules.Rule[] = def.rules;
-      const parsedRules = ruleArr.map((rule: fshrules.Rule) => {
+      const singletonArrayElements: Map<string, fhirtypes.PathPart[]> = new Map();
+      const parsedPaths = ruleArr.map((rule: fshrules.Rule) => {
         const parsedPath: { path: fhirtypes.PathPart[]; caretPath?: fhirtypes.PathPart[] } = {
           path: utils.parseFSHPath(rule.path)
         };
@@ -33,16 +32,15 @@ export default {
         }
         return parsedPath;
       });
+      addPrefixes(parsedPaths);
 
-      parsedRules.forEach((parsedRule: any, ruleIndex: number) => {
+      parsedPaths.forEach((parsedRule: any, ruleIndex: number) => {
         const originalRule = def.rules[ruleIndex];
-        parsedRule.path.forEach((element: fhirtypes.PathPart, elementIndex: number) => {
-          // Add a prefix to the current element containing previously parsed rule elements
-          element.prefix = utils.assembleFSHPath(parsedRule.path.slice(0, elementIndex));
-          applySoftIndexing(element, pathMap);
+        parsedRule.path.forEach((element: fhirtypes.PathPart) => {
+          applySoftIndexing(element, pathMap, singletonArrayElements);
         });
 
-        parsedRule.caretPath?.forEach((element: fhirtypes.PathPart, elementIndex: number) => {
+        parsedRule.caretPath?.forEach((element: fhirtypes.PathPart) => {
           // Caret path indexes should only be resolved in the context of a specific path
           // Each normal path has a separate map to keep track of the caret path indexes
           if (!caretPathMap.has(originalRule.path)) {
@@ -50,31 +48,48 @@ export default {
           }
 
           const elementCaretPathMap = caretPathMap.get(originalRule.path);
-          // Add a prefix to the current element containing previously parsed rule elements
-          element.prefix = utils.assembleFSHPath(parsedRule.caretPath.slice(0, elementIndex));
-          applySoftIndexing(element, elementCaretPathMap);
+          applySoftIndexing(element, elementCaretPathMap, singletonArrayElements);
         });
       });
 
-      removeZeroIndices();
+      removeZeroIndices(singletonArrayElements);
 
-      parsedRules.forEach((parsedRule: any, ruleIndex: number) => {
+      parsedPaths.forEach((parsedRule: any, ruleIndex: number) => {
         const originalRule = def.rules[ruleIndex];
         originalRule.path = utils.assembleFSHPath(parsedRule.path);
         if (originalRule instanceof ExportableCaretValueRule) {
           originalRule.caretPath = utils.assembleFSHPath(parsedRule.caretPath);
         }
       });
+      singletonArrayElements.clear();
     });
   }
 } as OptimizerPlugin;
+
+function addPrefixes(rules: any[]) {
+  rules.forEach((parsedPath: any) => {
+    parsedPath.path.forEach((element: fhirtypes.PathPart, elementIndex: number) => {
+      // Add a prefix to the current element containing previously parsed rule elements
+      element.prefix = utils.assembleFSHPath(parsedPath.path.slice(0, elementIndex));
+    });
+    parsedPath.caretPath?.forEach((element: fhirtypes.PathPart, elementIndex: number) => {
+      // Add a prefix to the current element containing previously parsed rule elements
+      element.prefix = utils.assembleFSHPath(parsedPath.path.slice(0, elementIndex));
+    });
+  });
+}
 
 /**
  *
  * @param {PathPart} element - A single element in a rules path
  * @param {Map<string, number} pathMap - A map containing an element's name as the key and that element's updated index as the value
+ * @param {Map<string, PathPart[]} singletonArrayElements - A map containing a
  */
-function applySoftIndexing(element: fhirtypes.PathPart, pathMap: Map<string, number>) {
+function applySoftIndexing(
+  element: fhirtypes.PathPart,
+  pathMap: Map<string, number>,
+  singletonArrayElements: Map<string, fhirtypes.PathPart[]>
+) {
   // Must account for a pathPart's base name, prior portions of the path, as well as any slices it's contained in.
   const mapName = `${element.prefix ?? ''}.${element.base}|${(element.slices ?? []).join('|')}`;
   const indexRegex = /^[0-9]+$/;
@@ -87,11 +102,15 @@ function applySoftIndexing(element: fhirtypes.PathPart, pathMap: Map<string, num
   if (!pathMap.has(mapName)) {
     pathMap.set(mapName, parseInt(currentNumericBracket));
     // If the element contains a zero Index, we'll flag the rule to have the index removed
-    if (currentNumericBracket === '0') singletonArrayElements.set(mapName, [element]);
+    if (currentNumericBracket === '0') {
+      singletonArrayElements.set(mapName, [element]);
+    }
   } else {
     const previousNumericIndex = pathMap.get(mapName);
     if (parseInt(currentNumericBracket) === previousNumericIndex + 1) {
-      if (previousNumericIndex === 0) singletonArrayElements.delete(mapName);
+      if (previousNumericIndex === 0) {
+        singletonArrayElements.delete(mapName);
+      }
       element.brackets[bracketIndex] = '+';
       pathMap.set(mapName, previousNumericIndex + 1);
     } else if (parseInt(currentNumericBracket) === previousNumericIndex) {
@@ -106,7 +125,7 @@ function applySoftIndexing(element: fhirtypes.PathPart, pathMap: Map<string, num
   }
 }
 
-function removeZeroIndices() {
+function removeZeroIndices(singletonArrayElements: Map<string, fhirtypes.PathPart[]>) {
   const redundantElementGroups = Array.from(singletonArrayElements.values());
   redundantElementGroups.forEach(cluster => {
     cluster.forEach(pathPart => {
