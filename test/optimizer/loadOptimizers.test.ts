@@ -22,7 +22,11 @@ describe('optimizer', () => {
       it('should load the standard optimizers in the expected order', () => {
         optimizers.forEach((opt, i) => {
           opt.runAfter?.forEach(dependsOn => {
-            const dependsOnIdx = optimizers.findIndex(otherOpt => otherOpt.name === dependsOn);
+            const dependsOnIdx = optimizers.findIndex(otherOpt =>
+              dependsOn instanceof RegExp
+                ? dependsOn.test(otherOpt.name)
+                : dependsOn === otherOpt.name
+            );
             expect(dependsOnIdx).not.toBe(-1);
             try {
               expect(dependsOnIdx).toBeLessThan(i);
@@ -33,8 +37,10 @@ describe('optimizer', () => {
             }
           });
           opt.runBefore?.forEach(dependedOnBy => {
-            const dependedOnByIdx = optimizers.findIndex(
-              otherOpt => otherOpt.name === dependedOnBy
+            const dependedOnByIdx = optimizers.findIndex(otherOpt =>
+              dependedOnBy instanceof RegExp
+                ? dependedOnBy.test(otherOpt.name)
+                : dependedOnBy === otherOpt.name
             );
             expect(dependedOnByIdx).not.toBe(-1);
             try {

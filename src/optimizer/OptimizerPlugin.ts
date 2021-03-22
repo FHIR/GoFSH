@@ -21,13 +21,13 @@ export interface OptimizerPlugin {
    * A list of the optimizers (by name) that this optimizer should be run before (e.g., list of optimizers that depend on this one).
    * NOTE: Only one side of the relationship needs to be specified.  E.g., 'a' runBefore 'b' implies 'b' runAfter 'a'.
    */
-  runBefore?: string[];
+  runBefore?: (string | RegExp)[];
 
   /**
    * A list of the optimizers (by name) that this optimizer should be run after (e.g., list of optimizers that this optimizer depends on).
    * NOTE: Only one side of the relationship needs to be specified.  E.g., 'y' runAfter 'x' implies 'x' runBefore 'y'.
    */
-  runAfter?: string[];
+  runAfter?: (string | RegExp)[];
 
   /**
    * Optimizes definitions in the package by adding/modifying/removing definitions and/or rules.  Mutates the Package in place.

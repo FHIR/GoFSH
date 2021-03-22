@@ -14,7 +14,7 @@ describe('optimizer', () => {
       expect(optimizer.name).toBe('simplify_array_indexing');
       expect(optimizer.description).toBeDefined();
       expect(optimizer.runBefore).toBeUndefined();
-      expect(optimizer.runAfter).toBeUndefined();
+      expect(optimizer.runAfter).toStrictEqual([/.*/]);
     });
 
     it('should remove zero indices from elements referencing a singleton array', () => {

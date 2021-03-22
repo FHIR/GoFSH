@@ -39,8 +39,11 @@ export async function loadOptimizers(
   optimizers.forEach(opt => {
     nodes.push(opt.name);
     opt.runAfter?.forEach(dependsOn => {
-      if (optimizers.some(o => o.name === dependsOn)) {
-        edges.push([opt.name, dependsOn]);
+      const preceedingOptimizer = optimizers.find(o =>
+        dependsOn instanceof RegExp ? dependsOn.test(o.name) : dependsOn === o.name
+      );
+      if (preceedingOptimizer) {
+        edges.push([opt.name, preceedingOptimizer.name]);
       } else {
         logger.error(
           `The ${opt.name} optimizer specifies an unknown optimizer in runAfter: ${dependsOn}`
@@ -48,8 +51,11 @@ export async function loadOptimizers(
       }
     });
     opt.runBefore?.forEach(dependedOnBy => {
-      if (optimizers.some(o => o.name === dependedOnBy)) {
-        edges.push([dependedOnBy, opt.name]);
+      const succeedingOptimizer = optimizers.find(o =>
+        dependedOnBy instanceof RegExp ? dependedOnBy.test(o.name) : dependedOnBy === o.name
+      );
+      if (succeedingOptimizer) {
+        edges.push([succeedingOptimizer.name, opt.name]);
       } else {
         logger.error(
           `The ${opt.name} optimizer specifies an unknown optimizer in runBefore: ${dependedOnBy}`

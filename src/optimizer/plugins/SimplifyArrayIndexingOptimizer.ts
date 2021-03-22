@@ -6,6 +6,7 @@ import { ExportableCaretValueRule } from '../../exportable';
 export default {
   name: 'simplify_array_indexing',
   description: 'Replace numeric indices with soft indexing',
+  runAfter: [new RegExp(/.*/)],
   optimize(pkg: Package): void {
     // If there is only a single element in an array, include no indices at all
     // If there is more than one element in an array, reference the first element with
@@ -32,7 +33,12 @@ export default {
         }
         return parsedPath;
       });
-      addPrefixes(parsedPaths);
+      parsedPaths.forEach(rule => {
+        addPrefixes(rule.path);
+        if (rule.caretPath) {
+          addPrefixes(rule.caretPath);
+        }
+      });
 
       parsedPaths.forEach((parsedRule: any, ruleIndex: number) => {
         const originalRule = def.rules[ruleIndex];
@@ -66,24 +72,22 @@ export default {
   }
 } as OptimizerPlugin;
 
-function addPrefixes(rules: any[]) {
-  rules.forEach((parsedPath: any) => {
-    parsedPath.path.forEach((element: fhirtypes.PathPart, elementIndex: number) => {
-      // Add a prefix to the current element containing previously parsed rule elements
-      element.prefix = utils.assembleFSHPath(parsedPath.path.slice(0, elementIndex));
-    });
-    parsedPath.caretPath?.forEach((element: fhirtypes.PathPart, elementIndex: number) => {
-      // Add a prefix to the current element containing previously parsed rule elements
-      element.prefix = utils.assembleFSHPath(parsedPath.path.slice(0, elementIndex));
-    });
+/**
+ * Populates each PathPart in an array of PathParts with a prefix containing the assembled path up to that element
+ * @param { path: PathPart[] } parsedPath - An array of PathParts
+ */
+function addPrefixes(parsedPath: fhirtypes.PathPart[]) {
+  parsedPath.forEach((element: fhirtypes.PathPart, elementIndex: number) => {
+    // Add a prefix to the current element containing previously parsed rule elements
+    element.prefix = utils.assembleFSHPath(parsedPath.slice(0, elementIndex));
   });
 }
 
 /**
- *
+ * Converts numeric indeces on a PathPart into soft indexing characters
  * @param {PathPart} element - A single element in a rules path
  * @param {Map<string, number} pathMap - A map containing an element's name as the key and that element's updated index as the value
- * @param {Map<string, PathPart[]} singletonArrayElements - A map containing a
+ * @param {Map<string, PathPart[]} singletonArrayElements - A map containing a string unique to each element of type array as the key, and an array of PathParts as the value
  */
 function applySoftIndexing(
   element: fhirtypes.PathPart,
@@ -125,6 +129,10 @@ function applySoftIndexing(
   }
 }
 
+/**
+ * Removes '[0]' and '[=]' indexing from elements with a single value in their array
+ * @param {Map<string, PathPart[]} singletonArrayElements - A map containing a string unique to each element of type array as the key, and an array of PathParts as the value
+ */
 function removeZeroIndices(singletonArrayElements: Map<string, fhirtypes.PathPart[]>) {
   const redundantElementGroups = Array.from(singletonArrayElements.values());
   redundantElementGroups.forEach(cluster => {
