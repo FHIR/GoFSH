@@ -179,17 +179,13 @@ describe('AssignmentRuleExtractor', () => {
       element.patternQuantity.system = 'http://other-units.org';
       element.patternQuantity.unit = 'Gigawatts';
       const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedQuantityRule = new ExportableAssignmentRule('valueQuantity');
-      expectedQuantityRule.value = new fshtypes.FshCode(
-        'GW',
-        'http://other-units.org',
-        'Gigawatts'
+      const expectedRule = new ExportableAssignmentRule('valueQuantity');
+      expectedRule.value = new fshtypes.FshQuantity(
+        1.21,
+        new fshtypes.FshCode('GW', 'http://other-units.org', 'Gigawatts')
       );
-      const expectedValueRule = new ExportableAssignmentRule('valueQuantity.value');
-      expectedValueRule.value = 1.21;
-      expect(assignmentRules).toHaveLength(2);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedQuantityRule);
-      expect(assignmentRules[1]).toEqual<ExportableAssignmentRule>(expectedValueRule);
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
       expect(element.processedPaths).toHaveLength(4);
       expect(element.processedPaths).toContain('patternQuantity.value');
       expect(element.processedPaths).toContain('patternQuantity.code');
@@ -223,23 +219,16 @@ describe('AssignmentRuleExtractor', () => {
       element.patternRatio.numerator.system = 'http://other-units.org';
       element.patternRatio.numerator.unit = 'centimeters';
       const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedNumeratorQuantity = new ExportableAssignmentRule('valueRatio.numerator');
-      expectedNumeratorQuantity.value = new fshtypes.FshCode(
-        'cm',
-        'http://other-units.org',
-        'centimeters'
+      const expectedRule = new ExportableAssignmentRule('valueRatio');
+      expectedRule.value = new fshtypes.FshRatio(
+        new fshtypes.FshQuantity(
+          5,
+          new fshtypes.FshCode('cm', 'http://other-units.org', 'centimeters')
+        ),
+        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://unitsofmeasure.org'))
       );
-      const expectedNumeratorValue = new ExportableAssignmentRule('valueRatio.numerator.value');
-      expectedNumeratorValue.value = 5;
-      const expectedDenominatorRule = new ExportableAssignmentRule('valueRatio.denominator');
-      expectedDenominatorRule.value = new fshtypes.FshQuantity(
-        1,
-        new fshtypes.FshCode('s', 'http://unitsofmeasure.org')
-      );
-      expect(assignmentRules).toHaveLength(3);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedNumeratorQuantity);
-      expect(assignmentRules[1]).toEqual<ExportableAssignmentRule>(expectedNumeratorValue);
-      expect(assignmentRules[2]).toEqual<ExportableAssignmentRule>(expectedDenominatorRule);
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
       expect(element.processedPaths).toHaveLength(8);
       expect(element.processedPaths).toContain('patternRatio.numerator.value');
       expect(element.processedPaths).toContain('patternRatio.numerator.code');
@@ -256,23 +245,13 @@ describe('AssignmentRuleExtractor', () => {
       element.patternRatio.denominator.system = 'http://other-units.org';
       element.patternRatio.denominator.unit = 'seconds';
       const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedNumeratorRule = new ExportableAssignmentRule('valueRatio.numerator');
-      expectedNumeratorRule.value = new fshtypes.FshQuantity(
-        5,
-        new fshtypes.FshCode('cm', 'http://unitsofmeasure.org')
+      const expectedRule = new ExportableAssignmentRule('valueRatio');
+      expectedRule.value = new fshtypes.FshRatio(
+        new fshtypes.FshQuantity(5, new fshtypes.FshCode('cm', 'http://unitsofmeasure.org')),
+        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://other-units.org', 'seconds'))
       );
-      const expectedDenominatorQuantity = new ExportableAssignmentRule('valueRatio.denominator');
-      expectedDenominatorQuantity.value = new fshtypes.FshCode(
-        's',
-        'http://other-units.org',
-        'seconds'
-      );
-      const expectedDenominatorValue = new ExportableAssignmentRule('valueRatio.denominator.value');
-      expectedDenominatorValue.value = 1;
-      expect(assignmentRules).toHaveLength(3);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedNumeratorRule);
-      expect(assignmentRules[1]).toEqual<ExportableAssignmentRule>(expectedDenominatorQuantity);
-      expect(assignmentRules[2]).toEqual<ExportableAssignmentRule>(expectedDenominatorValue);
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
       expect(element.processedPaths).toHaveLength(8);
       expect(element.processedPaths).toContain('patternRatio.numerator.value');
       expect(element.processedPaths).toContain('patternRatio.numerator.code');
@@ -291,27 +270,16 @@ describe('AssignmentRuleExtractor', () => {
       element.patternRatio.denominator.system = 'http://other-units.org';
       element.patternRatio.denominator.unit = 'seconds';
       const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedNumeratorQuantity = new ExportableAssignmentRule('valueRatio.numerator');
-      expectedNumeratorQuantity.value = new fshtypes.FshCode(
-        'cm',
-        'http://other-units.org',
-        'centimeters'
+      const expectedRule = new ExportableAssignmentRule('valueRatio');
+      expectedRule.value = new fshtypes.FshRatio(
+        new fshtypes.FshQuantity(
+          5,
+          new fshtypes.FshCode('cm', 'http://other-units.org', 'centimeters')
+        ),
+        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://other-units.org', 'seconds'))
       );
-      const expectedNumeratorValue = new ExportableAssignmentRule('valueRatio.numerator.value');
-      expectedNumeratorValue.value = 5;
-      const expectedDenominatorQuantity = new ExportableAssignmentRule('valueRatio.denominator');
-      expectedDenominatorQuantity.value = new fshtypes.FshCode(
-        's',
-        'http://other-units.org',
-        'seconds'
-      );
-      const expectedDenominatorValue = new ExportableAssignmentRule('valueRatio.denominator.value');
-      expectedDenominatorValue.value = 1;
-      expect(assignmentRules).toHaveLength(4);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedNumeratorQuantity);
-      expect(assignmentRules[1]).toEqual<ExportableAssignmentRule>(expectedNumeratorValue);
-      expect(assignmentRules[2]).toEqual<ExportableAssignmentRule>(expectedDenominatorQuantity);
-      expect(assignmentRules[3]).toEqual<ExportableAssignmentRule>(expectedDenominatorValue);
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
       expect(element.processedPaths).toContain('patternRatio.numerator.value');
       expect(element.processedPaths).toContain('patternRatio.numerator.code');
       expect(element.processedPaths).toContain('patternRatio.numerator.system');
