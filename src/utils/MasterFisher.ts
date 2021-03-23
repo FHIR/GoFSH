@@ -1,4 +1,4 @@
-import { utils, fhirdefs } from 'fsh-sushi';
+import { utils, fhirdefs, fhirtypes } from 'fsh-sushi';
 import { LakeOfFHIR } from '../processor';
 
 /**
@@ -11,6 +11,23 @@ export class MasterFisher implements utils.Fishable {
     public lakeOfFHIR = new LakeOfFHIR([]),
     public external = new fhirdefs.FHIRDefinitions()
   ) {}
+
+  fishForStructureDefinition(item: string) {
+    const json = this.fishForFHIR(
+      item,
+      utils.Type.Resource,
+      utils.Type.Profile,
+      utils.Type.Extension,
+      utils.Type.Type
+    );
+    if (json) {
+      // It is possible we can't parse the json, most likely if it doesn't have a snapshot
+      // if that is the case we don't want actual errors, just return nothing
+      try {
+        return fhirtypes.StructureDefinition.fromJSON(json);
+      } catch {}
+    }
+  }
 
   fishForFHIR(item: string, ...types: utils.Type[]) {
     return this.lakeOfFHIR.fishForFHIR(item, ...types) ?? this.external.fishForFHIR(item, ...types);
