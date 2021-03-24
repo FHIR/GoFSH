@@ -86,7 +86,7 @@ export class InstanceProcessor {
       newRules.push(assignmentRule);
     });
     target.rules = compact(newRules);
-    switchQuantityRules(target.rules); // TODO: Once STU 2 features are enabled this can be removed
+    switchQuantityRules(target.rules);
   }
 
   static process(input: any, implementationGuide: any, fisher: utils.Fishable): ExportableInstance {

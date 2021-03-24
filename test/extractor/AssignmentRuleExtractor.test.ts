@@ -174,112 +174,17 @@ describe('AssignmentRuleExtractor', () => {
       expect(element.processedPaths).toContain('patternQuantity.unit');
     });
 
-    it('should extract assigned value rules with a fixed Quantity value that does not use UCUM units', () => {
-      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-      element.patternQuantity.system = 'http://other-units.org';
-      element.patternQuantity.unit = 'Gigawatts';
-      const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedRule = new ExportableAssignmentRule('valueQuantity');
-      expectedRule.value = new fshtypes.FshQuantity(
-        1.21,
-        new fshtypes.FshCode('GW', 'http://other-units.org', 'Gigawatts')
-      );
-      expect(assignmentRules).toHaveLength(1);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
-      expect(element.processedPaths).toHaveLength(4);
-      expect(element.processedPaths).toContain('patternQuantity.value');
-      expect(element.processedPaths).toContain('patternQuantity.code');
-      expect(element.processedPaths).toContain('patternQuantity.system');
-      expect(element.processedPaths).toContain('patternQuantity.unit');
-    });
-
     it('should extract an assigned value rule with a fixed Ratio value', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
       const assignmentRules = AssignmentRuleExtractor.process(element);
       const expectedRule = new ExportableAssignmentRule('valueRatio');
       expectedRule.value = new fshtypes.FshRatio(
-        new fshtypes.FshQuantity(5, new fshtypes.FshCode('cm', 'http://unitsofmeasure.org')),
-        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://unitsofmeasure.org'))
+        new fshtypes.FshQuantity(5, new fshtypes.FshCode('cm', 'http://other-units.org')),
+        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://different-units.org'))
       );
       expect(assignmentRules).toHaveLength(1);
       expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
       expect(element.processedPaths).toHaveLength(8);
-      expect(element.processedPaths).toContain('patternRatio.numerator.value');
-      expect(element.processedPaths).toContain('patternRatio.numerator.code');
-      expect(element.processedPaths).toContain('patternRatio.numerator.system');
-      expect(element.processedPaths).toContain('patternRatio.numerator.unit');
-      expect(element.processedPaths).toContain('patternRatio.denominator.value');
-      expect(element.processedPaths).toContain('patternRatio.denominator.code');
-      expect(element.processedPaths).toContain('patternRatio.denominator.system');
-      expect(element.processedPaths).toContain('patternRatio.denominator.unit');
-    });
-
-    it('should extract assigned value rules with a fixed Ratio value when the numerator does not use UCUM units', () => {
-      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-      element.patternRatio.numerator.system = 'http://other-units.org';
-      element.patternRatio.numerator.unit = 'centimeters';
-      const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedRule = new ExportableAssignmentRule('valueRatio');
-      expectedRule.value = new fshtypes.FshRatio(
-        new fshtypes.FshQuantity(
-          5,
-          new fshtypes.FshCode('cm', 'http://other-units.org', 'centimeters')
-        ),
-        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://unitsofmeasure.org'))
-      );
-      expect(assignmentRules).toHaveLength(1);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
-      expect(element.processedPaths).toHaveLength(8);
-      expect(element.processedPaths).toContain('patternRatio.numerator.value');
-      expect(element.processedPaths).toContain('patternRatio.numerator.code');
-      expect(element.processedPaths).toContain('patternRatio.numerator.system');
-      expect(element.processedPaths).toContain('patternRatio.numerator.unit');
-      expect(element.processedPaths).toContain('patternRatio.denominator.value');
-      expect(element.processedPaths).toContain('patternRatio.denominator.code');
-      expect(element.processedPaths).toContain('patternRatio.denominator.system');
-      expect(element.processedPaths).toContain('patternRatio.denominator.unit');
-    });
-
-    it('should extract assigned value rules with a fixed Ratio value when the denominator does not use UCUM units', () => {
-      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-      element.patternRatio.denominator.system = 'http://other-units.org';
-      element.patternRatio.denominator.unit = 'seconds';
-      const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedRule = new ExportableAssignmentRule('valueRatio');
-      expectedRule.value = new fshtypes.FshRatio(
-        new fshtypes.FshQuantity(5, new fshtypes.FshCode('cm', 'http://unitsofmeasure.org')),
-        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://other-units.org', 'seconds'))
-      );
-      expect(assignmentRules).toHaveLength(1);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
-      expect(element.processedPaths).toHaveLength(8);
-      expect(element.processedPaths).toContain('patternRatio.numerator.value');
-      expect(element.processedPaths).toContain('patternRatio.numerator.code');
-      expect(element.processedPaths).toContain('patternRatio.numerator.system');
-      expect(element.processedPaths).toContain('patternRatio.numerator.unit');
-      expect(element.processedPaths).toContain('patternRatio.denominator.value');
-      expect(element.processedPaths).toContain('patternRatio.denominator.code');
-      expect(element.processedPaths).toContain('patternRatio.denominator.system');
-      expect(element.processedPaths).toContain('patternRatio.denominator.unit');
-    });
-
-    it('should extract assigned value rules with a fixed Ratio value when the numerator and denominator do not use UCUM units', () => {
-      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-      element.patternRatio.numerator.system = 'http://other-units.org';
-      element.patternRatio.numerator.unit = 'centimeters';
-      element.patternRatio.denominator.system = 'http://other-units.org';
-      element.patternRatio.denominator.unit = 'seconds';
-      const assignmentRules = AssignmentRuleExtractor.process(element);
-      const expectedRule = new ExportableAssignmentRule('valueRatio');
-      expectedRule.value = new fshtypes.FshRatio(
-        new fshtypes.FshQuantity(
-          5,
-          new fshtypes.FshCode('cm', 'http://other-units.org', 'centimeters')
-        ),
-        new fshtypes.FshQuantity(1, new fshtypes.FshCode('s', 'http://other-units.org', 'seconds'))
-      );
-      expect(assignmentRules).toHaveLength(1);
-      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
       expect(element.processedPaths).toContain('patternRatio.numerator.value');
       expect(element.processedPaths).toContain('patternRatio.numerator.code');
       expect(element.processedPaths).toContain('patternRatio.numerator.system');
@@ -295,11 +200,11 @@ describe('AssignmentRuleExtractor', () => {
       delete element.patternRatio.numerator.value;
       const assignmentRules = AssignmentRuleExtractor.process(element);
       const expectedNumeratorRule = new ExportableAssignmentRule('valueRatio.numerator');
-      expectedNumeratorRule.value = new fshtypes.FshCode('cm', 'http://unitsofmeasure.org');
+      expectedNumeratorRule.value = new fshtypes.FshCode('cm', 'http://other-units.org');
       const expectedDenominatorRule = new ExportableAssignmentRule('valueRatio.denominator');
       expectedDenominatorRule.value = new fshtypes.FshQuantity(
         1,
-        new fshtypes.FshCode('s', 'http://unitsofmeasure.org')
+        new fshtypes.FshCode('s', 'http://different-units.org')
       );
       expect(assignmentRules).toHaveLength(2);
       expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedNumeratorRule);
@@ -321,10 +226,10 @@ describe('AssignmentRuleExtractor', () => {
       const expectedNumeratorRule = new ExportableAssignmentRule('valueRatio.numerator');
       expectedNumeratorRule.value = new fshtypes.FshQuantity(
         5,
-        new fshtypes.FshCode('cm', 'http://unitsofmeasure.org')
+        new fshtypes.FshCode('cm', 'http://other-units.org')
       );
       const expectedDenominatorRule = new ExportableAssignmentRule('valueRatio.denominator');
-      expectedDenominatorRule.value = new fshtypes.FshCode('s', 'http://unitsofmeasure.org');
+      expectedDenominatorRule.value = new fshtypes.FshCode('s', 'http://different-units.org');
       expect(assignmentRules).toHaveLength(2);
       expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedNumeratorRule);
       expect(assignmentRules[1]).toEqual<ExportableAssignmentRule>(expectedDenominatorRule);
