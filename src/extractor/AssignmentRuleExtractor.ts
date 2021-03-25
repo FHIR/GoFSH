@@ -151,18 +151,8 @@ export class AssignmentRuleExtractor {
         matchingValue.system,
         matchingValue.unit
       );
-      // if system is http://unitsofmeasure.org, we can build a FshQuantity.
-      // otherwise, multiple assignments will be necessary.
-      if (matchingValue.system === 'http://unitsofmeasure.org') {
-        assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
-        return [assignmentRule];
-      } else {
-        assignmentRule.value = unit;
-        const valueRule = new ExportableAssignmentRule(`${assignmentRule.path}.value`);
-        valueRule.value = matchingValue.value;
-        valueRule.exactly = assignmentRule.exactly;
-        return [assignmentRule, valueRule];
-      }
+      assignmentRule.value = new fshtypes.FshQuantity(matchingValue.value, unit);
+      return [assignmentRule];
     } else {
       // we have something on patternQuantity that isn't expressible as a FshQuantity.
       // that's okay! we can still do good things here with whatever we have.
