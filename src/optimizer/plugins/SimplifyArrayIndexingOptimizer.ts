@@ -25,12 +25,12 @@ export default {
       const ruleArr: fshrules.Rule[] = def.rules;
       const parsedPaths = ruleArr.map((rule: fshrules.Rule) => {
         const parsedPath: { path: fhirtypes.PathPart[]; caretPath?: fhirtypes.PathPart[] } = {
-          path: utils.parseFSHPath(rule.path),
+          path: parseFSHPath(rule.path),
           caretPath: []
         };
         // If we have a CaretValueRule, we'll need a second round of parsing for the caret path
         if (rule instanceof ExportableCaretValueRule) {
-          parsedPath.caretPath = utils.parseFSHPath(rule.caretPath);
+          parsedPath.caretPath = parseFSHPath(rule.caretPath);
         }
         return parsedPath;
       });
@@ -112,6 +112,49 @@ function applySoftIndexing(element: fhirtypes.PathPart, pathMap: Map<string, num
       pathMap.set(mapName, parseInt(currentNumericBracket));
     }
   }
+}
+
+function splitOnPathPeriods(path: string): string[] {
+  return path.split(/\.(?![^\[]*\])/g); // match a period that isn't within square brackets
+}
+
+export function parseFSHPath(fshPath: string): fhirtypes.PathPart[] {
+  const pathParts: fhirtypes.PathPart[] = [];
+  const seenSlices: string[] = [];
+  const indexRegex = /^[0-9]+$/;
+  const splitPath = fshPath === '.' ? [fshPath] : splitOnPathPeriods(fshPath);
+  for (const pathPart of splitPath) {
+    const splitPathPart = pathPart.split('[');
+    if (splitPathPart.length === 1 || pathPart.endsWith('[x]')) {
+      // There are no brackets, or the brackets are for a choice, so just push on the name
+      pathParts.push({ base: pathPart });
+    } else {
+      // We have brackets, let's  save the bracket info
+      let fhirPathBase = splitPathPart[0];
+      // Get the bracket elements and slice off the trailing ']'
+      let brackets = splitPathPart.slice(1).map(s => s.slice(0, -1));
+      // Get rid of any remaining [x] elements in the brackets
+      if (brackets[0] === 'x') {
+        fhirPathBase += '[x]';
+        brackets = brackets.slice(1);
+      }
+      brackets.forEach(bracket => {
+        if (!indexRegex.test(bracket) && !(bracket === '+' || bracket === '=')) {
+          seenSlices.push(bracket);
+        }
+      });
+      if (seenSlices.length > 0) {
+        pathParts.push({
+          base: fhirPathBase,
+          brackets: brackets,
+          slices: seenSlices
+        });
+      } else {
+        pathParts.push({ base: fhirPathBase, brackets: brackets });
+      }
+    }
+  }
+  return pathParts;
 }
 
 // Removes '[0]' and '[=]' indexing from elements with a single value in their array
