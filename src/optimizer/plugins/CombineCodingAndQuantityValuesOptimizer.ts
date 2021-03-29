@@ -41,6 +41,8 @@ export default {
   optimize(pkg: Package, fisher: MasterFisher): void {
     // Coding has: code, system, display
     // Quantity has: code, system, unit, value
+    // If "value" is present, the rule should use a FshQuantity.
+    // Otherwise, the rule should keep its FshCode.
     // Profiles and Extensions may have relevant caret rules
     // Instances may have relevant assignment rules
     // It is not necessary to check assignment rules on Profiles and Extensions. Codings and Quantities that
@@ -78,31 +80,30 @@ export default {
             const displaySibling = siblings.find(sibling => sibling.caretPath.endsWith('.display'));
             const unitSibling = siblings.find(sibling => sibling.caretPath.endsWith('.unit'));
             const valueSibling = siblings.find(sibling => sibling.caretPath.endsWith('.value'));
-            if (valueSibling && systemSibling?.value === 'http://unitsofmeasure.org') {
-              rule.caretPath = basePath;
+            rule.caretPath = basePath;
+            if (valueSibling) {
               rule.value = new FshQuantity(
                 valueSibling.value as number,
-                new FshCode(rule.value.code, 'http://unitsofmeasure.org')
+                new FshCode(rule.value.code)
               );
-              rulesToRemove.push(rules.indexOf(valueSibling), rules.indexOf(systemSibling));
-            } else if (unitSibling) {
-              rule.caretPath = basePath;
-              rule.value.display = unitSibling.value.toString();
-              rulesToRemove.push(rules.indexOf(unitSibling));
-              // system may also be present
+              rulesToRemove.push(rules.indexOf(valueSibling));
+              if (systemSibling) {
+                rule.value.unit.system = systemSibling.value.toString();
+                rulesToRemove.push(rules.indexOf(systemSibling));
+              }
+              if (unitSibling) {
+                rule.value.unit.display = unitSibling.value.toString();
+                rulesToRemove.push(rules.indexOf(unitSibling));
+              }
+            } else {
               if (systemSibling) {
                 rule.value.system = systemSibling.value.toString();
                 rulesToRemove.push(rules.indexOf(systemSibling));
               }
-            } else if (systemSibling || displaySibling) {
-              rule.caretPath = basePath;
-              if (systemSibling) {
-                rule.value.system = systemSibling.value.toString();
-                rulesToRemove.push(rules.indexOf(systemSibling));
-              }
-              if (displaySibling) {
-                rule.value.display = displaySibling.value.toString();
-                rulesToRemove.push(rules.indexOf(displaySibling));
+              if (displaySibling || unitSibling) {
+                const displaySource = displaySibling || unitSibling;
+                rule.value.display = displaySource.value.toString();
+                rulesToRemove.push(rules.indexOf(displaySource));
               }
               moveUpCaretValueRule(rule, def, siblings);
             }
@@ -145,34 +146,30 @@ export default {
             const displaySibling = siblings.find(sibling => sibling.path.endsWith('.display'));
             const unitSibling = siblings.find(sibling => sibling.path.endsWith('.unit'));
             const valueSibling = siblings.find(sibling => sibling.path.endsWith('.value'));
-            if (valueSibling && systemSibling?.value === 'http://unitsofmeasure.org') {
-              rule.path = basePath;
+            rule.path = basePath;
+            if (valueSibling) {
               rule.value = new FshQuantity(
                 valueSibling.value as number,
-                new FshCode(rule.value.code, 'http://unitsofmeasure.org')
+                new FshCode(rule.value.code)
               );
-              rulesToRemove.push(
-                instance.rules.indexOf(valueSibling),
-                instance.rules.indexOf(systemSibling)
-              );
-            } else if (unitSibling) {
-              rule.path = basePath;
-              rule.value.display = unitSibling.value.toString();
-              rulesToRemove.push(instance.rules.indexOf(unitSibling));
-              // system may also be present
+              rulesToRemove.push(instance.rules.indexOf(valueSibling));
+              if (systemSibling) {
+                rule.value.unit.system = systemSibling.value.toString();
+                rulesToRemove.push(instance.rules.indexOf(systemSibling));
+              }
+              if (unitSibling) {
+                rule.value.unit.display = unitSibling.value.toString();
+                rulesToRemove.push(instance.rules.indexOf(unitSibling));
+              }
+            } else {
               if (systemSibling) {
                 rule.value.system = systemSibling.value.toString();
                 rulesToRemove.push(instance.rules.indexOf(systemSibling));
               }
-            } else if (systemSibling || displaySibling) {
-              rule.path = basePath;
-              if (systemSibling) {
-                rule.value.system = systemSibling.value.toString();
-                rulesToRemove.push(instance.rules.indexOf(systemSibling));
-              }
-              if (displaySibling) {
-                rule.value.display = displaySibling.value.toString();
-                rulesToRemove.push(instance.rules.indexOf(displaySibling));
+              if (displaySibling || unitSibling) {
+                const displaySource = displaySibling || unitSibling;
+                rule.value.display = displaySource.value.toString();
+                rulesToRemove.push(instance.rules.indexOf(displaySource));
               }
               moveUpAssignmentRule(rule, instance, siblings);
             }

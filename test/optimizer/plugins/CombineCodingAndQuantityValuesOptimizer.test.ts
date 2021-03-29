@@ -299,7 +299,7 @@ describe('optimizer', () => {
         expect(extension.rules[0]).toEqual(expectedRule);
       });
 
-      it('should combine rules on code and system when value is available but the system is not http://unitsofmeasure.org', () => {
+      it('should combine rules on code, system, and value into a single rule even when the system is not http://unitsofmeasure.org', () => {
         const extension = new ExportableExtension('MyExtension');
         const codeRule = new ExportableCaretValueRule('');
         codeRule.caretPath = 'extension[0].valueQuantity.code';
@@ -316,14 +316,13 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
-        expectedRule.value = new FshCode('GW', 'http://different-units.org');
+        expectedRule.value = new FshQuantity(1.21, new FshCode('GW', 'http://different-units.org'));
         optimizer.optimize(myPackage, fisher);
-        expect(extension.rules.length).toBe(2);
-        expect(extension.rules).toContainEqual(valueRule);
-        expect(extension.rules).toContainEqual(expectedRule);
+        expect(extension.rules.length).toBe(1);
+        expect(extension.rules[0]).toEqual(expectedRule);
       });
 
-      it('should not combine rules on code and value when system is not available', () => {
+      it('should combine rules on code and value', () => {
         const extension = new ExportableExtension('MyExtension');
         const codeRule = new ExportableCaretValueRule('');
         codeRule.caretPath = 'extension[0].valueQuantity.code';
@@ -335,13 +334,15 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(extension);
 
+        const expectedRule = new ExportableCaretValueRule('');
+        expectedRule.caretPath = 'extension[0].valueQuantity';
+        expectedRule.value = new FshQuantity(1.21, new FshCode('GW'));
         optimizer.optimize(myPackage, fisher);
-        expect(extension.rules.length).toBe(2);
-        expect(extension.rules).toContainEqual(codeRule);
-        expect(extension.rules).toContainEqual(valueRule);
+        expect(extension.rules.length).toBe(1);
+        expect(extension.rules).toContainEqual(expectedRule);
       });
 
-      it('should prefer combining code, system, and value, even when unit is available, if system is http://unitsofmeasure.org', () => {
+      it('should combine rules on code, system, value, and unit when the system is http://unitsofmeasure.org', () => {
         const extension = new ExportableExtension('MyExtension');
         const codeRule = new ExportableCaretValueRule('');
         codeRule.caretPath = 'extension[0].valueQuantity.code';
@@ -361,14 +362,16 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
-        expectedRule.value = new FshQuantity(1.21, new FshCode('GW', 'http://unitsofmeasure.org'));
+        expectedRule.value = new FshQuantity(
+          1.21,
+          new FshCode('GW', 'http://unitsofmeasure.org', 'Gigawatts')
+        );
         optimizer.optimize(myPackage, fisher);
-        expect(extension.rules.length).toBe(2);
+        expect(extension.rules.length).toBe(1);
         expect(extension.rules).toContainEqual(expectedRule);
-        expect(extension.rules).toContainEqual(unitRule);
       });
 
-      it('should combine rules on code, system, and unit when value is available, but system is not http://unitsofmeasure.org', () => {
+      it('should combine rules on code, system, value, and unit, even when system is not http://unitsofmeasure.org', () => {
         const extension = new ExportableExtension('MyExtension');
         const codeRule = new ExportableCaretValueRule('');
         codeRule.caretPath = 'extension[0].valueQuantity.code';
@@ -388,11 +391,13 @@ describe('optimizer', () => {
 
         const expectedRule = new ExportableCaretValueRule('');
         expectedRule.caretPath = 'extension[0].valueQuantity';
-        expectedRule.value = new FshCode('GW', 'http://other-units.org', 'Gigawatts');
+        expectedRule.value = new FshQuantity(
+          1.21,
+          new FshCode('GW', 'http://other-units.org', 'Gigawatts')
+        );
         optimizer.optimize(myPackage, fisher);
-        expect(extension.rules.length).toBe(2);
+        expect(extension.rules.length).toBe(1);
         expect(extension.rules).toContainEqual(expectedRule);
-        expect(extension.rules).toContainEqual(valueRule);
       });
 
       it('should not combine rules that have sibling caretPaths, but different paths', () => {
@@ -672,7 +677,7 @@ describe('optimizer', () => {
         expect(instance.rules[0]).toEqual(expectedRule);
       });
 
-      it('should combine rules on code and system when value is available but the system is not http://unitsofmeasure.org', () => {
+      it('should combine rules on code, system, value, and unit, even when system is not http://unitsofmeasure.org', () => {
         const instance = new ExportableInstance('MyProfile');
         instance.instanceOf = 'Observation';
         const codeRule = new ExportableAssignmentRule('referenceRange.low.code');
@@ -686,14 +691,13 @@ describe('optimizer', () => {
         myPackage.add(instance);
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
-        expectedRule.value = new FshCode('Cal', 'http://mystery-system.org');
+        expectedRule.value = new FshQuantity(6, new FshCode('Cal', 'http://mystery-system.org'));
         optimizer.optimize(myPackage, fisher);
-        expect(instance.rules.length).toBe(2);
-        expect(instance.rules).toContainEqual(valueRule);
-        expect(instance.rules).toContainEqual(expectedRule);
+        expect(instance.rules.length).toBe(1);
+        expect(instance.rules[0]).toEqual(expectedRule);
       });
 
-      it('should not combine rules on code and value when system is not available', () => {
+      it('should combine rules on code and value', () => {
         const instance = new ExportableInstance('MyProfile');
         instance.instanceOf = 'Observation';
         const codeRule = new ExportableAssignmentRule('referenceRange.low.code');
@@ -704,13 +708,14 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(instance);
 
+        const expectedRule = new ExportableAssignmentRule('referenceRange.low');
+        expectedRule.value = new FshQuantity(6, new FshCode('Cal'));
         optimizer.optimize(myPackage, fisher);
-        expect(instance.rules.length).toBe(2);
-        expect(instance.rules).toContainEqual(codeRule);
-        expect(instance.rules).toContainEqual(valueRule);
+        expect(instance.rules.length).toBe(1);
+        expect(instance.rules).toContainEqual(expectedRule);
       });
 
-      it('should prefer combining code, system, and value, even when unit is available, if system is http://unitsofmeasure.org', () => {
+      it('should combine rules on code, system, value, and unit when the system is http://unitsofmeasure.org', () => {
         const instance = new ExportableInstance('MyProfile');
         instance.instanceOf = 'Observation';
         const codeRule = new ExportableAssignmentRule('referenceRange.low.code');
@@ -726,14 +731,16 @@ describe('optimizer', () => {
         myPackage.add(instance);
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
-        expectedRule.value = new FshQuantity(6, new FshCode('Cal', 'http://unitsofmeasure.org'));
+        expectedRule.value = new FshQuantity(
+          6,
+          new FshCode('Cal', 'http://unitsofmeasure.org', 'nutrition label Calories')
+        );
         optimizer.optimize(myPackage, fisher);
-        expect(instance.rules.length).toBe(2);
+        expect(instance.rules.length).toBe(1);
         expect(instance.rules).toContainEqual(expectedRule);
-        expect(instance.rules).toContainEqual(unitRule);
       });
 
-      it('should combine rules on code, system, and unit when value is available, but system is not http://unitsofmeasure.org', () => {
+      it('should combine rules on code, system, value, and unit, even when system is not http://unitsofmeasure.org', () => {
         const instance = new ExportableInstance('MyProfile');
         instance.instanceOf = 'Observation';
         const codeRule = new ExportableAssignmentRule('referenceRange.low.code');
@@ -749,15 +756,13 @@ describe('optimizer', () => {
         myPackage.add(instance);
 
         const expectedRule = new ExportableAssignmentRule('referenceRange.low');
-        expectedRule.value = new FshCode(
-          'Cal',
-          'http://other-units.org',
-          'nutrition label Calories'
+        expectedRule.value = new FshQuantity(
+          6,
+          new FshCode('Cal', 'http://other-units.org', 'nutrition label Calories')
         );
         optimizer.optimize(myPackage, fisher);
-        expect(instance.rules.length).toBe(2);
+        expect(instance.rules.length).toBe(1);
         expect(instance.rules).toContainEqual(expectedRule);
-        expect(instance.rules).toContainEqual(valueRule);
       });
 
       it('should not combine rules that have different base paths', () => {

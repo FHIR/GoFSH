@@ -41,12 +41,12 @@
           "numerator": {
             "value": 5,
             "code": "cm",
-            "system": "http://unitsofmeasure.org"
+            "system": "http://other-units.org"
           },
           "denominator": {
             "value": 1,
             "code": "s",
-            "system": "http://unitsofmeasure.org"
+            "system": "http://different-units.org"
           }
         }
       },
