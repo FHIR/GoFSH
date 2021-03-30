@@ -147,7 +147,7 @@ export function parseFSHPath(fshPath: string): fhirtypes.PathPart[] {
         pathParts.push({
           base: fhirPathBase,
           brackets: brackets,
-          slices: seenSlices
+          slices: [...seenSlices]
         });
       } else {
         pathParts.push({ base: fhirPathBase, brackets: brackets });
