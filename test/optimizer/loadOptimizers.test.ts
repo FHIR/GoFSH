@@ -22,34 +22,56 @@ describe('optimizer', () => {
       it('should load the standard optimizers in the expected order', () => {
         optimizers.forEach((opt, i) => {
           opt.runAfter?.forEach(dependsOn => {
-            const dependsOnIdx = optimizers.findIndex(otherOpt =>
-              dependsOn instanceof RegExp
-                ? dependsOn.test(otherOpt.name)
-                : dependsOn === otherOpt.name
-            );
-            expect(dependsOnIdx).not.toBe(-1);
-            try {
-              expect(dependsOnIdx).toBeLessThan(i);
-            } catch {
-              throw new Error(
-                `Expected ${opt.name} (i: ${i}) to come after ${dependsOn} (i: ${dependsOnIdx})`
-              );
-            }
+            const dependsOnIndices = optimizers
+              .map((otherOpt, index) => {
+                if (otherOpt.name === opt.name) {
+                  return '';
+                }
+                if (dependsOn instanceof RegExp && dependsOn.test(otherOpt.name)) {
+                  return index;
+                } else if (typeof dependsOn === 'string' && dependsOn === otherOpt.name) {
+                  return index;
+                } else {
+                  return '';
+                }
+              })
+              .filter(String);
+            expect(dependsOnIndices.length).not.toBe(0);
+            dependsOnIndices.forEach(dependencyIndex => {
+              try {
+                expect(dependencyIndex).toBeLessThan(i);
+              } catch {
+                throw new Error(
+                  `Expected ${opt.name} (i: ${i}) to come after ${dependsOn} (i: ${dependencyIndex})`
+                );
+              }
+            });
           });
           opt.runBefore?.forEach(dependedOnBy => {
-            const dependedOnByIdx = optimizers.findIndex(otherOpt =>
-              dependedOnBy instanceof RegExp
-                ? dependedOnBy.test(otherOpt.name)
-                : dependedOnBy === otherOpt.name
-            );
-            expect(dependedOnByIdx).not.toBe(-1);
-            try {
-              expect(dependedOnByIdx).toBeGreaterThan(i);
-            } catch {
-              throw new Error(
-                `Expected ${opt.name} (i: ${i}) to come before ${dependedOnBy} (i: ${dependedOnByIdx})`
-              );
-            }
+            const dependedOnByIndices = optimizers
+              .map((otherOpt, index) => {
+                if (otherOpt.name === opt.name) {
+                  return '';
+                }
+                if (dependedOnBy instanceof RegExp && dependedOnBy.test(otherOpt.name)) {
+                  return index;
+                } else if (typeof dependedOnBy === 'string' && dependedOnBy === otherOpt.name) {
+                  return index;
+                } else {
+                  return '';
+                }
+              })
+              .filter(String);
+            expect(dependedOnByIndices.length).not.toBe(0);
+            dependedOnByIndices.forEach(dependedOnByIdx => {
+              try {
+                expect(dependedOnByIdx).toBeGreaterThan(i);
+              } catch {
+                throw new Error(
+                  `Expected ${opt.name} (i: ${i}) to come before ${dependedOnBy} (i: ${dependedOnByIdx})`
+                );
+              }
+            });
           });
         });
       });
