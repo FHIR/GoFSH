@@ -39,11 +39,15 @@ export async function loadOptimizers(
   optimizers.forEach(opt => {
     nodes.push(opt.name);
     opt.runAfter?.forEach(dependsOn => {
-      const preceedingOptimizer = optimizers.find(o =>
-        dependsOn instanceof RegExp ? dependsOn.test(o.name) : dependsOn === o.name
+      const preceedingOptimizers = optimizers.filter(o =>
+        o.name !== opt.name && dependsOn instanceof RegExp
+          ? dependsOn.test(o.name)
+          : dependsOn === o.name
       );
-      if (preceedingOptimizer) {
-        edges.push([opt.name, preceedingOptimizer.name]);
+      if (preceedingOptimizers.length > 0) {
+        preceedingOptimizers.forEach(preceedingOptimizer => {
+          edges.push([opt.name, preceedingOptimizer.name]);
+        });
       } else {
         logger.error(
           `The ${opt.name} optimizer specifies an unknown optimizer in runAfter: ${dependsOn}`
@@ -51,11 +55,15 @@ export async function loadOptimizers(
       }
     });
     opt.runBefore?.forEach(dependedOnBy => {
-      const succeedingOptimizer = optimizers.find(o =>
-        dependedOnBy instanceof RegExp ? dependedOnBy.test(o.name) : dependedOnBy === o.name
+      const succeedingOptimizers = optimizers.filter(o =>
+        o.name !== opt.name && dependedOnBy instanceof RegExp
+          ? dependedOnBy.test(o.name)
+          : dependedOnBy === o.name
       );
-      if (succeedingOptimizer) {
-        edges.push([succeedingOptimizer.name, opt.name]);
+      if (succeedingOptimizers.length > 0) {
+        succeedingOptimizers.forEach(succeedingOptimizer => {
+          edges.push([succeedingOptimizer.name, opt.name]);
+        });
       } else {
         logger.error(
           `The ${opt.name} optimizer specifies an unknown optimizer in runBefore: ${dependedOnBy}`
@@ -66,6 +74,7 @@ export async function loadOptimizers(
   let ordered: string[];
   try {
     ordered = toposort.array(nodes, edges).reverse();
+    console.log(JSON.stringify(ordered));
   } catch (e) {
     // This message should be reliably present and reliably in this format, but use '?' defensively just in case
     const nodeMatch = e.message?.match(/"([^"]+)"$/);
