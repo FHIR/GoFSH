@@ -74,7 +74,6 @@ export async function loadOptimizers(
   let ordered: string[];
   try {
     ordered = toposort.array(nodes, edges).reverse();
-    console.log(JSON.stringify(ordered));
   } catch (e) {
     // This message should be reliably present and reliably in this format, but use '?' defensively just in case
     const nodeMatch = e.message?.match(/"([^"]+)"$/);
