@@ -114,10 +114,12 @@ function applySoftIndexing(element: fhirtypes.PathPart, pathMap: Map<string, num
   }
 }
 
+// TODO: remove once sushi has been released with fixes to the parseFSHPath function
 function splitOnPathPeriods(path: string): string[] {
   return path.split(/\.(?![^\[]*\])/g); // match a period that isn't within square brackets
 }
 
+// TODO: remove once sushi has been released with fixes to the parseFSHPath function
 export function parseFSHPath(fshPath: string): fhirtypes.PathPart[] {
   const pathParts: fhirtypes.PathPart[] = [];
   const seenSlices: string[] = [];
