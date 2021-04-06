@@ -18,6 +18,7 @@ import ResolveParentURLsOptimizer from './ResolveParentURLsOptimizer';
 import ResolveReferenceAssignmentsOptimizer from './ResolveReferenceAssignmentsOptimizer';
 import ResolveValueRuleURLsOptimizer from './ResolveValueRuleURLsOptimizer';
 import ResolveValueSetComponentRuleURLsOptimizer from './ResolveValueSetComponentRuleURLsOptimizer';
+import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 import SimplifyInstanceNameOptimizer from './SimplifyInstanceNameOptimizer';
 import SimplifyMappingNamesOptimizer from './SimplifyMappingNamesOptimizer';
 
@@ -42,6 +43,7 @@ export {
   ResolveReferenceAssignmentsOptimizer,
   ResolveValueRuleURLsOptimizer,
   ResolveValueSetComponentRuleURLsOptimizer,
+  SimplifyArrayIndexingOptimizer,
   SimplifyInstanceNameOptimizer,
   SimplifyMappingNamesOptimizer
 };
