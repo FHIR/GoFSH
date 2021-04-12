@@ -4,7 +4,6 @@ import {
   StructureDefinitionProcessor,
   CodeSystemProcessor,
   ValueSetProcessor,
-  ConfigurationProcessor,
   Package,
   LakeOfFHIR,
   WildFHIR
@@ -30,21 +29,16 @@ export class FHIRProcessor {
   }
 
   processConfig(externalDeps?: string[]): ExportableConfiguration {
-    let config: ExportableConfiguration;
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
       this.lake.getAllImplementationGuides()[0];
-    if (this.lake.getAllImplementationGuides().length > 0) {
-      config = ConfigurationProcessor.process(igForConfig.content);
-    } else {
-      config = ConfigurationExtractor.process(
-        [
-          ...this.lake.getAllStructureDefinitions(),
-          ...this.lake.getAllCodeSystems(),
-          ...this.lake.getAllValueSets()
-        ].map(wild => wild.content)
-      );
-    }
+    const resources = [
+      ...this.lake.getAllStructureDefinitions(),
+      ...this.lake.getAllCodeSystems(),
+      ...this.lake.getAllValueSets()
+    ].map(wild => wild.content);
+    if (igForConfig) resources.push(igForConfig.content);
+    const config = ConfigurationExtractor.process(resources);
     if (externalDeps?.length > 0) {
       const existingIds: string[] = [];
       config.config.dependencies = config.config.dependencies || [];

@@ -2,13 +2,13 @@ import path from 'path';
 import fs from 'fs-extra';
 import {
   FHIRProcessor,
-  ConfigurationProcessor,
   CodeSystemProcessor,
   StructureDefinitionProcessor,
   ValueSetProcessor,
   InstanceProcessor,
   LakeOfFHIR
 } from '../../src/processor';
+import { ConfigurationExtractor } from '../../src/extractor';
 import { restockLake } from '../helpers';
 
 describe('FHIRProcessor', () => {
@@ -21,7 +21,7 @@ describe('FHIRProcessor', () => {
   let instanceSpy: jest.SpyInstance;
 
   beforeAll(() => {
-    configurationSpy = jest.spyOn(ConfigurationProcessor, 'process');
+    configurationSpy = jest.spyOn(ConfigurationExtractor, 'process');
     structureDefinitionSpy = jest.spyOn(StructureDefinitionProcessor, 'process');
     codeSystemSpy = jest.spyOn(CodeSystemProcessor, 'process');
     valueSetSpy = jest.spyOn(ValueSetProcessor, 'process');
@@ -38,12 +38,12 @@ describe('FHIRProcessor', () => {
     instanceSpy.mockClear();
   });
 
-  it('should try to process an ImplementationGuide with the ConfigurationProcessor', () => {
+  it('should try to extract configuration from an ImplementationGuide with the ConfigurationExtractor', () => {
     restockLake(lake, path.join(__dirname, 'fixtures', 'simple-ig.json'));
     processor.processConfig();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const simpleIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'simple-ig.json'));
-    expect(configurationSpy).toHaveBeenCalledWith(simpleIgContent); // Uses first and only IG in lake if no path provided
+    expect(configurationSpy).toHaveBeenCalledWith([simpleIgContent]); // Uses first and only IG in lake if no path provided
   });
 
   it('should resolve version numbers between command lines deps and ImplementationGuide deps', () => {
@@ -51,7 +51,7 @@ describe('FHIRProcessor', () => {
     const config = processor.processConfig(['hl7.fhir.us.core@2.1.0']);
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
-    expect(configurationSpy).toHaveBeenCalledWith(biggerIgContent); // Uses first and only IG in lake if no path provided
+    expect(configurationSpy).toHaveBeenCalledWith([biggerIgContent]); // Uses first and only IG in lake if no path provided
     expect(config.config.dependencies[0].version).toEqual('3.1.0');
   });
 
@@ -61,7 +61,7 @@ describe('FHIRProcessor', () => {
     expect(config.config.dependencies[2].packageId).toEqual('hl7.fhir.ha.haha');
   });
 
-  it('should try to process a provided ImplementationGuide with the ConfigurationProcessor', () => {
+  it('should try to extract a provided ImplementationGuide with the ConfigurationExtractor', () => {
     restockLake(
       lake,
       path.join(__dirname, 'fixtures', 'simple-ig.json'),
@@ -75,7 +75,7 @@ describe('FHIRProcessor', () => {
     processorWithIg.processConfig();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
-    expect(configurationSpy).toHaveBeenCalledWith(biggerIgContent); // Uses path provided instead of first IG in lake
+    expect(configurationSpy).toHaveBeenCalledWith([biggerIgContent]); // Uses path provided instead of first IG in lake
   });
 
   it('should try to process a Profile with the StructureDefinitionProcessor', () => {

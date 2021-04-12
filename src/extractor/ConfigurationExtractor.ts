@@ -1,33 +1,62 @@
 import { countBy, toPairs, maxBy, capitalize, filter } from 'lodash';
 import { fhirtypes } from 'fsh-sushi';
+import { logger } from '../utils/GoFSHLogger';
 import { ExportableConfiguration } from '../exportable';
 
 type ImplementationGuideStatus = fhirtypes.ImplementationGuideStatus;
 
 export class ConfigurationExtractor {
   static process(resources: any[]): ExportableConfiguration {
+    const igResource = ConfigurationExtractor.getIGResource(resources);
+    const missingIGProperties: string[] = [];
+    if (igResource && !igResource.url) {
+      missingIGProperties.push('url');
+    }
+    if (igResource && !igResource.fhirVersion?.length) {
+      missingIGProperties.push('fhirVersion');
+    }
+    if (missingIGProperties.length > 0) {
+      logger.warn(
+        `ImplementationGuide missing properties needed to generate configuration file: ${missingIGProperties.join(
+          ', '
+        )}`
+      );
+    }
+
     // canonical and fhirVersion are required elements in configuration, so they get defaults
-    const canonical = ConfigurationExtractor.inferCanonical(resources) || 'http://sample.org';
-    const fhirVersion = ConfigurationExtractor.inferString(resources, 'fhirVersion') || '4.0.1';
+    const canonical =
+      igResource?.url?.replace(/\/ImplementationGuide\/[^/]+$/, '') ??
+      (ConfigurationExtractor.inferCanonical(resources) || 'http://sample.org');
+    const fhirVersion = igResource?.fhirVersion ?? [
+      ConfigurationExtractor.inferString(resources, 'fhirVersion') || '4.0.1'
+    ];
     const config = new ExportableConfiguration({
       canonical: canonical,
-      fhirVersion: [fhirVersion],
+      fhirVersion: fhirVersion,
       FSHOnly: true,
       applyExtensionMetadataToRoot: false
     });
-    // infer name and id using canonical
-    Object.assign(config.config, ConfigurationExtractor.inferNameAndId(canonical));
+    if (igResource) {
+      config.config.id = igResource.id;
+      config.config.name = igResource.name;
+    } else {
+      // infer name and id using canonical
+      Object.assign(config.config, ConfigurationExtractor.inferNameAndId(canonical));
+    }
     // infer status and version from most common values
-    const status = ConfigurationExtractor.inferString(
-      resources,
-      'status'
-    ) as ImplementationGuideStatus;
+    const status =
+      igResource?.status ??
+      (ConfigurationExtractor.inferString(resources, 'status') as ImplementationGuideStatus);
     if (status) {
       config.config.status = status;
     }
-    const version = ConfigurationExtractor.inferString(resources, 'version');
+    const version = igResource?.version ?? ConfigurationExtractor.inferString(resources, 'version');
     if (version) {
       config.config.version = version;
+    }
+    const dependencies = igResource?.dependsOn;
+    if (dependencies) {
+      config.config.dependencies = dependencies;
     }
     return config;
   }
@@ -37,7 +66,9 @@ export class ConfigurationExtractor {
     resources.forEach(resource => {
       if (resource.url) {
         potentialCanonicals.push(
-          resource.url.toString().replace(/\/(StructureDefinition|ValueSet|CodeSystem)\/[^/]+$/, '')
+          resource.url
+            .toString()
+            .replace(/\/(StructureDefinition|ValueSet|CodeSystem|ImplementationGuide)\/[^/]+$/, '')
         );
       }
     });
@@ -90,5 +121,9 @@ export class ConfigurationExtractor {
     } else {
       return '';
     }
+  }
+
+  private static getIGResource(resources: any[]): any {
+    return resources.find(r => r.resourceType === 'ImplementationGuide');
   }
 }
