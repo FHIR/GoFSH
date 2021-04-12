@@ -26,7 +26,7 @@ export class ConfigurationExtractor {
     // canonical and fhirVersion are required elements in configuration, so they get defaults
     const canonical =
       igResource?.url?.replace(/\/ImplementationGuide\/[^/]+$/, '') ??
-      (ConfigurationExtractor.inferCanonical(resources) || 'http://sample.org');
+      (ConfigurationExtractor.inferCanonical(resources) || 'http://example.org');
     const fhirVersion = igResource?.fhirVersion ?? [
       ConfigurationExtractor.inferString(resources, 'fhirVersion') || '4.0.1'
     ];

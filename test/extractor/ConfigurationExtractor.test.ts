@@ -52,7 +52,7 @@ describe('ConfigurationExtractor', () => {
     it('should return a configuration with default canonical and fhirVersion when there are no resources', () => {
       const emptyResources: any[] = [];
       const result = ConfigurationExtractor.process(emptyResources);
-      expect(result.config.canonical).toBe('http://sample.org');
+      expect(result.config.canonical).toBe('http://example.org');
       expect(result.config.fhirVersion).toEqual(['4.0.1']);
       expect(result.config.FSHOnly).toBe(true);
       expect(result.config.applyExtensionMetadataToRoot).toBe(false);

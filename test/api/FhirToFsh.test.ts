@@ -36,10 +36,10 @@ describe('fhirToFsh', () => {
     });
     defaultConfig = {
       FSHOnly: true,
-      canonical: 'http://sample.org',
+      canonical: 'http://example.org',
       fhirVersion: ['4.0.1'],
-      id: 'sample',
-      name: 'Sample',
+      id: 'example',
+      name: 'Example',
       applyExtensionMetadataToRoot: false
     };
   });
