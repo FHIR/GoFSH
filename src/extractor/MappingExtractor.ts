@@ -96,7 +96,7 @@ export class MappingExtractor {
             `StructureDefinition was missing the mapping entry for ${matchingMapping.id}.\n` +
             'Please review this and add the following properties as necessary: Target, Title, Description';
           logger.warn(
-            `Element in ${sd.name} references undefined SD-level mapping: ${matchingMapping.id}.  GoFSH has created a new Mapping named ` +
+            `Element in ${sd.name} references undefined SD-level mapping: ${matchingMapping.id}. GoFSH has created a new Mapping named ` +
               `${matchingMapping.name}. Please review and edit the Mapping in your FSH files to provide additional information.`
           );
         }
