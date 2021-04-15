@@ -122,7 +122,7 @@ describe('MappingExtractor', () => {
     expect(element.processedPaths).toContain('mapping[0].map');
 
     expect(loggerSpy.getFirstMessage('warn')).toMatch(
-      /Element in MyObservation references .* RogueMapping\.  GoFSH has created a new Mapping named RogueMapping-for-MyObservation\./
+      /Element in MyObservation references .* RogueMapping\. GoFSH has created a new Mapping named RogueMapping-for-MyObservation\./
     );
   });
 
