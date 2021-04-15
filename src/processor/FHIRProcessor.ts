@@ -37,7 +37,9 @@ export class FHIRProcessor {
       ...this.lake.getAllCodeSystems(),
       ...this.lake.getAllValueSets()
     ].map(wild => wild.content);
-    if (igForConfig) resources.push(igForConfig.content);
+    if (igForConfig) {
+      resources.push(igForConfig.content);
+    }
     const config = ConfigurationExtractor.process(resources);
     if (externalDeps?.length > 0) {
       const existingIds: string[] = [];

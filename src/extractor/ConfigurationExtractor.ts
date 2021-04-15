@@ -19,7 +19,7 @@ export class ConfigurationExtractor {
       logger.warn(
         `ImplementationGuide missing properties needed to generate configuration file: ${missingIGProperties.join(
           ', '
-        )}`
+        )}. These properties will be inferred based on FHIR definitions.`
       );
     }
 
