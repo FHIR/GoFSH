@@ -1,6 +1,10 @@
+import path from 'path';
+import fs from 'fs';
 import { cloneDeep } from 'lodash';
+import { ImplementationGuideDependsOn } from 'fsh-sushi/dist/fhirtypes';
+import { loggerSpy } from '../helpers/loggerSpy';
 import { ConfigurationExtractor } from '../../src/extractor';
-import { ExportableCaretValueRule } from '../../src/exportable';
+import { ExportableCaretValueRule, ExportableConfiguration } from '../../src/exportable';
 
 describe('ConfigurationExtractor', () => {
   let resources: any[];
@@ -40,28 +44,112 @@ describe('ConfigurationExtractor', () => {
     resources = [typicalProfile, typicalExtension, typicalValueSet, typicalCodeSystem];
   });
 
+  beforeEach(() => {
+    loggerSpy.reset();
+  });
+
   describe('#process', () => {
     it('should return a configuration with default canonical and fhirVersion when there are no resources', () => {
       const emptyResources: any[] = [];
       const result = ConfigurationExtractor.process(emptyResources);
-      expect(result.config.canonical).toBe('http://sample.org');
+      expect(result.config.canonical).toBe('http://example.org');
       expect(result.config.fhirVersion).toEqual(['4.0.1']);
       expect(result.config.FSHOnly).toBe(true);
       expect(result.config.applyExtensionMetadataToRoot).toBe(false);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
     });
 
-    it('should return a configuration with elements inferred from the canonical', () => {
-      const result = ConfigurationExtractor.process(resources);
-      expect(result.config.canonical).toBe('http://example.org/our/ig');
-      expect(result.config.id).toBe('example.our.ig');
-      expect(result.config.name).toBe('ExampleOurIg');
+    describe('non-IG resources', () => {
+      it('should return a configuration with elements inferred from the canonical', () => {
+        const result = ConfigurationExtractor.process(resources);
+        expect(result.config.canonical).toBe('http://example.org/our/ig');
+        expect(result.config.id).toBe('example.our.ig');
+        expect(result.config.name).toBe('ExampleOurIg');
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+      });
+
+      it('should return a configuration with elements inferred from resources', () => {
+        const result = ConfigurationExtractor.process(resources);
+        expect(result.config.fhirVersion).toEqual(['4.0.1']);
+        expect(result.config.version).toBe('0.8.6');
+        expect(result.config.status).toBe('draft');
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+      });
     });
 
-    it('should return a configuration with elements inferred from resources', () => {
-      const result = ConfigurationExtractor.process(resources);
-      expect(result.config.fhirVersion).toEqual(['4.0.1']);
-      expect(result.config.version).toBe('0.8.6');
-      expect(result.config.status).toBe('draft');
+    describe('IG resource', () => {
+      it('should create a Configuration from an ImplementationGuide with url and fhirVersion properties', () => {
+        const ig = JSON.parse(
+          fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
+        );
+        const result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.canonical).toBe('http://example.org/tests'); // From IG
+        expect(result.config.fhirVersion).toEqual(['4.5.0']); // From IG
+        expect(result.config.FSHOnly).toBe(true);
+        expect(result.config.applyExtensionMetadataToRoot).toBe(false);
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+      });
+
+      it('should create a Configuration with an inferred url form an ImplementationGuide missing a url', () => {
+        const ig = JSON.parse(
+          fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-url-ig.json'), 'utf-8')
+        );
+        const result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.canonical).toBe('http://example.org/our/ig'); // Inferred from resources
+        expect(result.config.fhirVersion).toEqual(['4.0.1']);
+        expect(result.config.FSHOnly).toBe(true);
+        expect(result.config.applyExtensionMetadataToRoot).toBe(false);
+        expect(loggerSpy.getLastMessage('warn')).toMatch(
+          /ImplementationGuide missing properties.*url/s
+        );
+      });
+
+      it('should create a Configuration with an inferred fhirVersion from an ImplementationGuide missing a fhirVersion', () => {
+        const ig = JSON.parse(
+          fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
+        );
+        const result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.canonical).toBe('http://example.org/tests'); // From IG
+        expect(result.config.fhirVersion).toEqual(['4.0.1']); // Inferred from resources
+        expect(result.config.FSHOnly).toBe(true);
+        expect(result.config.applyExtensionMetadataToRoot).toBe(false);
+        expect(loggerSpy.getLastMessage('warn')).toMatch(
+          /ImplementationGuide missing properties.*fhirVersion/s
+        );
+      });
+
+      it('should create a Configuration with additional properties', () => {
+        const ig = JSON.parse(
+          fs.readFileSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'), 'utf-8')
+        );
+
+        const testDependencies: ImplementationGuideDependsOn[] = [
+          {
+            version: '3.1.0',
+            packageId: 'hl7.fhir.us.core',
+            uri: 'http://hl7.org/fhir/us/core/ImplementationGuide/hl7.fhir.us.core'
+          },
+          {
+            version: '1.0.0',
+            packageId: 'hl7.fhir.us.mcode',
+            uri: 'http://hl7.org/fhir/us/mcode/ImplementationGuide/hl7.fhir.us.mcode'
+          }
+        ];
+
+        const result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.canonical).toBe('http://example.org/tests');
+        expect(result.config.fhirVersion).toEqual(['4.0.1']);
+        expect(result.config.id).toBe('bigger.ig');
+        expect(result.config.name).toBe('BiggerImplementationGuideForTesting');
+        expect(result.config.status).toBe('active');
+        expect(result.config.version).toBe('0.12');
+        expect(result.config.dependencies).toEqual(testDependencies);
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+      });
     });
   });
 
