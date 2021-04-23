@@ -1,24 +1,10 @@
-# GoFSH (WORK IN PROGRESS)
+# GoFSH
 
-GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON to FSH. _GoFSH is in the early stages of development. See the LIMITATIONS section for details._
+GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON to FSH.
 
 FHIR Shorthand (FSH) is a specially-designed language for defining the content of FHIR Implementation Guides (IG). It is simple and compact, with tools to produce Fast Healthcare Interoperability Resources (FHIR) profiles, extensions and implementation guides (IG). Because it is a language, written in text statements, FHIR Shorthand encourages distributed, team-based development using conventional source code control tools such as Github.
 
 For more information about the evolving FSH syntax see the [FHIR Shorthand Reference Manual](https://build.fhir.org/ig/HL7/fhir-shorthand/).
-
-# LIMITATIONS
-
-GoFSH is in the early stages of development; it is neither functionally complete nor bug-free. GoFSH users should use GoFSH with caution, reviewing all outputs before integrating them into FSH projects.
-
-As of the 0.1.0 release (early September 2020):
-* GoFSH outputs valid FSH for most profiles and extensions.
-  * Generated profile and extension definitions should be _technically_ correct, but may not use the most efficient FSH representation or follow FSH authoring best practices.
-  * Generated profile and extension definitions do not use the Mapping or Invariant features of FSH; "caret" rules are used instead. Future versions of GoFSH will address this.
-* GoFSH does not output the content of Code System definitions; it declares them using keywords, but does not generate any of their rules.
-* GoFSH does not output ValueSet definitions.
-* GoFSH does not output Instance definitions (this includes examples, as well as any definitions that must be created in FSH using the _Instance_ keyword).
-* GoFSH does not process or consider the ImplementationGuide JSON when generating FSH.
-* GoFSH does not support generating FSH from FHIR XML definitions.
 
 # Installation for GoFSH Users
 
