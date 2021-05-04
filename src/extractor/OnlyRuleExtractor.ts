@@ -9,7 +9,7 @@ export class OnlyRuleExtractor {
     }
     const onlyRule = new ExportableOnlyRule(getPath(input));
     input.type.forEach((t, i) => {
-      if (t.code === 'Reference' && t.targetProfile) {
+      if (['Reference', 'CodeableReference'].includes(t.code) && t.targetProfile) {
         t.targetProfile.forEach((tp, tpi) => {
           onlyRule.types.push({ type: tp, isReference: true });
           input.processedPaths.push(`type[${i}].targetProfile[${tpi}]`);
