@@ -137,6 +137,7 @@ describe('ConfigurationExtractor', () => {
         expect(loggerSpy.getLastMessage('warn')).toMatch(
           /ImplementationGuide missing properties.*fhirVersion/s
         );
+        expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(/Unsupported fhirVersion 99\.0\.0/);
       });
 
       it('should create a Configuration with additional properties', () => {

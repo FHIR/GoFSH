@@ -12,9 +12,13 @@ export class ConfigurationExtractor {
     if (igResource && !igResource.url) {
       missingIGProperties.push('url');
     }
-    let fhirVersion: string[] = igResource?.fhirVersion?.filter((v: string) =>
-      utils.isSupportedFHIRVersion(v)
-    );
+    let fhirVersion: string[] = igResource?.fhirVersion?.filter((v: string) => {
+      if (!utils.isSupportedFHIRVersion(v)) {
+        logger.warn(`Unsupported fhirVersion ${v} in ImplementationGuide will be ignored.`);
+        return false;
+      }
+      return true;
+    });
     if (igResource && !fhirVersion?.length) {
       missingIGProperties.push('fhirVersion');
     }
