@@ -1,0 +1,7 @@
+{
+  "resourceType": "ImplementationGuide",
+  "id": "simple.ig",
+  "url": "http://example.org/tests/ImplementationGuide/simple.ig",
+  "name": "UnsupportedImplementationGuide",
+  "fhirVersion": ["99.0.0"]
+}
