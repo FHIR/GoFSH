@@ -20,10 +20,12 @@ export class AssignmentRuleExtractor {
         assignmentRule.exactly = true;
       }
       if (isPrimitiveValue(matchingValue)) {
-        // a primitive string could represent a string value or a code value
+        // a primitive string could represent a string value, code value, or integer64 value
         if (typeof matchingValue === 'string') {
           if (matchingKey.endsWith('Code')) {
             assignmentRule.value = new fshtypes.FshCode(matchingValue);
+          } else if (matchingKey.endsWith('Integer64')) {
+            assignmentRule.value = BigInt(matchingValue);
           } else {
             assignmentRule.value = fshifyString(matchingValue);
           }
