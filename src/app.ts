@@ -115,9 +115,10 @@ async function app() {
   const config = processor.processConfig(dependencies);
 
   // Load dependencies from config for GoFSH processing
-  const allDependencies = config.config.dependencies?.map(
-    (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
-  );
+  const allDependencies =
+    config.config.dependencies?.map(
+      (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
+    ) ?? [];
   const fhirPackageId = config.config.fhirVersion[0].startsWith('4.0')
     ? 'hl7.fhir.r4.core'
     : 'hl7.fhir.r5.core';
