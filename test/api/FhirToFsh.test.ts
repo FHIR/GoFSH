@@ -117,7 +117,11 @@ describe('fhirToFsh', () => {
     });
 
     expect(loadSpy.mock.calls).toHaveLength(1);
-    expect(loadSpy.mock.calls[0][1]).toEqual(['hl7.fhir.us.core@3.1.0', 'hl7.fhir.us.mcode@1.0.0']);
+    expect(loadSpy.mock.calls[0][1]).toEqual([
+      'hl7.fhir.us.core@3.1.0',
+      'hl7.fhir.us.mcode@1.0.0',
+      'hl7.fhir.r4.core@4.0.1'
+    ]);
   });
 
   it('should parse a string input into JSON', async () => {

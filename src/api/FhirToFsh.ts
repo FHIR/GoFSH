@@ -77,10 +77,12 @@ export async function fhirToFsh(
   const dependencies = configuration.config.dependencies?.map(
     (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
   );
-  const fhirPackageId = configuration.config.fhirVersion[0].startsWith('4.0')
-    ? 'hl7.fhir.r4.core'
-    : 'hl7.fhir.r5.core';
-  dependencies.push(`${fhirPackageId}@${configuration.config.fhirVersion[0]}`);
+  if (dependencies) {
+    const fhirPackageId = configuration.config.fhirVersion[0].startsWith('4.0')
+      ? 'hl7.fhir.r4.core'
+      : 'hl7.fhir.r5.core';
+    dependencies.push(`${fhirPackageId}@${configuration.config.fhirVersion[0]}`);
+  }
   await Promise.all(loadExternalDependencies(defs, dependencies));
 
   // Process the FHIR to rules, and then export to FSH
