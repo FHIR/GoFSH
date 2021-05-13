@@ -80,6 +80,27 @@ describe('AssignmentRuleExtractor', () => {
       expect(element.processedPaths).toContain('patternBoolean');
     });
 
+    it('should extract an assigned value rule with a fixed integer64 value', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[8]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('valueInteger64');
+      expectedRule.value = BigInt('9223372036854775807');
+      expectedRule.exactly = true;
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('fixedInteger64');
+    });
+
+    it('should extract an assigned value rule with a pattern integer64 value', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[9]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('valueInteger64');
+      expectedRule.value = BigInt('9223372036854775807');
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('patternInteger64');
+    });
+
     it('should extract an assigned value rule with a pattern code', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[6]);
       const assignmentRules = AssignmentRuleExtractor.process(element);

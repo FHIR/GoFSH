@@ -1,0 +1,40 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "CarePlan",
+  "name": "CarePlanWithOnly",
+  "snapshot": {
+    "element": []
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "CarePlan.activity.performedActivity",
+        "path": "CarePlan.activity.performedActivity",
+        "type": [
+          {
+            "code": "CodeableReference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Observation",
+              "http://hl7.org/fhir/StructureDefinition/MolecularSequence"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "CarePlan.extension:foo.value[x]",
+        "path": "CarePlan.extension:foo.value[x]",
+        "type": [
+          {
+            "code": "string"
+          },
+          {
+            "code": "CodeableReference",
+            "profile": ["http://hl7.org/fhir/StructureDefinition/ProfileOfCodeableReference"],
+            "versioning": "either"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -121,6 +121,25 @@ describe('ConfigurationExtractor', () => {
         );
       });
 
+      it('should default to 4.0.1 when no supported fhirVersion is given', () => {
+        const ig = JSON.parse(
+          fs.readFileSync(
+            path.join(__dirname, 'fixtures', 'unsupported-fhir-version-ig.json'),
+            'utf-8'
+          )
+        );
+        const result = ConfigurationExtractor.process([ig]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.canonical).toBe('http://example.org/tests'); // From IG
+        expect(result.config.fhirVersion).toEqual(['4.0.1']); // Default
+        expect(result.config.FSHOnly).toBe(true);
+        expect(result.config.applyExtensionMetadataToRoot).toBe(false);
+        expect(loggerSpy.getLastMessage('warn')).toMatch(
+          /ImplementationGuide missing properties.*fhirVersion/s
+        );
+        expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(/Unsupported fhirVersion 99\.0\.0/);
+      });
+
       it('should create a Configuration with additional properties', () => {
         const ig = JSON.parse(
           fs.readFileSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'), 'utf-8')

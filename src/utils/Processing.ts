@@ -97,8 +97,8 @@ export function loadExternalDependencies(
   defs: fhirdefs.FHIRDefinitions,
   dependencies: string[] = []
 ): Promise<fhirdefs.FHIRDefinitions | void>[] {
-  // Automatically include FHIR R4
-  if (!dependencies.includes('hl7.fhir.r4.core@4.0.1')) {
+  // Automatically include FHIR R4 if no other versions of FHIR are already included
+  if (!dependencies.some(dep => /hl7\.fhir\.r[45]\.core/.test(dep))) {
     dependencies.push('hl7.fhir.r4.core@4.0.1');
   }
 

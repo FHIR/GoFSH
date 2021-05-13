@@ -8,7 +8,11 @@ export class ExportableAssignmentRule extends fshrules.AssignmentRule implements
 
   toFSH(): string {
     let printableValue = '';
-    if (typeof this.value === 'boolean' || typeof this.value === 'number') {
+    if (
+      typeof this.value === 'boolean' ||
+      typeof this.value === 'number' ||
+      typeof this.value === 'bigint'
+    ) {
       printableValue = String(this.value);
     } else if (typeof this.value === 'string') {
       printableValue = this.isInstance ? this.value : `"${this.value}"`;

@@ -52,7 +52,7 @@ export function getFSHValue(
   flatObject: FlatObject,
   resourceType: string,
   fisher: utils.Fishable
-): number | boolean | string | fshtypes.FshCode {
+): number | boolean | string | fshtypes.FshCode | bigint {
   const value = flatObject[key];
   const definition = fhirtypes.StructureDefinition.fromJSON(
     fisher.fishForFHIR(resourceType, utils.Type.Resource, utils.Type.Type)
@@ -89,6 +89,8 @@ export function getFSHValue(
   }
   if (element?.type?.[0]?.code === 'code') {
     return new fshtypes.FshCode(value.toString());
+  } else if (element?.type?.[0]?.code === 'integer64') {
+    return BigInt(value);
   }
   return typeof value === 'string' ? fshifyString(value) : value;
 }

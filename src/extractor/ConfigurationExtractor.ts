@@ -1,5 +1,5 @@
 import { countBy, toPairs, maxBy, capitalize, filter } from 'lodash';
-import { fhirtypes } from 'fsh-sushi';
+import { fhirtypes, utils } from 'fsh-sushi';
 import { logger } from '../utils/GoFSHLogger';
 import { ExportableConfiguration } from '../exportable';
 
@@ -12,7 +12,14 @@ export class ConfigurationExtractor {
     if (igResource && !igResource.url) {
       missingIGProperties.push('url');
     }
-    if (igResource && !igResource.fhirVersion?.length) {
+    let fhirVersion: string[] = igResource?.fhirVersion?.filter((v: string) => {
+      if (!utils.isSupportedFHIRVersion(v)) {
+        logger.warn(`Unsupported fhirVersion ${v} in ImplementationGuide will be ignored.`);
+        return false;
+      }
+      return true;
+    });
+    if (igResource && !fhirVersion?.length) {
       missingIGProperties.push('fhirVersion');
     }
     if (missingIGProperties.length > 0) {
@@ -27,9 +34,12 @@ export class ConfigurationExtractor {
     const canonical =
       igResource?.url?.replace(/\/ImplementationGuide\/[^/]+$/, '') ??
       (ConfigurationExtractor.inferCanonical(resources) || 'http://example.org');
-    const fhirVersion = igResource?.fhirVersion ?? [
-      ConfigurationExtractor.inferString(resources, 'fhirVersion') || '4.0.1'
-    ];
+    if (!fhirVersion?.length) {
+      const fhirVersionFromResources = ConfigurationExtractor.inferString(resources, 'fhirVersion');
+      fhirVersion = utils.isSupportedFHIRVersion(fhirVersionFromResources)
+        ? [fhirVersionFromResources]
+        : ['4.0.1'];
+    }
     const config = new ExportableConfiguration({
       canonical: canonical,
       fhirVersion: fhirVersion,

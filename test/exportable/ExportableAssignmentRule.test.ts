@@ -22,6 +22,12 @@ describe('ExportableAssignmentRule', () => {
     expect(rule.toFSH()).toEqual('* valueDecimal = 1.21');
   });
 
+  it('should export a AssignmentRule with a bigint value', () => {
+    const rule = new ExportableAssignmentRule('valueInteger64');
+    rule.value = BigInt('9223372036854775807');
+    expect(rule.toFSH()).toEqual('* valueInteger64 = 9223372036854775807');
+  });
+
   it('should export a AssignmentRule with a string value', () => {
     const rule = new ExportableAssignmentRule('note.text');
     rule.value = 'This is the \\"note text\\".\\nThis is the second line.';
