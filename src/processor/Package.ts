@@ -8,13 +8,17 @@ import {
   ExportableConfiguration,
   ExportableMapping,
   ExportableAlias,
-  NamedExportable
+  NamedExportable,
+  ExportableResource,
+  ExportableLogical
 } from '../exportable';
 import { logger } from '../utils';
 
 export class Package {
   public readonly profiles: ExportableProfile[] = [];
   public readonly extensions: ExportableExtension[] = [];
+  public readonly resources: ExportableResource[] = [];
+  public readonly logicals: ExportableLogical[] = [];
   public readonly instances: ExportableInstance[] = [];
   public readonly valueSets: ExportableValueSet[] = [];
   public readonly codeSystems: ExportableCodeSystem[] = [];
@@ -29,6 +33,8 @@ export class Package {
     resource:
       | ExportableProfile
       | ExportableExtension
+      | ExportableResource
+      | ExportableLogical
       | ExportableInstance
       | ExportableValueSet
       | ExportableCodeSystem
@@ -42,6 +48,12 @@ export class Package {
     } else if (resource instanceof ExportableExtension) {
       checkDuplicateDefinition(this.extensions, resource, 'extension');
       this.extensions.push(resource);
+    } else if (resource instanceof ExportableResource) {
+      checkDuplicateDefinition(this.resources, resource, 'resource');
+      this.resources.push(resource);
+    } else if (resource instanceof ExportableLogical) {
+      checkDuplicateDefinition(this.logicals, resource, 'logical');
+      this.logicals.push(resource);
     } else if (resource instanceof ExportableInstance) {
       checkDuplicateDefinition(this.instances, resource, 'instance');
       this.instances.push(resource);

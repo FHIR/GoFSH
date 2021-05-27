@@ -1,6 +1,7 @@
 {
   "resourceType": "StructureDefinition",
   "kind": "resource",
+  "derivation": "constraint",
   "type": "Observation",
   "name": "MyObservation",
   "id": "my-profile",

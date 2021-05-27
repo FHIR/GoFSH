@@ -5,7 +5,10 @@ import {
   ExportableInvariant,
   ExportableMapping,
   ExportableProfile,
-  ExportableExtension
+  ExportableExtension,
+  ExportableLogical,
+  ExportableResource,
+  ExportableAddElementRule
 } from '../exportable';
 import {
   CardRuleExtractor,
@@ -29,16 +32,23 @@ export class StructureDefinitionProcessor {
     config: fshtypes.Configuration,
     existingInvariants: ExportableInvariant[] = []
   ):
-    | [ExportableProfile | ExportableExtension, ...(ExportableInvariant | ExportableMapping)[]]
+    | [
+        ExportableProfile | ExportableExtension | ExportableLogical | ExportableResource,
+        ...(ExportableInvariant | ExportableMapping)[]
+      ]
     | [] {
     if (StructureDefinitionProcessor.isProcessableStructureDefinition(input)) {
-      let sd: ExportableProfile | ExportableExtension;
+      let sd: ExportableProfile | ExportableExtension | ExportableLogical | ExportableResource;
       // Prefer name (which is required). If we happen to get invalid FHIR, create a reasonable name from the id with only allowable characters
       const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
       if (input.type === 'Extension') {
         sd = new ExportableExtension(name);
-      } else {
+      } else if (input.kind === 'logical') {
+        sd = new ExportableLogical(name);
+      } else if (input.kind === 'resource' && input.derivation === 'constraint') {
         sd = new ExportableProfile(name);
+      } else {
+        sd = new ExportableResource(name);
       }
       const elements =
         input.differential?.element?.map(rawElement => {
@@ -157,6 +167,8 @@ export interface ProcessableStructureDefinition {
   title?: string;
   description?: string;
   baseDefinition?: string;
+  kind?: string;
+  derivation?: string;
   mapping?: fhirtypes.StructureDefinitionMapping[];
   differential?: {
     element: any[];
@@ -171,6 +183,6 @@ interface ConstrainableEntity {
   id: string;
   title?: string;
   description?: string;
-  rules?: ExportableSdRule[];
+  rules?: ExportableSdRule[] | (ExportableSdRule | ExportableAddElementRule)[];
   parent?: string;
 }

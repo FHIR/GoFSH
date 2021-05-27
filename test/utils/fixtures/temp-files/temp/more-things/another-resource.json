@@ -1,5 +1,7 @@
 {
   "resourceType": "StructureDefinition",
   "id": "AnotherResource",
-  "name": "AnotherResource"
+  "name": "AnotherResource",
+  "kind": "resource",
+  "derivation": "constraint"
 }

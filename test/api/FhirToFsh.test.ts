@@ -129,7 +129,9 @@ describe('fhirToFsh', () => {
       JSON.stringify({
         resourceType: 'StructureDefinition',
         name: 'Foo',
-        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient'
+        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
+        kind: 'resource',
+        derivation: 'constraint'
       })
     ]);
     expect(results.errors).toHaveLength(0);
@@ -143,7 +145,9 @@ describe('fhirToFsh', () => {
       {
         resourceType: 'StructureDefinition',
         name: 'Foo',
-        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient'
+        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
+        kind: 'resource',
+        derivation: 'constraint'
       }
     ]);
     expect(results.errors).toHaveLength(0);
@@ -157,7 +161,9 @@ describe('fhirToFsh', () => {
       {
         resourceType: 'StructureDefinition',
         name: 'Foo',
-        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient'
+        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
+        kind: 'resource',
+        derivation: 'constraint'
       },
       { style: 'boo' }
     ]);
@@ -173,7 +179,9 @@ describe('fhirToFsh', () => {
         {
           resourceType: 'StructureDefinition',
           name: 'Foo',
-          baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient'
+          baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
+          kind: 'resource',
+          derivation: 'constraint'
         }
       ],
       { style: 'string' }
@@ -190,7 +198,9 @@ describe('fhirToFsh', () => {
         {
           resourceType: 'StructureDefinition',
           name: 'Foo',
-          baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient'
+          baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
+          kind: 'resource',
+          derivation: 'constraint'
         }
       ],
       { style: 'map' }

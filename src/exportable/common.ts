@@ -2,6 +2,8 @@ import { EOL } from 'os';
 import {
   ExportableProfile,
   ExportableExtension,
+  ExportableLogical,
+  ExportableResource,
   ExportableCodeSystem,
   ExportableValueSet,
   ExportableInvariant,
@@ -13,6 +15,8 @@ export function metadataToFSH(
   definition:
     | ExportableProfile
     | ExportableExtension
+    | ExportableLogical
+    | ExportableResource
     | ExportableCodeSystem
     | ExportableValueSet
     | ExportableInvariant
@@ -31,6 +35,22 @@ export function metadataToFSH(
     if (
       definition.parent != 'Extension' &&
       definition.parent != 'http://hl7.org/fhir/StructureDefinition/Extension'
+    ) {
+      resultLines.push(`Parent: ${definition.parent}`);
+    }
+  } else if (definition instanceof ExportableLogical) {
+    resultLines.push(`Logical: ${definition.name}`);
+    if (
+      definition.parent != 'Base' &&
+      definition.parent != 'http://hl7.org/fhir/StructureDefinition/Base'
+    ) {
+      resultLines.push(`Parent: ${definition.parent}`);
+    }
+  } else if (definition instanceof ExportableResource) {
+    resultLines.push(`Resource: ${definition.name}`);
+    if (
+      definition.parent != 'DomainResource' &&
+      definition.parent != 'http://hl7.org/fhir/StructureDefinition/DomainResource'
     ) {
       resultLines.push(`Parent: ${definition.parent}`);
     }
