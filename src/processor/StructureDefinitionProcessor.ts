@@ -90,8 +90,12 @@ export class StructureDefinitionProcessor {
     // Then extract rules based on the differential elements
     elements.forEach(element => {
       const ancestorSliceDefinition = getAncestorSliceDefinition(element, input, fisher);
-      // if there is a slice, but no ancestor definition, capture with a contains rule
-      if (element.sliceName && ancestorSliceDefinition == null) {
+      // if there is a slice, which is not a choice slice, but no ancestor definition, capture with a contains rule
+      if (
+        element.sliceName &&
+        !/\[x]:[a-z][a-z0-9]*[A-Z][A-Za-z0-9]*$/.test(element.id) &&
+        ancestorSliceDefinition == null
+      ) {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
