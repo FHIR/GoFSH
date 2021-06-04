@@ -27,7 +27,9 @@ export default {
             const parentPath = splitOnPathPeriods(rule.path).slice(0, -1).join('.');
             const searchablePath = parentPath.replace(/\[\d+\]/g, '');
             if (sd?.findElementByPath(searchablePath, fisher)?.type?.[0]?.code === 'Reference') {
-              const reference = new fshtypes.FshReference(rule.value);
+              // Remove '#' prefix from references to contained resources (if applicable)
+              const referenceTarget = rule.value.replace(/^#/, '');
+              const reference = new fshtypes.FshReference(referenceTarget);
               // If we are converting the reference, look for a matching display rule, using the
               // original numerical parent path
               const matchingDisplayRuleIndex = instance.rules
