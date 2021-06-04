@@ -1,0 +1,12 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "my-resource",
+  "url": "http://example.org/tests/StructureDefinition/my.resource",
+  "kind": "resource",
+  "type": "DomainResource",
+  "name": "MyResource",
+  "title": "My New Resource",
+  "description": "This is my new resource.",
+  "derivation": "specialization",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+}

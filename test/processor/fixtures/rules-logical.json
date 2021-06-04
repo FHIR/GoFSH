@@ -1,0 +1,69 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "MyLogical",
+  "name": "MyLogical",
+  "kind": "logical",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base",
+  "derivation": "specialization",
+  "differential": {
+    "element": [
+      {
+        "id": "MyLogical",
+        "path": "MyLogical"
+      },
+      {
+        "id": "MyLogical.bag",
+        "path": "MyLogical.bag",
+        "short": "A bag for holding things",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "id": "MyLogical.bag.capacity",
+        "path": "MyLogical.bag.capacity",
+        "short": "The amount held",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity"
+            ]
+          }
+        ],
+        "constraint": [
+          {
+            "key": "bag-1",
+            "severity": "warning",
+            "human": "This is my first invariant."
+          }
+        ]
+      },
+      {
+        "id": "MyLogical.bag.material",
+        "path": "MyLogical.bag.material",
+        "short": "Physical composition of the bag",
+        "definition": "Physical composition of the bag",
+        "min": 1,
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          },
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://example.org/StructureDefinition/Material"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

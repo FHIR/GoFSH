@@ -1,0 +1,7 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "DomainResource",
+  "derivation": "specialization",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource"
+}

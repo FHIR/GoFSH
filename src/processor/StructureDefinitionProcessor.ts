@@ -19,6 +19,7 @@ import {
   ContainsRuleExtractor,
   OnlyRuleExtractor,
   ObeysRuleExtractor,
+  AddElementRuleExtractor,
   InvariantExtractor,
   MappingExtractor
 } from '../extractor';
@@ -94,17 +95,44 @@ export class StructureDefinitionProcessor {
     fisher: utils.Fishable,
     config: fshtypes.Configuration
   ): void {
-    const newRules: ExportableSdRule[] = [];
+    const newRules: (ExportableSdRule | ExportableAddElementRule)[] = [];
+    let parentDefinition: ProcessableStructureDefinition;
+    if (input.baseDefinition) {
+      parentDefinition = fisher.fishForFHIR(input.baseDefinition);
+    } else if (target instanceof ExportableResource) {
+      parentDefinition = fisher.fishForFHIR(
+        'http://hl7.org/fhir/StructureDefinition/DomainResource'
+      );
+    } else if (target instanceof ExportableLogical) {
+      parentDefinition = fisher.fishForFHIR('http://hl7.org/fhir/StructureDefinition/Base');
+    }
     // First extract the top-level caret rules from the StructureDefinition
     newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fisher, config));
     // Then extract rules based on the differential elements
     elements.forEach(element => {
       const ancestorSliceDefinition = getAncestorSliceDefinition(element, input, fisher);
-      // if there is a slice, but no ancestor definition, capture with a contains rule
+      // if this element is a newly-defined slice, capture with a contains rule
       if (element.sliceName && ancestorSliceDefinition == null) {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
+          ...AssignmentRuleExtractor.process(element),
+          BindingRuleExtractor.process(element),
+          ObeysRuleExtractor.process(element)
+        );
+      } else if (
+        (target instanceof ExportableResource || target instanceof ExportableLogical) &&
+        !parentDefinition?.snapshot?.element?.some(parentEl => parentEl.id === element.id)
+      ) {
+        // a newly defined element on a Resource or Logical needs an AddElementRule
+        // AddElementRule contains cardinality, flag, and type information, so those extractors don't need to be called here
+        // the root element doesn't need to be added, but all other elements do.
+        // but, we still want to mark paths as processed so that caret value rules are not made.
+        const addElementRule = AddElementRuleExtractor.process(element);
+        if (element.path !== input.name) {
+          newRules.push(addElementRule);
+        }
+        newRules.push(
           ...AssignmentRuleExtractor.process(element),
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)

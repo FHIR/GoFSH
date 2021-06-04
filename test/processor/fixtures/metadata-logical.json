@@ -1,0 +1,11 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "my-logical",
+  "url": "http://example.org/tests/StructureDefinition/my.logical",
+  "kind": "logical",
+  "type": "Base",
+  "name": "MyLogical",
+  "title": "My Logical Model",
+  "description": "This is my fancy new logical model.",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base"
+}

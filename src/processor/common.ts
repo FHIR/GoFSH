@@ -51,12 +51,12 @@ export function makeNameSushiSafe(
 ) {
   if (/\s/.test(entity.name)) {
     let entityType: string;
-    if (entity instanceof ExportableProfile || entity instanceof ExportableExtension) {
-      entityType = 'StructureDefinition';
-    } else if (entity instanceof ExportableValueSet) {
+    if (entity instanceof ExportableValueSet) {
       entityType = 'ValueSet';
-    } else {
+    } else if (entity instanceof ExportableCodeSystem) {
       entityType = 'CodeSystem';
+    } else {
+      entityType = 'StructureDefinition';
     }
     logger.warn(
       `${entityType} with id ${entity.id} has name with whitespace. Converting whitespace to underscores.`
