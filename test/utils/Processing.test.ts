@@ -359,19 +359,22 @@ describe('Processing', () => {
 
   describe('loadExternalDependencies', () => {
     beforeAll(() => {
-      jest
-        .spyOn(fhirdefs, 'loadDependency')
-        .mockImplementation(
-          async (packageName: string, version: string, FHIRDefs: fhirdefs.FHIRDefinitions) => {
-            // the mock loader can find hl7.fhir.r4.core and hl7.fhir.us.core
-            if (packageName === 'hl7.fhir.r4.core' || packageName === 'hl7.fhir.us.core') {
-              FHIRDefs.packages.push(`${packageName}#${version}`);
-              return Promise.resolve(FHIRDefs);
-            } else {
-              throw new Error();
-            }
+      jest.mock('fsh-sushi', () => ({
+        ...jest.requireActual('fsh-sushi'),
+        loadDependency: async (
+          packageName: string,
+          version: string,
+          FHIRDefs: fhirdefs.FHIRDefinitions
+        ) => {
+          // the mock loader can find hl7.fhir.r4.core and hl7.fhir.us.core
+          if (packageName === 'hl7.fhir.r4.core' || packageName === 'hl7.fhir.us.core') {
+            FHIRDefs.packages.push(`${packageName}#${version}`);
+            return Promise.resolve(FHIRDefs);
+          } else {
+            throw new Error();
           }
-        );
+        }
+      }));
     });
     beforeEach(() => {
       loggerSpy.reset();
