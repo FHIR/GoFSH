@@ -53,7 +53,7 @@ describe('AssignmentRuleExtractor', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
       const assignmentRules = AssignmentRuleExtractor.process(element);
       const expectedRule = new ExportableAssignmentRule('note.text');
-      expectedRule.value = 'This is the \\"note\\" text.\\nThere are two lines.';
+      expectedRule.value = 'This is the "note" text.\nThere are two lines.';
       expect(assignmentRules).toHaveLength(1);
       expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
       expect(element.processedPaths).toContain('patternString');
