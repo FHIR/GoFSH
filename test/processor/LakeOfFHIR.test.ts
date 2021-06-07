@@ -12,6 +12,8 @@ describe('LakeOfHIR', () => {
       getWildFHIRs(
         'simple-profile.json',
         'simple-extension.json',
+        'simple-logical-model.json',
+        'simple-resource.json',
         'simple-codesystem.json',
         'simple-valueset.json',
         'simple-ig.json',
@@ -28,15 +30,17 @@ describe('LakeOfHIR', () => {
 
   describe('#constructor', () => {
     it('should store all the passed in values', () => {
-      expect(lake.docs).toHaveLength(8);
+      expect(lake.docs).toHaveLength(10);
       expect(lake.docs[0].content.id).toBe('simple.profile');
       expect(lake.docs[1].content.id).toBe('simple.extension');
-      expect(lake.docs[2].content.id).toBe('simple.codesystem');
-      expect(lake.docs[3].content.id).toBe('simple.valueset');
-      expect(lake.docs[4].content.id).toBe('simple.ig');
-      expect(lake.docs[5].content.id).toBe('rocky.balboa');
-      expect(lake.docs[6].content.id).toBe('unsupported.valueset');
-      expect(lake.docs[7].content.id).toBe('unsupported.codesystem');
+      expect(lake.docs[2].content.id).toBe('SimpleLogicalModel');
+      expect(lake.docs[3].content.id).toBe('SimpleResource');
+      expect(lake.docs[4].content.id).toBe('simple.codesystem');
+      expect(lake.docs[5].content.id).toBe('simple.valueset');
+      expect(lake.docs[6].content.id).toBe('simple.ig');
+      expect(lake.docs[7].content.id).toBe('rocky.balboa');
+      expect(lake.docs[8].content.id).toBe('unsupported.valueset');
+      expect(lake.docs[9].content.id).toBe('unsupported.codesystem');
     });
   });
 
@@ -46,6 +50,8 @@ describe('LakeOfHIR', () => {
       expect(results).toHaveLength(2);
       expect(results[0].content.id).toBe('simple.profile');
       expect(results[1].content.id).toBe('simple.extension');
+      // NOTE: This does not yet contain specializations (LogicalModels and Resources)
+      // When full support is implemented, LogicalModels and Resources should be included in this test.
     });
   });
 
@@ -104,22 +110,30 @@ describe('LakeOfHIR', () => {
   describe('#getAllInstances', () => {
     it('should get all non-IG/SD/VS/CS resources by default', () => {
       const results = lake.getAllInstances();
-      expect(results).toHaveLength(1);
-      expect(results[0].content.id).toBe('rocky.balboa');
+      expect(results).toHaveLength(3); // NOTE: Specializations are included temporarily until full support for LogicalModels and Resources is implemented
+      expect(results[2].content.id).toBe('rocky.balboa');
     });
 
     it('should get all non-IG/SD/VS/CS resources when includeUnsupportedValueSets is false', () => {
       const results = lake.getAllInstances(false);
-      expect(results).toHaveLength(1);
-      expect(results[0].content.id).toBe('rocky.balboa');
+      expect(results).toHaveLength(3);
+      expect(results[2].content.id).toBe('rocky.balboa');
     });
 
     it('should also get unsupported value sets and code systems when includeUnsupportedTerminologyResources is true', () => {
       const results = lake.getAllInstances(true);
+      expect(results).toHaveLength(5);
+      expect(results[2].content.id).toBe('rocky.balboa');
+      expect(results[3].content.id).toBe('unsupported.valueset');
+      expect(results[4].content.id).toBe('unsupported.codesystem');
+    });
+
+    // TODO: This test should be move to the getAllStructureDefinitions case when full support for LogicalModel and Resources is implemented.
+    it('should get specializations (temporarily)', () => {
+      const results = lake.getAllInstances();
       expect(results).toHaveLength(3);
-      expect(results[0].content.id).toBe('rocky.balboa');
-      expect(results[1].content.id).toBe('unsupported.valueset');
-      expect(results[2].content.id).toBe('unsupported.codesystem');
+      expect(results[0].content.id).toBe('SimpleLogicalModel');
+      expect(results[1].content.id).toBe('SimpleResource');
     });
   });
 
