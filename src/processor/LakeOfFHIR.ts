@@ -16,7 +16,9 @@ export class LakeOfFHIR implements utils.Fishable {
    * @returns {WildFHIR[]}
    */
   getAllStructureDefinitions(): WildFHIR[] {
-    return this.docs.filter(d => d.content.resourceType === 'StructureDefinition');
+    return this.docs
+      .filter(d => d.content.resourceType === 'StructureDefinition')
+      .filter(d => !this.isSpecialization(d)); // TODO: Remove this filter when full support for LogicalModels and Resources is implemented
   }
 
   /**
@@ -62,8 +64,11 @@ export class LakeOfFHIR implements utils.Fishable {
     return this.docs.filter(d => {
       switch (d.content.resourceType) {
         case 'ImplementationGuide':
-        case 'StructureDefinition':
           return false;
+        case 'StructureDefinition':
+          // TODO: This is a temporary fix to support exporting LogicalModels and Resources as Instances.
+          // This should return false when full support is implemented.
+          return this.isSpecialization(d);
         case 'CodeSystem':
           return (
             includeUnsupportedTerminologyResources &&
@@ -78,6 +83,12 @@ export class LakeOfFHIR implements utils.Fishable {
           return true;
       }
     });
+  }
+
+  isSpecialization(d: WildFHIR): boolean {
+    return (
+      d.content.resourceType === 'StructureDefinition' && d.content.derivation === 'specialization'
+    );
   }
 
   fishForFHIR(item: string, ...types: utils.Type[]) {

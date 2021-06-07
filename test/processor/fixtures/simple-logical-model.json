@@ -1,0 +1,29 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "SimpleLogicalModel",
+  "url": "http://example.org/StructureDefinition/SimpleLogicalModel",
+  "version": "1.0.0",
+  "name": "SimpleLogicalModel",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "rim",
+      "name": "RIM Mapping",
+      "uri": "http://hl7.org/v3"
+    }
+  ],
+  "kind": "logical",
+  "abstract": false,
+  "type": "http://example.org/StructureDefinition/SimpleLogicalModel",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base",
+  "derivation": "specialization",
+  "differential": {
+    "element": [
+      {
+        "id": "SimpleLogicalModel",
+        "path": "SimpleLogicalModel"
+      }
+    ]
+  }
+}
