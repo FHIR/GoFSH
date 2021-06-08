@@ -229,13 +229,13 @@ describe('StructureDefinitionProcessor', () => {
 
     it('should convert the simplest Logical', () => {
       const input = JSON.parse(
-        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-logical.json'), 'utf-8')
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-logical-model.json'), 'utf-8')
       );
       const result = StructureDefinitionProcessor.process(input, defs, config);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(ExportableLogical);
-      expect(result[0].name).toBe('SimpleLogical');
+      expect(result[0].name).toBe('SimpleLogicalModel');
     });
 
     it('should not convert a Logical without a name or id', () => {

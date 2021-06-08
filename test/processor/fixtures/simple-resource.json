@@ -1,6 +1,6 @@
 {
   "resourceType": "StructureDefinition",
-  "id": "SimpleResource",
+  "id": "simple.resource",
   "url": "http://example.org/StructureDefinition/SimpleResource",
   "version": "1.0.0",
   "name": "SimpleResource",

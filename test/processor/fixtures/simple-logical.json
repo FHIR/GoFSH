@@ -1,9 +1,0 @@
-{
-  "resourceType": "StructureDefinition",
-  "id": "simple.logical",
-  "url": "http://example.org/tests/StructureDefinition/simple.logical",
-  "kind": "logical",
-  "type": "Base",
-  "name": "SimpleLogical",
-  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base"
-}
