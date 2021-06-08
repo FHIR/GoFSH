@@ -45,38 +45,6 @@ export class ExportableValueSetFilterComponentRule extends fshrules.ValueSetFilt
   constructor(inclusion: boolean) {
     super(inclusion);
   }
-
-  toFSH() {
-    const inclusionPart = `* ${this.inclusion ? 'include' : 'exclude'} codes`;
-    let fromPart = fromString(this.from);
-    let filterPart = this.buildFilterString();
-    // if the result is more than 100 characters long, build it again, but with linebreaks
-    if (inclusionPart.length + fromPart.length + filterPart.length > 100) {
-      fromPart = fromString(this.from, ` and${EOL}    `);
-      filterPart = `${EOL}   ` + this.buildFilterString(` and${EOL}    `);
-    }
-    return `${inclusionPart}${fromPart}${filterPart}`;
-  }
-
-  private buildFilterString(separator = ' and '): string {
-    if (this.filters.length) {
-      return (
-        ' where ' +
-        this.filters
-          .map(
-            filter =>
-              `${filter.property} ${filter.operator} ${
-                typeof filter.value === 'string'
-                  ? `"${filter.value.toString()}"`
-                  : filter.value.toString()
-              }`
-          )
-          .join(separator)
-      );
-    } else {
-      return '';
-    }
-  }
 }
 
 function fromString(from: fshtypes.ValueSetComponentFrom, separator = ' and ') {

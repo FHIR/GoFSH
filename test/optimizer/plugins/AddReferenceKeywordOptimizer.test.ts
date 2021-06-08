@@ -38,6 +38,22 @@ describe('optimizer', () => {
       expect(instance.rules).toEqual([expectedRule]);
     });
 
+    it('should add the Reference keyword on a reference rule with a contained reference', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Patient';
+      const referenceRule = new ExportableAssignmentRule('generalPractitioner.reference');
+      referenceRule.value = '#mypractitioner';
+      instance.rules = [referenceRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = new ExportableAssignmentRule('generalPractitioner');
+      // In FSH, references to contained resources refer by id w/ no # (e.g., Reference(mypractitioner))
+      expectedRule.value = new fshtypes.FshReference('mypractitioner');
+      expect(instance.rules).toEqual([expectedRule]);
+    });
+
     it('should add the Reference keyword on a reference rule and find a corresponding display', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Patient';

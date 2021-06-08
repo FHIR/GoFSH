@@ -364,7 +364,6 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingExtension.rules.length).toBe(1);
       expect(workingExtension.rules).toContainEqual<ExportableAssignmentRule>(assignmentRule);
     });
-
     it('should add rules to a Resource', () => {
       const input: ProcessableStructureDefinition = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-resource.json'), 'utf-8')
@@ -472,6 +471,51 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingLogical.rules[2]).toEqual(capacityElementRule);
       expect(workingLogical.rules[3]).toEqual(capacityObeysRule);
       expect(workingLogical.rules[4]).toEqual(materialElementRule);
+    });
+
+    it('should not create contains rules when the extension SD puts the slicename in the choice (#122)', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'slice-name-in-choice.json'), 'utf-8')
+      );
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      const workingExtension = new ExportableExtension('SliceNameInChoice');
+      StructureDefinitionProcessor.extractRules(input, elements, workingExtension, defs, config);
+      expect(workingExtension.rules.length).toBeGreaterThan(0);
+      const containsRules = workingExtension.rules.filter(r => r instanceof ExportableContainsRule);
+      expect(containsRules.length).toBe(0);
+    });
+
+    it('should still create contains rules when the extension SD puts the slicename child paths of the choice (#122)', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'slice-name-in-choice-child-paths.json'),
+          'utf-8'
+        )
+      );
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      const workingExtension = new ExportableExtension('SliceNameInChoiceChildPaths');
+      StructureDefinitionProcessor.extractRules(input, elements, workingExtension, defs, config);
+      expect(workingExtension.rules.length).toBeGreaterThan(0);
+      const containsRules = workingExtension.rules.filter(r => r instanceof ExportableContainsRule);
+      const containsRuleA = new ExportableContainsRule('valueCodeableConcept.coding');
+      containsRuleA.items = [{ name: 'codingA' }];
+      const cardRuleA = new ExportableCardRule('valueCodeableConcept.coding[codingA]');
+      cardRuleA.min = 0;
+      cardRuleA.max = '1';
+      containsRuleA.cardRules = [cardRuleA];
+      const containsRuleB = new ExportableContainsRule('valueCodeableConcept.coding');
+      containsRuleB.items = [{ name: 'codingB' }];
+      const cardRuleB = new ExportableCardRule('valueCodeableConcept.coding[codingB]');
+      cardRuleB.min = 0;
+      cardRuleB.max = '1';
+      containsRuleB.cardRules = [cardRuleB];
+      expect(containsRules).toEqual([containsRuleA, containsRuleB]);
     });
 
     it('should add rules to a Profile with a new slice', () => {

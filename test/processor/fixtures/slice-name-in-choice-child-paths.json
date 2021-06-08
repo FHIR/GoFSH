@@ -1,0 +1,91 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "slice-name-in-choice-child-path",
+  "url": "http://example.org/StructureDefinition/slice-name-in-choice-child-path",
+  "version": "1.0.0",
+  "name": "SliceNameInChoiceChildPath",
+  "title": "SliceName in Choice Child Path",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "rim",
+      "uri": "http://hl7.org/v3",
+      "name": "RIM Mapping"
+    }
+  ],
+  "kind": "complex-type",
+  "abstract": false,
+  "context": [
+    {
+      "type": "element",
+      "expression": "Element"
+    }
+  ],
+  "type": "Extension",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "Extension",
+        "path": "Extension",
+        "short": "SliceName in Choice Child Path"
+      },
+      {
+        "id": "Extension.url",
+        "path": "Extension.url",
+        "fixedUri": "http://example.org/StructureDefinition/slice-name-in-choice-child-path"
+      },
+      {
+        "id": "Extension.value[x]:valueCodeableConcept",
+        "path": "Extension.valueCodeableConcept",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "id": "Extension.value[x]:valueCodeableConcept.coding",
+        "path": "Extension.valueCodeableConcept.coding",
+        "slicing": {
+          "discriminator": [
+            {
+              "type": "value",
+              "path": "code"
+            }
+          ]
+        }
+      },
+      {
+        "id": "Extension.value[x]:valueCodeableConcept.coding:codingA",
+        "path": "Extension.valueCodeableConcept.coding",
+        "sliceName": "codingA",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "Extension.value[x]:valueCodeableConcept.coding:codingA.code",
+        "path": "Extension.valueCodeableConcept.coding.code",
+        "min": 1,
+        "fixedCode": "foo"
+      },
+      {
+        "id": "Extension.value[x]:valueCodeableConcept.coding:codingB",
+        "path": "Extension.valueCodeableConcept.coding",
+        "sliceName": "codingB",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "Extension.value[x]:valueCodeableConcept.coding:codingB.code",
+        "path": "Extension.valueCodeableConcept.coding.code",
+        "min": 1,
+        "fixedCode": "bar"
+      }
+    ]
+  }
+}
