@@ -92,7 +92,6 @@ export function getFSHValue(
   } else if (element?.type?.[0]?.code === 'integer64') {
     return BigInt(value);
   }
-  // return typeof value === 'string' ? fshifyString(value) : value;
   return value;
 }
 
