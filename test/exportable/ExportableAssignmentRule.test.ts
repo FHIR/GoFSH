@@ -30,7 +30,7 @@ describe('ExportableAssignmentRule', () => {
 
   it('should export a AssignmentRule with a string value', () => {
     const rule = new ExportableAssignmentRule('note.text');
-    rule.value = 'This is the \\"note text\\".\\nThis is the second line.';
+    rule.value = 'This is the "note text".\nThis is the second line.';
     expect(rule.toFSH()).toEqual(
       '* note.text = "This is the \\"note text\\".\\nThis is the second line."'
     );

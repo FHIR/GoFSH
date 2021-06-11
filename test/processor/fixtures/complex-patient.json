@@ -2,7 +2,9 @@
   "resourceType": "Patient",
   "id": "complex-patient",
   "meta": {
-    "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"]
+    "profile": [
+      "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+    ]
   },
   "extension": [
     {
@@ -52,6 +54,10 @@
           {
             "url": "http://foo.com",
             "valueCode": "bar"
+          },
+          {
+            "url": "http://example.com",
+            "valueString": "This \"value\" is\nin the second extension."
           }
         ]
       }

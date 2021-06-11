@@ -27,7 +27,7 @@ export class AssignmentRuleExtractor {
           } else if (matchingKey.endsWith('Integer64')) {
             assignmentRule.value = BigInt(matchingValue);
           } else {
-            assignmentRule.value = fshifyString(matchingValue);
+            assignmentRule.value = matchingValue;
           }
         } else {
           assignmentRule.value = matchingValue;

@@ -64,7 +64,7 @@
         "id": "Observation.basedOn",
         "path": "Observation.basedOn",
         "short": "foo",
-        "definition": "bar"
+        "definition": "bar\n\"bar\"? yes\\bar"
       },
       {
         "id": "Observation.partOf",
@@ -140,14 +140,14 @@
         "constraint": [
           {
             "id": "yesconstraintscanhaveids",
-            "key" : "foo-1",
-            "severity" : "error",
-            "human" : "It must foo"
+            "key": "foo-1",
+            "severity": "error",
+            "human": "It must foo"
           },
           {
-            "key" : "foo-2",
-            "severity" : "error",
-            "human" : "It still must foo"
+            "key": "foo-2",
+            "severity": "error",
+            "human": "It still must foo"
           }
         ]
       },
@@ -156,13 +156,13 @@
         "path": "Observation.hasMember",
         "mapping": [
           {
-            "identity" : "middle-earth",
-            "map" : "mordor"
+            "identity": "middle-earth",
+            "map": "mordor"
           },
           {
             "id": "inthewardrobe",
-            "identity" : "narnia",
-            "map" : "lamppost"
+            "identity": "narnia",
+            "map": "lamppost"
           }
         ]
       },
@@ -172,9 +172,9 @@
         "constraint": [
           {
             "id": "yesconstraintscanhaveids",
-            "key" : "foo-3",
-            "severity" : "error",
-            "human" : "It must choose to foo"
+            "key": "foo-3",
+            "severity": "error",
+            "human": "It must choose to foo"
           }
         ]
       }

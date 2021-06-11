@@ -1,7 +1,7 @@
 import { flatten } from 'flat';
 import { pickBy, mapKeys, flatMap, flatten as flat } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
-import { fshifyString, removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
+import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
 
 // This function depends on the id of an element to construct the path.
@@ -92,7 +92,7 @@ export function getFSHValue(
   } else if (element?.type?.[0]?.code === 'integer64') {
     return BigInt(value);
   }
-  return typeof value === 'string' ? fshifyString(value) : value;
+  return value;
 }
 
 export function getAncestorElement(
