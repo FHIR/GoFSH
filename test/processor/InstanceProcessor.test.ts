@@ -114,7 +114,7 @@ describe('InstanceProcessor', () => {
         'complex-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
       );
       expect(result.id).toBe('complex-patient');
-      expect(result.rules).toHaveLength(21); // One rule for every value set since there are no optimizations for things like codes
+      expect(result.rules).toHaveLength(23); // One rule for every value set since there are no optimizations for things like codes
 
       const genderAssignmentRule = new ExportableAssignmentRule('gender');
       genderAssignmentRule.value = new fshtypes.FshCode('female');
@@ -135,7 +135,7 @@ describe('InstanceProcessor', () => {
         'complex-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
       );
       expect(result.id).toBe('complex-patient');
-      expect(result.rules).toHaveLength(21); // One rule for every value set since there are no optimizations for things like codes
+      expect(result.rules).toHaveLength(23); // One rule for every value set since there are no optimizations for things like codes
 
       const ombCategoryUrl = new ExportableAssignmentRule('extension[0].extension[0].url');
       ombCategoryUrl.value = 'ombCategory';
@@ -204,16 +204,22 @@ describe('InstanceProcessor', () => {
       );
       expect(result.id).toBe('complex-patient');
 
-      const countryExtensionUrl = new ExportableAssignmentRule(
-        'address[0].country.extension[0].url'
-      );
-      countryExtensionUrl.value = 'http://foo.com';
-      const countryExtensionValue = new ExportableAssignmentRule(
+      const fooExtensionUrl = new ExportableAssignmentRule('address[0].country.extension[0].url');
+      fooExtensionUrl.value = 'http://foo.com';
+      const fooExtensionValue = new ExportableAssignmentRule(
         'address[0].country.extension[0].valueCode'
       );
-      countryExtensionValue.value = new fshtypes.FshCode('bar');
-      expect(result.rules).toContainEqual(countryExtensionUrl);
-      expect(result.rules).toContainEqual(countryExtensionValue);
+      fooExtensionValue.value = new fshtypes.FshCode('bar');
+      const exampleExtensionUrl = new ExportableAssignmentRule(
+        'address[0].country.extension[1].url'
+      );
+      exampleExtensionUrl.value = 'http://example.com';
+      const exampleExtensionValue = new ExportableAssignmentRule(
+        'address[0].country.extension[1].valueString'
+      );
+      exampleExtensionValue.value = 'This "value" is\nin the second extension.';
+      expect(result.rules).toContainEqual(fooExtensionUrl);
+      expect(result.rules).toContainEqual(fooExtensionValue);
     });
 
     it('should use entry resource type to determine assignment rule value types on bundle entry resources', () => {
