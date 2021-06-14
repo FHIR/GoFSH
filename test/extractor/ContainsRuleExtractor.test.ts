@@ -9,6 +9,7 @@ import {
   ExportableFlagRule
 } from '../../src/exportable';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { loggerSpy } from '../helpers/loggerSpy';
 
 describe('ContainsRuleExtractor', () => {
   let looseSD: any;
@@ -64,6 +65,24 @@ describe('ContainsRuleExtractor', () => {
     cardRule.max = '*';
     expectedRule.cardRules.push(cardRule);
     expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
+  });
+
+  it('should extract a ContainsRule with a sliceName that does not match its id', () => {
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[9]);
+    const containsRule = ContainsRuleExtractor.process(element, looseSD, defs);
+    const expectedRule = new ExportableContainsRule('extension');
+    expectedRule.items.push({
+      name: 'Nectarines'
+    });
+    const cardRule = new ExportableCardRule('extension[Nectarines]');
+    cardRule.min = 1;
+    cardRule.max = '4';
+    expectedRule.cardRules.push(cardRule);
+    expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
+    expect(element.processedPaths).toEqual(['min', 'max', 'sliceName']);
+    expect(loggerSpy.getLastMessage('error')).toMatch(
+      /Element sliceName \"Plums\".*Observation.extension:Nectarines/
+    );
   });
 
   it('should return null when no cardinality information can be found', () => {
