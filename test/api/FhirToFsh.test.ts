@@ -215,6 +215,8 @@ describe('fhirToFsh', () => {
       invariants: new ResourceMap(),
       mappings: new ResourceMap(),
       extensions: new ResourceMap(),
+      logicals: new ResourceMap(),
+      resources: new ResourceMap(),
       codeSystems: new ResourceMap(),
       valueSets: new ResourceMap(),
       instances: new ResourceMap()

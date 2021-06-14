@@ -11,7 +11,9 @@ import {
   ExportableInvariant,
   ExportableObeysRule,
   ExportableProfile,
-  NamedExportable
+  NamedExportable,
+  ExportableLogical,
+  ExportableResource
 } from '../exportable';
 import { Package } from '../processor';
 import { logger } from '../utils';
@@ -78,6 +80,8 @@ export class FSHExporter {
         ...this.fshPackage.aliases,
         ...this.fshPackage.profiles,
         ...this.fshPackage.extensions,
+        ...this.fshPackage.logicals,
+        ...this.fshPackage.resources,
         ...this.fshPackage.codeSystems,
         ...this.fshPackage.valueSets,
         ...this.fshPackage.instances,
@@ -91,6 +95,8 @@ export class FSHExporter {
         mappings: new ResourceMap(),
         profiles: new ResourceMap(),
         extensions: new ResourceMap(),
+        logicals: new ResourceMap(),
+        resources: new ResourceMap(),
         codeSystems: new ResourceMap(),
         valueSets: new ResourceMap(),
         instances: new ResourceMap()
@@ -107,6 +113,12 @@ export class FSHExporter {
       }
       for (const extension of this.fshPackage.extensions) {
         fshMap.extensions.set(extension.name, extension.toFSH());
+      }
+      for (const logical of this.fshPackage.logicals) {
+        fshMap.logicals.set(logical.name, logical.toFSH());
+      }
+      for (const resource of this.fshPackage.resources) {
+        fshMap.resources.set(resource.name, resource.toFSH());
       }
       for (const codeSystem of this.fshPackage.codeSystems) {
         fshMap.codeSystems.set(codeSystem.name, codeSystem.toFSH());
@@ -142,6 +154,8 @@ export class FSHExporter {
     results.push(...this.fshPackage.aliases);
     results.push(...this.fshPackage.profiles);
     results.push(...this.fshPackage.extensions);
+    results.push(...this.fshPackage.logicals);
+    results.push(...this.fshPackage.resources);
     results.push(...this.fshPackage.codeSystems);
     results.push(...this.fshPackage.valueSets);
     results.push(...this.fshPackage.instances);
@@ -168,6 +182,12 @@ export class FSHExporter {
     for (const extension of this.fshPackage.extensions) {
       files.set(`${extension.name}-Extension.fsh`, [extension]);
     }
+    for (const logical of this.fshPackage.logicals) {
+      files.set(`${logical.name}-Logical.fsh`, [logical]);
+    }
+    for (const resource of this.fshPackage.resources) {
+      files.set(`${resource.name}-Resource.fsh`, [resource]);
+    }
     for (const codeSystem of this.fshPackage.codeSystems) {
       files.set(`${codeSystem.name}-CodeSystem.fsh`, [codeSystem]);
     }
@@ -186,6 +206,8 @@ export class FSHExporter {
     files.set('aliases.fsh', this.fshPackage.aliases);
     files.set('profiles.fsh', this.fshPackage.profiles);
     files.set('extensions.fsh', this.fshPackage.extensions);
+    files.set('logicals.fsh', this.fshPackage.logicals);
+    files.set('resources.fsh', this.fshPackage.resources);
     files.set('valueSets.fsh', this.fshPackage.valueSets);
     files.set('codeSystems.fsh', this.fshPackage.codeSystems);
     files.set('instances.fsh', this.fshPackage.instances);
@@ -239,6 +261,8 @@ export class FSHExporter {
     // All other artifacts are grouped by category
     files.set('aliases.fsh', this.fshPackage.aliases);
     files.set('extensions.fsh', this.fshPackage.extensions);
+    files.set('logicals.fsh', this.fshPackage.logicals);
+    files.set('resources.fsh', this.fshPackage.resources);
     files.set('valueSets.fsh', this.fshPackage.valueSets);
     files.set('codeSystems.fsh', this.fshPackage.codeSystems);
     files.set('mappings.fsh', this.fshPackage.mappings);
@@ -282,8 +306,13 @@ export class FSHExporter {
     const usedIn: string[] = [];
     files.forEach((exportables, file) => {
       exportables
-        .filter(exportable => exportable instanceof ExportableProfile)
-        .forEach((profile: ExportableProfile) => {
+        .filter(
+          exportable =>
+            exportable instanceof ExportableProfile ||
+            exportable instanceof ExportableLogical ||
+            exportable instanceof ExportableResource
+        )
+        .forEach((profile: ExportableProfile | ExportableLogical | ExportableResource) => {
           profile.rules.forEach(rule => {
             if (rule instanceof ExportableObeysRule && rule.keys.includes(invariant.name)) {
               usedIn.push(file);
