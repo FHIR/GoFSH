@@ -425,7 +425,7 @@ describe('StructureDefinitionProcessor', () => {
         'constraint[0].human',
         'constraint[0].severity'
       );
-      const workingLogical = new ExportableResource('MyLogical');
+      const workingLogical = new ExportableLogical('MyLogical');
       StructureDefinitionProcessor.extractRules(input, elements, workingLogical, defs, config);
       expect(workingLogical.rules).toHaveLength(5);
       // a caret rule for kind: this can get removed by optimizer later, but is technically fine
@@ -471,6 +471,79 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingLogical.rules[2]).toEqual(capacityElementRule);
       expect(workingLogical.rules[3]).toEqual(capacityObeysRule);
       expect(workingLogical.rules[4]).toEqual(materialElementRule);
+    });
+
+    it('should show a warning when a Logical contains a slice definition', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-logical.json'), 'utf-8')
+      );
+      // add a slice into the differential
+      input.differential.element.splice(2, 0, {
+        id: 'MyLogical.bag:specialBag',
+        path: 'MyLogical.bag',
+        sliceName: 'specialBag'
+      });
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      // these paths would have been processed by the InvariantExtractor
+      elements[3].processedPaths.push(
+        'constraint[0].key',
+        'constraint[0].human',
+        'constraint[0].severity'
+      );
+      const workingLogical = new ExportableLogical('MyLogical');
+      StructureDefinitionProcessor.extractRules(input, elements, workingLogical, defs, config);
+      expect(workingLogical.rules).toHaveLength(6);
+      // We get the rule that defines the slice...
+      const bagContains = new ExportableContainsRule('bag');
+      bagContains.items.push({ name: 'specialBag' });
+      const specialBagCard = new ExportableCardRule('bag[specialBag]');
+      specialBagCard.min = 0;
+      specialBagCard.max = '*';
+      bagContains.cardRules.push(specialBagCard);
+      expect(workingLogical.rules).toContainEqual(bagContains);
+      // but we also get a warning about it.
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'MyLogical contains a slice definition for specialBag'
+      );
+    });
+
+    it('should show a warning when a Logical contains a value assignment', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-logical.json'), 'utf-8')
+      );
+      // add a value assignment into the differential
+      input.differential.element[2].patternQuantity = {
+        value: 4,
+        code: 'L',
+        system: 'http://unitsofmeasure.org'
+      };
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      // these paths would have been processed by the InvariantExtractor
+      elements[2].processedPaths.push(
+        'constraint[0].key',
+        'constraint[0].human',
+        'constraint[0].severity'
+      );
+      const workingLogical = new ExportableLogical('MyLogical');
+      StructureDefinitionProcessor.extractRules(input, elements, workingLogical, defs, config);
+      expect(workingLogical.rules).toHaveLength(6);
+      // We get the rule that assigns the value...
+      const capacityAssignment = new ExportableAssignmentRule('bag.capacity');
+      capacityAssignment.value = new fshtypes.FshQuantity(
+        4,
+        new fshtypes.FshCode('L', 'http://unitsofmeasure.org')
+      );
+      expect(workingLogical.rules).toContainEqual(capacityAssignment);
+      // but we also get a warning about it.
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'MyLogical contains value assignment for MyLogical.bag.capacity'
+      );
     });
 
     it('should not create contains rules when the extension SD puts the slicename in the choice (#122)', () => {

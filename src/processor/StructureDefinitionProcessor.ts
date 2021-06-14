@@ -24,7 +24,7 @@ import {
   MappingExtractor
 } from '../extractor';
 import { ProcessableElementDefinition, switchQuantityRules, makeNameSushiSafe } from '.';
-import { getAncestorSliceDefinition } from '../utils';
+import { getAncestorSliceDefinition, logger } from '../utils';
 
 export class StructureDefinitionProcessor {
   static process(
@@ -121,20 +121,12 @@ export class StructureDefinitionProcessor {
     // Then extract rules based on the differential elements
     elements.forEach(element => {
       const ancestorSliceDefinition = getAncestorSliceDefinition(element, input, fisher);
-      // if there is a slice, which is not a choice slice, but no ancestor definition, capture with a contains rule
-      if (
+      // if there is a slice, which is not a choice slice, but no ancestor definition, it will need a contains rule
+      const isNewSlice =
         element.sliceName &&
         !/\[x]:[a-z][a-z0-9]*[A-Z][A-Za-z0-9]*$/.test(element.id) &&
-        ancestorSliceDefinition == null
-      ) {
-        newRules.push(
-          ContainsRuleExtractor.process(element, input, fisher),
-          OnlyRuleExtractor.process(element),
-          ...AssignmentRuleExtractor.process(element),
-          BindingRuleExtractor.process(element),
-          ObeysRuleExtractor.process(element)
-        );
-      } else if (
+        ancestorSliceDefinition == null;
+      if (
         (target instanceof ExportableResource || target instanceof ExportableLogical) &&
         !parentDefinition?.snapshot?.element?.some(parentEl => parentEl.id === element.id)
       ) {
@@ -143,10 +135,26 @@ export class StructureDefinitionProcessor {
         // the root element doesn't need to be added, but all other elements do.
         // but, we still want to mark paths as processed so that caret value rules are not made.
         const addElementRule = AddElementRuleExtractor.process(element);
-        if (element.path !== input.name) {
+        if (isNewSlice) {
+          logger.warn(
+            `${target.constructorName} ${target.name} contains a slice definition for ${element.sliceName} on ${element.path}. This is not supported by FHIR.`
+          );
+          newRules.push(ContainsRuleExtractor.process(element, input, fisher));
+        } else if (element.path !== input.name) {
           newRules.push(addElementRule);
         }
+        newRules.push(BindingRuleExtractor.process(element), ObeysRuleExtractor.process(element));
+        const assignmentRules = AssignmentRuleExtractor.process(element);
+        if (assignmentRules.length > 0) {
+          logger.warn(
+            `${target.constructorName} ${target.name} contains value assignment for ${element.id}. This is not supported by FHIR.`
+          );
+          newRules.push(...assignmentRules);
+        }
+      } else if (isNewSlice) {
         newRules.push(
+          ContainsRuleExtractor.process(element, input, fisher),
+          OnlyRuleExtractor.process(element),
           ...AssignmentRuleExtractor.process(element),
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
