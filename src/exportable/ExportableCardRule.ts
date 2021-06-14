@@ -5,12 +5,4 @@ export class ExportableCardRule extends fshrules.CardRule implements ExportableR
   constructor(path: string) {
     super(path);
   }
-
-  cardToString(): string {
-    return `${this.min ?? ''}..${this.max ?? ''}`;
-  }
-
-  toFSH(): string {
-    return `* ${this.path} ${this.cardToString()}`;
-  }
 }

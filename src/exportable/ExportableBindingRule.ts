@@ -5,8 +5,4 @@ export class ExportableBindingRule extends fshrules.BindingRule implements Expor
   constructor(path: string) {
     super(path);
   }
-
-  toFSH(): string {
-    return `* ${this.path} from ${this.valueSet} (${this.strength})`;
-  }
 }

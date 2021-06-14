@@ -562,7 +562,7 @@ describe('CaretValueRuleExtractor', () => {
       expectedRule1.value = 'foo';
       const expectedRule2 = new ExportableCaretValueRule('basedOn');
       expectedRule2.caretPath = 'definition';
-      expectedRule2.value = 'bar';
+      expectedRule2.value = 'bar\n"bar"? yes\\bar';
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([expectedRule1, expectedRule2]);
     });
 

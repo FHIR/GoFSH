@@ -1,7 +1,6 @@
 import { EOL } from 'os';
 import { fshtypes } from 'fsh-sushi';
 import { Exportable, ExportableSdRule } from '.';
-import { metadataToFSH } from './common';
 
 export class ExportableExtension extends fshtypes.Extension implements Exportable {
   rules: ExportableSdRule[];
@@ -11,8 +10,14 @@ export class ExportableExtension extends fshtypes.Extension implements Exportabl
   }
 
   toFSH(): string {
-    const metadataFSH = metadataToFSH(this);
-    const rulesFSH = this.rules.map(r => r.toFSH()).join(EOL);
-    return `${metadataFSH}${rulesFSH.length ? EOL + rulesFSH : ''}`;
+    // Omit the Parent keyword when the default Parent is used
+    let fsh = super.toFSH();
+    if (
+      this.parent === 'Extension' ||
+      this.parent === 'http://hl7.org/fhir/StructureDefinition/Extension'
+    ) {
+      fsh = fsh.replace(`${EOL}Parent: ${this.parent}`, '');
+    }
+    return fsh;
   }
 }
