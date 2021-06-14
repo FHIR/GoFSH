@@ -18,7 +18,9 @@ export class ContainsRuleExtractor {
     const sliceNameFromId = input.id.match(/[:/]([^:/]+)$/)?.[1];
     if (sliceNameFromId !== input.sliceName) {
       logger.error(
-        `Element sliceName "${input.sliceName}" is not correctly used to populate id "${input.id}". The value implied by the id will be used.`
+        `Element sliceName "${input.sliceName}" is not correctly used to populate id "${input.id}" according to ` +
+          'the algorithm specified here: https://www.hl7.org/fhir/elementdefinition.html#id. ' +
+          'The value implied by the id will be used.'
       );
     }
     const rulePath = elementPath.replace(RegExp(`\\[${sliceNameFromId}\\]$`), '');
