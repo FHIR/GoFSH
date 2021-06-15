@@ -233,6 +233,6 @@ interface ConstrainableEntity {
   id: string;
   title?: string;
   description?: string;
-  rules?: ExportableSdRule[] | (ExportableSdRule | ExportableAddElementRule)[];
+  rules?: (ExportableSdRule | ExportableAddElementRule)[];
   parent?: string;
 }

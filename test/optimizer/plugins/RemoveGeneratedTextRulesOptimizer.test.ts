@@ -6,7 +6,9 @@ import {
   ExportableCaretValueRule,
   ExportableInstance,
   ExportableProfile,
-  ExportableValueSet
+  ExportableValueSet,
+  ExportableLogical,
+  ExportableResource
 } from '../../../src/exportable';
 import optimizer from '../../../src/optimizer/plugins/RemoveGeneratedTextRulesOptimizer';
 
@@ -43,6 +45,24 @@ describe('optimizer', () => {
         myPackage.add(profile);
         optimizer.optimize(myPackage);
         expect(profile.rules).toEqual([rulesRule]);
+      });
+
+      it('should remove ^text rules when text.status is #generated on a Logical', () => {
+        const logical = new ExportableLogical('Foo');
+        logical.rules = [statusRule, divRule, rulesRule];
+        const myPackage = new Package();
+        myPackage.add(logical);
+        optimizer.optimize(myPackage);
+        expect(logical.rules).toEqual([rulesRule]);
+      });
+
+      it('should remove ^text rules when text.status is #generated on a Resource', () => {
+        const resource = new ExportableResource('Foo');
+        resource.rules = [statusRule, divRule, rulesRule];
+        const myPackage = new Package();
+        myPackage.add(resource);
+        optimizer.optimize(myPackage);
+        expect(resource.rules).toEqual([rulesRule]);
       });
 
       it('should remove ^text rules when text.status is #generated on a ValueSet', () => {
