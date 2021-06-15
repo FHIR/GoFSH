@@ -46,14 +46,14 @@ export class StructureDefinitionProcessor {
         sd = new ExportableLogical(name);
       } else if (input.kind === 'resource' && input.derivation === 'specialization') {
         sd = new ExportableResource(name);
-      } else if (input.kind === 'resource' && input.derivation === 'constraint') {
-        sd = new ExportableProfile(name);
       } else if (
         input.kind === 'complex-type' &&
         input.derivation === 'constraint' &&
         input.type === 'Extension'
       ) {
         sd = new ExportableExtension(name);
+      } else if (input.kind !== 'logical' && input.derivation === 'constraint') {
+        sd = new ExportableProfile(name);
       } else {
         // this should never be encountered when running normally, hopefully,
         // since the LakeOfFHIR should only be providing us with non-Instance StructureDefinitions

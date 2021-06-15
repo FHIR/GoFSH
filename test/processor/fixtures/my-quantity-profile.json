@@ -1,0 +1,22 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "MyQuantity",
+  "url": "http://example.org/StructureDefinition/MyQuantity",
+  "version": "1.0.0",
+  "name": "MyQuantity",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "kind": "complex-type",
+  "abstract": false,
+  "type": "Quantity",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Quantity",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "Quantity",
+        "path": "Quantity"
+      }
+    ]
+  }
+}

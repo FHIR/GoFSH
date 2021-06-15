@@ -57,6 +57,17 @@ describe('StructureDefinitionProcessor', () => {
       expect(result[0].name).toBe('SimpleProfile');
     });
 
+    it('should create a Profile for a StructureDefinition with kind complex-type, derivation constraint, and a non-Extension type', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'my-quantity-profile.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableProfile);
+      expect(result[0].name).toBe('MyQuantity');
+    });
+
     it('should not create contains rules for slices that are not new', () => {
       const containsExtractorSpy = jest.spyOn(ContainsRuleExtractor, 'process');
       const input = JSON.parse(

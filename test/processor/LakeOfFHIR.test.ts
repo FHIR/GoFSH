@@ -19,7 +19,8 @@ describe('LakeOfHIR', () => {
         'simple-ig.json',
         'rocky-balboa.json',
         'unsupported-valueset.json',
-        'unsupported-codesystem.json'
+        'unsupported-codesystem.json',
+        'my-string-profile.json'
       )
     );
   });
@@ -30,7 +31,7 @@ describe('LakeOfHIR', () => {
 
   describe('#constructor', () => {
     it('should store all the passed in values', () => {
-      expect(lake.docs).toHaveLength(10);
+      expect(lake.docs).toHaveLength(11);
       expect(lake.docs[0].content.id).toBe('simple.profile');
       expect(lake.docs[1].content.id).toBe('simple.extension');
       expect(lake.docs[2].content.id).toBe('simple.logical');
@@ -41,17 +42,19 @@ describe('LakeOfHIR', () => {
       expect(lake.docs[7].content.id).toBe('rocky.balboa');
       expect(lake.docs[8].content.id).toBe('unsupported.valueset');
       expect(lake.docs[9].content.id).toBe('unsupported.codesystem');
+      expect(lake.docs[10].content.id).toBe('my.string.profile');
     });
   });
 
   describe('#getAllStructureDefinitions', () => {
     it('should get all structure definitions', () => {
       const results = lake.getAllStructureDefinitions();
-      expect(results).toHaveLength(4);
+      expect(results).toHaveLength(5);
       expect(results[0].content.id).toBe('simple.profile');
       expect(results[1].content.id).toBe('simple.extension');
       expect(results[2].content.id).toBe('simple.logical');
       expect(results[3].content.id).toBe('simple.resource');
+      expect(results[4].content.id).toBe('my.string.profile');
     });
   });
 
