@@ -94,6 +94,13 @@
         "id": "Observation.error:Grapes",
         "path": "Observation.error:Grapes",
         "sliceName": "Grapes"
+      },
+      {
+        "id": "Observation.extension:Nectarines",
+        "path": "Observation.extension",
+        "sliceName": "Plums",
+        "min": 1,
+        "max": "4"
       }
     ]
   }
