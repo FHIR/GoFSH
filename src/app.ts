@@ -16,9 +16,7 @@ import {
   logger,
   stats,
   fshingTrip,
-  getRandomPun,
-  getRandomSeaCreatures,
-  getRandomSeaCreaturesStat
+  getRandomPun
 } from './utils';
 import { Package } from './processor';
 
@@ -137,17 +135,17 @@ async function app() {
 
   writeFSH(pkg, outDir, program.style);
 
-  const proNum = pad(pkg.profiles.length.toString(), 12);
-  const extNum = pad(pkg.extensions.length.toString(), 13);
-  const vsNum = pad(pkg.valueSets.length.toString(), 12);
-  const csNum = pad(pkg.codeSystems.length.toString(), 13);
-  const instNum = pad(pkg.instances.length.toString(), 12);
-  const invNum = pad(pkg.invariants.length.toString(), 13);
-  const mapNum = pad(pkg.mappings.length.toString(), 12);
+  const proNum = pad(pkg.profiles.length.toString(), 18);
+  const extNum = pad(pkg.extensions.length.toString(), 17);
+  const logNum = pad(pkg.logicals.length.toString(), 18);
+  const resNum = pad(pkg.resources.length.toString(), 18);
+  const vsNum = pad(pkg.valueSets.length.toString(), 17);
+  const csNum = pad(pkg.codeSystems.length.toString(), 18);
+  const instNum = pad(pkg.instances.length.toString(), 18);
+  const invNum = pad(pkg.invariants.length.toString(), 17);
+  const mapNum = pad(pkg.mappings.length.toString(), 18);
   const errNumMsg = pad(`${stats.numError} Error${stats.numError !== 1 ? 's' : ''}`, 12);
   const wrnNumMsg = padStart(`${stats.numWarn} Warning${stats.numWarn !== 1 ? 's' : ''}`, 12);
-  const creatures = pad(getRandomSeaCreatures(), 13);
-  const creatrStat = pad(getRandomSeaCreaturesStat(stats.numError, stats.numWarn), 13);
   const aWittyMessageInvolvingABadFishPun = padEnd(getRandomPun(stats.numError, stats.numWarn), 37);
   const clr =
     stats.numError > 0 ? chalk.red : stats.numWarn > 0 ? chalk.rgb(179, 98, 0) : chalk.green;
@@ -155,16 +153,21 @@ async function app() {
   // prettier-ignore
   const results = [
     clr('╔'  + '═════════════════════════ GoFSH RESULTS ═════════════════════════' +     '╗'),
-    clr('║') + ' ╭──────────────┬───────────────┬──────────────┬───────────────╮ ' + clr('║'),
-    clr('║') + ' │   Profiles   │  Extensions   │  ValueSets   │  CodeSystems  │ ' + clr('║'),
-    clr('║') + ' ├──────────────┼───────────────┼──────────────┼───────────────┤ ' + clr('║'),
-    clr('║') + ` │ ${ proNum  } │ ${  extNum  } │ ${  vsNum  } │ ${  csNum   } │ ` + clr('║'),
-    clr('║') + ' ╰──────────────┴───────────────┴──────────────┴───────────────╯ ' + clr('║'),
-    clr('║') + ' ╭──────────────┬───────────────┬──────────────┬───────────────╮ ' + clr('║'),
-    clr('║') + ` │  Instances   │  Invariants   │   Mappings   │ ${creatures } │ ` + clr('║'),
-    clr('║') + ' ├──────────────┼───────────────┼──────────────┼───────────────┤ ' + clr('║'),
-    clr('║') + ` │ ${ instNum } │ ${  invNum  } │ ${ mapNum  } │ ${creatrStat} │ ` + clr('║'),
-    clr('║') + ' ╰──────────────┴───────────────┴──────────────┴───────────────╯ ' + clr('║'),
+    clr('║') + ' ╭────────────────────┬───────────────────┬────────────────────╮ ' + clr('║'),
+    clr('║') + ' │      Profiles      │    Extensions     │      Logicals      │ ' + clr('║'),
+    clr('║') + ' ├────────────────────┼───────────────────┼────────────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${    proNum     } │ ${    extNum    } │ ${    logNum     } │ ` + clr('║'),
+    clr('║') + ' ╰────────────────────┴───────────────────┴────────────────────╯ ' + clr('║'),
+    clr('║') + ' ╭────────────────────┬───────────────────┬────────────────────╮ ' + clr('║'),
+    clr('║') + ' │     Resources      │     ValueSets     │     CodeSystems    │ ' + clr('║'),
+    clr('║') + ' ├────────────────────┼───────────────────┼────────────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${    resNum     } │ ${    vsNum     } │ ${     csNum     } │ ` + clr('║'),
+    clr('║') + ' ╰────────────────────┴───────────────────┴────────────────────╯ ' + clr('║'),
+    clr('║') + ' ╭────────────────────┬───────────────────┬────────────────────╮ ' + clr('║'),
+    clr('║') + ' │     Instances      │    Invariants     │      Mappings      │ ' + clr('║'),
+    clr('║') + ' ├────────────────────┼───────────────────┼────────────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${    instNum    } │ ${    invNum    } │ ${    mapNum     } │ ` + clr('║'),
+    clr('║') + ' ╰────────────────────┴───────────────────┴────────────────────╯ ' + clr('║'),
     clr('║') + '                                                                 ' + clr('║'),
     clr('╠'  + '═════════════════════════════════════════════════════════════════' +     '╣'),
     clr('║') + ` ${aWittyMessageInvolvingABadFishPun } ${errNumMsg} ${wrnNumMsg} ` + clr('║'),
