@@ -289,5 +289,24 @@ describe('InstanceProcessor', () => {
       expect(loggerSpy.getLastMessage('error')).toMatch(/Definition of ResourceType not found/s);
       expect(result.rules).toHaveLength(0); // Do not add rules
     });
+
+    it('should not add assignment rules when the value of the rule is empty', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'complex-patient.json'), 'utf-8')
+      );
+      // turn name[0].given into an empty list
+      input.name[0].given = [];
+      const result = InstanceProcessor.process(input, simpleIg, defs);
+      expect(result).toBeInstanceOf(ExportableInstance);
+      // There should be no rule created with path name[0].given
+      expect(result.rules).not.toContainEqual(
+        expect.objectContaining({
+          path: 'name[0].given'
+        })
+      );
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'Value in Instance complex-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient at path name[0].given is empty.'
+      );
+    });
   });
 });

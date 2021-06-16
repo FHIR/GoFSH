@@ -1,5 +1,5 @@
 import { flatten } from 'flat';
-import { pickBy, mapKeys, flatMap, flatten as flat } from 'lodash';
+import { pickBy, mapKeys, flatMap, flatten as flat, isObject, isEmpty, isNil } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
@@ -93,6 +93,11 @@ export function getFSHValue(
     return BigInt(value);
   }
   return value;
+}
+
+// Typical empty FSH values are: [], {}, null, undefined
+export function isFSHValueEmpty(fshValue: any): boolean {
+  return (isObject(fshValue) && isEmpty(fshValue)) || isNil(fshValue);
 }
 
 export function getAncestorElement(

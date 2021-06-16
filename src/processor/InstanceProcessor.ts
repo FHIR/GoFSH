@@ -2,7 +2,7 @@ import { cloneDeep, compact, isEmpty } from 'lodash';
 import { fhirtypes, utils } from 'fsh-sushi';
 import { ExportableAssignmentRule, ExportableInstance } from '../exportable';
 import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
-import { getFSHValue, getPathValuePairs, logger } from '../utils';
+import { getFSHValue, isFSHValueEmpty, getPathValuePairs, logger } from '../utils';
 import { switchQuantityRules } from '.';
 
 export class InstanceProcessor {
@@ -83,7 +83,14 @@ export class InstanceProcessor {
       const path = removeUnderscoreForPrimitiveChildPath(key);
       const assignmentRule = new ExportableAssignmentRule(path);
       assignmentRule.value = getFSHValue(key, flatInstance, instanceOfJSON.type, fisher);
-      newRules.push(assignmentRule);
+      // if the value is empty, we can't use that
+      if (isFSHValueEmpty(assignmentRule.value)) {
+        logger.error(
+          `Value in Instance ${target.name} at path ${key} is empty. No assignment rule will be created.`
+        );
+      } else {
+        newRules.push(assignmentRule);
+      }
     });
     target.rules = compact(newRules);
     switchQuantityRules(target.rules);
