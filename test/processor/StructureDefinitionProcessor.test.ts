@@ -385,11 +385,15 @@ describe('StructureDefinitionProcessor', () => {
         }) ?? [];
       const workingResource = new ExportableResource('MyResource');
       StructureDefinitionProcessor.extractRules(input, elements, workingResource, defs, config);
-      expect(workingResource.rules).toHaveLength(4);
+      expect(workingResource.rules).toHaveLength(5);
       // caret value rule that sets the url
       const urlCaretRule = new ExportableCaretValueRule('');
       urlCaretRule.caretPath = 'url';
       urlCaretRule.value = 'http://example.org/tests/StructureDefinition/my-resource';
+      // caret value rule that sets the type (gets removed later by an optimizer)
+      const typeCaretRule = new ExportableCaretValueRule('');
+      typeCaretRule.caretPath = 'type';
+      typeCaretRule.value = 'MyResource';
       // add an element for MyResource.bread
       const breadElementRule = new ExportableAddElementRule('bread');
       breadElementRule.short = 'Bread type';
@@ -417,9 +421,10 @@ describe('StructureDefinitionProcessor', () => {
       fruitElementRule.max = '*';
       fruitElementRule.types = [{ type: 'string' }];
       expect(workingResource.rules[0]).toEqual(urlCaretRule);
-      expect(workingResource.rules[1]).toEqual(breadElementRule);
-      expect(workingResource.rules[2]).toEqual(breadBindingRule);
-      expect(workingResource.rules[3]).toEqual(fruitElementRule);
+      expect(workingResource.rules[1]).toEqual(typeCaretRule);
+      expect(workingResource.rules[2]).toEqual(breadElementRule);
+      expect(workingResource.rules[3]).toEqual(breadBindingRule);
+      expect(workingResource.rules[4]).toEqual(fruitElementRule);
     });
 
     it('should add rules to a Logical', () => {

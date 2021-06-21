@@ -6,6 +6,8 @@ import ConstructInlineInstanceOptimizer from './ConstructInlineInstanceOptimizer
 import ConstructNamedExtensionContainsRulesOptimizer from './ConstructNamedExtensionContainsRulesOptimizer';
 import RemoveChoiceSlicingRulesOptimizer from './RemoveChoiceSlicingRulesOptimizer';
 import RemoveDefaultExtensionContextRulesOptimizer from './RemoveDefaultExtensionContextRulesOptimizer';
+import RemoveDefaultLogicalCaretRulesOptimizer from './RemoveDefaultLogicalCaretRulesOptimizer';
+import RemoveDefaultResourceCaretRulesOptimizer from './RemoveDefaultResourceCaretRulesOptimizer';
 import RemoveExtensionSlicingRulesOptimizer from './RemoveExtensionSlicingRulesOptimizer';
 import RemoveExtensionURLAssignmentRules from './RemoveExtensionURLAssignmentRules';
 import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
@@ -31,6 +33,8 @@ export {
   ConstructNamedExtensionContainsRulesOptimizer,
   RemoveChoiceSlicingRulesOptimizer,
   RemoveDefaultExtensionContextRulesOptimizer,
+  RemoveDefaultLogicalCaretRulesOptimizer,
+  RemoveDefaultResourceCaretRulesOptimizer,
   RemoveExtensionSlicingRulesOptimizer,
   RemoveExtensionURLAssignmentRules,
   RemoveGeneratedTextRulesOptimizer,
