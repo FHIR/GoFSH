@@ -8,7 +8,8 @@ const FISHER_TYPES = [
   utils.Type.Resource,
   utils.Type.Type,
   utils.Type.Profile,
-  utils.Type.Extension
+  utils.Type.Extension,
+  utils.Type.Logical
 ];
 
 export default {
@@ -16,7 +17,12 @@ export default {
   description: 'Replace declared parent URLs with their names or aliases',
 
   optimize(pkg: Package, fisher: MasterFisher): void {
-    for (const resource of [...pkg.profiles, ...pkg.extensions]) {
+    for (const resource of [
+      ...pkg.profiles,
+      ...pkg.extensions,
+      ...pkg.logicals,
+      ...pkg.resources
+    ]) {
       if (resource.parent) {
         resource.parent = optimizeURL(resource.parent, pkg.aliases, FISHER_TYPES, fisher);
       }
