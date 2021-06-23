@@ -339,6 +339,10 @@ describe('FSHExporter', () => {
       myPackage.add(profile1);
       const profile2 = new ExportableProfile('AnotherProfile');
       myPackage.add(profile2);
+      const logical = new ExportableLogical('SomeLogical');
+      myPackage.add(logical);
+      const resource = new ExportableResource('SomeResource');
+      myPackage.add(resource);
       myPackage.add(new ExportableExtension('SomeExtension'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
@@ -350,6 +354,14 @@ describe('FSHExporter', () => {
       const anotherInstance = new ExportableInstance('AnotherInstance');
       anotherInstance.instanceOf = 'AnotherProfile';
       myPackage.add(anotherInstance);
+
+      const logicalInstance = new ExportableInstance('LogicalInstance');
+      logicalInstance.instanceOf = 'SomeLogical';
+      myPackage.add(logicalInstance);
+
+      const resourceInstance = new ExportableInstance('ResourceInstance');
+      resourceInstance.instanceOf = 'SomeResource';
+      myPackage.add(resourceInstance);
 
       // Add one inline instance which is only used once
       const inlineInstance1 = new ExportableInstance('SomeInlineInstance');
@@ -382,6 +394,17 @@ describe('FSHExporter', () => {
       inlineInstance3Rule.isInstance = true;
       inlineInstance3Rule.value = 'YetAnotherInlineInstance';
       profile1.rules.push(inlineInstance3Rule);
+
+      // Ad an inline instance used on a logical
+      const inlineInstance4 = new ExportableInstance('ExtraBonusInlineInstance');
+      inlineInstance4.instanceOf = 'Observation';
+      inlineInstance4.usage = 'Inline';
+      myPackage.add(inlineInstance4);
+      const inlineInstance4Rule = new ExportableCaretValueRule('');
+      inlineInstance4Rule.caretPath = 'contained[0]';
+      inlineInstance4Rule.isInstance = true;
+      inlineInstance4Rule.value = 'ExtraBonusInlineInstance';
+      logical.rules.push(inlineInstance4Rule);
 
       const definitionalInstance = new ExportableInstance('DefinitionalInstance');
       definitionalInstance.instanceOf = 'ValueSet';
@@ -475,6 +498,45 @@ describe('FSHExporter', () => {
               '* contained[1] = AnotherInlineInstance'
             ].join('')
           )
+          .set(
+            'SomeLogical.fsh',
+            [
+              'Logical: SomeLogical',
+              EOL,
+              'Id: SomeLogical',
+              EOL,
+              '* ^contained[0] = ExtraBonusInlineInstance',
+              EOL,
+              EOL,
+              'Instance: LogicalInstance',
+              EOL,
+              'InstanceOf: SomeLogical',
+              EOL,
+              'Usage: #example',
+              EOL,
+              EOL,
+              'Instance: ExtraBonusInlineInstance',
+              EOL,
+              'InstanceOf: Observation',
+              EOL,
+              'Usage: #inline'
+            ].join('')
+          )
+          .set(
+            'SomeResource.fsh',
+            [
+              'Resource: SomeResource',
+              EOL,
+              'Id: SomeResource',
+              EOL,
+              EOL,
+              'Instance: ResourceInstance',
+              EOL,
+              'InstanceOf: SomeResource',
+              EOL,
+              'Usage: #example'
+            ].join('')
+          )
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
           .set('valueSets.fsh', ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join(''))
           .set(
@@ -517,13 +579,18 @@ describe('FSHExporter', () => {
               ['AnotherProfile', 'Profile', 'AnotherProfile.fsh'],
               ['DefinitionalInstance', 'Instance', 'instances.fsh'],
               ['ExternalExampleInstance', 'Instance', 'instances.fsh'],
+              ['ExtraBonusInlineInstance', 'Instance', 'SomeLogical.fsh'],
+              ['LogicalInstance', 'Instance', 'SomeLogical.fsh'],
+              ['ResourceInstance', 'Instance', 'SomeResource.fsh'],
               ['SomeCodeSystem', 'CodeSystem', 'codeSystems.fsh'],
               ['SomeExtension', 'Extension', 'extensions.fsh'],
               ['SomeInlineInstance', 'Instance', 'SomeProfile.fsh'],
               ['SomeInstance', 'Instance', 'SomeProfile.fsh'],
               ['SomeInvariant', 'Invariant', 'SomeProfile.fsh'],
+              ['SomeLogical', 'Logical', 'SomeLogical.fsh'],
               ['SomeMapping', 'Mapping', 'mappings.fsh'],
               ['SomeProfile', 'Profile', 'SomeProfile.fsh'],
+              ['SomeResource', 'Resource', 'SomeResource.fsh'],
               ['SomeValueSet', 'ValueSet', 'valueSets.fsh'],
               ['YetAnotherInlineInstance', 'Instance', 'SomeProfile.fsh']
             ])
