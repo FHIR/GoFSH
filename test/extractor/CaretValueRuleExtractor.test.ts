@@ -142,6 +142,21 @@ describe('CaretValueRuleExtractor', () => {
       ]);
     });
 
+    it('should not extract array caret value rules when the array is empty', () => {
+      const sd = cloneDeep(looseSD);
+      sd.contextInvariant = [];
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'contextInvariant'
+        })
+      );
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'Value in StructureDefinition ObservationWithCaret for element contextInvariant is empty.'
+      );
+    });
+
     it('should convert a FHIR code string to a FSH code when extracting', () => {
       const sd = cloneDeep(looseSD);
       sd.status = 'draft';
@@ -495,6 +510,23 @@ describe('CaretValueRuleExtractor', () => {
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule3);
       expect(caretRules).toHaveLength(3);
     });
+
+    it('should not extract ValueSet caret rules when the value of the rule is empty', () => {
+      const vs = cloneDeep(looseVS);
+      vs.status = 'active';
+      vs.compose.inactive = true;
+      vs.identifier = {};
+      const caretRules = CaretValueRuleExtractor.processResource(vs, defs, vs.resourceType, config);
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'identifier'
+        })
+      );
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'Value in ValueSet ValueSetWithCaret for element identifier is empty.'
+      );
+    });
   });
 
   describe('CodeSystem', () => {
@@ -541,6 +573,23 @@ describe('CaretValueRuleExtractor', () => {
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule3);
       expect(caretRules).toHaveLength(3);
+    });
+
+    it('should not extract CodeSystem caret rules when the value of the rule is empty', () => {
+      const cs = cloneDeep(looseCS);
+      cs.status = 'active';
+      cs.experimental = true;
+      cs.identifier = {};
+      const caretRules = CaretValueRuleExtractor.processResource(cs, defs, cs.resourceType, config);
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'identifier'
+        })
+      );
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'Value in CodeSystem CodeSystemWithCaret for element identifier is empty.'
+      );
     });
   });
 
@@ -810,6 +859,24 @@ describe('CaretValueRuleExtractor', () => {
       expect(caretRules).toHaveLength(2);
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule1);
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
+    });
+
+    it('should not create rules when the value of the rule is empty', () => {
+      const modifiedInput = cloneDeep(looseSD.differential.element[2]);
+      // turn base into an empty object
+      modifiedInput.base = {};
+      const element = ProcessableElementDefinition.fromJSON(modifiedInput);
+      // There should be no rule created with path partOf and caret path base
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: 'partOf',
+          caretPath: 'base'
+        })
+      );
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'Value in StructureDefinition ObservationWithCaret for element partOf.base is empty.'
+      );
     });
   });
 });

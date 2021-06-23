@@ -2,7 +2,7 @@ import { fshtypes, utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
-import { getFSHValue, getPath, getPathValuePairs, logger } from '../utils';
+import { getFSHValue, getPath, getPathValuePairs, logger, isFSHValueEmpty } from '../utils';
 
 export class CaretValueRuleExtractor {
   static process(
@@ -21,7 +21,13 @@ export class CaretValueRuleExtractor {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
       caretValueRule.value = getFSHValue(key, flatElement, 'ElementDefinition', fisher);
-
+      // If the value is empty, we can't use it. Log an error and give up on trying to use this key.
+      if (isFSHValueEmpty(caretValueRule.value)) {
+        logger.error(
+          `Value in StructureDefinition ${structDef.name} for element ${path}.${key} is empty. No caret value rule will be created.`
+        );
+        return;
+      }
       // Fix constraint[n] indices if applicable. This is necessary because GoFSH will use constraint indices relative
       // to the constraint array in the differential, which may be a *subset* of the constraint array in the snapshot.
       // SUSHI, however, processes indices relative to the constraint array in the snapshot, so we need to adjust for
@@ -177,7 +183,13 @@ export class CaretValueRuleExtractor {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
         caretValueRule.value = getFSHValue(key, flatSD, 'StructureDefinition', fisher);
-        caretValueRules.push(caretValueRule);
+        if (isFSHValueEmpty(caretValueRule.value)) {
+          logger.error(
+            `Value in StructureDefinition ${input.name} for element ${key} is empty. No caret value rule will be created.`
+          );
+        } else {
+          caretValueRules.push(caretValueRule);
+        }
       }
     });
 
@@ -206,7 +218,15 @@ export class CaretValueRuleExtractor {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
         caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
-        caretValueRules.push(caretValueRule);
+        if (isFSHValueEmpty(caretValueRule.value)) {
+          logger.error(
+            `Value in ${resourceType} ${
+              input.name ?? input.id
+            } for element ${key} is empty. No caret value rule will be created.`
+          );
+        } else {
+          caretValueRules.push(caretValueRule);
+        }
       });
     return caretValueRules;
   }
