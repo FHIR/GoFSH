@@ -4,6 +4,7 @@ import { ExportableRule } from '.';
 
 export class ExportableCaretValueRule extends fshrules.CaretValueRule implements ExportableRule {
   fshComment: string;
+  indent: number;
 
   constructor(path: string) {
     super(path);

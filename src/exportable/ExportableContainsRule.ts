@@ -5,6 +5,8 @@ import { ExportableRule, ExportableCardRule, ExportableFlagRule } from '.';
 export class ExportableContainsRule extends fshrules.ContainsRule implements ExportableRule {
   cardRules: ExportableCardRule[] = [];
   flagRules: ExportableFlagRule[] = [];
+  indent: number;
+
   constructor(path: string) {
     super(path);
   }

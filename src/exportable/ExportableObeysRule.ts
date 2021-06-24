@@ -3,6 +3,7 @@ import { ExportableRule } from '.';
 
 export class ExportableObeysRule extends fshrules.ObeysRule implements ExportableRule {
   keys: string[];
+  indent: number;
 
   constructor(path: string) {
     super(path);

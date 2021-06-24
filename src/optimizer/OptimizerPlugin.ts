@@ -35,4 +35,15 @@ export interface OptimizerPlugin {
    * @param fisher - a fisher that can be used to look up definitions from local files, FHIR core, and dependencies
    */
   optimize(pkg: Package, fisher?: MasterFisher): void;
+
+  /**
+   * Determines whether to run the optimizer based on provided options. If this function is not present, the optimizer will always run.
+   * @param options - an object containing flags or other information provided by the user
+   * @returns true if the optimizer should run, false if the optimizer should not run
+   */
+  enable?(options: OptimizerOptions): boolean;
 }
+
+export type OptimizerOptions = {
+  [key: string]: boolean | number | string;
+};

@@ -2,6 +2,8 @@ import { fshrules } from 'fsh-sushi';
 import { ExportableRule } from '.';
 
 export class ExportableFlagRule extends fshrules.FlagRule implements ExportableRule {
+  indent: number;
+
   constructor(path: string) {
     super(path);
   }

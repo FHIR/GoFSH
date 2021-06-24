@@ -6,6 +6,8 @@ import { ExportableFlagRule } from './ExportableFlagRule';
 // ExportableProfile.rules (which allows ExportableCombinedCardFlagRule) must be assignable to
 // Profile.rules in order for TypeScript to recognize it as a proper subclass of Profile.
 export class ExportableCombinedCardFlagRule extends fshrules.CardRule implements ExportableRule {
+  indent: number;
+
   constructor(
     path: string,
     public cardRule: ExportableCardRule,

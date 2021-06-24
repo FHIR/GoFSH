@@ -9,7 +9,8 @@ import { logger } from '../utils/GoFSHLogger';
  * @param folder - the folder to load optimizers from.  Currently only used in tests.  CLI uses default value.
  */
 export async function loadOptimizers(
-  folder = path.join(__dirname, 'plugins')
+  folder = path.join(__dirname, 'plugins'),
+  options = {}
 ): Promise<OptimizerPlugin[]> {
   // make an import-friendly relative path (e.g. \Users\bob\dev\optimizers --> ../../../../dev/optimizers)
   let relativePath = path.relative(__dirname, folder);
@@ -29,7 +30,8 @@ export async function loadOptimizers(
     o =>
       typeof o?.name === 'string' &&
       typeof o?.description === 'string' &&
-      typeof o?.optimize === 'function'
+      typeof o?.optimize === 'function' &&
+      (typeof o?.enable !== 'function' || o.enable(options))
   );
   logger.debug(`Loaded ${optimizers.length} optimizers from ${path.join(__dirname, 'plugins')}`);
   // Sort them using a topological sort to get them in dependency order

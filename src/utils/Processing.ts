@@ -59,13 +59,14 @@ export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions, 
 
 export async function getResources(
   processor: FHIRProcessor,
-  config: ExportableConfiguration
+  config: ExportableConfiguration,
+  optimizerOptions: object = {}
 ): Promise<Package> {
   const fisher = processor.getFisher();
   const resources = processor.process(config);
   // Dynamically load and run the optimizers
   logger.info('Optimizing FSH definitions to follow best practices...');
-  const optimizers = await loadOptimizers();
+  const optimizers = await loadOptimizers(undefined, optimizerOptions);
   optimizers.forEach(opt => {
     logger.debug(`Running optimizer ${opt.name}: ${opt.description}`);
     opt.optimize(resources, fisher);
