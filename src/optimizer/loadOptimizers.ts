@@ -1,6 +1,7 @@
 import { OptimizerPlugin } from './OptimizerPlugin';
 import path from 'path';
 import toposort from 'toposort';
+import { partition } from 'lodash';
 import { logger } from '../utils/GoFSHLogger';
 
 /**
@@ -25,13 +26,17 @@ export async function loadOptimizers(
   // relativePath is placed in a dynamic string to allow for FSHOnline compatibility
   const Optimizers: { property: OptimizerPlugin } = await import(`${relativePath}`);
 
-  const optimizers = Object.values(Optimizers).filter(
+  const allOptimizers = Object.values(Optimizers).filter(
     // Remove non-optimizers
     o =>
       typeof o?.name === 'string' &&
       typeof o?.description === 'string' &&
-      typeof o?.optimize === 'function' &&
-      (typeof o?.enable !== 'function' || o.enable(options))
+      typeof o?.optimize === 'function'
+  );
+  const [optimizers, offOptimizers] = partition(
+    allOptimizers,
+    // Keep optimizers without an enable function and optimizers whose enable function is true
+    o => typeof o?.enable !== 'function' || o.enable(options)
   );
   logger.debug(`Loaded ${optimizers.length} optimizers from ${path.join(__dirname, 'plugins')}`);
   // Sort them using a topological sort to get them in dependency order
@@ -51,9 +56,29 @@ export async function loadOptimizers(
           edges.push([opt.name, preceedingOptimizer.name]);
         });
       } else {
-        logger.error(
-          `The ${opt.name} optimizer specifies an unknown optimizer in runAfter: ${dependsOn}`
-        );
+        // the preceeding optimizer(s) may exist, but not be enabled
+        // this is still an error, but needs a different message
+        const offPrecedingOptimizers = offOptimizers
+          .filter(o =>
+            o.name !== opt.name && dependsOn instanceof RegExp
+              ? dependsOn.test(o.name)
+              : dependsOn === o.name
+          )
+          .map(o => o.name);
+        if (offPrecedingOptimizers.length > 0) {
+          const plural = offPrecedingOptimizers.length > 1;
+          logger.error(
+            `The ${opt.name} optimizer specifies ${
+              plural ? 'optimizers' : 'an optimizer'
+            } in runAfter that ${plural ? 'are' : 'is'} not enabled: ${offPrecedingOptimizers.join(
+              ', '
+            )}`
+          );
+        } else {
+          logger.error(
+            `The ${opt.name} optimizer specifies an unknown optimizer in runAfter: ${dependsOn}`
+          );
+        }
       }
     });
     opt.runBefore?.forEach(dependedOnBy => {
@@ -67,9 +92,18 @@ export async function loadOptimizers(
           edges.push([succeedingOptimizer.name, opt.name]);
         });
       } else {
-        logger.error(
-          `The ${opt.name} optimizer specifies an unknown optimizer in runBefore: ${dependedOnBy}`
+        // a succeeding optimizer may exist, but be optional and not enabled.
+        // this does not represent an error, so nothing is logged.
+        const offSucceedingOptimizers = offOptimizers.filter(o =>
+          o.name !== opt.name && dependedOnBy instanceof RegExp
+            ? dependedOnBy.test(o.name)
+            : dependedOnBy === o.name
         );
+        if (offSucceedingOptimizers.length == 0) {
+          logger.error(
+            `The ${opt.name} optimizer specifies an unknown optimizer in runBefore: ${dependedOnBy}`
+          );
+        }
       }
     });
   });

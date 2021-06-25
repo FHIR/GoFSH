@@ -1,14 +1,15 @@
 import { Package } from '../../processor';
 import { OptimizerPlugin, OptimizerOptions } from '../OptimizerPlugin';
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
+import SimplifyMappingNamesOptimizer from './SimplifyMappingNamesOptimizer';
 
 export default {
   name: 'simplify_rule_path_contexts',
   description:
     'Make rule paths shorter by indenting the rule and using the context of preceding rules.',
-  runAfter: [SimplifyArrayIndexingOptimizer.name],
+  runAfter: [SimplifyArrayIndexingOptimizer.name, SimplifyMappingNamesOptimizer.name],
   optimize(pkg: Package): void {
-    [...pkg.profiles, ...pkg.instances].forEach(entity => {
+    [...pkg.profiles, ...pkg.extensions, ...pkg.instances].forEach(entity => {
       const pathContext: string[] = [];
       let contextIndex: number;
       entity.rules.forEach(rule => {
