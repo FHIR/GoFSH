@@ -219,7 +219,7 @@ export class FSHExporter {
   private groupByProfile(): Map<string, Exportable[]> {
     const files: Map<string, Exportable[]> = new Map();
 
-    // Group profiles, logicals, and resources with their respective examples into individual files
+    // Group profiles, logicals, and resources with their related instances and invariants.
     [
       ...this.fshPackage.profiles,
       ...this.fshPackage.logicals,
@@ -234,7 +234,7 @@ export class FSHExporter {
       this.fshPackage.instances,
       i => i.usage === 'Inline'
     );
-    // If a non-inline instance is an example of a profile, logical, or resource, it is written to the file
+    // If a non-inline instance is an example of a profile or resource, it is written to the file
     // for that entity. Otherwise it is written to instances.fsh
     nonInlineInstances.forEach(instance => {
       if (instance.usage === 'Example' && files.has(`${instance.instanceOf}.fsh`)) {
