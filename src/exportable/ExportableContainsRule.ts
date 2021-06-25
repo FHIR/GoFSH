@@ -1,6 +1,7 @@
 import { EOL } from 'os';
 import { fshrules } from 'fsh-sushi';
-import { ExportableRule, ExportableCardRule, ExportableFlagRule } from '.';
+import { ExportableRule, ExportableCardRule, ExportableFlagRule, INDENT_SIZE } from '.';
+import { repeat } from 'lodash';
 
 export class ExportableContainsRule extends fshrules.ContainsRule implements ExportableRule {
   cardRules: ExportableCardRule[] = [];
@@ -32,8 +33,10 @@ export class ExportableContainsRule extends fshrules.ContainsRule implements Exp
       return line;
     });
 
-    return `* ${this.path} contains${
-      itemsWithAssociatedRules.length > 1 ? `${EOL}    ` : ' '
-    }${itemsWithAssociatedRules.join(` and${EOL}    `)}`; // New line and indent each
+    const spaces = repeat(' ', INDENT_SIZE * (this.indent ?? 0));
+
+    return `${spaces}* ${this.path} contains${
+      itemsWithAssociatedRules.length > 1 ? `${EOL}${spaces}    ` : ' '
+    }${itemsWithAssociatedRules.join(` and${EOL}${spaces}    `)}`; // New line and indent each
   }
 }

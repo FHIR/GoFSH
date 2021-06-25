@@ -171,4 +171,15 @@ describe('ExportableCaretValueRule', () => {
 
     expect(rule.toFSH()).toBe('* ^contact = MyContact');
   });
+
+  it('should export an indented caret rule', () => {
+    const rule = new ExportableCaretValueRule('component');
+    rule.caretPath = 'slicing.rules';
+    rule.value = new fshtypes.FshCode('open', 'http://foo.com', 'Display Text');
+    rule.indent = 2;
+
+    expect(rule.toFSH()).toBe(
+      '    * component ^slicing.rules = http://foo.com#open "Display Text"'
+    );
+  });
 });

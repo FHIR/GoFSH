@@ -1,5 +1,6 @@
 import { fshrules } from 'fsh-sushi';
-import { ExportableRule } from '.';
+import { ExportableRule, INDENT_SIZE } from '.';
+import { repeat } from 'lodash';
 
 export class ExportableObeysRule extends fshrules.ObeysRule implements ExportableRule {
   keys: string[];
@@ -10,6 +11,8 @@ export class ExportableObeysRule extends fshrules.ObeysRule implements Exportabl
   }
 
   toFSH(): string {
-    return `* ${this.path === '.' ? '' : `${this.path} `}obeys ${this.keys.join(' and ')}`;
+    return `${repeat(' ', INDENT_SIZE * (this.indent ?? 0))}* ${
+      this.path === '.' || this.path === '' ? '' : `${this.path} `
+    }obeys ${this.keys.join(' and ')}`;
   }
 }

@@ -1,6 +1,7 @@
-import { ExportableRule, ExportableCardRule } from '.';
+import { ExportableRule, ExportableCardRule, INDENT_SIZE } from '.';
 import { fshrules } from 'fsh-sushi';
 import { ExportableFlagRule } from './ExportableFlagRule';
+import { repeat } from 'lodash';
 
 // NOTE: This needs to extend a SUSHI SdRule (in this case fshrules.CardRule) because
 // ExportableProfile.rules (which allows ExportableCombinedCardFlagRule) must be assignable to
@@ -36,6 +37,8 @@ export class ExportableCombinedCardFlagRule extends fshrules.CardRule implements
   }
 
   toFSH(): string {
-    return `* ${this.path} ${this.cardRule.cardToString()} ${this.flagRule.flagsToString()}`;
+    return `${repeat(' ', INDENT_SIZE * (this.indent ?? 0))}* ${
+      this.path
+    } ${this.cardRule.cardToString()} ${this.flagRule.flagsToString()}`;
   }
 }
