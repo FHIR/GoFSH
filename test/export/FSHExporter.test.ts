@@ -1,4 +1,5 @@
 import { EOL } from 'os';
+import path from 'path';
 import { FSHExporter } from '../../src/export';
 import { Package } from '../../src/processor';
 import {
@@ -657,6 +658,104 @@ describe('FSHExporter', () => {
               ['SomeProfile', 'Profile', 'SomeProfile-Profile.fsh'],
               ['SomeResource', 'Resource', 'SomeResource-Resource.fsh'],
               ['SomeValueSet', 'ValueSet', 'SomeValueSet-ValueSet.fsh']
+            ])
+          )
+      );
+    });
+
+    it('should export each definition to its own file nested within a folder of its fsh type when style is "files-organized-by-type"', () => {
+      myPackage.add(new ExportableProfile('SomeProfile'));
+      myPackage.add(new ExportableProfile('AnotherProfile'));
+      myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableValueSet('SomeValueSet'));
+      myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
+      const instance = new ExportableInstance('SomeInstance');
+      instance.instanceOf = 'SomeProfile';
+      myPackage.add(instance);
+      const anotherInstance = new ExportableInstance('AnotherInstance');
+      anotherInstance.instanceOf = 'AnotherProfile';
+      myPackage.add(anotherInstance);
+      myPackage.add(new ExportableInvariant('SomeInvariant'));
+      myPackage.add(new ExportableMapping('SomeMapping'));
+      myPackage.aliases.push(new ExportableAlias('foo', 'http://example.com/foo'));
+
+      const result = exporter.export('files-organized-by-type');
+      expect(result).toEqual(
+        new Map()
+          .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
+          .set(
+            path.join('invariants', 'SomeInvariant-Invariant.fsh'),
+            ['Invariant: SomeInvariant'].join('')
+          )
+          .set(
+            path.join('mappings', 'SomeMapping-Mapping.fsh'),
+            ['Mapping: SomeMapping', EOL, 'Id: SomeMapping'].join('')
+          )
+          .set(
+            path.join('profiles', 'AnotherProfile-Profile.fsh'),
+            ['Profile: AnotherProfile', EOL, 'Id: AnotherProfile'].join('')
+          )
+          .set(
+            path.join('profiles', 'SomeProfile-Profile.fsh'),
+            ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join('')
+          )
+          .set(
+            path.join('extensions', 'SomeExtension-Extension.fsh'),
+            ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join('')
+          )
+          .set(
+            path.join('codesystems', 'SomeCodeSystem-CodeSystem.fsh'),
+            ['CodeSystem: SomeCodeSystem', EOL, 'Id: SomeCodeSystem'].join('')
+          )
+          .set(
+            path.join('valuesets', 'SomeValueSet-ValueSet.fsh'),
+            ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join('')
+          )
+          .set(
+            path.join('instances', 'AnotherInstance-Instance.fsh'),
+            [
+              'Instance: AnotherInstance',
+              EOL,
+              'InstanceOf: AnotherProfile',
+              EOL,
+              'Usage: #example'
+            ].join('')
+          )
+          .set(
+            path.join('instances', 'SomeInstance-Instance.fsh'),
+            ['Instance: SomeInstance', EOL, 'InstanceOf: SomeProfile', EOL, 'Usage: #example'].join(
+              ''
+            )
+          )
+          .set(
+            'index.txt',
+            table([
+              ['Name', 'Type', 'File'],
+              [
+                'AnotherInstance',
+                'Instance',
+                path.join('instances', 'AnotherInstance-Instance.fsh')
+              ],
+              ['AnotherProfile', 'Profile', path.join('profiles', 'AnotherProfile-Profile.fsh')],
+              [
+                'SomeCodeSystem',
+                'CodeSystem',
+                path.join('codesystems', 'SomeCodeSystem-CodeSystem.fsh')
+              ],
+              [
+                'SomeExtension',
+                'Extension',
+                path.join('extensions', 'SomeExtension-Extension.fsh')
+              ],
+              ['SomeInstance', 'Instance', path.join('instances', 'SomeInstance-Instance.fsh')],
+              [
+                'SomeInvariant',
+                'Invariant',
+                path.join('invariants', 'SomeInvariant-Invariant.fsh')
+              ],
+              ['SomeMapping', 'Mapping', path.join('mappings', 'SomeMapping-Mapping.fsh')],
+              ['SomeProfile', 'Profile', path.join('profiles', 'SomeProfile-Profile.fsh')],
+              ['SomeValueSet', 'ValueSet', path.join('valuesets', 'SomeValueSet-ValueSet.fsh')]
             ])
           )
       );
