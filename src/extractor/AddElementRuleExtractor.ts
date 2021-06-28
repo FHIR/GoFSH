@@ -1,6 +1,7 @@
+import { isEmpty } from 'lodash';
 import { ProcessableElementDefinition } from '../processor';
 import { ExportableAddElementRule } from '../exportable';
-import { getPath } from '../utils';
+import { getPath, logger } from '../utils';
 import { FlagRuleExtractor } from '.';
 import { OnlyRuleExtractor } from './OnlyRuleExtractor';
 
@@ -15,6 +16,11 @@ export class AddElementRuleExtractor {
     input.processedPaths.push('min', 'max');
     // get types using OnlyRuleExtractor
     addElementRule.types = OnlyRuleExtractor.process(input)?.types;
+    // if types were missing, default to BackboneElement
+    if (isEmpty(addElementRule.types)) {
+      addElementRule.types = [{ type: 'BackboneElement' }];
+      logger.warn(`No types found for element ${input.id}. Defaulting to BackboneElement.`);
+    }
     // we might have flags, so use FlagRuleExtractor
     const flagRule = FlagRuleExtractor.process(input);
     if (flagRule) {

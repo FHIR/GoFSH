@@ -1,8 +1,10 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { cloneDeep } from 'lodash';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { AddElementRuleExtractor } from '../../src/extractor';
 import { ExportableAddElementRule } from '../../src/exportable';
+import { loggerSpy } from '../helpers';
 
 describe('AddElementRuleExtractor', () => {
   let looseSD: any;
@@ -11,6 +13,10 @@ describe('AddElementRuleExtractor', () => {
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'add-element-resource.json'), 'utf-8').trim()
     );
+  });
+
+  beforeEach(() => {
+    loggerSpy.reset();
   });
 
   describe('#process', () => {
@@ -263,6 +269,18 @@ describe('AddElementRuleExtractor', () => {
           'extension[0].url',
           'extension[0].valueCode'
         ])
+      );
+    });
+
+    it('should log a warning and default to BackboneElement when an element has no types', () => {
+      const element = cloneDeep(
+        ProcessableElementDefinition.fromJSON(looseSD.differential.element[12])
+      );
+      delete element.type;
+      const elementRule = AddElementRuleExtractor.process(element);
+      expect(elementRule.types).toEqual([{ type: 'BackboneElement' }]);
+      expect(loggerSpy.getLastMessage('warn')).toBe(
+        'No types found for element MyResource.spice. Defaulting to BackboneElement.'
       );
     });
   });
