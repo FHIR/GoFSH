@@ -375,6 +375,7 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingExtension.rules.length).toBe(1);
       expect(workingExtension.rules).toContainEqual<ExportableAssignmentRule>(assignmentRule);
     });
+
     it('should add rules to a Resource', () => {
       const input: ProcessableStructureDefinition = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-resource.json'), 'utf-8')
@@ -385,7 +386,7 @@ describe('StructureDefinitionProcessor', () => {
         }) ?? [];
       const workingResource = new ExportableResource('MyResource');
       StructureDefinitionProcessor.extractRules(input, elements, workingResource, defs, config);
-      expect(workingResource.rules).toHaveLength(5);
+      expect(workingResource.rules).toHaveLength(6);
       // caret value rule that sets the url
       const urlCaretRule = new ExportableCaretValueRule('');
       urlCaretRule.caretPath = 'url';
@@ -394,6 +395,10 @@ describe('StructureDefinitionProcessor', () => {
       const typeCaretRule = new ExportableCaretValueRule('');
       typeCaretRule.caretPath = 'type';
       typeCaretRule.value = 'MyResource';
+      // caret value rule for the short text on the root element
+      const shortCaretRule = new ExportableCaretValueRule('.');
+      shortCaretRule.caretPath = 'short';
+      shortCaretRule.value = 'This is my resource';
       // add an element for MyResource.bread
       const breadElementRule = new ExportableAddElementRule('bread');
       breadElementRule.short = 'Bread type';
@@ -422,9 +427,10 @@ describe('StructureDefinitionProcessor', () => {
       fruitElementRule.types = [{ type: 'string' }];
       expect(workingResource.rules[0]).toEqual(urlCaretRule);
       expect(workingResource.rules[1]).toEqual(typeCaretRule);
-      expect(workingResource.rules[2]).toEqual(breadElementRule);
-      expect(workingResource.rules[3]).toEqual(breadBindingRule);
-      expect(workingResource.rules[4]).toEqual(fruitElementRule);
+      expect(workingResource.rules[2]).toEqual(shortCaretRule);
+      expect(workingResource.rules[3]).toEqual(breadElementRule);
+      expect(workingResource.rules[4]).toEqual(breadBindingRule);
+      expect(workingResource.rules[5]).toEqual(fruitElementRule);
     });
 
     it('should add rules to a Logical', () => {

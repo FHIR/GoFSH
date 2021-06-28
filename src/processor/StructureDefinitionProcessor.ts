@@ -134,14 +134,22 @@ export class StructureDefinitionProcessor {
         // AddElementRule contains cardinality, flag, and type information, so those extractors don't need to be called here
         // the root element doesn't need to be added, but all other elements do.
         // but, we still want to mark paths as processed so that caret value rules are not made.
-        const addElementRule = AddElementRuleExtractor.process(element);
+
         if (isNewSlice) {
           logger.warn(
             `${target.constructorName} ${target.name} contains a slice definition for ${element.sliceName} on ${element.path}. This is not supported by FHIR.`
           );
           newRules.push(ContainsRuleExtractor.process(element, input, fisher));
-        } else if (element.path !== input.name) {
-          newRules.push(addElementRule);
+        } else {
+          if (element.path === input.name) {
+            // For the root element, mark the cardinality paths as processed
+            // so that they don't get CaretValueRules created.
+            element.processedPaths.push('min', 'max');
+          } else {
+            // For all other elements, make a rule to add them.
+            const addElementRule = AddElementRuleExtractor.process(element);
+            newRules.push(addElementRule);
+          }
         }
         newRules.push(BindingRuleExtractor.process(element), ObeysRuleExtractor.process(element));
         const assignmentRules = AssignmentRuleExtractor.process(element);
