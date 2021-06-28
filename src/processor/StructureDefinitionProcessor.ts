@@ -141,7 +141,7 @@ export class StructureDefinitionProcessor {
           );
           newRules.push(ContainsRuleExtractor.process(element, input, fisher));
         } else {
-          if (!element.path.includes('.')) {
+          if (element.path.indexOf('.') === -1) {
             // For the root element, mark the cardinality paths as processed
             // so that they don't get CaretValueRules created.
             element.processedPaths.push('min', 'max');
