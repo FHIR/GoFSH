@@ -38,14 +38,11 @@ export class FSHExporter {
       case 'file-per-definition':
         files = this.groupAsFilePerDefinition();
         break;
-      case 'files-organized-by-type':
-        files = this.groupAsFilePerDefinition(true);
-        break;
       default:
         if (style != null) {
           logger.warn(`Unrecognized output style "${style}". Defaulting to "by-category" style.`);
         }
-        files = this.groupByFSHType();
+        files = this.groupAsFilePerDefinition();
     }
 
     const writtenFiles: Map<string, string> = new Map();
@@ -168,51 +165,46 @@ export class FSHExporter {
     return new Map().set('resources.fsh', results);
   }
 
-  private groupAsFilePerDefinition(byGroup = false): Map<string, Exportable[]> {
+  private groupAsFilePerDefinition(): Map<string, Exportable[]> {
     const files: Map<string, Exportable[]> = new Map();
     // Aliases, still get grouped into one file
     files.set('aliases.fsh', this.fshPackage.aliases);
 
     // Other definitions are each placed in an individual file
     for (const invariant of this.fshPackage.invariants) {
-      const fileDir = byGroup ? 'invariants' : '';
-      const filename = path.join(fileDir, `${invariant.name}-Invariant.fsh`);
+      const filename = path.join('invariants', `${invariant.name}.fsh`);
       files.set(filename, [invariant]);
     }
     for (const mapping of this.fshPackage.mappings) {
-      const fileDir = byGroup ? 'mappings' : '';
-      const filename = path.join(fileDir, `${mapping.name}-Mapping.fsh`);
+      const filename = path.join('mappings', `${mapping.name}.fsh`);
       files.set(filename, [mapping]);
     }
     for (const profile of this.fshPackage.profiles) {
-      const fileDir = byGroup ? 'profiles' : '';
-      const filename = path.join(fileDir, `${profile.name}-Profile.fsh`);
+      const filename = path.join('profiles', `${profile.name}.fsh`);
       files.set(filename, [profile]);
     }
     for (const extension of this.fshPackage.extensions) {
-      const fileDir = byGroup ? 'extensions' : '';
-      const filename = path.join(fileDir, `${extension.name}-Extension.fsh`);
+      const filename = path.join('extensions', `${extension.name}.fsh`);
       files.set(filename, [extension]);
     }
     for (const logical of this.fshPackage.logicals) {
-      files.set(`${logical.name}-Logical.fsh`, [logical]);
+      const filename = path.join('logicals', `${logical.name}.fsh`);
+      files.set(filename, [logical]);
     }
     for (const resource of this.fshPackage.resources) {
-      files.set(`${resource.name}-Resource.fsh`, [resource]);
+      const filename = path.join('resources', `${resource.name}.fsh`);
+      files.set(filename, [resource]);
     }
     for (const codeSystem of this.fshPackage.codeSystems) {
-      const fileDir = byGroup ? 'codesystems' : '';
-      const filename = path.join(fileDir, `${codeSystem.name}-CodeSystem.fsh`);
+      const filename = path.join('codesystems', `${codeSystem.name}.fsh`);
       files.set(filename, [codeSystem]);
     }
     for (const valueSet of this.fshPackage.valueSets) {
-      const fileDir = byGroup ? 'valuesets' : '';
-      const filename = path.join(fileDir, `${valueSet.name}-ValueSet.fsh`);
+      const filename = path.join('valuesets', `${valueSet.name}.fsh`);
       files.set(filename, [valueSet]);
     }
     for (const instance of this.fshPackage.instances) {
-      const fileDir = byGroup ? 'instances' : '';
-      const filename = path.join(fileDir, `${instance.name}-Instance.fsh`);
+      const filename = path.join('instances', `${instance.name}.fsh`);
       files.set(filename, [instance]);
     }
 

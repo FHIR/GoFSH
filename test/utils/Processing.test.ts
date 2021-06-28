@@ -354,11 +354,11 @@ describe('Processing', () => {
       expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'resources.fsh'))).toBeTruthy();
     });
 
-    it('should write output to files organized by category when style is by-category', () => {
+    it('should write output to files organized by category when style is group-by-fsh-type', () => {
       const resources = new Package();
       resources.add(new ExportableProfile('Foo'));
       resources.add(new ExportableInstance('Bar'));
-      writeFSH(resources, tempRoot, 'by-category');
+      writeFSH(resources, tempRoot, 'group-by-fsh-type');
       expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'profiles.fsh'))).toBeTruthy();
       expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'instances.fsh'))).toBeTruthy();
     });
@@ -368,8 +368,12 @@ describe('Processing', () => {
       resources.add(new ExportableProfile('Foo'));
       resources.add(new ExportableInstance('Bar'));
       writeFSH(resources, tempRoot, undefined);
-      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'profiles.fsh'))).toBeTruthy();
-      expect(fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'instances.fsh'))).toBeTruthy();
+      expect(
+        fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'profiles', 'Foo.fsh'))
+      ).toBeTruthy();
+      expect(
+        fs.existsSync(path.join(tempRoot, 'input', 'fsh', 'instances', 'Bar.fsh'))
+      ).toBeTruthy();
     });
 
     it('should write configuration details to a file named sushi-config.yaml in the output directory', () => {
