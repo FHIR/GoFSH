@@ -14,6 +14,8 @@ export default {
     for (const resource of [
       ...pkg.profiles,
       ...pkg.extensions,
+      ...pkg.logicals,
+      ...pkg.resources,
       ...pkg.valueSets,
       ...pkg.codeSystems
     ]) {
@@ -49,13 +51,18 @@ export default {
       const DEFAULT_DATE = new ExportableCaretValueRule('');
       DEFAULT_DATE.caretPath = 'date';
       DEFAULT_DATE.value = date;
-      [...pkg.profiles, ...pkg.extensions, ...pkg.valueSets, ...pkg.codeSystems].forEach(
-        resource => {
-          (resource.rules as ExportableRule[]) = (resource.rules as ExportableRule[]).filter(
-            rule => !isEqual(rule, DEFAULT_DATE)
-          );
-        }
-      );
+      [
+        ...pkg.profiles,
+        ...pkg.extensions,
+        ...pkg.logicals,
+        ...pkg.resources,
+        ...pkg.valueSets,
+        ...pkg.codeSystems
+      ].forEach(resource => {
+        (resource.rules as ExportableRule[]) = (resource.rules as ExportableRule[]).filter(
+          rule => !isEqual(rule, DEFAULT_DATE)
+        );
+      });
     }
   }
 } as OptimizerPlugin;

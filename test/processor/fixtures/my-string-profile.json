@@ -1,0 +1,22 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "my.string.profile",
+  "url": "http://example.org/StructureDefinition/MyString",
+  "version": "1.0.0",
+  "name": "MyString",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "kind": "primitive-type",
+  "abstract": false,
+  "type": "string",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/string",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "string",
+        "path": "string"
+      }
+    ]
+  }
+}

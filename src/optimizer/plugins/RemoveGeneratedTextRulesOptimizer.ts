@@ -9,7 +9,9 @@ import {
   ExportableInstance,
   ExportableProfile,
   ExportableRule,
-  ExportableValueSet
+  ExportableValueSet,
+  ExportableLogical,
+  ExportableResource
 } from '../../exportable';
 import { fshtypes } from 'fsh-sushi';
 
@@ -18,7 +20,14 @@ export default {
   description: 'Remove rules on "text" which represent generated content.',
 
   optimize(pkg: Package): void {
-    [...pkg.profiles, ...pkg.extensions, ...pkg.valueSets, ...pkg.codeSystems].forEach(resource => {
+    [
+      ...pkg.profiles,
+      ...pkg.extensions,
+      ...pkg.logicals,
+      ...pkg.resources,
+      ...pkg.valueSets,
+      ...pkg.codeSystems
+    ].forEach(resource => {
       if (hasGeneratedText(resource)) {
         remove(
           resource.rules as ExportableRule[],
@@ -46,6 +55,8 @@ export function hasGeneratedText(
     | ExportableInstance
     | ExportableProfile
     | ExportableExtension
+    | ExportableLogical
+    | ExportableResource
     | ExportableValueSet
     | ExportableCodeSystem
 ): boolean {

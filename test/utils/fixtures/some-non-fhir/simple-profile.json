@@ -1,4 +1,6 @@
 {
   "resourceType": "StructureDefinition",
-  "name": "SimpleProfile"
+  "name": "SimpleProfile",
+  "kind": "resource",
+  "derivation": "constraint"
 }

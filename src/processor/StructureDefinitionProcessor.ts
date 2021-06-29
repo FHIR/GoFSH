@@ -5,7 +5,10 @@ import {
   ExportableInvariant,
   ExportableMapping,
   ExportableProfile,
-  ExportableExtension
+  ExportableExtension,
+  ExportableLogical,
+  ExportableResource,
+  ExportableAddElementRule
 } from '../exportable';
 import {
   CardRuleExtractor,
@@ -16,11 +19,12 @@ import {
   ContainsRuleExtractor,
   OnlyRuleExtractor,
   ObeysRuleExtractor,
+  AddElementRuleExtractor,
   InvariantExtractor,
   MappingExtractor
 } from '../extractor';
 import { ProcessableElementDefinition, switchQuantityRules, makeNameSushiSafe } from '.';
-import { getAncestorSliceDefinition } from '../utils';
+import { getAncestorSliceDefinition, logger } from '../utils';
 
 export class StructureDefinitionProcessor {
   static process(
@@ -29,16 +33,33 @@ export class StructureDefinitionProcessor {
     config: fshtypes.Configuration,
     existingInvariants: ExportableInvariant[] = []
   ):
-    | [ExportableProfile | ExportableExtension, ...(ExportableInvariant | ExportableMapping)[]]
+    | [
+        ExportableProfile | ExportableExtension | ExportableLogical | ExportableResource,
+        ...(ExportableInvariant | ExportableMapping)[]
+      ]
     | [] {
     if (StructureDefinitionProcessor.isProcessableStructureDefinition(input)) {
-      let sd: ExportableProfile | ExportableExtension;
+      let sd: ExportableProfile | ExportableExtension | ExportableLogical | ExportableResource;
       // Prefer name (which is required). If we happen to get invalid FHIR, create a reasonable name from the id with only allowable characters
       const name = input.name ?? input.id.split(/[-.]+/).map(capitalize).join('');
-      if (input.type === 'Extension') {
+      if (input.kind === 'logical' && input.derivation === 'specialization') {
+        sd = new ExportableLogical(name);
+      } else if (input.kind === 'resource' && input.derivation === 'specialization') {
+        sd = new ExportableResource(name);
+      } else if (
+        input.kind === 'complex-type' &&
+        input.derivation === 'constraint' &&
+        input.type === 'Extension'
+      ) {
         sd = new ExportableExtension(name);
-      } else {
+      } else if (input.kind !== 'logical' && input.derivation === 'constraint') {
         sd = new ExportableProfile(name);
+      } else {
+        // this should never be encountered when running normally, hopefully,
+        // since the LakeOfFHIR should only be providing us with non-Instance StructureDefinitions
+        throw new Error(
+          'This StructureDefinition does not represent a FSH Profile, Extension, Logical, or Resource.'
+        );
       }
       const elements =
         input.differential?.element?.map(rawElement => {
@@ -84,18 +105,61 @@ export class StructureDefinitionProcessor {
     fisher: utils.Fishable,
     config: fshtypes.Configuration
   ): void {
-    const newRules: ExportableSdRule[] = [];
+    const newRules: (ExportableSdRule | ExportableAddElementRule)[] = [];
+    let parentDefinition: ProcessableStructureDefinition;
+    if (input.baseDefinition) {
+      parentDefinition = fisher.fishForFHIR(input.baseDefinition);
+    } else if (target instanceof ExportableResource) {
+      parentDefinition = fisher.fishForFHIR(
+        'http://hl7.org/fhir/StructureDefinition/DomainResource'
+      );
+    } else if (target instanceof ExportableLogical) {
+      parentDefinition = fisher.fishForFHIR('http://hl7.org/fhir/StructureDefinition/Base');
+    }
     // First extract the top-level caret rules from the StructureDefinition
     newRules.push(...CaretValueRuleExtractor.processStructureDefinition(input, fisher, config));
     // Then extract rules based on the differential elements
     elements.forEach(element => {
       const ancestorSliceDefinition = getAncestorSliceDefinition(element, input, fisher);
-      // if there is a slice, which is not a choice slice, but no ancestor definition, capture with a contains rule
-      if (
+      // if there is a slice, which is not a choice slice, but no ancestor definition, it will need a contains rule
+      const isNewSlice =
         element.sliceName &&
         !/\[x]:[a-z][a-z0-9]*[A-Z][A-Za-z0-9]*$/.test(element.id) &&
-        ancestorSliceDefinition == null
+        ancestorSliceDefinition == null;
+      if (
+        (target instanceof ExportableResource || target instanceof ExportableLogical) &&
+        !parentDefinition?.snapshot?.element?.some(parentEl => parentEl.id === element.id)
       ) {
+        // a newly defined element on a Resource or Logical needs an AddElementRule
+        // AddElementRule contains cardinality, flag, and type information, so those extractors don't need to be called here
+        // the root element doesn't need to be added, but all other elements do.
+        // but, we still want to mark paths as processed so that caret value rules are not made.
+
+        if (isNewSlice) {
+          logger.warn(
+            `${target.constructorName} ${target.name} contains a slice definition for ${element.sliceName} on ${element.path}. This is not supported by FHIR.`
+          );
+          newRules.push(ContainsRuleExtractor.process(element, input, fisher));
+        } else {
+          if (element.path.indexOf('.') === -1) {
+            // For the root element, mark the cardinality paths as processed
+            // so that they don't get CaretValueRules created.
+            element.processedPaths.push('min', 'max');
+          } else {
+            // For all other elements, make a rule to add them.
+            const addElementRule = AddElementRuleExtractor.process(element);
+            newRules.push(addElementRule);
+          }
+        }
+        newRules.push(BindingRuleExtractor.process(element), ObeysRuleExtractor.process(element));
+        const assignmentRules = AssignmentRuleExtractor.process(element);
+        if (assignmentRules.length > 0) {
+          logger.warn(
+            `${target.constructorName} ${target.name} contains value assignment for ${element.id}. This is not supported by FHIR.`
+          );
+          newRules.push(...assignmentRules);
+        }
+      } else if (isNewSlice) {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
@@ -161,6 +225,8 @@ export interface ProcessableStructureDefinition {
   title?: string;
   description?: string;
   baseDefinition?: string;
+  kind?: string;
+  derivation?: string;
   mapping?: fhirtypes.StructureDefinitionMapping[];
   differential?: {
     element: any[];
@@ -175,6 +241,6 @@ interface ConstrainableEntity {
   id: string;
   title?: string;
   description?: string;
-  rules?: ExportableSdRule[];
+  rules?: (ExportableSdRule | ExportableAddElementRule)[];
   parent?: string;
 }

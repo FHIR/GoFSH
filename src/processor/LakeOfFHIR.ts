@@ -12,13 +12,13 @@ export class LakeOfFHIR implements utils.Fishable {
   constructor(public docs: WildFHIR[]) {}
 
   /**
-   * Gets all structure definitions (profiles and extensions) in the lake
+   * Gets all non-instance structure definitions (profiles, extensions, logicals, and resources) in the lake
    * @returns {WildFHIR[]}
    */
   getAllStructureDefinitions(): WildFHIR[] {
     return this.docs
       .filter(d => d.content.resourceType === 'StructureDefinition')
-      .filter(d => !this.isSpecialization(d)); // TODO: Remove this filter when full support for LogicalModels and Resources is implemented
+      .filter(d => !this.isSDForInstance(d));
   }
 
   /**
@@ -66,9 +66,7 @@ export class LakeOfFHIR implements utils.Fishable {
         case 'ImplementationGuide':
           return false;
         case 'StructureDefinition':
-          // TODO: This is a temporary fix to support exporting LogicalModels and Resources as Instances.
-          // This should return false when full support is implemented.
-          return this.isSpecialization(d);
+          return this.isSDForInstance(d);
         case 'CodeSystem':
           return (
             includeUnsupportedTerminologyResources &&
@@ -89,6 +87,28 @@ export class LakeOfFHIR implements utils.Fishable {
     return (
       d.content.resourceType === 'StructureDefinition' && d.content.derivation === 'specialization'
     );
+  }
+
+  // A StructureDefinition can represent many different FSH types:
+  // Profile, Extension, Logical, Resource, Instance
+  // The first four are handled by the StructureDefinitionProcessor, but Instances are handled by InstanceProcessor.
+  // Thus, splitting the categories based on that is useful.
+  // The important fields here are kind and derivation.
+  // A Profile has kind "resource", "complex-type", or "primitive-type" and derivation "constraint".
+  // An Extension has kind "complex-type", derivation "constraint", and type "Extension". It's a special case of Profile.
+  // A Logical has kind "logical" and derivation "specialization".
+  // A Resource has kind "resource" and derivation "specialization".
+  // Any other combination of values for kind and derivation represents an Instance.
+  isSDForInstance(d: WildFHIR): boolean {
+    if (d.content.resourceType === 'StructureDefinition') {
+      if (d.content.derivation === 'specialization') {
+        return ['primitive-type', 'complex-type'].includes(d.content.kind);
+      } else {
+        return d.content.kind === 'logical';
+      }
+    } else {
+      return false;
+    }
   }
 
   fishForFHIR(item: string, ...types: utils.Type[]) {

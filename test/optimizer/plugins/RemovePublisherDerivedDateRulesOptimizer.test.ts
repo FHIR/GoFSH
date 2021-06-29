@@ -5,7 +5,9 @@ import {
   ExportableCodeSystem,
   ExportableExtension,
   ExportableProfile,
-  ExportableValueSet
+  ExportableValueSet,
+  ExportableLogical,
+  ExportableResource
 } from '../../../src/exportable';
 import optimizer from '../../../src/optimizer/plugins/RemovePublisherDerivedDateRulesOptimizer';
 
@@ -22,6 +24,8 @@ describe('optimizer', () => {
       const extension = new ExportableExtension('ExtraExtension');
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'Observation';
+      const logical = new ExportableLogical('ExtraLogical');
+      const resource = new ExportableResource('ExtraResource');
       const valueSet = new ExportableValueSet('ExtraValueSet');
       const codeSystem = new ExportableCodeSystem('ExtraCodeSystem');
       const dateCaretRule = new ExportableCaretValueRule('');
@@ -29,16 +33,22 @@ describe('optimizer', () => {
       dateCaretRule.value = '2020-03-24T22:19:43+00:00';
       profile.rules = [dateCaretRule];
       extension.rules = [dateCaretRule];
+      logical.rules = [dateCaretRule];
+      resource.rules = [dateCaretRule];
       valueSet.rules = [dateCaretRule];
       codeSystem.rules = [dateCaretRule];
       const myPackage = new Package();
       myPackage.add(profile);
       myPackage.add(extension);
+      myPackage.add(logical);
+      myPackage.add(resource);
       myPackage.add(valueSet);
       myPackage.add(codeSystem);
       optimizer.optimize(myPackage);
       expect(profile.rules).toHaveLength(0); // date CaretValueRule removed
       expect(extension.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(logical.rules).toHaveLength(0); // date CaretValueRule removed
+      expect(resource.rules).toHaveLength(0); // date CaretValueRule removed
       expect(valueSet.rules).toHaveLength(0); // date CaretValueRule removed
       expect(codeSystem.rules).toHaveLength(0); // date CaretValueRule removed
     });

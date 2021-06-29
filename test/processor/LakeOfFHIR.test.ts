@@ -19,7 +19,8 @@ describe('LakeOfHIR', () => {
         'simple-ig.json',
         'rocky-balboa.json',
         'unsupported-valueset.json',
-        'unsupported-codesystem.json'
+        'unsupported-codesystem.json',
+        'my-string-profile.json'
       )
     );
   });
@@ -30,28 +31,30 @@ describe('LakeOfHIR', () => {
 
   describe('#constructor', () => {
     it('should store all the passed in values', () => {
-      expect(lake.docs).toHaveLength(10);
+      expect(lake.docs).toHaveLength(11);
       expect(lake.docs[0].content.id).toBe('simple.profile');
       expect(lake.docs[1].content.id).toBe('simple.extension');
-      expect(lake.docs[2].content.id).toBe('SimpleLogicalModel');
-      expect(lake.docs[3].content.id).toBe('SimpleResource');
+      expect(lake.docs[2].content.id).toBe('simple.logical');
+      expect(lake.docs[3].content.id).toBe('simple.resource');
       expect(lake.docs[4].content.id).toBe('simple.codesystem');
       expect(lake.docs[5].content.id).toBe('simple.valueset');
       expect(lake.docs[6].content.id).toBe('simple.ig');
       expect(lake.docs[7].content.id).toBe('rocky.balboa');
       expect(lake.docs[8].content.id).toBe('unsupported.valueset');
       expect(lake.docs[9].content.id).toBe('unsupported.codesystem');
+      expect(lake.docs[10].content.id).toBe('my.string.profile');
     });
   });
 
   describe('#getAllStructureDefinitions', () => {
     it('should get all structure definitions', () => {
       const results = lake.getAllStructureDefinitions();
-      expect(results).toHaveLength(2);
+      expect(results).toHaveLength(5);
       expect(results[0].content.id).toBe('simple.profile');
       expect(results[1].content.id).toBe('simple.extension');
-      // NOTE: This does not yet contain specializations (LogicalModels and Resources)
-      // When full support is implemented, LogicalModels and Resources should be included in this test.
+      expect(results[2].content.id).toBe('simple.logical');
+      expect(results[3].content.id).toBe('simple.resource');
+      expect(results[4].content.id).toBe('my.string.profile');
     });
   });
 
@@ -110,30 +113,22 @@ describe('LakeOfHIR', () => {
   describe('#getAllInstances', () => {
     it('should get all non-IG/SD/VS/CS resources by default', () => {
       const results = lake.getAllInstances();
-      expect(results).toHaveLength(3); // NOTE: Specializations are included temporarily until full support for LogicalModels and Resources is implemented
-      expect(results[2].content.id).toBe('rocky.balboa');
+      expect(results).toHaveLength(1);
+      expect(results[0].content.id).toBe('rocky.balboa');
     });
 
     it('should get all non-IG/SD/VS/CS resources when includeUnsupportedValueSets is false', () => {
       const results = lake.getAllInstances(false);
-      expect(results).toHaveLength(3);
-      expect(results[2].content.id).toBe('rocky.balboa');
+      expect(results).toHaveLength(1);
+      expect(results[0].content.id).toBe('rocky.balboa');
     });
 
     it('should also get unsupported value sets and code systems when includeUnsupportedTerminologyResources is true', () => {
       const results = lake.getAllInstances(true);
-      expect(results).toHaveLength(5);
-      expect(results[2].content.id).toBe('rocky.balboa');
-      expect(results[3].content.id).toBe('unsupported.valueset');
-      expect(results[4].content.id).toBe('unsupported.codesystem');
-    });
-
-    // TODO: This test should be move to the getAllStructureDefinitions case when full support for LogicalModel and Resources is implemented.
-    it('should get specializations (temporarily)', () => {
-      const results = lake.getAllInstances();
       expect(results).toHaveLength(3);
-      expect(results[0].content.id).toBe('SimpleLogicalModel');
-      expect(results[1].content.id).toBe('SimpleResource');
+      expect(results[0].content.id).toBe('rocky.balboa');
+      expect(results[1].content.id).toBe('unsupported.valueset');
+      expect(results[2].content.id).toBe('unsupported.codesystem');
     });
   });
 
@@ -141,6 +136,8 @@ describe('LakeOfHIR', () => {
     it('should fish by name', () => {
       expect(lake.fishForFHIR('SimpleProfile').id).toBe('simple.profile');
       expect(lake.fishForFHIR('SimpleExtension').id).toBe('simple.extension');
+      expect(lake.fishForFHIR('SimpleLogicalModel').id).toBe('simple.logical');
+      expect(lake.fishForFHIR('SimpleResource').id).toBe('simple.resource');
       expect(lake.fishForFHIR('SimpleCodeSystem').id).toBe('simple.codesystem');
       expect(lake.fishForFHIR('SimpleValueSet').id).toBe('simple.valueset');
     });
@@ -150,6 +147,10 @@ describe('LakeOfHIR', () => {
       expect(lake.fishForFHIR('SimpleProfile', utils.Type.Extension)).toBeUndefined();
       expect(lake.fishForFHIR('SimpleExtension', utils.Type.Extension).id).toBe('simple.extension');
       expect(lake.fishForFHIR('SimpleExtension', utils.Type.Profile)).toBeUndefined();
+      expect(lake.fishForFHIR('SimpleLogicalModel', utils.Type.Logical).id).toBe('simple.logical');
+      expect(lake.fishForFHIR('SimpleLogicalModel', utils.Type.Resource)).toBeUndefined();
+      expect(lake.fishForFHIR('SimpleResource', utils.Type.Resource).id).toBe('simple.resource');
+      expect(lake.fishForFHIR('SimpleResource', utils.Type.Logical)).toBeUndefined();
       expect(lake.fishForFHIR('SimpleCodeSystem', utils.Type.CodeSystem).id).toBe(
         'simple.codesystem'
       );
@@ -161,6 +162,8 @@ describe('LakeOfHIR', () => {
     it('should fish by id', () => {
       expect(lake.fishForFHIR('simple.profile').name).toBe('SimpleProfile');
       expect(lake.fishForFHIR('simple.extension').name).toBe('SimpleExtension');
+      expect(lake.fishForFHIR('simple.logical').name).toBe('SimpleLogicalModel');
+      expect(lake.fishForFHIR('simple.resource').name).toBe('SimpleResource');
       expect(lake.fishForFHIR('simple.codesystem').name).toBe('SimpleCodeSystem');
       expect(lake.fishForFHIR('simple.valueset').name).toBe('SimpleValueSet');
     });
@@ -172,6 +175,12 @@ describe('LakeOfHIR', () => {
         'SimpleExtension'
       );
       expect(lake.fishForFHIR('simple.extension', utils.Type.Profile)).toBeUndefined();
+      expect(lake.fishForFHIR('simple.logical', utils.Type.Logical).name).toBe(
+        'SimpleLogicalModel'
+      );
+      expect(lake.fishForFHIR('simple.logical', utils.Type.Resource)).toBeUndefined();
+      expect(lake.fishForFHIR('simple.resource', utils.Type.Resource).name).toBe('SimpleResource');
+      expect(lake.fishForFHIR('simple.resource', utils.Type.Logical)).toBeUndefined();
       expect(lake.fishForFHIR('simple.codesystem', utils.Type.CodeSystem).name).toBe(
         'SimpleCodeSystem'
       );
@@ -187,6 +196,12 @@ describe('LakeOfHIR', () => {
       expect(
         lake.fishForFHIR('http://example.org/tests/StructureDefinition/simple.extension').id
       ).toBe('simple.extension');
+      expect(lake.fishForFHIR('http://example.org/StructureDefinition/SimpleLogicalModel').id).toBe(
+        'simple.logical'
+      );
+      expect(lake.fishForFHIR('http://example.org/StructureDefinition/SimpleResource').id).toBe(
+        'simple.resource'
+      );
       expect(lake.fishForFHIR('http://example.org/tests/CodeSystem/simple.codesystem').id).toBe(
         'simple.codesystem'
       );
@@ -222,6 +237,30 @@ describe('LakeOfHIR', () => {
       ).toBeUndefined();
       expect(
         lake.fishForFHIR(
+          'http://example.org/StructureDefinition/SimpleLogicalModel',
+          utils.Type.Logical
+        ).id
+      ).toBe('simple.logical');
+      expect(
+        lake.fishForFHIR(
+          'http://example.org/StructureDefinition/SimpleLogicalModel',
+          utils.Type.Resource
+        )
+      ).toBeUndefined();
+      expect(
+        lake.fishForFHIR(
+          'http://example.org/StructureDefinition/SimpleResource',
+          utils.Type.Resource
+        ).id
+      ).toBe('simple.resource');
+      expect(
+        lake.fishForFHIR(
+          'http://example.org/StructureDefinition/SimpleResource',
+          utils.Type.Logical
+        )
+      ).toBeUndefined();
+      expect(
+        lake.fishForFHIR(
           'http://example.org/tests/CodeSystem/simple.codesystem',
           utils.Type.CodeSystem
         ).id
@@ -246,6 +285,8 @@ describe('LakeOfHIR', () => {
     it('should fish by name', () => {
       expect(lake.fishForMetadata('SimpleProfile').id).toBe('simple.profile');
       expect(lake.fishForMetadata('SimpleExtension').id).toBe('simple.extension');
+      expect(lake.fishForMetadata('SimpleLogicalModel').id).toBe('simple.logical');
+      expect(lake.fishForMetadata('SimpleResource').id).toBe('simple.resource');
       expect(lake.fishForMetadata('SimpleCodeSystem').id).toBe('simple.codesystem');
       expect(lake.fishForMetadata('SimpleValueSet').id).toBe('simple.valueset');
     });
@@ -257,6 +298,14 @@ describe('LakeOfHIR', () => {
         'simple.extension'
       );
       expect(lake.fishForMetadata('SimpleExtension', utils.Type.Profile)).toBeUndefined();
+      expect(lake.fishForMetadata('SimpleLogicalModel', utils.Type.Logical).id).toBe(
+        'simple.logical'
+      );
+      expect(lake.fishForMetadata('SimpleLogicalModel', utils.Type.Resource)).toBeUndefined();
+      expect(lake.fishForMetadata('SimpleResource', utils.Type.Resource).id).toBe(
+        'simple.resource'
+      );
+      expect(lake.fishForMetadata('SimpleResource', utils.Type.Logical)).toBeUndefined();
       expect(lake.fishForMetadata('SimpleCodeSystem', utils.Type.CodeSystem).id).toBe(
         'simple.codesystem'
       );
@@ -270,6 +319,8 @@ describe('LakeOfHIR', () => {
     it('should fish by id', () => {
       expect(lake.fishForMetadata('simple.profile').name).toBe('SimpleProfile');
       expect(lake.fishForMetadata('simple.extension').name).toBe('SimpleExtension');
+      expect(lake.fishForMetadata('simple.logical').name).toBe('SimpleLogicalModel');
+      expect(lake.fishForMetadata('simple.resource').name).toBe('SimpleResource');
       expect(lake.fishForMetadata('simple.codesystem').name).toBe('SimpleCodeSystem');
       expect(lake.fishForMetadata('simple.valueset').name).toBe('SimpleValueSet');
     });
@@ -281,6 +332,14 @@ describe('LakeOfHIR', () => {
         'SimpleExtension'
       );
       expect(lake.fishForMetadata('simple.extension', utils.Type.Profile)).toBeUndefined();
+      expect(lake.fishForMetadata('simple.logical', utils.Type.Logical).name).toBe(
+        'SimpleLogicalModel'
+      );
+      expect(lake.fishForMetadata('simple.logical', utils.Type.Resource)).toBeUndefined();
+      expect(lake.fishForMetadata('simple.resource', utils.Type.Resource).name).toBe(
+        'SimpleResource'
+      );
+      expect(lake.fishForMetadata('simple.resource', utils.Type.Logical)).toBeUndefined();
       expect(lake.fishForMetadata('simple.codesystem', utils.Type.CodeSystem).name).toBe(
         'SimpleCodeSystem'
       );
@@ -298,6 +357,12 @@ describe('LakeOfHIR', () => {
       expect(
         lake.fishForMetadata('http://example.org/tests/StructureDefinition/simple.extension').id
       ).toBe('simple.extension');
+      expect(
+        lake.fishForMetadata('http://example.org/StructureDefinition/SimpleLogicalModel').id
+      ).toBe('simple.logical');
+      expect(lake.fishForMetadata('http://example.org/StructureDefinition/SimpleResource').id).toBe(
+        'simple.resource'
+      );
       expect(lake.fishForMetadata('http://example.org/tests/CodeSystem/simple.codesystem').id).toBe(
         'simple.codesystem'
       );
@@ -329,6 +394,24 @@ describe('LakeOfHIR', () => {
         lake.fishForMetadata(
           'http://example.org/tests/StructureDefinition/simple.extension',
           utils.Type.Profile
+        )
+      ).toBeUndefined();
+      expect(
+        lake.fishForMetadata(
+          'http://example.org/StructureDefinition/SimpleLogicalModel',
+          utils.Type.Logical
+        ).id
+      ).toBe('simple.logical');
+      expect(
+        lake.fishForMetadata(
+          'http://example.org/StructureDefinition/SimpleLogicalModel',
+          utils.Type.Resource
+        )
+      ).toBeUndefined();
+      expect(
+        lake.fishForMetadata(
+          'http://example.org/StructureDefinition/SimpleResource',
+          utils.Type.Logical
         )
       ).toBeUndefined();
       expect(

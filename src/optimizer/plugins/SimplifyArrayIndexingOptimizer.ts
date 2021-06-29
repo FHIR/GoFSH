@@ -15,6 +15,8 @@ export default {
     [
       ...pkg.profiles,
       ...pkg.extensions,
+      ...pkg.logicals,
+      ...pkg.resources,
       ...pkg.valueSets,
       ...pkg.codeSystems,
       ...pkg.instances,

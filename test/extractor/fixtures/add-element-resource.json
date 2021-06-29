@@ -1,0 +1,235 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "MyResource",
+  "url": "http://hl7.org/big/mood/StructureDefinition/MyResource",
+  "version": "0.9.5",
+  "name": "MyResource",
+  "title": "My Resource",
+  "status": "active",
+  "description": "A resource for my grocery list",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "rim",
+      "uri": "http://hl7.org/v3",
+      "name": "RIM Mapping"
+    }
+  ],
+  "kind": "resource",
+  "abstract": false,
+  "type": "MyResource",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+  "derivation": "specialization",
+  "differential": {
+    "element": [
+      {
+        "id": "MyResource",
+        "path": "MyResource",
+        "short": "My Resource",
+        "definition": "A resource for my grocery list"
+      },
+      {
+        "id": "MyResource.bread",
+        "path": "MyResource.bread",
+        "short": "Always get bread",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "id": "MyResource.apple[x]",
+        "path": "MyResource.apple[x]",
+        "short": "Get some apples",
+        "min": 0,
+        "max": "3",
+        "type": [
+          {
+            "code": "string"
+          },
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "id": "MyResource.orange",
+        "path": "MyResource.orange",
+        "short": "Get an orange",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Substance"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "MyResource.banana",
+        "path": "MyResource.banana",
+        "short": "Lots of bananas",
+        "min": 1,
+        "max": "*",
+        "type": [
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "MyResource.potato",
+        "path": "MyResource.potato",
+        "short": "Potato must be supported",
+        "min": 1,
+        "max": "3",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ],
+        "mustSupport": true
+      },
+      {
+        "id": "MyResource.peppers",
+        "path": "MyResource.peppers",
+        "short": "Sweet peppers",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ],
+        "isSummary": true
+      },
+      {
+        "id": "MyResource.onions",
+        "path": "MyResource.onions",
+        "short": "Onions can change flavors a lot",
+        "min": 0,
+        "max": "3",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ],
+        "isModifier": true
+      },
+      {
+        "id": "MyResource.cabbage",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "draft"
+          }
+        ],
+        "path": "MyResource.cabbage",
+        "short": "Cabbages... but just one",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "id": "MyResource.milk",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "trial-use"
+          }
+        ],
+        "path": "MyResource.milk",
+        "short": "Any kind of milk you want",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Quantity"
+          }
+        ]
+      },
+      {
+        "id": "MyResource.coffee",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "normative"
+          }
+        ],
+        "path": "MyResource.coffee",
+        "short": "Coffee is good in the morning",
+        "min": 0,
+        "max": "2",
+        "type": [
+          {
+            "code": "Quantity"
+          }
+        ]
+      },
+      {
+        "id": "MyResource.peanuts",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "normative"
+          }
+        ],
+        "path": "MyResource.peanuts",
+        "short": "Peanuts are a good snack",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ],
+        "isSummary": true
+      },
+      {
+        "id": "MyResource.spice",
+        "path": "MyResource.spice",
+        "short": "Assorted spices",
+        "definition": "Any kind of spice is allowed",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "id": "MyResource.cookies",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status",
+            "valueCode": "normative"
+          }
+        ],
+        "path": "MyResource.cookies",
+        "short": "Cookies are delicious",
+        "definition": "Cookies are the most important thing to get at the grocery store.",
+        "min": 0,
+        "max": "2",
+        "type": [
+          {
+            "code": "string"
+          }
+        ],
+        "isSummary": true
+      }
+    ]
+  }
+}

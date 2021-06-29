@@ -1,0 +1,6 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "logical",
+  "type": "Base",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base"
+}

@@ -1,0 +1,29 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "SmallLogical",
+  "url": "http://demo.org/StructureDefinition/SmallLogical",
+  "version": "1.0.0",
+  "name": "SmallLogical",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "rim",
+      "name": "RIM Mapping",
+      "uri": "http://hl7.org/v3"
+    }
+  ],
+  "kind": "logical",
+  "abstract": false,
+  "type": "http://demo.org/StructureDefinition/SmallLogical",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base",
+  "derivation": "specialization",
+  "differential": {
+    "element": [
+      {
+        "id": "SmallLogical",
+        "path": "SmallLogical"
+      }
+    ]
+  }
+}

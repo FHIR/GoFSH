@@ -12,7 +12,9 @@ import {
   ExportableAlias,
   ExportableAssignmentRule,
   ExportableObeysRule,
-  ExportableCaretValueRule
+  ExportableCaretValueRule,
+  ExportableLogical,
+  ExportableResource
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
 import table from 'text-table';
@@ -73,6 +75,8 @@ describe('FSHExporter', () => {
   describe('#groupBySingleFile', () => {
     let profileSpy: jest.SpyInstance;
     let extensionSpy: jest.SpyInstance;
+    let logicalSpy: jest.SpyInstance;
+    let resourceSpy: jest.SpyInstance;
     let codeSystemSpy: jest.SpyInstance;
     let valueSetSpy: jest.SpyInstance;
     let invariantSpy: jest.SpyInstance;
@@ -83,6 +87,8 @@ describe('FSHExporter', () => {
     beforeAll(() => {
       profileSpy = jest.spyOn(ExportableProfile.prototype, 'toFSH');
       extensionSpy = jest.spyOn(ExportableExtension.prototype, 'toFSH');
+      logicalSpy = jest.spyOn(ExportableLogical.prototype, 'toFSH');
+      resourceSpy = jest.spyOn(ExportableResource.prototype, 'toFSH');
       codeSystemSpy = jest.spyOn(ExportableCodeSystem.prototype, 'toFSH');
       valueSetSpy = jest.spyOn(ExportableValueSet.prototype, 'toFSH');
       invariantSpy = jest.spyOn(ExportableInvariant.prototype, 'toFSH');
@@ -94,6 +100,8 @@ describe('FSHExporter', () => {
     afterAll(() => {
       profileSpy.mockRestore();
       extensionSpy.mockRestore();
+      logicalSpy.mockRestore();
+      resourceSpy.mockRestore();
       codeSystemSpy.mockRestore();
       valueSetSpy.mockRestore();
       invariantSpy.mockRestore();
@@ -105,6 +113,8 @@ describe('FSHExporter', () => {
     beforeEach(() => {
       profileSpy.mockReset();
       extensionSpy.mockReset();
+      logicalSpy.mockReset();
+      resourceSpy.mockReset();
       codeSystemSpy.mockReset();
       valueSetSpy.mockReset();
       invariantSpy.mockReset();
@@ -122,6 +132,18 @@ describe('FSHExporter', () => {
       myPackage.add(new ExportableExtension('SomeExtension'));
       exporter.export('single-file');
       expect(extensionSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should try to export a Logical', () => {
+      myPackage.add(new ExportableLogical('SomeLogical'));
+      exporter.export('single-file');
+      expect(logicalSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should try to export a Resource', () => {
+      myPackage.add(new ExportableResource('SomeResource'));
+      exporter.export('single-file');
+      expect(resourceSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should try to export a CodeSystem', () => {
@@ -207,6 +229,8 @@ describe('FSHExporter', () => {
     it('should export to a multiple files grouped by category when style is "group-by-fsh-type"', () => {
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableLogical('SomeLogical'));
+      myPackage.add(new ExportableResource('SomeResource'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
       const instance = new ExportableInstance('SomeInstance');
@@ -222,6 +246,8 @@ describe('FSHExporter', () => {
           .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
           .set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
+          .set('logicals.fsh', ['Logical: SomeLogical', EOL, 'Id: SomeLogical'].join(''))
+          .set('resources.fsh', ['Resource: SomeResource', EOL, 'Id: SomeResource'].join(''))
           .set('valueSets.fsh', ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join(''))
           .set(
             'codeSystems.fsh',
@@ -243,8 +269,10 @@ describe('FSHExporter', () => {
               ['SomeExtension', 'Extension', 'extensions.fsh'],
               ['SomeInstance', 'Instance', 'instances.fsh'],
               ['SomeInvariant', 'Invariant', 'invariants.fsh'],
+              ['SomeLogical', 'Logical', 'logicals.fsh'],
               ['SomeMapping', 'Mapping', 'mappings.fsh'],
               ['SomeProfile', 'Profile', 'profiles.fsh'],
+              ['SomeResource', 'Resource', 'resources.fsh'],
               ['SomeValueSet', 'ValueSet', 'valueSets.fsh']
             ])
           )
@@ -254,6 +282,8 @@ describe('FSHExporter', () => {
     it('should export to a multiple files grouped by category when style is undefined', () => {
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableLogical('SomeLogical'));
+      myPackage.add(new ExportableResource('SomeResource'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
       const instance = new ExportableInstance('SomeInstance');
@@ -269,6 +299,8 @@ describe('FSHExporter', () => {
           .set('aliases.fsh', ['Alias: foo = http://example.com/foo'].join(''))
           .set('profiles.fsh', ['Profile: SomeProfile', EOL, 'Id: SomeProfile'].join(''))
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
+          .set('logicals.fsh', ['Logical: SomeLogical', EOL, 'Id: SomeLogical'].join(''))
+          .set('resources.fsh', ['Resource: SomeResource', EOL, 'Id: SomeResource'].join(''))
           .set('valueSets.fsh', ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join(''))
           .set(
             'codeSystems.fsh',
@@ -290,8 +322,10 @@ describe('FSHExporter', () => {
               ['SomeExtension', 'Extension', 'extensions.fsh'],
               ['SomeInstance', 'Instance', 'instances.fsh'],
               ['SomeInvariant', 'Invariant', 'invariants.fsh'],
+              ['SomeLogical', 'Logical', 'logicals.fsh'],
               ['SomeMapping', 'Mapping', 'mappings.fsh'],
               ['SomeProfile', 'Profile', 'profiles.fsh'],
+              ['SomeResource', 'Resource', 'resources.fsh'],
               ['SomeValueSet', 'ValueSet', 'valueSets.fsh']
             ])
           )
@@ -305,6 +339,10 @@ describe('FSHExporter', () => {
       myPackage.add(profile1);
       const profile2 = new ExportableProfile('AnotherProfile');
       myPackage.add(profile2);
+      const logical = new ExportableLogical('SomeLogical');
+      myPackage.add(logical);
+      const resource = new ExportableResource('SomeResource');
+      myPackage.add(resource);
       myPackage.add(new ExportableExtension('SomeExtension'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
@@ -316,6 +354,14 @@ describe('FSHExporter', () => {
       const anotherInstance = new ExportableInstance('AnotherInstance');
       anotherInstance.instanceOf = 'AnotherProfile';
       myPackage.add(anotherInstance);
+
+      const logicalInstance = new ExportableInstance('LogicalInstance');
+      logicalInstance.instanceOf = 'SomeLogical';
+      myPackage.add(logicalInstance);
+
+      const resourceInstance = new ExportableInstance('ResourceInstance');
+      resourceInstance.instanceOf = 'SomeResource';
+      myPackage.add(resourceInstance);
 
       // Add one inline instance which is only used once
       const inlineInstance1 = new ExportableInstance('SomeInlineInstance');
@@ -348,6 +394,17 @@ describe('FSHExporter', () => {
       inlineInstance3Rule.isInstance = true;
       inlineInstance3Rule.value = 'YetAnotherInlineInstance';
       profile1.rules.push(inlineInstance3Rule);
+
+      // Ad an inline instance used on a logical
+      const inlineInstance4 = new ExportableInstance('ExtraBonusInlineInstance');
+      inlineInstance4.instanceOf = 'Observation';
+      inlineInstance4.usage = 'Inline';
+      myPackage.add(inlineInstance4);
+      const inlineInstance4Rule = new ExportableCaretValueRule('');
+      inlineInstance4Rule.caretPath = 'contained[0]';
+      inlineInstance4Rule.isInstance = true;
+      inlineInstance4Rule.value = 'ExtraBonusInlineInstance';
+      logical.rules.push(inlineInstance4Rule);
 
       const definitionalInstance = new ExportableInstance('DefinitionalInstance');
       definitionalInstance.instanceOf = 'ValueSet';
@@ -441,6 +498,45 @@ describe('FSHExporter', () => {
               '* contained[1] = AnotherInlineInstance'
             ].join('')
           )
+          .set(
+            'SomeLogical.fsh',
+            [
+              'Logical: SomeLogical',
+              EOL,
+              'Id: SomeLogical',
+              EOL,
+              '* ^contained[0] = ExtraBonusInlineInstance',
+              EOL,
+              EOL,
+              'Instance: LogicalInstance',
+              EOL,
+              'InstanceOf: SomeLogical',
+              EOL,
+              'Usage: #example',
+              EOL,
+              EOL,
+              'Instance: ExtraBonusInlineInstance',
+              EOL,
+              'InstanceOf: Observation',
+              EOL,
+              'Usage: #inline'
+            ].join('')
+          )
+          .set(
+            'SomeResource.fsh',
+            [
+              'Resource: SomeResource',
+              EOL,
+              'Id: SomeResource',
+              EOL,
+              EOL,
+              'Instance: ResourceInstance',
+              EOL,
+              'InstanceOf: SomeResource',
+              EOL,
+              'Usage: #example'
+            ].join('')
+          )
           .set('extensions.fsh', ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join(''))
           .set('valueSets.fsh', ['ValueSet: SomeValueSet', EOL, 'Id: SomeValueSet'].join(''))
           .set(
@@ -483,13 +579,18 @@ describe('FSHExporter', () => {
               ['AnotherProfile', 'Profile', 'AnotherProfile.fsh'],
               ['DefinitionalInstance', 'Instance', 'instances.fsh'],
               ['ExternalExampleInstance', 'Instance', 'instances.fsh'],
+              ['ExtraBonusInlineInstance', 'Instance', 'SomeLogical.fsh'],
+              ['LogicalInstance', 'Instance', 'SomeLogical.fsh'],
+              ['ResourceInstance', 'Instance', 'SomeResource.fsh'],
               ['SomeCodeSystem', 'CodeSystem', 'codeSystems.fsh'],
               ['SomeExtension', 'Extension', 'extensions.fsh'],
               ['SomeInlineInstance', 'Instance', 'SomeProfile.fsh'],
               ['SomeInstance', 'Instance', 'SomeProfile.fsh'],
               ['SomeInvariant', 'Invariant', 'SomeProfile.fsh'],
+              ['SomeLogical', 'Logical', 'SomeLogical.fsh'],
               ['SomeMapping', 'Mapping', 'mappings.fsh'],
               ['SomeProfile', 'Profile', 'SomeProfile.fsh'],
+              ['SomeResource', 'Resource', 'SomeResource.fsh'],
               ['SomeValueSet', 'ValueSet', 'valueSets.fsh'],
               ['YetAnotherInlineInstance', 'Instance', 'SomeProfile.fsh']
             ])
@@ -502,6 +603,8 @@ describe('FSHExporter', () => {
     it('should export each definition to its own file when style is "file-per-definition"', () => {
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableLogical('SomeLogical'));
+      myPackage.add(new ExportableResource('SomeResource'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
       const instance = new ExportableInstance('SomeInstance');
@@ -521,6 +624,11 @@ describe('FSHExporter', () => {
           .set(
             'SomeExtension-Extension.fsh',
             ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join('')
+          )
+          .set('SomeLogical-Logical.fsh', ['Logical: SomeLogical', EOL, 'Id: SomeLogical'].join(''))
+          .set(
+            'SomeResource-Resource.fsh',
+            ['Resource: SomeResource', EOL, 'Id: SomeResource'].join('')
           )
           .set(
             'SomeCodeSystem-CodeSystem.fsh',
@@ -544,8 +652,10 @@ describe('FSHExporter', () => {
               ['SomeExtension', 'Extension', 'SomeExtension-Extension.fsh'],
               ['SomeInstance', 'Instance', 'SomeInstance-Instance.fsh'],
               ['SomeInvariant', 'Invariant', 'SomeInvariant-Invariant.fsh'],
+              ['SomeLogical', 'Logical', 'SomeLogical-Logical.fsh'],
               ['SomeMapping', 'Mapping', 'SomeMapping-Mapping.fsh'],
               ['SomeProfile', 'Profile', 'SomeProfile-Profile.fsh'],
+              ['SomeResource', 'Resource', 'SomeResource-Resource.fsh'],
               ['SomeValueSet', 'ValueSet', 'SomeValueSet-ValueSet.fsh']
             ])
           )
@@ -558,6 +668,8 @@ describe('FSHExporter', () => {
       myPackage.aliases.push(new ExportableAlias('SomeAlias', 'http://test.com'));
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableLogical('SomeLogical'));
+      myPackage.add(new ExportableResource('SomeResource'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       const instance = new ExportableInstance('SomeInstance');
@@ -579,6 +691,16 @@ describe('FSHExporter', () => {
           'Extension: SomeExtension',
           EOL,
           'Id: SomeExtension',
+          EOL,
+          EOL,
+          'Logical: SomeLogical',
+          EOL,
+          'Id: SomeLogical',
+          EOL,
+          EOL,
+          'Resource: SomeResource',
+          EOL,
+          'Id: SomeResource',
           EOL,
           EOL,
           'CodeSystem: SomeCodeSystem',
@@ -612,6 +734,8 @@ describe('FSHExporter', () => {
       myPackage.aliases.push(new ExportableAlias('SomeAlias', 'http://test.com'));
       myPackage.add(new ExportableProfile('SomeProfile'));
       myPackage.add(new ExportableExtension('SomeExtension'));
+      myPackage.add(new ExportableLogical('SomeLogical'));
+      myPackage.add(new ExportableResource('SomeResource'));
       myPackage.add(new ExportableCodeSystem('SomeCodeSystem'));
       myPackage.add(new ExportableValueSet('SomeValueSet'));
       const instance = new ExportableInstance('SomeInstance');
@@ -634,6 +758,14 @@ describe('FSHExporter', () => {
         extensions: new ResourceMap().set(
           'SomeExtension',
           ['Extension: SomeExtension', EOL, 'Id: SomeExtension'].join('')
+        ),
+        logicals: new ResourceMap().set(
+          'SomeLogical',
+          ['Logical: SomeLogical', EOL, 'Id: SomeLogical'].join('')
+        ),
+        resources: new ResourceMap().set(
+          'SomeResource',
+          ['Resource: SomeResource', EOL, 'Id: SomeResource'].join('')
         ),
         codeSystems: new ResourceMap().set(
           'SomeCodeSystem',
@@ -659,7 +791,7 @@ describe('FSHExporter', () => {
       myPackage.add(instance);
 
       const serializedString =
-        '{"aliases":"","invariants":{},"mappings":{},"profiles":{"TestProfile":"Profile: TestProfile\\nId: TestProfile"},"extensions":{},"codeSystems":{},"valueSets":{},"instances":{"TestInstance":"Instance: TestInstance\\nInstanceOf: TestProfile\\nUsage: #example"}}';
+        '{"aliases":"","invariants":{},"mappings":{},"profiles":{"TestProfile":"Profile: TestProfile\\nId: TestProfile"},"extensions":{},"logicals":{},"resources":{},"codeSystems":{},"valueSets":{},"instances":{"TestInstance":"Instance: TestInstance\\nInstanceOf: TestProfile\\nUsage: #example"}}';
       const exportedMap = exporter.apiExport('map');
 
       expect(JSON.stringify(exportedMap).replace(/(\\r\\n|\\n|\\r)/gm, '')).toEqual(

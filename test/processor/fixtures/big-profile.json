@@ -1,6 +1,7 @@
 {
   "resourceType": "StructureDefinition",
   "kind": "resource",
+  "derivation": "constraint",
   "type": "Resource",
   "name": "BigProfile",
   "url": "https://demo.org/StructureDefinition/BigProfile",

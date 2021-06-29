@@ -9,12 +9,16 @@ import {
 import {
   ExportableProfile,
   ExportableExtension,
+  ExportableResource,
+  ExportableLogical,
   ExportableCardRule,
   ExportableAssignmentRule,
   ExportableCaretValueRule,
   ExportableObeysRule,
   ExportableContainsRule,
-  ExportableInvariant
+  ExportableAddElementRule,
+  ExportableInvariant,
+  ExportableBindingRule
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
@@ -51,6 +55,17 @@ describe('StructureDefinitionProcessor', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(ExportableProfile);
       expect(result[0].name).toBe('SimpleProfile');
+    });
+
+    it('should create a Profile for a StructureDefinition with kind complex-type, derivation constraint, and a non-Extension type', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'my-quantity-profile.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableProfile);
+      expect(result[0].name).toBe('MyQuantity');
     });
 
     it('should not create contains rules for slices that are not new', () => {
@@ -162,7 +177,7 @@ describe('StructureDefinitionProcessor', () => {
     });
 
     // NOTE: name is required on StructureDefinitions. This case is designed to do our best to handle invalid FHIR.
-    it('should not convert a Profile without a name but with an id', () => {
+    it('should convert a Profile without a name but with an id', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-profile-with-id.json'), 'utf-8')
       );
@@ -202,6 +217,46 @@ describe('StructureDefinitionProcessor', () => {
         'StructureDefinition with id simple.profile has name with whitespace. Converting whitespace to underscores.'
       );
     });
+
+    it('should convert the simplest Resource', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-resource.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableResource);
+      expect(result[0].name).toBe('SimpleResource');
+    });
+
+    it('should not convert a Resource without a name or id', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-resource.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should convert the simplest Logical', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-logical-model.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableLogical);
+      expect(result[0].name).toBe('SimpleLogicalModel');
+    });
+
+    it('should not convert a Logical without a name or id', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'nameless-logical.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(0);
+    });
   });
 
   describe('#extractKeywords', () => {
@@ -229,6 +284,30 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingExtension.id).toBe('my-extension');
       expect(workingExtension.title).toBe('My New Extension');
       expect(workingExtension.description).toBe('This is my new Extension. Thank you.');
+    });
+
+    it('should get keywords for a Resource with simple metadata', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'metadata-resource.json'), 'utf-8')
+      );
+      const workingResource = new ExportableResource(input.name);
+      StructureDefinitionProcessor.extractKeywords(input, workingResource);
+
+      expect(workingResource.id).toBe('my-resource');
+      expect(workingResource.title).toBe('My New Resource');
+      expect(workingResource.description).toBe('This is my new resource.');
+    });
+
+    it('should get keywords for a Logical with simple metadata', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'metadata-logical.json'), 'utf-8')
+      );
+      const workingLogical = new ExportableLogical(input.name);
+      StructureDefinitionProcessor.extractKeywords(input, workingLogical);
+
+      expect(workingLogical.id).toBe('my-logical');
+      expect(workingLogical.title).toBe('My Logical Model');
+      expect(workingLogical.description).toBe('This is my fancy new logical model.');
     });
   });
 
@@ -295,6 +374,198 @@ describe('StructureDefinitionProcessor', () => {
 
       expect(workingExtension.rules.length).toBe(1);
       expect(workingExtension.rules).toContainEqual<ExportableAssignmentRule>(assignmentRule);
+    });
+
+    it('should add rules to a Resource', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-resource.json'), 'utf-8')
+      );
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      const workingResource = new ExportableResource('MyResource');
+      StructureDefinitionProcessor.extractRules(input, elements, workingResource, defs, config);
+      expect(workingResource.rules).toHaveLength(6);
+      // caret value rule that sets the url
+      const urlCaretRule = new ExportableCaretValueRule('');
+      urlCaretRule.caretPath = 'url';
+      urlCaretRule.value = 'http://example.org/tests/StructureDefinition/my-resource';
+      // caret value rule that sets the type (gets removed later by an optimizer)
+      const typeCaretRule = new ExportableCaretValueRule('');
+      typeCaretRule.caretPath = 'type';
+      typeCaretRule.value = 'MyResource';
+      // caret value rule for the short text on the root element
+      const shortCaretRule = new ExportableCaretValueRule('.');
+      shortCaretRule.caretPath = 'short';
+      shortCaretRule.value = 'This is my resource';
+      // add an element for MyResource.bread
+      const breadElementRule = new ExportableAddElementRule('bread');
+      breadElementRule.short = 'Bread type';
+      breadElementRule.definition =
+        'Each instance of this resource contains exactly one type of bread.';
+      breadElementRule.mustSupport = true;
+      breadElementRule.summary = true;
+      breadElementRule.min = 1;
+      breadElementRule.max = '1';
+      breadElementRule.types = [
+        {
+          type: 'code'
+        }
+      ];
+      // binding for MyResource.bread
+      const breadBindingRule = new ExportableBindingRule('bread');
+      breadBindingRule.strength = 'preferred';
+      breadBindingRule.valueSet = 'http://example.org/ValueSet/breads|1.3';
+      // add an element for MyResource.fruit
+      const fruitElementRule = new ExportableAddElementRule('fruit');
+      fruitElementRule.short = 'Fruit type';
+      fruitElementRule.definition =
+        'Each instance of this resource contains at least one type of fruit.';
+      fruitElementRule.min = 1;
+      fruitElementRule.max = '*';
+      fruitElementRule.types = [{ type: 'string' }];
+      expect(workingResource.rules[0]).toEqual(urlCaretRule);
+      expect(workingResource.rules[1]).toEqual(typeCaretRule);
+      expect(workingResource.rules[2]).toEqual(shortCaretRule);
+      expect(workingResource.rules[3]).toEqual(breadElementRule);
+      expect(workingResource.rules[4]).toEqual(breadBindingRule);
+      expect(workingResource.rules[5]).toEqual(fruitElementRule);
+    });
+
+    it('should add rules to a Logical', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-logical.json'), 'utf-8')
+      );
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      // these paths would have been processed by the InvariantExtractor
+      elements[2].processedPaths.push(
+        'constraint[0].key',
+        'constraint[0].human',
+        'constraint[0].severity'
+      );
+      const workingLogical = new ExportableLogical('MyLogical');
+      StructureDefinitionProcessor.extractRules(input, elements, workingLogical, defs, config);
+      expect(workingLogical.rules).toHaveLength(5);
+      // a caret rule for kind: this can get removed by optimizer later, but is technically fine
+      const logicalKindRule = new ExportableCaretValueRule('');
+      logicalKindRule.caretPath = 'kind';
+      logicalKindRule.value = new fshtypes.FshCode('logical');
+      // add an element for MyLogical.bag
+      const bagElementRule = new ExportableAddElementRule('bag');
+      bagElementRule.short = 'A bag for holding things';
+      bagElementRule.min = 0;
+      bagElementRule.max = '*';
+      bagElementRule.types = [{ type: 'BackboneElement' }];
+      // add an element for MyLogical.bag.capacity
+      const capacityElementRule = new ExportableAddElementRule('bag.capacity');
+      capacityElementRule.short = 'The amount held';
+      capacityElementRule.min = 1;
+      capacityElementRule.max = '1';
+      capacityElementRule.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/SimpleQuantity'
+        }
+      ];
+      // add a constraint for MyLogical.bag.capacity
+      const capacityObeysRule = new ExportableObeysRule('bag.capacity');
+      capacityObeysRule.keys = ['bag-1'];
+      // add an element for MyLogical.bag.material
+      const materialElementRule = new ExportableAddElementRule('bag.material');
+      materialElementRule.short = 'Physical composition of the bag';
+      materialElementRule.definition = 'Physical composition of the bag';
+      materialElementRule.min = 1;
+      materialElementRule.max = '*';
+      materialElementRule.types = [
+        {
+          type: 'string'
+        },
+        {
+          type: 'http://example.org/StructureDefinition/Material',
+          isReference: true
+        }
+      ];
+      expect(workingLogical.rules[0]).toEqual(logicalKindRule);
+      expect(workingLogical.rules[1]).toEqual(bagElementRule);
+      expect(workingLogical.rules[2]).toEqual(capacityElementRule);
+      expect(workingLogical.rules[3]).toEqual(capacityObeysRule);
+      expect(workingLogical.rules[4]).toEqual(materialElementRule);
+    });
+
+    it('should show a warning when a Logical contains a slice definition', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-logical.json'), 'utf-8')
+      );
+      // add a slice into the differential
+      input.differential.element.splice(2, 0, {
+        id: 'MyLogical.bag:specialBag',
+        path: 'MyLogical.bag',
+        sliceName: 'specialBag'
+      });
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      // these paths would have been processed by the InvariantExtractor
+      elements[3].processedPaths.push(
+        'constraint[0].key',
+        'constraint[0].human',
+        'constraint[0].severity'
+      );
+      const workingLogical = new ExportableLogical('MyLogical');
+      StructureDefinitionProcessor.extractRules(input, elements, workingLogical, defs, config);
+      expect(workingLogical.rules).toHaveLength(6);
+      // We get the rule that defines the slice...
+      const bagContains = new ExportableContainsRule('bag');
+      bagContains.items.push({ name: 'specialBag' });
+      const specialBagCard = new ExportableCardRule('bag[specialBag]');
+      specialBagCard.min = 0;
+      specialBagCard.max = '*';
+      bagContains.cardRules.push(specialBagCard);
+      expect(workingLogical.rules).toContainEqual(bagContains);
+      // but we also get a warning about it.
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'MyLogical contains a slice definition for specialBag'
+      );
+    });
+
+    it('should show a warning when a Logical contains a value assignment', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-logical.json'), 'utf-8')
+      );
+      // add a value assignment into the differential
+      input.differential.element[2].patternQuantity = {
+        value: 4,
+        code: 'L',
+        system: 'http://unitsofmeasure.org'
+      };
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      // these paths would have been processed by the InvariantExtractor
+      elements[2].processedPaths.push(
+        'constraint[0].key',
+        'constraint[0].human',
+        'constraint[0].severity'
+      );
+      const workingLogical = new ExportableLogical('MyLogical');
+      StructureDefinitionProcessor.extractRules(input, elements, workingLogical, defs, config);
+      expect(workingLogical.rules).toHaveLength(6);
+      // We get the rule that assigns the value...
+      const capacityAssignment = new ExportableAssignmentRule('bag.capacity');
+      capacityAssignment.value = new fshtypes.FshQuantity(
+        4,
+        new fshtypes.FshCode('L', 'http://unitsofmeasure.org')
+      );
+      expect(workingLogical.rules).toContainEqual(capacityAssignment);
+      // but we also get a warning about it.
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'MyLogical contains value assignment for MyLogical.bag.capacity'
+      );
     });
 
     it('should not create contains rules when the extension SD puts the slicename in the choice (#122)', () => {

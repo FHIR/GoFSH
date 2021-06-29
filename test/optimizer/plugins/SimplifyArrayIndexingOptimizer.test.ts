@@ -4,7 +4,9 @@ import {
   ExportableAssignmentRule,
   ExportableCaretValueRule,
   ExportableInstance,
-  ExportableProfile
+  ExportableProfile,
+  ExportableLogical,
+  ExportableResource
 } from '../../../src/exportable';
 import optimizer from '../../../src/optimizer/plugins/SimplifyArrayIndexingOptimizer';
 
@@ -82,7 +84,7 @@ describe('optimizer', () => {
       expect(myPackage.instances[0].rules[2].path).toBe('name[5].given');
     });
 
-    it('should apply soft indexing on caret paths', () => {
+    it('should apply soft indexing on caret paths for a Profile', () => {
       const profile = new ExportableProfile('MyProfile');
       const caretRule1 = new ExportableCaretValueRule('');
       caretRule1.caretPath = 'contact[0].name';
@@ -103,6 +105,62 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage);
 
       const optimizedCaretRules = myPackage.profiles[0].rules as ExportableCaretValueRule[];
+
+      expect(optimizedCaretRules[0].caretPath).toBe('contact[0].name');
+      expect(optimizedCaretRules[1].caretPath).toBe('contact[=].phone');
+      expect(optimizedCaretRules[2].caretPath).toBe('contact[=].email');
+      expect(optimizedCaretRules[3].caretPath).toBe('contact[+].phone');
+    });
+
+    it('should apply soft indexing on caret paths for a Logical', () => {
+      const logical = new ExportableLogical('MyLogical');
+      const caretRule1 = new ExportableCaretValueRule('');
+      caretRule1.caretPath = 'contact[0].name';
+
+      const caretRule2 = new ExportableCaretValueRule('');
+      caretRule2.caretPath = 'contact[0].phone';
+
+      const caretRule3 = new ExportableCaretValueRule('');
+      caretRule3.caretPath = 'contact[0].email';
+
+      const caretRule4 = new ExportableCaretValueRule('');
+      caretRule4.caretPath = 'contact[1].phone';
+
+      logical.rules.push(caretRule1, caretRule2, caretRule3, caretRule4);
+
+      const myPackage = new Package();
+      myPackage.add(logical);
+      optimizer.optimize(myPackage);
+
+      const optimizedCaretRules = myPackage.logicals[0].rules as ExportableCaretValueRule[];
+
+      expect(optimizedCaretRules[0].caretPath).toBe('contact[0].name');
+      expect(optimizedCaretRules[1].caretPath).toBe('contact[=].phone');
+      expect(optimizedCaretRules[2].caretPath).toBe('contact[=].email');
+      expect(optimizedCaretRules[3].caretPath).toBe('contact[+].phone');
+    });
+
+    it('should apply soft indexing on caret paths for a Resource', () => {
+      const resource = new ExportableResource('MyResource');
+      const caretRule1 = new ExportableCaretValueRule('');
+      caretRule1.caretPath = 'contact[0].name';
+
+      const caretRule2 = new ExportableCaretValueRule('');
+      caretRule2.caretPath = 'contact[0].phone';
+
+      const caretRule3 = new ExportableCaretValueRule('');
+      caretRule3.caretPath = 'contact[0].email';
+
+      const caretRule4 = new ExportableCaretValueRule('');
+      caretRule4.caretPath = 'contact[1].phone';
+
+      resource.rules.push(caretRule1, caretRule2, caretRule3, caretRule4);
+
+      const myPackage = new Package();
+      myPackage.add(resource);
+      optimizer.optimize(myPackage);
+
+      const optimizedCaretRules = myPackage.resources[0].rules as ExportableCaretValueRule[];
 
       expect(optimizedCaretRules[0].caretPath).toBe('contact[0].name');
       expect(optimizedCaretRules[1].caretPath).toBe('contact[=].phone');

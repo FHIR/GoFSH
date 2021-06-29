@@ -3,15 +3,18 @@ import {
   ExportableAssignmentRule,
   ExportableCaretValueRule,
   ExportableSdRule,
+  ExportableAddElementRule,
   ExportableProfile,
   ExportableExtension,
   ExportableValueSet,
-  ExportableCodeSystem
+  ExportableCodeSystem,
+  ExportableLogical,
+  ExportableResource
 } from '../exportable';
 import { logger } from '../utils';
 
 // Places general Quantity-setting rules ahead of Quantity.unit setting rules
-export function switchQuantityRules(rules: ExportableSdRule[]): void {
+export function switchQuantityRules(rules: (ExportableSdRule | ExportableAddElementRule)[]): void {
   let unitIndex: number;
   let lastSiblingIndex: number;
   let basePath: string;
@@ -38,16 +41,22 @@ export function switchQuantityRules(rules: ExportableSdRule[]): void {
 }
 
 export function makeNameSushiSafe(
-  entity: ExportableProfile | ExportableExtension | ExportableValueSet | ExportableCodeSystem
+  entity:
+    | ExportableProfile
+    | ExportableExtension
+    | ExportableLogical
+    | ExportableResource
+    | ExportableValueSet
+    | ExportableCodeSystem
 ) {
   if (/\s/.test(entity.name)) {
     let entityType: string;
-    if (entity instanceof ExportableProfile || entity instanceof ExportableExtension) {
-      entityType = 'StructureDefinition';
-    } else if (entity instanceof ExportableValueSet) {
+    if (entity instanceof ExportableValueSet) {
       entityType = 'ValueSet';
-    } else {
+    } else if (entity instanceof ExportableCodeSystem) {
       entityType = 'CodeSystem';
+    } else {
+      entityType = 'StructureDefinition';
     }
     logger.warn(
       `${entityType} with id ${entity.id} has name with whitespace. Converting whitespace to underscores.`

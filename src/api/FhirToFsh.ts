@@ -103,6 +103,8 @@ export type fshMap = {
   mappings: ResourceMap;
   profiles: ResourceMap;
   extensions: ResourceMap;
+  logicals: ResourceMap;
+  resources: ResourceMap;
   codeSystems: ResourceMap;
   valueSets: ResourceMap;
   instances: ResourceMap;

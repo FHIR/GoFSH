@@ -1,0 +1,29 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "SmallResource",
+  "url": "http://demo.org/StructureDefinition/SmallResource",
+  "version": "1.0.0",
+  "name": "SmallResource",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "rim",
+      "uri": "http://hl7.org/v3",
+      "name": "RIM Mapping"
+    }
+  ],
+  "kind": "resource",
+  "abstract": false,
+  "type": "SmallResource",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+  "derivation": "specialization",
+  "differential": {
+    "element": [
+      {
+        "id": "SmallResource",
+        "path": "SmallResource"
+      }
+    ]
+  }
+}
