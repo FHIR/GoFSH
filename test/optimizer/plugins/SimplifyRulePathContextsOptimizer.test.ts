@@ -8,7 +8,9 @@ import {
   ExportableObeysRule,
   ExportableBindingRule,
   ExportableInstance,
-  ExportableAssignmentRule
+  ExportableAssignmentRule,
+  ExportableAddElementRule,
+  ExportableLogical
 } from '../../../src/exportable';
 import { Package } from '../../../src/processor';
 import { cloneDeep } from 'lodash';
@@ -45,13 +47,20 @@ describe('optimizer', () => {
       givenRule.min = 1;
       givenRule.max = '*';
       profile.rules.push(nameRule, givenRule);
-      myPackage.add(profile);
-      optimizer.optimize(myPackage);
 
+      // Profile: MyPatient
+      // Parent: Patient
+      // * name 1..*
+      //   * given 1..*
+      const expectedNameRule = cloneDeep(nameRule);
+      expectedNameRule.indent = 0;
       const expectedGivenRule = cloneDeep(givenRule);
       expectedGivenRule.indent = 1;
       expectedGivenRule.path = 'given';
-      expect(profile.rules).toEqual([nameRule, expectedGivenRule]);
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+      expect(profile.rules).toEqual([expectedNameRule, expectedGivenRule]);
     });
 
     it('should simplify rule paths with multiple indent levels', () => {
@@ -73,9 +82,15 @@ describe('optimizer', () => {
       const endRule = new ExportableFlagRule('name.period.end');
       endRule.normative = true;
       profile.rules.push(nameRule, periodRule, startRule, endRule);
-      myPackage.add(profile);
-      optimizer.optimize(myPackage);
 
+      // Profile: MyPatient
+      // Parent: Patient
+      // * name MS
+      //   * period 1..1
+      //     * start MS
+      //     * end N
+      const expectedNameRule = cloneDeep(nameRule);
+      expectedNameRule.indent = 0;
       const expectedPeriodRule = cloneDeep(periodRule);
       expectedPeriodRule.indent = 1;
       expectedPeriodRule.path = 'period';
@@ -85,11 +100,95 @@ describe('optimizer', () => {
       const expectedEndRule = cloneDeep(endRule);
       expectedEndRule.indent = 2;
       expectedEndRule.path = 'end';
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
       expect(profile.rules).toEqual([
-        nameRule,
+        expectedNameRule,
         expectedPeriodRule,
         expectedStartRule,
         expectedEndRule
+      ]);
+    });
+
+    it('should simplify rule paths when adding elements', () => {
+      // Logical: GroceryList
+      // * produce 0..* BackboneElement "fruits and vegetables"
+      // * produce.fruit 0..* BackboneElement "fruits"
+      // * produce.fruit obeys gl-1
+      // * produce.fruit.citrus 0..3 CodeableConcept "citrus fruit for vitamin c"
+      // * produce.vegetable 0..* CodeableConcept "vegetables"
+      // * bread[x] 0..* CodeableConcept or string "freshly baked, always"
+      const logical = new ExportableLogical('GroceryList');
+      const produceElement = new ExportableAddElementRule('produce');
+      produceElement.min = 0;
+      produceElement.max = '*';
+      produceElement.types = [{ type: 'BackboneElement' }];
+      produceElement.short = 'fruits and vegetables';
+      const fruitElement = new ExportableAddElementRule('produce.fruit');
+      fruitElement.min = 0;
+      fruitElement.max = '*';
+      fruitElement.types = [{ type: 'BackboneElement' }];
+      fruitElement.short = 'fruit';
+      const fruitObeys = new ExportableObeysRule('produce.fruit');
+      fruitObeys.keys = ['gl-1'];
+      const citrusElement = new ExportableAddElementRule('produce.fruit.citrus');
+      citrusElement.min = 0;
+      citrusElement.max = '3';
+      citrusElement.types = [{ type: 'CodeableConcept' }];
+      citrusElement.short = 'citrus fruit for vitamin c';
+      const vegetableElement = new ExportableAddElementRule('produce.vegetable');
+      vegetableElement.min = 0;
+      vegetableElement.max = '*';
+      vegetableElement.types = [{ type: 'BackboneElement' }];
+      vegetableElement.short = 'vegetables';
+      const breadElement = new ExportableAddElementRule('bread[x]');
+      breadElement.min = 0;
+      breadElement.max = '*';
+      breadElement.types = [{ type: 'CodeableConcept' }, { type: 'string' }];
+      breadElement.short = 'freshly baked, always';
+      logical.rules.push(
+        produceElement,
+        fruitElement,
+        fruitObeys,
+        citrusElement,
+        vegetableElement,
+        breadElement
+      );
+
+      // Logical: GroceryList
+      // * produce 0..* BackboneElement "fruits and vegetables"
+      //   * fruit 0..* BackboneElement "fruits"
+      //     * obeys gl-1
+      //     * citrus 0..3 CodeableConcept "citrus fruit for vitamin c"
+      //   * vegetable 0..* CodeableConcept "vegetables"
+      // * bread[x] 0..* CodeableConcept or string "freshly baked, always"
+      const expectedProduceElement = cloneDeep(produceElement);
+      expectedProduceElement.indent = 0;
+      const expectedFruitElement = cloneDeep(fruitElement);
+      expectedFruitElement.path = 'fruit';
+      expectedFruitElement.indent = 1;
+      const expectedFruitObeys = cloneDeep(fruitObeys);
+      expectedFruitObeys.path = '';
+      expectedFruitObeys.indent = 2;
+      const expectedCitrusElement = cloneDeep(citrusElement);
+      expectedCitrusElement.path = 'citrus';
+      expectedCitrusElement.indent = 2;
+      const expectedVegetableElement = cloneDeep(vegetableElement);
+      expectedVegetableElement.path = 'vegetable';
+      expectedVegetableElement.indent = 1;
+      const expectedBreadElement = cloneDeep(breadElement);
+      expectedBreadElement.indent = 0;
+
+      myPackage.add(logical);
+      optimizer.optimize(myPackage);
+      expect(logical.rules).toEqual([
+        expectedProduceElement,
+        expectedFruitElement,
+        expectedFruitObeys,
+        expectedCitrusElement,
+        expectedVegetableElement,
+        expectedBreadElement
       ]);
     });
 
@@ -113,19 +212,33 @@ describe('optimizer', () => {
       relationshipBinding.valueSet = 'EnhancedRelationshipVS';
       relationshipBinding.strength = 'extensible';
       profile.rules.push(contactCard, contactObeys, relationshipFlag, relationshipBinding);
+
+      // Profile: MyPatient
+      // Parent: Patient
+      // * contact 1..10
+      //   * obeys myp-1
+      //   * relationship MS
+      //     * from EnhancedRelationshipVS (extensible)
+      const expectedContactCard = cloneDeep(contactCard);
+      expectedContactCard.indent = 0;
+      const expectedContactObeys = cloneDeep(contactObeys);
+      expectedContactObeys.path = '';
+      expectedContactObeys.indent = 1;
+      const expectedRelationshipFlag = cloneDeep(relationshipFlag);
+      expectedRelationshipFlag.path = 'relationship';
+      expectedRelationshipFlag.indent = 1;
+      const expectedRelationshipBinding = cloneDeep(relationshipBinding);
+      expectedRelationshipBinding.path = '';
+      expectedRelationshipBinding.indent = 2;
+
       myPackage.add(profile);
       optimizer.optimize(myPackage);
-
-      const expectedObeys = cloneDeep(contactObeys);
-      expectedObeys.path = '';
-      expectedObeys.indent = 1;
-      const expectedFlag = cloneDeep(relationshipFlag);
-      expectedFlag.path = 'relationship';
-      expectedFlag.indent = 1;
-      const expectedBinding = cloneDeep(relationshipBinding);
-      expectedBinding.path = '';
-      expectedBinding.indent = 2;
-      expect(profile.rules).toEqual([contactCard, expectedObeys, expectedFlag, expectedBinding]);
+      expect(profile.rules).toEqual([
+        expectedContactCard,
+        expectedContactObeys,
+        expectedRelationshipFlag,
+        expectedRelationshipBinding
+      ]);
     });
 
     it('should simplify rule paths that add more than one part after the context path', () => {
@@ -140,13 +253,20 @@ describe('optimizer', () => {
       const endRule = new ExportableFlagRule('name.period.end');
       endRule.trialUse = true;
       profile.rules.push(nameRule, endRule);
-      myPackage.add(profile);
-      optimizer.optimize(myPackage);
 
+      // Profile: MyPatient
+      // Parent: Patient
+      // * name MS
+      //   * period.end TU
+      const expectedNameRule = cloneDeep(nameRule);
+      expectedNameRule.indent = 0;
       const expectedEndRule = cloneDeep(endRule);
       expectedEndRule.path = 'period.end';
       expectedEndRule.indent = 1;
-      expect(profile.rules).toEqual([nameRule, expectedEndRule]);
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+      expect(profile.rules).toEqual([expectedNameRule, expectedEndRule]);
     });
 
     it('should simplify rule paths that use soft indexing', () => {
@@ -169,16 +289,33 @@ describe('optimizer', () => {
       const clamId = new ExportableAssignmentRule('address[=].city.id');
       clamId.value = 'clam-valley';
       instance.rules.push(sharkCity, sharkId, clamCity, clamId);
-      myPackage.add(instance);
-      optimizer.optimize(myPackage);
 
+      // Instance: OceanPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address[+].city = "Shark Park"
+      //   * id = "shark-park"
+      // * address[+].city = "Clam Valley"
+      //   * id = "clam-valley"
+      const expectedSharkCity = cloneDeep(sharkCity);
+      expectedSharkCity.indent = 0;
       const expectedSharkId = cloneDeep(sharkId);
       expectedSharkId.path = 'id';
       expectedSharkId.indent = 1;
+      const expectedClamCity = cloneDeep(clamCity);
+      expectedClamCity.indent = 0;
       const expectedClamId = cloneDeep(clamId);
       expectedClamId.path = 'id';
       expectedClamId.indent = 1;
-      expect(instance.rules).toEqual([sharkCity, expectedSharkId, clamCity, expectedClamId]);
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+      expect(instance.rules).toEqual([
+        expectedSharkCity,
+        expectedSharkId,
+        expectedClamCity,
+        expectedClamId
+      ]);
     });
 
     it('should not change rule paths with different indices', () => {
@@ -195,10 +332,20 @@ describe('optimizer', () => {
       const clamCity = new ExportableAssignmentRule('address[+].city');
       clamCity.value = 'Clam Valley';
       instance.rules.push(sharkCity, clamCity);
+
+      // Instance: OceanPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address[+].city = "Shark Park"
+      // * address[+].city = "Clam Valley"
+      const expectedShark = cloneDeep(sharkCity);
+      expectedShark.indent = 0;
+      const expectedClam = cloneDeep(clamCity);
+      expectedClam.indent = 0;
+
       myPackage.add(instance);
       optimizer.optimize(myPackage);
-
-      expect(instance.rules).toEqual([sharkCity, clamCity]);
+      expect(instance.rules).toEqual([expectedShark, expectedClam]);
     });
   });
 });

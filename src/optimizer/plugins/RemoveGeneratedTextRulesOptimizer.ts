@@ -11,8 +11,7 @@ import {
   ExportableRule,
   ExportableValueSet,
   ExportableLogical,
-  ExportableResource,
-  ExportableAddElementRule
+  ExportableResource
 } from '../../exportable';
 import { fshtypes } from 'fsh-sushi';
 
@@ -71,7 +70,7 @@ export function hasGeneratedText(
     );
   } else {
     return resource.rules.some(
-      (rule: ExportableRule | ExportableAddElementRule) =>
+      (rule: ExportableRule) =>
         rule instanceof ExportableCaretValueRule &&
         rule.path === '' &&
         rule.caretPath === 'text.status' &&
