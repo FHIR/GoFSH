@@ -123,7 +123,7 @@ describe('optimizer', () => {
       });
     });
 
-    describe('#enable', () => {
+    describe('#isEnabled', () => {
       let enableSpies: { [key: string]: jest.SpyInstance };
       const enablePath = path.join(__dirname, 'fixtures', 'with-enable');
 
@@ -132,15 +132,14 @@ describe('optimizer', () => {
         // get the optimizers ourselves to set up some spies
         const optimizers: { property: OptimizerPlugin } = await import(enablePath);
         Object.values(optimizers).forEach(o => {
-          if (typeof o?.enable === 'function') {
-            enableSpies[o.name] = jest.spyOn(o, 'enable');
+          if (typeof o?.isEnabled === 'function') {
+            enableSpies[o.name] = jest.spyOn(o, 'isEnabled');
           }
         });
         loggerSpy.reset();
       });
 
       it('should provide options to each optimizer with an enable function', async () => {
-        // const enablePath = path.join(__dirname, 'fixtures', 'with-enable');
         const withEnable = await loadOptimizers(enablePath, {
           aName: 'A',
           bFlag: true,
@@ -158,7 +157,6 @@ describe('optimizer', () => {
       });
 
       it('should not log an error when a succeeding optimizer is disabled', async () => {
-        const enablePath = path.join(__dirname, 'fixtures', 'with-enable');
         // optimizer A will be disabled. optimizer C is set to run before optimizer A.
         const withEnable = await loadOptimizers(enablePath, {
           bFlag: true,
@@ -170,7 +168,6 @@ describe('optimizer', () => {
       });
 
       it('should log an error when an preceeding optimizer is disabled', async () => {
-        const enablePath = path.join(__dirname, 'fixtures', 'with-enable');
         // optimizer B will be disabled. optimizer C is set to run after optimizer B.
         const withEnable = await loadOptimizers(enablePath, {
           aName: 'A',

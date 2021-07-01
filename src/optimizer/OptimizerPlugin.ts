@@ -41,7 +41,7 @@ export interface OptimizerPlugin {
    * @param options - an object containing flags or other information provided by the user
    * @returns true if the optimizer should run, false if the optimizer should not run
    */
-  enable?(options: OptimizerOptions): boolean;
+  isEnabled?(options: OptimizerOptions): boolean;
 }
 
 export type OptimizerOptions = {

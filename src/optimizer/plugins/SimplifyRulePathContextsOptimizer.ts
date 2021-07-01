@@ -56,7 +56,7 @@ export default {
       });
     });
   },
-  enable(options: OptimizerOptions): boolean {
+  isEnabled(options: OptimizerOptions): boolean {
     return options.indent === true;
   }
 } as OptimizerPlugin;

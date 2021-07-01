@@ -36,7 +36,7 @@ export async function loadOptimizers(
   const [optimizers, offOptimizers] = partition(
     allOptimizers,
     // Keep optimizers without an enable function and optimizers whose enable function is true
-    o => typeof o?.enable !== 'function' || o.enable(options)
+    o => typeof o?.isEnabled !== 'function' || o.isEnabled(options)
   );
   logger.debug(`Loaded ${optimizers.length} optimizers from ${path.join(__dirname, 'plugins')}`);
   // Sort them using a topological sort to get them in dependency order

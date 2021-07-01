@@ -5,7 +5,7 @@ import { ExportableRule, INDENT_SIZE } from '.';
 
 export class ExportableCaretValueRule extends fshrules.CaretValueRule implements ExportableRule {
   fshComment: string;
-  indent: number;
+  indent = 0;
 
   constructor(path: string) {
     super(path);
@@ -16,7 +16,7 @@ export class ExportableCaretValueRule extends fshrules.CaretValueRule implements
     if (this.fshComment) {
       lines.push(...this.fshComment.split('\n').map(c => `// ${c}`));
     }
-    lines.push(`${repeat(' ', INDENT_SIZE * (this.indent ?? 0))}${super.toFSH()}`);
+    lines.push(`${repeat(' ', INDENT_SIZE * this.indent)}${super.toFSH()}`);
     return lines.join(EOL);
   }
 }

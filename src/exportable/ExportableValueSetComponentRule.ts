@@ -7,6 +7,7 @@ export type ExportableValueSetComponentRule =
 
 export class ExportableValueSetConceptComponentRule extends fshrules.ValueSetConceptComponentRule
   implements ExportableRule {
+  // indent is required to implement ExportableRule, but is not actually used
   indent: number;
 
   constructor(inclusion: boolean) {
@@ -16,6 +17,7 @@ export class ExportableValueSetConceptComponentRule extends fshrules.ValueSetCon
 
 export class ExportableValueSetFilterComponentRule extends fshrules.ValueSetFilterComponentRule
   implements ExportableRule {
+  // indent is required to implement ExportableRule, but is not actually used
   indent: number;
 
   constructor(inclusion: boolean) {

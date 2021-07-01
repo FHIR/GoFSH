@@ -5,7 +5,7 @@ export default {
   description: 'A Optimizer',
   runAfter: ['b'],
   optimize(): void {},
-  enable(options: OptimizerOptions): boolean {
+  isEnabled(options: OptimizerOptions): boolean {
     return options.aName === 'A';
   }
 } as OptimizerPlugin;

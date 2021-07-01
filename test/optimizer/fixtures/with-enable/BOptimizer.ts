@@ -4,7 +4,7 @@ export default {
   name: 'b',
   description: 'B Optimizer',
   optimize(): void {},
-  enable(options: OptimizerOptions) {
+  isEnabled(options: OptimizerOptions) {
     return options.bFlag === true;
   }
 } as OptimizerPlugin;

@@ -6,7 +6,7 @@ import { repeat } from 'lodash';
 export class ExportableContainsRule extends fshrules.ContainsRule implements ExportableRule {
   cardRules: ExportableCardRule[] = [];
   flagRules: ExportableFlagRule[] = [];
-  indent: number;
+  indent = 0;
 
   constructor(path: string) {
     super(path);

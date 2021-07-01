@@ -7,7 +7,7 @@ import { repeat } from 'lodash';
 // ExportableProfile.rules (which allows ExportableCombinedCardFlagRule) must be assignable to
 // Profile.rules in order for TypeScript to recognize it as a proper subclass of Profile.
 export class ExportableCombinedCardFlagRule extends fshrules.CardRule implements ExportableRule {
-  indent: number;
+  indent = 0;
 
   constructor(
     path: string,
@@ -37,7 +37,7 @@ export class ExportableCombinedCardFlagRule extends fshrules.CardRule implements
   }
 
   toFSH(): string {
-    return `${repeat(' ', INDENT_SIZE * (this.indent ?? 0))}* ${
+    return `${repeat(' ', INDENT_SIZE * this.indent)}* ${
       this.path
     } ${this.cardRule.cardToString()} ${this.flagRule.flagsToString()}`;
   }
