@@ -78,8 +78,8 @@ export function writeFSH(resources: Package, outDir: string, style: string): voi
   const exporter = new FSHExporter(resources);
   try {
     const resourceDir = path.join(outDir, 'input', 'fsh');
-    fs.ensureDirSync(resourceDir);
     exporter.export(style).forEach((content, name) => {
+      fs.ensureFileSync(path.join(resourceDir, name));
       fs.writeFileSync(path.join(resourceDir, name), content);
     });
     logger.info(`Wrote fsh to ${resourceDir}.`);

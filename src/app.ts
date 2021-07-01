@@ -43,7 +43,7 @@ async function app() {
     )
     .option(
       '-s, --style <style>',
-      'specify how the output is organized into files: group-by-fsh-type (default), group-by-profile, single-file, file-per-definition'
+      'specify how the output is organized into files: file-per-definition (default), group-by-fsh-type, group-by-profile, single-file'
     )
     .option(
       '-f, --fshing-trip',

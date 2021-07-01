@@ -1,6 +1,7 @@
 import table from 'text-table';
 import { partition } from 'lodash';
 import { EOL } from 'os';
+import path from 'path';
 import {
   Exportable,
   ExportableAlias,
@@ -41,7 +42,7 @@ export class FSHExporter {
         if (style != null) {
           logger.warn(`Unrecognized output style "${style}". Defaulting to "by-category" style.`);
         }
-        files = this.groupByFSHType();
+        files = this.groupAsFilePerDefinition();
     }
 
     const writtenFiles: Map<string, string> = new Map();
@@ -171,31 +172,40 @@ export class FSHExporter {
 
     // Other definitions are each placed in an individual file
     for (const invariant of this.fshPackage.invariants) {
-      files.set(`${invariant.name}-Invariant.fsh`, [invariant]);
+      const filename = path.join('invariants', `${invariant.name}.fsh`);
+      files.set(filename, [invariant]);
     }
     for (const mapping of this.fshPackage.mappings) {
-      files.set(`${mapping.name}-Mapping.fsh`, [mapping]);
+      const filename = path.join('mappings', `${mapping.name}.fsh`);
+      files.set(filename, [mapping]);
     }
     for (const profile of this.fshPackage.profiles) {
-      files.set(`${profile.name}-Profile.fsh`, [profile]);
+      const filename = path.join('profiles', `${profile.name}.fsh`);
+      files.set(filename, [profile]);
     }
     for (const extension of this.fshPackage.extensions) {
-      files.set(`${extension.name}-Extension.fsh`, [extension]);
+      const filename = path.join('extensions', `${extension.name}.fsh`);
+      files.set(filename, [extension]);
     }
     for (const logical of this.fshPackage.logicals) {
-      files.set(`${logical.name}-Logical.fsh`, [logical]);
+      const filename = path.join('logicals', `${logical.name}.fsh`);
+      files.set(filename, [logical]);
     }
     for (const resource of this.fshPackage.resources) {
-      files.set(`${resource.name}-Resource.fsh`, [resource]);
+      const filename = path.join('resources', `${resource.name}.fsh`);
+      files.set(filename, [resource]);
     }
     for (const codeSystem of this.fshPackage.codeSystems) {
-      files.set(`${codeSystem.name}-CodeSystem.fsh`, [codeSystem]);
+      const filename = path.join('codesystems', `${codeSystem.name}.fsh`);
+      files.set(filename, [codeSystem]);
     }
     for (const valueSet of this.fshPackage.valueSets) {
-      files.set(`${valueSet.name}-ValueSet.fsh`, [valueSet]);
+      const filename = path.join('valuesets', `${valueSet.name}.fsh`);
+      files.set(filename, [valueSet]);
     }
     for (const instance of this.fshPackage.instances) {
-      files.set(`${instance.name}-Instance.fsh`, [instance]);
+      const filename = path.join('instances', `${instance.name}.fsh`);
+      files.set(filename, [instance]);
     }
 
     return files;
