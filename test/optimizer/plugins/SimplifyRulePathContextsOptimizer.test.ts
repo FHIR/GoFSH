@@ -1,6 +1,5 @@
 import optimizer from '../../../src/optimizer/plugins/SimplifyRulePathContextsOptimizer';
 import SimplifyArrayIndexingOptimizer from '../../../src/optimizer/plugins/SimplifyArrayIndexingOptimizer';
-import SimplifyMappingNamesOptimizer from '../../../src/optimizer/plugins/SimplifyMappingNamesOptimizer';
 import {
   ExportableProfile,
   ExportableCardRule,
@@ -27,10 +26,7 @@ describe('optimizer', () => {
       expect(optimizer.name).toBe('simplify_rule_path_contexts');
       expect(optimizer.description).toBeDefined();
       expect(optimizer.runBefore).toBeUndefined();
-      expect(optimizer.runAfter).toEqual([
-        SimplifyArrayIndexingOptimizer.name,
-        SimplifyMappingNamesOptimizer.name
-      ]);
+      expect(optimizer.runAfter).toEqual([SimplifyArrayIndexingOptimizer.name]);
     });
 
     it('should simplify rule paths with one indent level', () => {

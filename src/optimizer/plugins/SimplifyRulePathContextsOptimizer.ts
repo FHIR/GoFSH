@@ -1,14 +1,13 @@
 import { Package } from '../../processor';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
-import SimplifyMappingNamesOptimizer from './SimplifyMappingNamesOptimizer';
 import { ProcessingOptions } from '../../utils';
 
 export default {
   name: 'simplify_rule_path_contexts',
   description:
     'Make rule paths shorter by indenting the rule and using the context of preceding rules.',
-  runAfter: [SimplifyArrayIndexingOptimizer.name, SimplifyMappingNamesOptimizer.name],
+  runAfter: [SimplifyArrayIndexingOptimizer.name],
   optimize(pkg: Package): void {
     [
       ...pkg.profiles,
