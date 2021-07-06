@@ -55,14 +55,14 @@ describe('ContainsRuleExtractor', () => {
     expect(element.processedPaths).toEqual(['min', 'max', 'mustSupport', 'sliceName']);
   });
 
-  it('should inherit cardinality on a ContainsRule from the element being sliced', () => {
+  it('should use default cardinality on a ContainsRule when cardinality information is not available', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[7]);
     const containsRule = ContainsRuleExtractor.process(element, looseSD, defs);
     const expectedRule = new ExportableContainsRule('extension');
     expectedRule.items.push({ name: 'Rutabega' });
     const cardRule = new ExportableCardRule('extension[Rutabega]');
-    cardRule.min = 3;
-    cardRule.max = '*';
+    cardRule.min = 0;
+    cardRule.max = '100';
     expectedRule.cardRules.push(cardRule);
     expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
   });
@@ -88,6 +88,18 @@ describe('ContainsRuleExtractor', () => {
   it('should return null when no cardinality information can be found', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[8]);
     expect(ContainsRuleExtractor.process(element, looseSD, defs)).toBeNull();
+  });
+
+  it('should use cardinality information on the snapshot when the information is not present on the differential', () => {
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[10]);
+    const containsRule = ContainsRuleExtractor.process(element, looseSD, defs);
+    const expectedRule = new ExportableContainsRule('extension');
+    expectedRule.items.push({ name: 'Pomelo' });
+    const cardRule = new ExportableCardRule('extension[Pomelo]');
+    cardRule.max = '3'; // max available on snapshot
+    // there is no min on the differential or snapshot, so the rule only has a max.
+    expectedRule.cardRules.push(cardRule);
+    expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
   });
 
   it.todo('should extract a ContainsRule with cardinality and a name');

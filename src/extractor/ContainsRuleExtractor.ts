@@ -28,20 +28,33 @@ export class ContainsRuleExtractor {
     containsRule.items.push({
       name: sliceNameFromId
     });
-    // CardRule is required, so if it isn't present, we don't get a ContainsRule
+    // CardRule is required, so try our best to get correct cardinality information
+    // 1. Check the element differential
+    // 2. Check the element snapshot
+    // 3. Use defaults: min = 0, max = sliced element's max
     const cardRule = CardRuleExtractor.process(input, structDef, fisher, false);
     if (cardRule) {
       containsRule.cardRules.push(cardRule);
     } else {
-      const slicedElementId = input.id.slice(0, input.id.lastIndexOf(':'));
-      const card = getCardinality(slicedElementId, structDef, fisher);
-      if (card) {
+      // can we get information from the snapshot?
+      const snapshotElement = structDef.snapshot?.element.find(el => el.id === input.id);
+      if (snapshotElement?.min != null || snapshotElement?.max != null) {
         const cardRule = new ExportableCardRule(elementPath);
-        cardRule.min = card.min;
-        cardRule.max = card.max;
+        cardRule.min = snapshotElement.min;
+        cardRule.max = snapshotElement.max;
         containsRule.cardRules.push(cardRule);
       } else {
-        return null;
+        // use defaults, which means check the sliced element's max
+        const slicedElementId = input.id.slice(0, input.id.lastIndexOf(':'));
+        const card = getCardinality(slicedElementId, structDef, fisher);
+        if (card) {
+          const cardRule = new ExportableCardRule(elementPath);
+          cardRule.min = 0;
+          cardRule.max = card.max;
+          containsRule.cardRules.push(cardRule);
+        } else {
+          return null;
+        }
       }
     }
     // FlagRule is optional
