@@ -2,13 +2,11 @@ import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import { ExportableAssignmentRule } from '../../exportable';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
-import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 
 export default {
   name: 'simplify_instance_names',
   description:
     'Simplify Instance names by removing the appended InstanceOf information from the name (where possible)',
-  runBefore: [SimplifyArrayIndexingOptimizer.name],
   runAfter: [ResolveInstanceOfURLsOptimizer.name],
 
   optimize(pkg: Package): void {

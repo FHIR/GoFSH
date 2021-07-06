@@ -6,14 +6,13 @@ import { MasterFisher } from '../../../src/utils';
 import { loadTestDefinitions, stockLake } from '../../helpers';
 import optimizer from '../../../src/optimizer/plugins/SimplifyInstanceNameOptimizer';
 import ResolveInstanceOfURLsOptimizer from '../../../src/optimizer/plugins/ResolveInstanceOfURLsOptimizer';
-import SimplifyArrayIndexingOptimizer from '../../../src/optimizer/plugins/SimplifyArrayIndexingOptimizer';
 
 describe('optimizer', () => {
   describe('#simplify_instance_names', () => {
     it('should have appropriate metadata', () => {
       expect(optimizer.name).toBe('simplify_instance_names');
       expect(optimizer.description).toBeDefined();
-      expect(optimizer.runBefore).toEqual([SimplifyArrayIndexingOptimizer.name]);
+      expect(optimizer.runBefore).toBeUndefined();
       expect(optimizer.runAfter).toEqual([ResolveInstanceOfURLsOptimizer.name]);
     });
 
