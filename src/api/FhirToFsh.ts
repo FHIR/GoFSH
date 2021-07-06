@@ -63,7 +63,7 @@ export async function fhirToFsh(
   });
 
   // Get options for optimizers (currently just the indent flag)
-  const optimizerOptions = {
+  const processingOptions = {
     indent: options.indent === true
   };
 
@@ -91,7 +91,7 @@ export async function fhirToFsh(
   await Promise.all(loadExternalDependencies(defs, dependencies));
 
   // Process the FHIR to rules, and then export to FSH
-  const pkg = await getResources(processor, configuration, optimizerOptions);
+  const pkg = await getResources(processor, configuration, processingOptions);
 
   // Default to exporting as a single string
   return {

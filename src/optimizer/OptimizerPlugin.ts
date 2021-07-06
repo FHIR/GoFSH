@@ -1,5 +1,5 @@
 import { Package } from '../processor';
-import { MasterFisher } from '../utils';
+import { MasterFisher, ProcessingOptions } from '../utils';
 
 /**
  * OptimizerPlugin defines the interface that an optimizer must support to be automatically loaded by the loadOptimizers function.
@@ -41,9 +41,5 @@ export interface OptimizerPlugin {
    * @param options - an object containing flags or other information provided by the user
    * @returns true if the optimizer should run, false if the optimizer should not run
    */
-  isEnabled?(options: OptimizerOptions): boolean;
+  isEnabled?(options: ProcessingOptions): boolean;
 }
-
-export type OptimizerOptions = {
-  [key: string]: boolean | number | string;
-};

@@ -111,7 +111,7 @@ async function app() {
   }
 
   // Get options for optimizers (currently just the indent flag)
-  const optimizerOptions = {
+  const processingOptions = {
     indent: program.indent === true
   };
 
@@ -133,7 +133,7 @@ async function app() {
 
   let pkg: Package;
   try {
-    pkg = await getResources(processor, config, optimizerOptions);
+    pkg = await getResources(processor, config, processingOptions);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);

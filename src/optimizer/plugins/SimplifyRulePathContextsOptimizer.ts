@@ -1,7 +1,8 @@
 import { Package } from '../../processor';
-import { OptimizerPlugin, OptimizerOptions } from '../OptimizerPlugin';
+import { OptimizerPlugin } from '../OptimizerPlugin';
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 import SimplifyMappingNamesOptimizer from './SimplifyMappingNamesOptimizer';
+import { ProcessingOptions } from '../../utils';
 
 export default {
   name: 'simplify_rule_path_contexts',
@@ -56,7 +57,7 @@ export default {
       });
     });
   },
-  isEnabled(options: OptimizerOptions): boolean {
+  isEnabled(options: ProcessingOptions): boolean {
     return options.indent === true;
   }
 } as OptimizerPlugin;
