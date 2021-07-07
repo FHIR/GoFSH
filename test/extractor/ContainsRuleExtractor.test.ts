@@ -85,7 +85,7 @@ describe('ContainsRuleExtractor', () => {
     );
   });
 
-  it('should return null when no cardinality information can be found', () => {
+  it('should return null when no cardinality information can be found for the sliced element', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[8]);
     expect(ContainsRuleExtractor.process(element, looseSD, defs)).toBeNull();
   });
@@ -96,8 +96,8 @@ describe('ContainsRuleExtractor', () => {
     const expectedRule = new ExportableContainsRule('extension');
     expectedRule.items.push({ name: 'Pomelo' });
     const cardRule = new ExportableCardRule('extension[Pomelo]');
+    cardRule.min = 0; // no min on differential or snapshot, so use default slice min
     cardRule.max = '3'; // max available on snapshot
-    // there is no min on the differential or snapshot, so the rule only has a max.
     expectedRule.cardRules.push(cardRule);
     expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
   });

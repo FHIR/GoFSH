@@ -32,31 +32,37 @@ export class ContainsRuleExtractor {
     // 1. Check the element differential
     // 2. Check the element snapshot
     // 3. Use defaults: min = 0, max = sliced element's max
-    const cardRule = CardRuleExtractor.process(input, structDef, fisher, false);
-    if (cardRule) {
-      containsRule.cardRules.push(cardRule);
-    } else {
-      // can we get information from the snapshot?
+    // Once both min and max are defined, the CardRule is ready to use.
+    let cardRule = CardRuleExtractor.process(input, structDef, fisher, false);
+    // if no information was available, the extractor will return null. but we need a rule!
+    if (cardRule == null) {
+      cardRule = new ExportableCardRule(elementPath);
+    }
+    // fill in missing information from snapshot
+    if (cardRule.min == null || cardRule.max == null) {
       const snapshotElement = structDef.snapshot?.element.find(el => el.id === input.id);
-      if (snapshotElement?.min != null || snapshotElement?.max != null) {
-        const cardRule = new ExportableCardRule(elementPath);
+      if (cardRule.min == null && snapshotElement?.min != null) {
         cardRule.min = snapshotElement.min;
+      }
+      if (cardRule.max == null && snapshotElement?.max != null) {
         cardRule.max = snapshotElement.max;
-        containsRule.cardRules.push(cardRule);
-      } else {
-        // use defaults, which means check the sliced element's max
-        const slicedElementId = input.id.slice(0, input.id.lastIndexOf(':'));
-        const card = getCardinality(slicedElementId, structDef, fisher);
-        if (card) {
-          const cardRule = new ExportableCardRule(elementPath);
-          cardRule.min = 0;
-          cardRule.max = card.max;
-          containsRule.cardRules.push(cardRule);
-        } else {
-          return null;
-        }
       }
     }
+    // fill in missing information using defaults
+    if (cardRule.min == null) {
+      cardRule.min = 0;
+    }
+    if (cardRule.max == null) {
+      const slicedElementId = input.id.slice(0, input.id.lastIndexOf(':'));
+      const card = getCardinality(slicedElementId, structDef, fisher);
+      if (card) {
+        cardRule.max = card?.max ?? '*';
+      } else {
+        // we couldn't find the cardinality of the sliced element, which means this slice is probably not valid
+        return null;
+      }
+    }
+    containsRule.cardRules.push(cardRule);
     // FlagRule is optional
     const flagRule = FlagRuleExtractor.process(input);
     if (flagRule) {
