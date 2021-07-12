@@ -626,7 +626,7 @@ describe('StructureDefinitionProcessor', () => {
       const containsRule = new ExportableContainsRule('category');
       containsRule.items = [{ name: 'Foo' }];
       const cardRule = new ExportableCardRule('category[Foo]');
-      cardRule.min = 1;
+      cardRule.min = 0;
       cardRule.max = '*';
       containsRule.cardRules.push(cardRule);
 
