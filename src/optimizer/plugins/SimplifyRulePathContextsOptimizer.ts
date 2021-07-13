@@ -2,6 +2,15 @@ import { Package } from '../../processor';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 import { ProcessingOptions } from '../../utils';
+import {
+  ExportableCardRule,
+  ExportableFlagRule,
+  ExportableCombinedCardFlagRule,
+  ExportableBindingRule,
+  ExportableAssignmentRule,
+  ExportableContainsRule,
+  ExportableOnlyRule
+} from '../../exportable';
 
 export default {
   name: 'simplify_rule_path_contexts',
@@ -19,14 +28,46 @@ export default {
       const pathContext: string[] = [];
       let contextIndex: number;
       entity.rules.forEach(rule => {
-        const rulePathParts = rule.path.split('.');
+        let rulePathParts: string[];
+        if (rule.path === '') {
+          rulePathParts = [];
+        } else if (rule.path === '.') {
+          rulePathParts = ['.'];
+        } else {
+          rulePathParts = rule.path.split('.');
+        }
         // check if we can use an existing context
         // check contexts at the end first so we use as deep a context as possible
         for (contextIndex = pathContext.length - 1; contextIndex >= 0; contextIndex--) {
-          const contextPathParts = pathContext[contextIndex].split('.');
+          let contextPathParts: string[];
+          if (pathContext[contextIndex] === '') {
+            // we never want to count an empty path as a match.
+            continue;
+          } else if (pathContext[contextIndex] === '.') {
+            contextPathParts = ['.'];
+          } else {
+            contextPathParts = pathContext[contextIndex].split('.');
+          }
           if (contextPathParts.every((contextPart, idx) => contextPart === rulePathParts[idx])) {
             break;
           }
+        }
+        // if the context exactly matches the rule's path, we use an empty path for that rule.
+        // but, some rule types must have a non-empty path.
+        // if our context would give us an empty path for one of those rule types,
+        // use the context that comes before it, if available.
+        if (
+          (rule instanceof ExportableCardRule ||
+            rule instanceof ExportableFlagRule ||
+            rule instanceof ExportableCombinedCardFlagRule ||
+            rule instanceof ExportableBindingRule ||
+            rule instanceof ExportableAssignmentRule ||
+            rule instanceof ExportableContainsRule ||
+            rule instanceof ExportableOnlyRule) &&
+          contextIndex > -1 &&
+          rule.path === pathContext[contextIndex]
+        ) {
+          contextIndex -= 1;
         }
         if (contextIndex > -1) {
           // if our contextIndex ended up at least 0, we found a context to use!
@@ -60,3 +101,12 @@ export default {
     return options.indent === true;
   }
 } as OptimizerPlugin;
+
+type RuleWithNonEmptyPath =
+  | ExportableCardRule
+  | ExportableFlagRule
+  | ExportableCombinedCardFlagRule
+  | ExportableBindingRule
+  | ExportableAssignmentRule
+  | ExportableContainsRule
+  | ExportableOnlyRule;
