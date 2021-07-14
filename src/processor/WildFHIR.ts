@@ -4,7 +4,7 @@ export class WildFHIR {
   public readonly large: boolean;
   public readonly content: FHIRResource;
 
-  constructor(file: any, path?: string) {
+  constructor(file: FileImport, path?: string) {
     this.content = file.content;
     this.path = path ?? '';
     this.large = file.large ?? false;
