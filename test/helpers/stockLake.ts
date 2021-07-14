@@ -9,6 +9,6 @@ export function stockLake(...paths: string[]): LakeOfFHIR {
 
 export function restockLake(lake: LakeOfFHIR, ...paths: string[]): void {
   paths.forEach(p => {
-    lake.docs.push(new WildFHIR(fs.readJSONSync(p), p));
+    lake.docs.push(new WildFHIR({ content: fs.readJSONSync(p) }, p));
   });
 }

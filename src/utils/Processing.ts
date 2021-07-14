@@ -4,7 +4,14 @@ import ini from 'ini';
 import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
 import { logger } from './GoFSHLogger';
-import { Package, FHIRProcessor, LakeOfFHIR, WildFHIR, FHIRResource } from '../processor';
+import {
+  Package,
+  FHIRProcessor,
+  LakeOfFHIR,
+  WildFHIR,
+  FHIRResource,
+  FileImport
+} from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { loadOptimizers } from '../optimizer';
 import { MasterFisher } from '../utils';
@@ -172,9 +179,9 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
 function loadPrimaryFiles(files: string[], docs: WildFHIR[]) {
   files.forEach(file => {
     try {
-      const content = readJSONorXML(file);
-      if (isProcessableContent(content, file)) {
-        docs.push(new WildFHIR(content, file));
+      const loadedFile = readJSONorXML(file);
+      if (isProcessableContent(loadedFile.content, file)) {
+        docs.push(new WildFHIR(loadedFile, file));
       }
     } catch (ex) {
       logger.error(`Could not load ${file}: ${ex.message}`);
@@ -185,7 +192,7 @@ function loadPrimaryFiles(files: string[], docs: WildFHIR[]) {
 function findNonDuplicateSecondaryFiles(files: string[], docs: WildFHIR[]): string[] {
   return files.filter(file => {
     try {
-      const content = readJSONorXML(file);
+      const content = readJSONorXML(file).content;
       return (
         isProcessableContent(content, file) &&
         content.id &&
@@ -201,9 +208,19 @@ function findNonDuplicateSecondaryFiles(files: string[], docs: WildFHIR[]): stri
 
 function readJSONorXML(file: string): any {
   if (file.endsWith('.json')) {
-    return fs.readJSONSync(file);
+    const buffer = fs.readFileSync(file);
+    const importedFile: FileImport = { content: JSON.parse(buffer.toString()) };
+    if (buffer.length > 200000) {
+      importedFile.large = true;
+    }
+    return importedFile;
   } else if (file.endsWith('.xml')) {
-    return FHIRConverter.xmlToObj(fs.readFileSync(file).toString());
+    const buffer = fs.readFileSync(file);
+    const importedFile: FileImport = { content: FHIRConverter.xmlToObj(buffer.toString()) };
+    if (buffer.length > 200000) {
+      importedFile.large = true;
+    }
+    return importedFile;
   }
 }
 
