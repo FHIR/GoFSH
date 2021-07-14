@@ -24,11 +24,11 @@ export class ExportableContainsRule extends fshrules.ContainsRule implements Exp
       }
 
       // Add card rules for the current item
-      const associatedCardRule = this.cardRules.find(r => r.path === `${this.path}[${item.name}]`);
+      const associatedCardRule = this.cardRules.find(r => r.path.endsWith(`[${item.name}]`));
       line += associatedCardRule ? ` ${associatedCardRule.cardToString()}` : '';
 
       // Add flag rules for the current item
-      const associatedFlagRule = this.flagRules.find(r => r.path === `${this.path}[${item.name}]`);
+      const associatedFlagRule = this.flagRules.find(r => r.path.endsWith(`[${item.name}]`));
       line += associatedFlagRule ? ` ${associatedFlagRule.flagsToString()}` : '';
       return line;
     });

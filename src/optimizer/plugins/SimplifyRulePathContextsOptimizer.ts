@@ -89,10 +89,12 @@ export default {
         } else {
           // we didn't find a context to use. so, the indent will be 0.
           rule.indent = 0;
-          // get rid of all existing contexts, and push this rule's path on to pathContext
+          // get rid of all existing contexts, and push this rule's path (if it exists) on to pathContext
           pathContext.splice(0);
           // change soft-index marker because a matching path should use [=]
-          pathContext.push(rule.path.replace(/\[\+\]/g, '[=]'));
+          if (rule.path.length > 0) {
+            pathContext.push(rule.path.replace(/\[\+\]/g, '[=]'));
+          }
         }
       });
     });
@@ -101,12 +103,3 @@ export default {
     return options.indent === true;
   }
 } as OptimizerPlugin;
-
-type RuleWithNonEmptyPath =
-  | ExportableCardRule
-  | ExportableFlagRule
-  | ExportableCombinedCardFlagRule
-  | ExportableBindingRule
-  | ExportableAssignmentRule
-  | ExportableContainsRule
-  | ExportableOnlyRule;
