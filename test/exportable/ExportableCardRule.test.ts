@@ -22,4 +22,13 @@ describe('ExportableCardRule', () => {
 
     expect(rule.toFSH()).toBe('* contact ..5');
   });
+
+  it('should export an indented CardRule', () => {
+    const rule = new ExportableCardRule('name');
+    rule.min = 2;
+    rule.max = '8';
+    rule.indent = 1;
+
+    expect(rule.toFSH()).toBe('  * name 2..8');
+  });
 });

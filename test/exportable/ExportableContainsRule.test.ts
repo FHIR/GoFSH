@@ -82,4 +82,25 @@ describe('ExportableContainsRule', () => {
 
     expect(containsRule.toFSH()).toBe(expectedFSH);
   });
+
+  it('should export an indented ContainsRule', () => {
+    const containsRule = new ExportableContainsRule('component');
+    containsRule.items = [
+      { name: 'systolic', type: 'SystolicBP' },
+      { name: 'diastolic', type: 'DiastolicBP' }
+    ];
+    containsRule.indent = 1;
+
+    const cardRuleSystolic = new ExportableCardRule('component[systolic]');
+    cardRuleSystolic.min = 0;
+    cardRuleSystolic.max = '1';
+    const cardRuleDiastolic = new ExportableCardRule('component[diastolic]');
+    cardRuleDiastolic.min = 0;
+    cardRuleDiastolic.max = '1';
+    containsRule.cardRules.push(cardRuleSystolic, cardRuleDiastolic);
+
+    const expectedFSH = `  * component contains${EOL}      SystolicBP named systolic 0..1 and${EOL}      DiastolicBP named diastolic 0..1`;
+
+    expect(containsRule.toFSH()).toBe(expectedFSH);
+  });
 });

@@ -1,10 +1,13 @@
 import { EOL } from 'os';
 import { fshrules } from 'fsh-sushi';
-import { ExportableRule, ExportableCardRule, ExportableFlagRule } from '.';
+import { ExportableRule, ExportableCardRule, ExportableFlagRule, INDENT_SIZE } from '.';
+import { repeat } from 'lodash';
 
 export class ExportableContainsRule extends fshrules.ContainsRule implements ExportableRule {
   cardRules: ExportableCardRule[] = [];
   flagRules: ExportableFlagRule[] = [];
+  indent = 0;
+
   constructor(path: string) {
     super(path);
   }
@@ -21,17 +24,19 @@ export class ExportableContainsRule extends fshrules.ContainsRule implements Exp
       }
 
       // Add card rules for the current item
-      const associatedCardRule = this.cardRules.find(r => r.path === `${this.path}[${item.name}]`);
+      const associatedCardRule = this.cardRules.find(r => r.path.endsWith(`[${item.name}]`));
       line += associatedCardRule ? ` ${associatedCardRule.cardToString()}` : '';
 
       // Add flag rules for the current item
-      const associatedFlagRule = this.flagRules.find(r => r.path === `${this.path}[${item.name}]`);
+      const associatedFlagRule = this.flagRules.find(r => r.path.endsWith(`[${item.name}]`));
       line += associatedFlagRule ? ` ${associatedFlagRule.flagsToString()}` : '';
       return line;
     });
 
-    return `* ${this.path} contains${
-      itemsWithAssociatedRules.length > 1 ? `${EOL}    ` : ' '
-    }${itemsWithAssociatedRules.join(` and${EOL}    `)}`; // New line and indent each
+    const spaces = repeat(' ', INDENT_SIZE * (this.indent ?? 0));
+
+    return `${spaces}* ${this.path} contains${
+      itemsWithAssociatedRules.length > 1 ? `${EOL}${spaces}    ` : ' '
+    }${itemsWithAssociatedRules.join(` and${EOL}${spaces}    `)}`; // New line and indent each
   }
 }

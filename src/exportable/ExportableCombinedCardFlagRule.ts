@@ -1,11 +1,14 @@
-import { ExportableRule, ExportableCardRule } from '.';
+import { ExportableRule, ExportableCardRule, INDENT_SIZE } from '.';
 import { fshrules } from 'fsh-sushi';
 import { ExportableFlagRule } from './ExportableFlagRule';
+import { repeat } from 'lodash';
 
 // NOTE: This needs to extend a SUSHI SdRule (in this case fshrules.CardRule) because
 // ExportableProfile.rules (which allows ExportableCombinedCardFlagRule) must be assignable to
 // Profile.rules in order for TypeScript to recognize it as a proper subclass of Profile.
 export class ExportableCombinedCardFlagRule extends fshrules.CardRule implements ExportableRule {
+  indent = 0;
+
   constructor(
     path: string,
     public cardRule: ExportableCardRule,
@@ -34,6 +37,8 @@ export class ExportableCombinedCardFlagRule extends fshrules.CardRule implements
   }
 
   toFSH(): string {
-    return `* ${this.path} ${this.cardRule.cardToString()} ${this.flagRule.flagsToString()}`;
+    return `${repeat(' ', INDENT_SIZE * this.indent)}* ${
+      this.path
+    } ${this.cardRule.cardToString()} ${this.flagRule.flagsToString()}`;
   }
 }

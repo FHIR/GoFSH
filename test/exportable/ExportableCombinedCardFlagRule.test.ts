@@ -46,6 +46,20 @@ describe('ExportableCombinedCardFlagRule', () => {
     expect(rule.toFSH()).toBe('* name 1..1 MS ?! SU');
   });
 
+  it('should export an indented CombinedCardFlagRule', () => {
+    const cardRule = new ExportableCardRule('name');
+    cardRule.min = 1;
+    cardRule.max = '1';
+    const flagRule = new ExportableFlagRule('name');
+    flagRule.mustSupport = true;
+    flagRule.modifier = true;
+    flagRule.summary = true;
+    const rule = new ExportableCombinedCardFlagRule('name', cardRule, flagRule);
+    rule.indent = 1;
+
+    expect(rule.toFSH()).toBe('  * name 1..1 MS ?! SU');
+  });
+
   it('should redirect min/max getters to cardRule', () => {
     const cardRule = new ExportableCardRule('name');
     cardRule.min = 1;

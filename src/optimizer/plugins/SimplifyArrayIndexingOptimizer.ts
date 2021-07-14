@@ -7,7 +7,7 @@ import _ from 'lodash';
 export default {
   name: 'simplify_array_indexing',
   description: 'Replace numeric indices with soft indexing',
-  runAfter: [new RegExp(/.*/)],
+  runAfter: [new RegExp(/(add|combine|construct|remove|resolve).*/)],
   optimize(pkg: Package): void {
     // If there is only a single element in an array, include no indices at all
     // If there is more than one element in an array, reference the first element with

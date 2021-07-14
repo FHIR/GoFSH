@@ -1,7 +1,10 @@
 import { fshrules } from 'fsh-sushi';
-import { ExportableRule } from '.';
+import { ExportableRule, INDENT_SIZE } from '.';
+import { repeat } from 'lodash';
 
 export class ExportableFlagRule extends fshrules.FlagRule implements ExportableRule {
+  indent = 0;
+
   constructor(path: string) {
     super(path);
   }
@@ -16,5 +19,9 @@ export class ExportableFlagRule extends fshrules.FlagRule implements ExportableR
     else if (this.normative) flags.push('N');
 
     return flags;
+  }
+
+  toFSH(): string {
+    return `${repeat(' ', INDENT_SIZE * this.indent)}${super.toFSH()}`;
   }
 }

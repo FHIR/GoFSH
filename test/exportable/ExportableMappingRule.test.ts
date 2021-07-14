@@ -59,4 +59,16 @@ describe('ExportableMappingRule', () => {
       '* identifier -> "Patient.otherIdentifier" "This has a \\n newline, which is pretty \\\\wild."'
     );
   });
+
+  it('should export an indented mapping rule', () => {
+    const rule = new ExportableMappingRule('identifier');
+    rule.map = 'Patient.otherIdentifier';
+    rule.comment = 'This is a comment';
+    rule.language = new fshtypes.FshCode('lang');
+    rule.indent = 3;
+
+    expect(rule.toFSH()).toBe(
+      '      * identifier -> "Patient.otherIdentifier" "This is a comment" #lang'
+    );
+  });
 });
