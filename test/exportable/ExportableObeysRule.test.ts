@@ -19,7 +19,7 @@ describe('ExportableObeysRule', () => {
     const rule = new ExportableObeysRule('.');
     rule.keys = ['FSH-5', 'FSH-6'];
 
-    expect(rule.toFSH()).toBe('* obeys FSH-5 and FSH-6');
+    expect(rule.toFSH()).toBe('* . obeys FSH-5 and FSH-6');
   });
 
   it('should export an indented ObeysRule with a non-empty path', () => {

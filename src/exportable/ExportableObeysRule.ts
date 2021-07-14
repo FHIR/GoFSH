@@ -12,7 +12,7 @@ export class ExportableObeysRule extends fshrules.ObeysRule implements Exportabl
 
   toFSH(): string {
     return `${repeat(' ', INDENT_SIZE * this.indent)}* ${
-      this.path === '.' || this.path === '' ? '' : `${this.path} `
+      this.path === '' ? '' : `${this.path} `
     }obeys ${this.keys.join(' and ')}`;
   }
 }
