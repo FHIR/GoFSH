@@ -1,5 +1,5 @@
-import fs from 'fs-extra';
 import { LakeOfFHIR, WildFHIR } from '../../src/processor';
+import { readJSONorXML } from '../../src/utils';
 
 export function stockLake(...paths: string[]): LakeOfFHIR {
   const lake = new LakeOfFHIR([]);
@@ -9,6 +9,7 @@ export function stockLake(...paths: string[]): LakeOfFHIR {
 
 export function restockLake(lake: LakeOfFHIR, ...paths: string[]): void {
   paths.forEach(p => {
-    lake.docs.push(new WildFHIR({ content: fs.readJSONSync(p) }, p));
+    const importedFile = readJSONorXML(p);
+    lake.docs.push(new WildFHIR(importedFile, p));
   });
 }
