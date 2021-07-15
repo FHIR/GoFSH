@@ -418,12 +418,7 @@ describe('Processing', () => {
     it('should properly read json and xml files', () => {
       const FHIRProcessor = new Fhir();
 
-      const JSONFilePath = path.join(
-        __dirname,
-        'fixtures',
-        'instance-files',
-        'small-instance.json'
-      );
+      const JSONFilePath = path.join(__dirname, 'fixtures', 'only-json', 'patient.json');
       const XMLFilePath = path.join(__dirname, 'fixtures', 'only-xml', 'patient.xml');
 
       const jsonFileImport = readJSONorXML(JSONFilePath);
