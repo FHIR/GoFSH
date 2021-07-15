@@ -206,7 +206,7 @@ function findNonDuplicateSecondaryFiles(files: string[], docs: WildFHIR[]): stri
   });
 }
 
-function readJSONorXML(file: string): any {
+export function readJSONorXML(file: string): FileImport {
   if (file.endsWith('.json')) {
     const buffer = fs.readFileSync(file);
     const importedFile: FileImport = { content: JSON.parse(buffer.toString()) };

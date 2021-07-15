@@ -135,7 +135,7 @@ export class FHIRProcessor {
     instances.forEach((wild, index) => {
       try {
         if (wild.large) {
-          logger.debug(
+          logger.info(
             `Instance ${wild.content.id} is especially large. Processing may take a while.`
           );
         }

@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import temp from 'temp';
+import { Fhir } from 'fhir/fhir';
 import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
@@ -12,7 +13,8 @@ import {
   writeFSH,
   getIgPathFromIgIni,
   getFhirProcessor,
-  getLakeOfFHIR
+  getLakeOfFHIR,
+  readJSONorXML
 } from '../../src/utils/Processing';
 import { Package } from '../../src/processor';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
@@ -382,6 +384,55 @@ describe('Processing', () => {
       resources.add(config);
       writeFSH(resources, tempRoot, 'single-file');
       expect(fs.existsSync(path.join(tempRoot, 'sushi-config.yaml'))).toBeTruthy();
+    });
+  });
+
+  describe('readJSONorXML', () => {
+    it('should return a FileImport object with the "large" property set to true for big files', () => {
+      const JSONFilePath = path.join(
+        __dirname,
+        'fixtures',
+        'instance-files',
+        'large-instance.json'
+      );
+      const XMLFilePath = path.join(__dirname, 'fixtures', 'instance-files', 'large-instance.xml');
+
+      const jsonFileImport = readJSONorXML(JSONFilePath);
+      const xmlFileImport = readJSONorXML(XMLFilePath);
+
+      expect(jsonFileImport.large).toEqual(true);
+      expect(xmlFileImport.large).toEqual(true);
+    });
+
+    it('should return a FileImport object with the "large" property set to false for small files', () => {
+      const JSONFilePath = path.join(__dirname, 'fixtures', 'only-json', 'patient.json');
+      const XMLFilePath = path.join(__dirname, 'fixtures', 'only-xml', 'patient.xml');
+
+      const jsonFileImport = readJSONorXML(JSONFilePath);
+      const xmlFileImport = readJSONorXML(XMLFilePath);
+
+      expect(jsonFileImport.large).toBeUndefined();
+      expect(xmlFileImport.large).toBeUndefined();
+    });
+
+    it('should properly read json and xml files', () => {
+      const FHIRProcessor = new Fhir();
+
+      const JSONFilePath = path.join(
+        __dirname,
+        'fixtures',
+        'instance-files',
+        'small-instance.json'
+      );
+      const XMLFilePath = path.join(__dirname, 'fixtures', 'only-xml', 'patient.xml');
+
+      const jsonFileImport = readJSONorXML(JSONFilePath);
+      const xmlFileImport = readJSONorXML(XMLFilePath);
+
+      expect(jsonFileImport.content).toEqual(fs.readJSONSync(JSONFilePath));
+      expect(xmlFileImport.content).toEqual(
+        FHIRProcessor.xmlToObj(fs.readFileSync(XMLFilePath).toString())
+      );
     });
   });
 
