@@ -134,6 +134,11 @@ export class FHIRProcessor {
     if (instances.length > 0) logger.info('Processing Instances...');
     instances.forEach((wild, index) => {
       try {
+        if (wild.large) {
+          logger.info(
+            `Instance ${wild.content.id} is especially large. Processing may take a while.`
+          );
+        }
         resources.add(InstanceProcessor.process(wild.content, igForConfig?.content, this.fisher));
         this.outputCount(instances, index, 'Instance');
       } catch (ex) {

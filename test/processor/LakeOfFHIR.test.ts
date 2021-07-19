@@ -672,6 +672,6 @@ describe('LakeOfHIR', () => {
 function getWildFHIRs(...files: string[]): WildFHIR[] {
   return files.map(f => {
     const fPath = path.join(__dirname, 'fixtures', f);
-    return new WildFHIR(fs.readJSONSync(fPath), fPath);
+    return new WildFHIR({ content: fs.readJSONSync(fPath) }, fPath);
   });
 }

@@ -58,7 +58,7 @@ export async function fhirToFsh(
       }
     }
     if (isProcessableContent(resource, location)) {
-      docs.push(new WildFHIR(resource, location));
+      docs.push(new WildFHIR({ content: resource }, location));
     }
   });
 
