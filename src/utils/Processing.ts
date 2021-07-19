@@ -210,14 +210,14 @@ export function readJSONorXML(file: string): FileImport {
   if (file.endsWith('.json')) {
     const buffer = fs.readFileSync(file);
     const importedFile: FileImport = { content: JSON.parse(buffer.toString()) };
-    if (buffer.length > 200000) {
+    if (buffer.length > LARGE_FILE_BUFFER_LENGTH) {
       importedFile.large = true;
     }
     return importedFile;
   } else if (file.endsWith('.xml')) {
     const buffer = fs.readFileSync(file);
     const importedFile: FileImport = { content: FHIRConverter.xmlToObj(buffer.toString()) };
-    if (buffer.length > 200000) {
+    if (buffer.length > LARGE_FILE_BUFFER_LENGTH) {
       importedFile.large = true;
     }
     return importedFile;
@@ -301,3 +301,5 @@ const IGNORED_NON_RESOURCE_DIRECTORIES = [
   `input${path.sep}images`,
   `input${path.sep}images-source`
 ];
+
+const LARGE_FILE_BUFFER_LENGTH = 200000;
