@@ -1,4 +1,4 @@
-import { pullAt, escapeRegExp, cloneDeep, isEqual } from 'lodash';
+import { pullAt, cloneDeep, isEqual } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import {
@@ -10,6 +10,8 @@ import {
 import { hasGeneratedText } from './RemoveGeneratedTextRulesOptimizer';
 import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
+import { MasterFisher, logger } from '../../utils';
+import { utils } from 'fsh-sushi';
 
 export default {
   name: 'construct_inline_instance',
@@ -17,7 +19,7 @@ export default {
     'Construct inline instances from groups of rules in a contained resource or a Bundle',
   runBefore: [RemoveGeneratedTextRulesOptimizer.name, ResolveInstanceOfURLsOptimizer.name],
 
-  optimize(pkg: Package): void {
+  optimize(pkg: Package, fisher: MasterFisher): void {
     const inlineInstances: ExportableInstance[] = [];
     [...pkg.instances, ...pkg.profiles, ...pkg.extensions].forEach(resource => {
       const ruleType =
@@ -40,7 +42,7 @@ export default {
         const rulesToRemove: number[] = [];
         let id: string;
         let resourceType: string;
-        let profile: string;
+        const profileIndices: number[] = [];
         const inlineInstanceRules: ExportableAssignmentRule[] = [];
 
         // Find all rules on the instance that are children of the base path and should be
@@ -67,13 +69,13 @@ export default {
             id = rule.value as string;
           } else if (rule.path === `${basePath}.resourceType`) {
             resourceType = rule.value as string;
-          } else if (
-            new RegExp(`^${escapeRegExp(basePath)}\\.meta\\.profile(\\[0\\])?$`).test(rule.path)
-          ) {
-            profile = rule.value as string;
           } else {
             const inlineInstanceRule = cloneDeep(rule);
             inlineInstanceRule.path = rule.path.replace(`${basePath}.`, '');
+            // if this rule is on meta.profile, save its index to check later
+            if (/^meta\.profile(\[\d+\])?$/.test(inlineInstanceRule.path)) {
+              profileIndices.push(inlineInstanceRules.length);
+            }
             inlineInstanceRules.push(inlineInstanceRule);
           }
         });
@@ -81,8 +83,30 @@ export default {
         let newInstance = new ExportableInstance(
           id ?? `Inline-Instance-for-${resource.id}-${++generatedIdCount}`
         );
+
+        // if there is exactly one profile, use it as InstanceOf if we can fish it up
+        if (profileIndices.length === 1) {
+          const profileToTry = inlineInstanceRules[profileIndices[0]].value as string;
+          const instanceOfJSON = fisher.fishForFHIR(
+            profileToTry,
+            utils.Type.Resource,
+            utils.Type.Profile,
+            utils.Type.Extension,
+            utils.Type.Type
+          );
+          if (instanceOfJSON == null) {
+            newInstance.instanceOf = resourceType;
+            logger.warn(
+              `InstanceOf definition not found for ${newInstance.id}. The ResourceType of the instance will be used as a base.`
+            );
+          } else {
+            newInstance.instanceOf = profileToTry;
+            inlineInstanceRules.splice(profileIndices[0], 1);
+          }
+        } else {
+          newInstance.instanceOf = resourceType;
+        }
         newInstance.rules.push(...inlineInstanceRules);
-        newInstance.instanceOf = profile ?? resourceType;
         newInstance.usage = 'Inline';
 
         const duplicatedInstance = duplicatesExistingInstance(newInstance, [

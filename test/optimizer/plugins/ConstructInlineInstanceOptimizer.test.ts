@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash';
 import { fshtypes } from 'fsh-sushi';
-import '../../helpers/loggerSpy'; // side-effect: suppresses logs
+import { loggerSpy } from '../../helpers/loggerSpy';
 import { Package } from '../../../src/processor';
 import {
   ExportableAssignmentRule,
@@ -13,9 +13,23 @@ import optimizer from '../../../src/optimizer/plugins/ConstructInlineInstanceOpt
 import { assertExportableInstance } from '../../helpers/asserts';
 import RemoveGeneratedTextRulesOptimizer from '../../../src/optimizer/plugins/RemoveGeneratedTextRulesOptimizer';
 import ResolveInstanceOfURLsOptimizer from '../../../src/optimizer/plugins/ResolveInstanceOfURLsOptimizer';
+import { MasterFisher } from '../../../src/utils';
+import { loadTestDefinitions, stockLake } from '../../helpers';
 
 describe('optimizer', () => {
   describe('#construct_inline_instance', () => {
+    let fisher: MasterFisher;
+
+    beforeAll(() => {
+      const defs = loadTestDefinitions();
+      const lake = stockLake();
+      fisher = new MasterFisher(lake, defs);
+    });
+
+    beforeEach(() => {
+      loggerSpy.reset();
+    });
+
     describe('Instances', () => {
       let containedResourceType1: ExportableAssignmentRule;
       let containedId1: ExportableAssignmentRule;
@@ -64,7 +78,7 @@ describe('optimizer', () => {
         ];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(3);
         assertExportableInstance(
@@ -99,7 +113,7 @@ describe('optimizer', () => {
         instance.rules = [containedResourceType1, containedId1, bundleResourceType, bundleId];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(3);
         assertExportableInstance(
@@ -136,7 +150,7 @@ describe('optimizer', () => {
         instance.rules = [containedResourceType1, containedId1];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
@@ -159,7 +173,7 @@ describe('optimizer', () => {
         instance.rules = [containedResourceType1, containedResourceType2];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(3);
         assertExportableInstance(
@@ -201,7 +215,7 @@ describe('optimizer', () => {
         ];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(3);
         const expectedRule1 = cloneDeep(containedId1);
@@ -244,7 +258,7 @@ describe('optimizer', () => {
         const myPackage = new Package();
         myPackage.add(someInstance);
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(3);
         const expectedRule = cloneDeep(containedId1);
@@ -271,7 +285,7 @@ describe('optimizer', () => {
         instance.rules = [containedResourceType1, containedId1, containedString];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         const expectedRule = cloneDeep(containedString);
         expectedRule.path = 'valueString';
@@ -302,7 +316,7 @@ describe('optimizer', () => {
         instance.rules = [containedResourceType1, containedId1, containedString, nonContainedRule];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         const expectedRule = cloneDeep(containedString);
         expectedRule.path = 'valueString';
@@ -325,18 +339,17 @@ describe('optimizer', () => {
 
       it('should create a profiled inline instance from a contained resource', () => {
         const containedProfile = new ExportableAssignmentRule('contained[0].meta.profile[0]');
-        containedProfile.value =
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        containedProfile.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
         instance.rules = [containedResourceType1, containedId1, containedProfile];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
           myPackage.instances[1],
           'Bar',
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
           'Inline',
           undefined,
           undefined,
@@ -351,18 +364,17 @@ describe('optimizer', () => {
 
       it('should create a profiled inline instance from a contained resource with non-numeric path', () => {
         const containedProfile = new ExportableAssignmentRule('contained[0].meta.profile');
-        containedProfile.value =
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        containedProfile.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
         instance.rules = [containedResourceType1, containedId1, containedProfile];
         const myPackage = new Package();
         myPackage.add(instance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
           myPackage.instances[1],
           'Bar',
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
           'Inline',
           undefined,
           undefined,
@@ -402,7 +414,7 @@ describe('optimizer', () => {
         divRule.value = 'other text';
         existingInstance.rules = [stringRule, statusRule, divRule];
         myPackage.add(existingInstance);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         const expectedRule = cloneDeep(containedString);
         expectedRule.path = 'valueString';
@@ -462,7 +474,7 @@ describe('optimizer', () => {
         ];
         const myPackage = new Package();
         myPackage.add(profile);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
@@ -504,7 +516,7 @@ describe('optimizer', () => {
         ];
         const myPackage = new Package();
         myPackage.add(extension);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
@@ -543,7 +555,7 @@ describe('optimizer', () => {
         profile.rules = [containedResourceType1, containedId1];
         const myPackage = new Package();
         myPackage.add(profile);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(1);
         assertExportableInstance(
@@ -567,7 +579,7 @@ describe('optimizer', () => {
         profile.rules = [containedResourceType1, containedResourceType2];
         const myPackage = new Package();
         myPackage.add(profile);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(2);
         assertExportableInstance(
@@ -607,7 +619,7 @@ describe('optimizer', () => {
         profile.rules = [containedResourceType1, containedId1, containedString];
         const myPackage = new Package();
         myPackage.add(profile);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(1);
         const expectedRule = new ExportableAssignmentRule('valueString');
@@ -641,7 +653,7 @@ describe('optimizer', () => {
         profile.rules = [containedResourceType1, containedId1, containedString, nonContainedRule];
         const myPackage = new Package();
         myPackage.add(profile);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         const expectedRule = new ExportableAssignmentRule('valueString');
         expectedRule.value = 'string value';
@@ -666,18 +678,17 @@ describe('optimizer', () => {
       it('should create a profiled inline instance from a contained resource', () => {
         const containedProfile = new ExportableCaretValueRule('');
         containedProfile.caretPath = 'contained[0].meta.profile[0]';
-        containedProfile.value =
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        containedProfile.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
         profile.rules = [containedResourceType1, containedId1, containedProfile];
         const myPackage = new Package();
         myPackage.add(profile);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(1);
         assertExportableInstance(
           myPackage.instances[0],
           'Bar',
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
           'Inline',
           undefined,
           undefined,
@@ -694,23 +705,97 @@ describe('optimizer', () => {
       it('should create a profiled inline instance from a contained resource with non-numeric path', () => {
         const containedProfile = new ExportableCaretValueRule('');
         containedProfile.caretPath = 'contained[0].meta.profile';
-        containedProfile.value =
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        containedProfile.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
         profile.rules = [containedResourceType1, containedId1, containedProfile];
         const myPackage = new Package();
         myPackage.add(profile);
-        optimizer.optimize(myPackage);
+        optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(1);
         assertExportableInstance(
           myPackage.instances[0],
           'Bar',
-          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
           'Inline',
           undefined,
           undefined,
           []
         );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create an inline instance from a contained resource with multiple profiles', () => {
+        const containedProfile1 = new ExportableCaretValueRule('');
+        containedProfile1.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const containedProfile2 = new ExportableCaretValueRule('');
+        containedProfile2.caretPath = 'contained[0].meta.profile[1]';
+        containedProfile2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [
+          containedResourceType1,
+          containedId1,
+          containedProfile1,
+          containedProfile2
+        ];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher);
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule1 = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const profileRule2 = new ExportableAssignmentRule('meta.profile[1]');
+        profileRule2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule1, profileRule2]
+        );
+        // Even though the second entry in meta.profile won't resolve, we don't try to resolve them when there is more than one.
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create an inline instance from a contained resource when the profile on the instance is not available', () => {
+        const containedProfile = new ExportableCaretValueRule('');
+        containedProfile.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [containedResourceType1, containedId1, containedProfile];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher);
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule]
+        );
+        expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found for/s);
 
         const inlineInstanceRule1 = new ExportableCaretValueRule('');
         inlineInstanceRule1.caretPath = 'contained[0]';

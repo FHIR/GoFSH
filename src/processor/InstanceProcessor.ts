@@ -7,7 +7,8 @@ import { switchQuantityRules } from '.';
 
 export class InstanceProcessor {
   static extractKeywords(input: any, target: ExportableInstance, implementationGuide: any): void {
-    target.instanceOf = input.meta?.profile?.[0] ?? input.resourceType;
+    target.instanceOf =
+      input.meta?.profile?.length === 1 ? input.meta.profile[0] : input.resourceType;
     const resource: fhirtypes.ImplementationGuideDefinitionResource = implementationGuide?.definition?.resource?.find(
       (resource: fhirtypes.ImplementationGuideDefinitionResource) =>
         resource.reference?.reference === `${input.resourceType}/${input.id}`
@@ -42,10 +43,11 @@ export class InstanceProcessor {
     );
 
     if (instanceOfJSON == null) {
-      if (input.meta?.profile?.[0]) {
+      if (input.meta?.profile?.length === 1) {
         logger.warn(
           `InstanceOf definition not found for ${input.id}. The ResourceType of the instance will be used as a base.`
         );
+        target.instanceOf = input.resourceType;
       }
       instanceOfJSON = fisher.fishForFHIR(
         input.resourceType,
@@ -60,19 +62,17 @@ export class InstanceProcessor {
         );
         return;
       }
-    }
-
-    IGNORED_PROPERTIES.forEach(prop => {
-      delete inputJSON[prop];
-    });
-    // First profile will be used in InstanceOf keyword if present
-    inputJSON.meta?.profile?.splice(0, 1);
-    if (inputJSON.meta?.profile?.length === 0) {
+    } else if (inputJSON.meta?.profile?.length === 1) {
+      // If we found JSON for exactly one profile, delete meta.profile.
       delete inputJSON.meta?.profile;
       if (isEmpty(inputJSON.meta)) {
         delete inputJSON.meta;
       }
     }
+
+    IGNORED_PROPERTIES.forEach(prop => {
+      delete inputJSON[prop];
+    });
     if (inputJSON.text?.status === 'generated') {
       delete inputJSON.text;
     }
