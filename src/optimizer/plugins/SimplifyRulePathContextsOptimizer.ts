@@ -1,6 +1,7 @@
 import { Package } from '../../processor';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
+import SimplifyObeysRuleDotPathsOptimizer from './SimplifyObeysRuleDotPathsOptimizer';
 import { ProcessingOptions } from '../../utils';
 import {
   ExportableCardRule,
@@ -16,7 +17,7 @@ export default {
   name: 'simplify_rule_path_contexts',
   description:
     'Make rule paths shorter by indenting the rule and using the context of preceding rules.',
-  runAfter: [SimplifyArrayIndexingOptimizer.name],
+  runAfter: [SimplifyArrayIndexingOptimizer.name, SimplifyObeysRuleDotPathsOptimizer.name],
   optimize(pkg: Package): void {
     [
       ...pkg.profiles,
