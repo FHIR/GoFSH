@@ -13,6 +13,7 @@ import optimizer from '../../../src/optimizer/plugins/ConstructInlineInstanceOpt
 import { assertExportableInstance } from '../../helpers/asserts';
 import RemoveGeneratedTextRulesOptimizer from '../../../src/optimizer/plugins/RemoveGeneratedTextRulesOptimizer';
 import ResolveInstanceOfURLsOptimizer from '../../../src/optimizer/plugins/ResolveInstanceOfURLsOptimizer';
+import AddReferenceKeywordOptimizer from '../../../src/optimizer/plugins/AddReferenceKeywordOptimizer';
 
 describe('optimizer', () => {
   describe('#construct_inline_instance', () => {
@@ -50,7 +51,8 @@ describe('optimizer', () => {
         expect(optimizer.description).toBeDefined();
         expect(optimizer.runBefore).toEqual([
           RemoveGeneratedTextRulesOptimizer.name,
-          ResolveInstanceOfURLsOptimizer.name
+          ResolveInstanceOfURLsOptimizer.name,
+          AddReferenceKeywordOptimizer.name
         ]);
         expect(optimizer.runAfter).toBeUndefined();
       });
