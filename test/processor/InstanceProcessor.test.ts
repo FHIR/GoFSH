@@ -44,6 +44,58 @@ describe('InstanceProcessor', () => {
       'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
     );
     expect(result.usage).toBe('Example');
+    expect(result.rules).toHaveLength(0);
+  });
+
+  it('should convert an example Instance with one entry in meta.profile as the InstanceOf when the metaProfile option is only-one and that entry resolves to an SD', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'only-one' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe(
+      'profiled-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+    );
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+    );
+    expect(result.usage).toBe('Example');
+    expect(result.rules).toHaveLength(0);
+  });
+
+  it('should convert an example Instance with one entry in meta.profile as the InstanceOf when the metaProfile option is first and that entry resolves to an SD', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'first' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe(
+      'profiled-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+    );
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+    );
+    expect(result.usage).toBe('Example');
+    expect(result.rules).toHaveLength(0);
+  });
+
+  it('should convert an example Instance and use the resourceType as InstanceOf when the metaProfile option is none', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'none' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe('profiled-patient-of-Patient');
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe('Patient');
+    expect(result.usage).toBe('Example');
+    expect(result.rules).toHaveLength(1);
+
+    const metaProfileRule = new ExportableAssignmentRule('meta.profile[0]');
+    metaProfileRule.value = 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient';
+    expect(result.rules).toContainEqual(metaProfileRule);
   });
 
   it('should convert an example Instance with one entry in meta.profile using the base resource when that entry does not resolve to an SD', () => {
@@ -69,6 +121,71 @@ describe('InstanceProcessor', () => {
     );
   });
 
+  it('should convert an example Instance with one entry in meta.profile using the base resource when the metaProfile option is only-one and that entry does not resolve to an SD', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    input.meta.profile[0] = 'http://example.org/StructureDefinition/some-unknown-profile';
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'only-one' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe(
+      'profiled-patient-of-http://example.org/StructureDefinition/some-unknown-profile'
+    );
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe('Patient');
+    expect(result.usage).toBe('Example');
+
+    const expectedMetaProfile = new ExportableAssignmentRule('meta.profile[0]');
+    expectedMetaProfile.value = 'http://example.org/StructureDefinition/some-unknown-profile';
+    expect(result.rules).toContainEqual(expectedMetaProfile);
+
+    expect(loggerSpy.getLastMessage('warn')).toMatch(
+      /InstanceOf definition not found for profiled-patient/s
+    );
+  });
+
+  it('should convert an example Instance with one entry in meta.profile using the base resource when the metaProfile option is first and that entry does not resolve to an SD', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    input.meta.profile[0] = 'http://example.org/StructureDefinition/some-unknown-profile';
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'first' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe(
+      'profiled-patient-of-http://example.org/StructureDefinition/some-unknown-profile'
+    );
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe('Patient');
+    expect(result.usage).toBe('Example');
+
+    const expectedMetaProfile = new ExportableAssignmentRule('meta.profile[0]');
+    expectedMetaProfile.value = 'http://example.org/StructureDefinition/some-unknown-profile';
+    expect(result.rules).toContainEqual(expectedMetaProfile);
+
+    expect(loggerSpy.getLastMessage('warn')).toMatch(
+      /InstanceOf definition not found for profiled-patient/s
+    );
+  });
+
+  it('should convert an example Instance with one entry in meta.profile using the base resource when the metaProfile option is none and that entry does not resolve to an SD', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    input.meta.profile[0] = 'http://example.org/StructureDefinition/some-unknown-profile';
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'none' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe('profiled-patient-of-Patient');
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe('Patient');
+    expect(result.usage).toBe('Example');
+
+    const expectedMetaProfile = new ExportableAssignmentRule('meta.profile[0]');
+    expectedMetaProfile.value = 'http://example.org/StructureDefinition/some-unknown-profile';
+    expect(result.rules).toContainEqual(expectedMetaProfile);
+
+    expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+  });
+
   it('should convert an example Instance with multiple entries in meta.profile using the base resource as the InstanceOf', () => {
     const input = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
@@ -85,10 +202,81 @@ describe('InstanceProcessor', () => {
     firstProfile.value = 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient';
     const secondProfile = new ExportableAssignmentRule('meta.profile[1]');
     secondProfile.value = 'http://example.org/StructureDefinition/some-unknown-profile';
+    expect(result.rules).toHaveLength(2);
     expect(result.rules).toContainEqual(firstProfile);
     expect(result.rules).toContainEqual(secondProfile);
 
     // Even though the second entry in meta.profile won't resolve, we don't try to resolve them when there is more than one.
+    expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+  });
+
+  it('should convert an example Instance with multiple entries in meta.profile using the base resource as the InstanceOf when the metaProfile option is only-one', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    input.meta.profile.push('http://example.org/StructureDefinition/some-unknown-profile');
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'only-one' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe('profiled-patient-of-Patient');
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe('Patient');
+    expect(result.usage).toBe('Example');
+
+    const firstProfile = new ExportableAssignmentRule('meta.profile[0]');
+    firstProfile.value = 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient';
+    const secondProfile = new ExportableAssignmentRule('meta.profile[1]');
+    secondProfile.value = 'http://example.org/StructureDefinition/some-unknown-profile';
+    expect(result.rules).toHaveLength(2);
+    expect(result.rules).toContainEqual(firstProfile);
+    expect(result.rules).toContainEqual(secondProfile);
+
+    expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+  });
+
+  it('should convert an example Instance with multiple entries in meta.profile using the first profile when the metaProfile option is first', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    input.meta.profile.push('http://example.org/StructureDefinition/some-unknown-profile');
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'first' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe(
+      'profiled-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+    );
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+    );
+    expect(result.usage).toBe('Example');
+
+    const firstProfile = new ExportableAssignmentRule('meta.profile[0]');
+    firstProfile.value = 'http://example.org/StructureDefinition/some-unknown-profile';
+    expect(result.rules).toHaveLength(1);
+    expect(result.rules).toContainEqual(firstProfile);
+
+    expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+  });
+
+  it('should convert an example Instance with multiple entries in meta.profile using the base resource as the InstanceOf when the metaProfile option is none', () => {
+    const input = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'profiled-patient.json'), 'utf-8')
+    );
+    input.meta.profile.push('http://example.org/StructureDefinition/some-unknown-profile');
+    const result = InstanceProcessor.process(input, simpleIg, defs, { metaProfile: 'none' });
+    expect(result).toBeInstanceOf(ExportableInstance);
+    expect(result.name).toBe('profiled-patient-of-Patient');
+    expect(result.id).toBe('profiled-patient');
+    expect(result.instanceOf).toBe('Patient');
+    expect(result.usage).toBe('Example');
+
+    const firstProfile = new ExportableAssignmentRule('meta.profile[0]');
+    firstProfile.value = 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient';
+    const secondProfile = new ExportableAssignmentRule('meta.profile[1]');
+    secondProfile.value = 'http://example.org/StructureDefinition/some-unknown-profile';
+    expect(result.rules).toHaveLength(2);
+    expect(result.rules).toContainEqual(firstProfile);
+    expect(result.rules).toContainEqual(secondProfile);
+
     expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
   });
 

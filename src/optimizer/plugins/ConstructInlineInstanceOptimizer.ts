@@ -11,7 +11,7 @@ import { hasGeneratedText } from './RemoveGeneratedTextRulesOptimizer';
 import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
 import AddReferenceKeywordOptimizer from './AddReferenceKeywordOptimizer';
-import { MasterFisher, logger } from '../../utils';
+import { MasterFisher, logger, ProcessingOptions } from '../../utils';
 import { utils } from 'fsh-sushi';
 
 export default {
@@ -24,7 +24,7 @@ export default {
     AddReferenceKeywordOptimizer.name
   ],
 
-  optimize(pkg: Package, fisher: MasterFisher): void {
+  optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
     const inlineInstances: ExportableInstance[] = [];
     [...pkg.instances, ...pkg.profiles, ...pkg.extensions].forEach(resource => {
       const ruleType =
@@ -89,8 +89,11 @@ export default {
           id ?? `Inline-Instance-for-${resource.id}-${++generatedIdCount}`
         );
 
-        // if there is exactly one profile, use it as InstanceOf if we can fish it up
-        if (profileIndices.length === 1) {
+        // if a profile is available and the user wants it, try to fish it up and use it as InstanceOf
+        if (
+          (profileIndices.length === 1 && options.metaProfile !== 'none') ||
+          (profileIndices.length > 0 && options.metaProfile === 'first')
+        ) {
           const profileToTry = inlineInstanceRules[profileIndices[0]].value as string;
           const instanceOfJSON = fisher.fishForFHIR(
             profileToTry,
@@ -106,6 +109,13 @@ export default {
             );
           } else {
             newInstance.instanceOf = profileToTry;
+            // since we are going to remove meta.profile[0], decrement the indices on other meta.profile[i] rules
+            profileIndices.slice(1).forEach(idx => {
+              const profileRule = inlineInstanceRules[idx];
+              const profileIndex = profileRule.path.match(/^meta\.profile\[(\d+)\]$/)[1];
+              profileRule.path = `meta.profile[${parseInt(profileIndex, 10) - 1}]`;
+            });
+            // remove the rule on meta.profile[0]
             inlineInstanceRules.splice(profileIndices[0], 1);
           }
         } else {

@@ -704,6 +704,89 @@ describe('optimizer', () => {
         expect(profile.rules).toEqual([inlineInstanceRule1]);
       });
 
+      it('should create a profiled inline instance from a contained resource when the metaProfile option is only-one', () => {
+        const containedProfile = new ExportableCaretValueRule('');
+        containedProfile.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        profile.rules = [containedResourceType1, containedId1, containedProfile];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'only-one' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create a profiled inline instance from a contained resource when the metaProfile option is first', () => {
+        const containedProfile = new ExportableCaretValueRule('');
+        containedProfile.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        profile.rules = [containedResourceType1, containedId1, containedProfile];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'first' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create a non-profiled inline instance from a contained resource when the metaProfile option is none', () => {
+        const containedProfile = new ExportableCaretValueRule('');
+        containedProfile.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        profile.rules = [containedResourceType1, containedId1, containedProfile];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'none' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule1 = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule1]
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
       it('should create a profiled inline instance from a contained resource with non-numeric path', () => {
         const containedProfile = new ExportableCaretValueRule('');
         containedProfile.caretPath = 'contained[0].meta.profile';
@@ -774,6 +857,133 @@ describe('optimizer', () => {
         expect(profile.rules).toEqual([inlineInstanceRule1]);
       });
 
+      it('should create an inline instance from a contained resource with multiple profiles when the metaProfile option is only-one', () => {
+        const containedProfile1 = new ExportableCaretValueRule('');
+        containedProfile1.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const containedProfile2 = new ExportableCaretValueRule('');
+        containedProfile2.caretPath = 'contained[0].meta.profile[1]';
+        containedProfile2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [
+          containedResourceType1,
+          containedId1,
+          containedProfile1,
+          containedProfile2
+        ];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'only-one' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule1 = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const profileRule2 = new ExportableAssignmentRule('meta.profile[1]');
+        profileRule2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule1, profileRule2]
+        );
+        // Even though the second entry in meta.profile won't resolve, we don't try to resolve them when there is more than one.
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create a profiled inline instance from a contained resource with multiple profiles when the metaProfile option is first', () => {
+        const containedProfile1 = new ExportableCaretValueRule('');
+        containedProfile1.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const containedProfile2 = new ExportableCaretValueRule('');
+        containedProfile2.caretPath = 'contained[0].meta.profile[1]';
+        containedProfile2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [
+          containedResourceType1,
+          containedId1,
+          containedProfile1,
+          containedProfile2
+        ];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'first' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule1 = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule1.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule1]
+        );
+        // Even though the second entry in meta.profile won't resolve, we don't try to resolve them when there is more than one.
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create an inline instance from a contained resource with multiple profiles when the metaProfile option is none', () => {
+        const containedProfile1 = new ExportableCaretValueRule('');
+        containedProfile1.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const containedProfile2 = new ExportableCaretValueRule('');
+        containedProfile2.caretPath = 'contained[0].meta.profile[1]';
+        containedProfile2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [
+          containedResourceType1,
+          containedId1,
+          containedProfile1,
+          containedProfile2
+        ];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'none' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule1 = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const profileRule2 = new ExportableAssignmentRule('meta.profile[1]');
+        profileRule2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule1, profileRule2]
+        );
+        // Even though the second entry in meta.profile won't resolve, we don't try to resolve them when there is more than one.
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
       it('should create an inline instance from a contained resource when the profile on the instance is not available', () => {
         const containedProfile = new ExportableCaretValueRule('');
         containedProfile.caretPath = 'contained[0].meta.profile[0]';
@@ -798,6 +1008,102 @@ describe('optimizer', () => {
           [profileRule]
         );
         expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found for/s);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create an inline instance from a contained resource when the metaProfile option is only-one and the profile on the instance is not available', () => {
+        const containedProfile = new ExportableCaretValueRule('');
+        containedProfile.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [containedResourceType1, containedId1, containedProfile];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'only-one' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule]
+        );
+        expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found for/s);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create an inline instance from a contained resource when the metaProfile option is first and the profile on the instance is not available', () => {
+        const containedProfile = new ExportableCaretValueRule('');
+        containedProfile.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [containedResourceType1, containedId1, containedProfile];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'first' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule]
+        );
+        expect(loggerSpy.getLastMessage('warn')).toMatch(/InstanceOf definition not found for/s);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create an inline instance from a contained resource when the metaProfile option is none and the profile on the instance is not available', () => {
+        const containedProfile = new ExportableCaretValueRule('');
+        containedProfile.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        profile.rules = [containedResourceType1, containedId1, containedProfile];
+        const myPackage = new Package();
+        myPackage.add(profile);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'none' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule]
+        );
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
 
         const inlineInstanceRule1 = new ExportableCaretValueRule('');
         inlineInstanceRule1.caretPath = 'contained[0]';
