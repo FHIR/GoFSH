@@ -5,10 +5,12 @@ import { ExportableAssignmentRule } from '../../exportable';
 import { MasterFisher } from '../../utils';
 import { splitOnPathPeriods } from 'fsh-sushi/dist/fhirtypes/common';
 import { pullAt } from 'lodash';
+import SimplifyInstanceNameOptimizer from './SimplifyInstanceNameOptimizer';
 
 export default {
   name: 'add_reference_keyword_optimizer',
   description: 'Adds the "Reference" keyword to instances where applicable',
+  runAfter: [SimplifyInstanceNameOptimizer.name],
 
   optimize(pkg: Package, fisher: MasterFisher): void {
     pkg.instances.forEach(instance => {

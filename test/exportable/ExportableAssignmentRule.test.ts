@@ -86,4 +86,11 @@ describe('ExportableAssignmentRule', () => {
     rule.isInstance = true;
     expect(rule.toFSH()).toEqual('* note = Annotation0');
   });
+
+  it('should export an indented AssignmentRule', () => {
+    const rule = new ExportableAssignmentRule('valueDecimal');
+    rule.value = 5.9;
+    rule.indent = 2;
+    expect(rule.toFSH()).toEqual('    * valueDecimal = 5.9');
+  });
 });

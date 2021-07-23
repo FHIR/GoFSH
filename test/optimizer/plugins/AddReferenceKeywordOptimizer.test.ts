@@ -5,6 +5,7 @@ import optimizer from '../../../src/optimizer/plugins/AddReferenceKeywordOptimiz
 import { loadTestDefinitions, stockLake } from '../../helpers';
 import { MasterFisher } from '../../../src/utils';
 import { fshtypes } from 'fsh-sushi';
+import SimplifyInstanceNameOptimizer from '../../../src/optimizer/plugins/SimplifyInstanceNameOptimizer';
 
 describe('optimizer', () => {
   describe('#add_reference_keyword_optimizer', () => {
@@ -20,7 +21,7 @@ describe('optimizer', () => {
       expect(optimizer.name).toBe('add_reference_keyword_optimizer');
       expect(optimizer.description).toBeDefined();
       expect(optimizer.runBefore).toBeUndefined();
-      expect(optimizer.runAfter).toBeUndefined();
+      expect(optimizer.runAfter).toEqual([SimplifyInstanceNameOptimizer.name]);
     });
 
     it('should add the Reference keyword on a reference rule', () => {

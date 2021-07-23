@@ -62,6 +62,11 @@ export async function fhirToFsh(
     }
   });
 
+  // Get options for optimizers (currently just the indent flag)
+  const processingOptions = {
+    indent: options.indent === true
+  };
+
   // Set up the FHIRProcessor
   const lake = new LakeOfFHIR(docs);
   const defs = new fhirdefs.FHIRDefinitions();
@@ -86,7 +91,7 @@ export async function fhirToFsh(
   await Promise.all(loadExternalDependencies(defs, dependencies));
 
   // Process the FHIR to rules, and then export to FSH
-  const pkg = await getResources(processor, configuration);
+  const pkg = await getResources(processor, configuration, processingOptions);
 
   // Default to exporting as a single string
   return {
@@ -125,6 +130,7 @@ type fhirToFshOptions = {
   dependencies?: string[];
   logLevel?: Level;
   style?: exportStyle;
+  indent?: boolean;
 };
 
 export type exportStyle = 'string' | 'map';

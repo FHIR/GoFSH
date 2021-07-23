@@ -24,6 +24,7 @@ import {
   ExportableProfile,
   ExportableAssignmentRule
 } from '../../src/exportable';
+import * as loadOptimizers from '../../src/optimizer/loadOptimizers';
 
 jest.mock('fsh-sushi', () => {
   const original = jest.requireActual('fsh-sushi');
@@ -335,6 +336,40 @@ describe('Processing', () => {
       expect(bundle.rules).toContainEqual(inlineInstanceRule);
       const patient = result.instances.find(i => i.id === 'bar');
       expect(patient.usage).toBe('Example');
+    });
+
+    describe('#enableOptimizers', () => {
+      beforeEach(() => {
+        // mock the call to loadOptimizers so that we get a custom set
+        jest.spyOn(loadOptimizers, 'loadOptimizers').mockImplementationOnce(async () => {
+          const enablePath = path.join(__dirname, 'fixtures', 'with-enable');
+          return await loadOptimizers.loadOptimizers(enablePath);
+        });
+      });
+
+      it('should run optimizers without an isEnabled function or when their isEnabled function returns true', async () => {
+        // the actual resources being collected don't really matter for this test.
+        const inDir = path.join(__dirname, 'fixtures', 'all-good');
+        const processor = getFhirProcessor(inDir, undefined, 'json-only');
+        const config = processor.processConfig();
+        await getResources(processor, config, { aName: 'A', bFlag: true });
+        const debugMessages = loggerSpy.getAllMessages('debug');
+        expect(debugMessages).toContainEqual('Running optimizer a: A Optimizer');
+        expect(debugMessages).toContainEqual('Running optimizer b: B Optimizer');
+        expect(debugMessages).toContainEqual('Running optimizer c: C Optimizer');
+      });
+
+      it('should not run optimizers with an isEnabled function when that function returns false', async () => {
+        // the actual resources being collected don't really matter for this test.
+        const inDir = path.join(__dirname, 'fixtures', 'all-good');
+        const processor = getFhirProcessor(inDir, undefined, 'json-only');
+        const config = processor.processConfig();
+        await getResources(processor, config, { aName: 'Z' });
+        const debugMessages = loggerSpy.getAllMessages('debug');
+        expect(debugMessages).toContainEqual('Skipping optimizer a: A Optimizer');
+        expect(debugMessages).toContainEqual('Skipping optimizer b: B Optimizer');
+        expect(debugMessages).toContainEqual('Running optimizer c: C Optimizer');
+      });
     });
   });
 
