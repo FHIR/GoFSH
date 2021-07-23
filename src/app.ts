@@ -57,6 +57,7 @@ async function app() {
       '-t, --file-type <type>',
       'specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml'
     )
+    .option('--indent', 'output FSH with indented rules using context paths')
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -109,6 +110,11 @@ async function app() {
     process.exit(1);
   }
 
+  // Get options for optimizers (currently just the indent flag)
+  const processingOptions = {
+    indent: program.indent === true
+  };
+
   const processor = getFhirProcessor(inDir, defs, fileType);
   const config = processor.processConfig(dependencies);
 
@@ -127,7 +133,7 @@ async function app() {
 
   let pkg: Package;
   try {
-    pkg = await getResources(processor, config);
+    pkg = await getResources(processor, config, processingOptions);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);

@@ -6,10 +6,12 @@ import {
   StructureDefinitionProcessor,
   ValueSetProcessor,
   InstanceProcessor,
-  LakeOfFHIR
+  LakeOfFHIR,
+  WildFHIR,
+  FileImport
 } from '../../src/processor';
 import { ConfigurationExtractor } from '../../src/extractor';
-import { restockLake } from '../helpers';
+import { restockLake, loggerSpy } from '../helpers';
 
 describe('FHIRProcessor', () => {
   let processor: FHIRProcessor;
@@ -36,6 +38,7 @@ describe('FHIRProcessor', () => {
     codeSystemSpy.mockClear();
     valueSetSpy.mockClear();
     instanceSpy.mockClear();
+    loggerSpy.reset();
   });
 
   it('should try to extract configuration from an ImplementationGuide with the ConfigurationExtractor', () => {
@@ -130,5 +133,18 @@ describe('FHIRProcessor', () => {
     processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
     expect(codeSystemSpy).not.toHaveBeenCalled();
+  });
+
+  it('should log an info message when processing an instance doc with the "large" property', () => {
+    const instancePath = path.join(__dirname, 'fixtures', 'large-instance.json');
+    const largeDoc: FileImport = { content: fs.readJsonSync(instancePath), large: true };
+    lake.docs.push(new WildFHIR(largeDoc, instancePath));
+
+    const config = processor.processConfig();
+    processor.process(config);
+
+    expect(loggerSpy.getLastMessage('info')).toMatch(
+      'Instance large-instance is especially large. Processing may take a while.'
+    );
   });
 });

@@ -10,6 +10,7 @@ import {
 import { hasGeneratedText } from './RemoveGeneratedTextRulesOptimizer';
 import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
+import AddReferenceKeywordOptimizer from './AddReferenceKeywordOptimizer';
 import { MasterFisher, logger } from '../../utils';
 import { utils } from 'fsh-sushi';
 
@@ -17,7 +18,11 @@ export default {
   name: 'construct_inline_instance',
   description:
     'Construct inline instances from groups of rules in a contained resource or a Bundle',
-  runBefore: [RemoveGeneratedTextRulesOptimizer.name, ResolveInstanceOfURLsOptimizer.name],
+  runBefore: [
+    RemoveGeneratedTextRulesOptimizer.name,
+    ResolveInstanceOfURLsOptimizer.name,
+    AddReferenceKeywordOptimizer.name
+  ],
 
   optimize(pkg: Package, fisher: MasterFisher): void {
     const inlineInstances: ExportableInstance[] = [];

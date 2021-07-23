@@ -52,6 +52,14 @@ describe('ExportableFlagRule', () => {
     expect(rule.toFSH()).toBe('* name MS SU TU');
   });
 
+  it('should export an indented FlagRule', () => {
+    const rule = new ExportableFlagRule('name');
+    rule.trialUse = true;
+    rule.indent = 2;
+
+    expect(rule.toFSH()).toBe('    * name TU');
+  });
+
   it('should export a FlagRule and apply draft status over trialUse and normative', () => {
     const rule = new ExportableFlagRule('name');
     rule.draft = true;

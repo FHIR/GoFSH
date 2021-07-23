@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import temp from 'temp';
+import { Fhir } from 'fhir/fhir';
 import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
@@ -12,7 +13,8 @@ import {
   writeFSH,
   getIgPathFromIgIni,
   getFhirProcessor,
-  getLakeOfFHIR
+  getLakeOfFHIR,
+  readJSONorXML
 } from '../../src/utils/Processing';
 import { Package } from '../../src/processor';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
@@ -22,6 +24,7 @@ import {
   ExportableProfile,
   ExportableAssignmentRule
 } from '../../src/exportable';
+import * as loadOptimizers from '../../src/optimizer/loadOptimizers';
 
 jest.mock('fsh-sushi', () => {
   const original = jest.requireActual('fsh-sushi');
@@ -334,6 +337,40 @@ describe('Processing', () => {
       const patient = result.instances.find(i => i.id === 'bar');
       expect(patient.usage).toBe('Example');
     });
+
+    describe('#enableOptimizers', () => {
+      beforeEach(() => {
+        // mock the call to loadOptimizers so that we get a custom set
+        jest.spyOn(loadOptimizers, 'loadOptimizers').mockImplementationOnce(async () => {
+          const enablePath = path.join(__dirname, 'fixtures', 'with-enable');
+          return await loadOptimizers.loadOptimizers(enablePath);
+        });
+      });
+
+      it('should run optimizers without an isEnabled function or when their isEnabled function returns true', async () => {
+        // the actual resources being collected don't really matter for this test.
+        const inDir = path.join(__dirname, 'fixtures', 'all-good');
+        const processor = getFhirProcessor(inDir, undefined, 'json-only');
+        const config = processor.processConfig();
+        await getResources(processor, config, { aName: 'A', bFlag: true });
+        const debugMessages = loggerSpy.getAllMessages('debug');
+        expect(debugMessages).toContainEqual('Running optimizer a: A Optimizer');
+        expect(debugMessages).toContainEqual('Running optimizer b: B Optimizer');
+        expect(debugMessages).toContainEqual('Running optimizer c: C Optimizer');
+      });
+
+      it('should not run optimizers with an isEnabled function when that function returns false', async () => {
+        // the actual resources being collected don't really matter for this test.
+        const inDir = path.join(__dirname, 'fixtures', 'all-good');
+        const processor = getFhirProcessor(inDir, undefined, 'json-only');
+        const config = processor.processConfig();
+        await getResources(processor, config, { aName: 'Z' });
+        const debugMessages = loggerSpy.getAllMessages('debug');
+        expect(debugMessages).toContainEqual('Skipping optimizer a: A Optimizer');
+        expect(debugMessages).toContainEqual('Skipping optimizer b: B Optimizer');
+        expect(debugMessages).toContainEqual('Running optimizer c: C Optimizer');
+      });
+    });
   });
 
   describe('writeFSH', () => {
@@ -382,6 +419,50 @@ describe('Processing', () => {
       resources.add(config);
       writeFSH(resources, tempRoot, 'single-file');
       expect(fs.existsSync(path.join(tempRoot, 'sushi-config.yaml'))).toBeTruthy();
+    });
+  });
+
+  describe('readJSONorXML', () => {
+    it('should return a FileImport object with the "large" property set to true for big files', () => {
+      const JSONFilePath = path.join(
+        __dirname,
+        'fixtures',
+        'instance-files',
+        'large-instance.json'
+      );
+      const XMLFilePath = path.join(__dirname, 'fixtures', 'instance-files', 'large-instance.xml');
+
+      const jsonFileImport = readJSONorXML(JSONFilePath);
+      const xmlFileImport = readJSONorXML(XMLFilePath);
+
+      expect(jsonFileImport.large).toEqual(true);
+      expect(xmlFileImport.large).toEqual(true);
+    });
+
+    it('should return a FileImport object with the "large" property set to false for small files', () => {
+      const JSONFilePath = path.join(__dirname, 'fixtures', 'only-json', 'patient.json');
+      const XMLFilePath = path.join(__dirname, 'fixtures', 'only-xml', 'patient.xml');
+
+      const jsonFileImport = readJSONorXML(JSONFilePath);
+      const xmlFileImport = readJSONorXML(XMLFilePath);
+
+      expect(jsonFileImport.large).toBeUndefined();
+      expect(xmlFileImport.large).toBeUndefined();
+    });
+
+    it('should properly read json and xml files', () => {
+      const FHIRProcessor = new Fhir();
+
+      const JSONFilePath = path.join(__dirname, 'fixtures', 'only-json', 'patient.json');
+      const XMLFilePath = path.join(__dirname, 'fixtures', 'only-xml', 'patient.xml');
+
+      const jsonFileImport = readJSONorXML(JSONFilePath);
+      const xmlFileImport = readJSONorXML(XMLFilePath);
+
+      expect(jsonFileImport.content).toEqual(fs.readJSONSync(JSONFilePath));
+      expect(xmlFileImport.content).toEqual(
+        FHIRProcessor.xmlToObj(fs.readFileSync(XMLFilePath).toString())
+      );
     });
   });
 

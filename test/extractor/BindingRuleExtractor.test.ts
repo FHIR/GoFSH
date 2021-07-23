@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fshrules } from 'fsh-sushi';
 import { BindingRuleExtractor } from '../../src/extractor';
 import { ProcessableElementDefinition } from '../../src/processor';
+import { ExportableBindingRule } from '../../src/exportable';
 
 describe('BindingRuleExtractor', () => {
   let looseSD: any;
@@ -16,10 +16,10 @@ describe('BindingRuleExtractor', () => {
   it('should extract a BindingRule with a valueSet and a strength', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
     const bindingRule = BindingRuleExtractor.process(element);
-    const expectedRule = new fshrules.BindingRule('valueCodeableConcept');
+    const expectedRule = new ExportableBindingRule('valueCodeableConcept');
     expectedRule.valueSet = 'http://example.org/ValueSet/Foo';
     expectedRule.strength = 'required';
-    expect(bindingRule).toEqual<fshrules.BindingRule>(expectedRule);
+    expect(bindingRule).toEqual<ExportableBindingRule>(expectedRule);
     expect(element.processedPaths).toEqual(['binding.valueSet', 'binding.strength']);
   });
 

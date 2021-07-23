@@ -23,6 +23,8 @@ import ResolveValueSetComponentRuleURLsOptimizer from './ResolveValueSetComponen
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 import SimplifyInstanceNameOptimizer from './SimplifyInstanceNameOptimizer';
 import SimplifyMappingNamesOptimizer from './SimplifyMappingNamesOptimizer';
+import SimplifyObeysRuleDotPathsOptimizer from './SimplifyObeysRuleDotPathsOptimizer';
+import SimplifyRulePathContextsOptimizer from './SimplifyRulePathContextsOptimizer';
 
 export {
   AddReferenceKeywordOptimizer,
@@ -49,5 +51,7 @@ export {
   ResolveValueSetComponentRuleURLsOptimizer,
   SimplifyArrayIndexingOptimizer,
   SimplifyInstanceNameOptimizer,
-  SimplifyMappingNamesOptimizer
+  SimplifyMappingNamesOptimizer,
+  SimplifyObeysRuleDotPathsOptimizer,
+  SimplifyRulePathContextsOptimizer
 };

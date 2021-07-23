@@ -115,7 +115,7 @@ describe('ExportableExtension', () => {
       '* extension 0..0',
       '* value[x] MS SU',
       '* value[x] from http://example.org/ValueSet/Foo (required)',
-      '* obeys myx-1 and myx-2'
+      '* . obeys myx-1 and myx-2'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);

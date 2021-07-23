@@ -42,4 +42,11 @@ describe('ExportableOnlyRule', () => {
       '* value[x] only Quantity or string or Reference(FooReferenceProfile or BarReferenceProfile)'
     );
   });
+
+  it('should export an indented OnlyRule', () => {
+    const rule = new ExportableOnlyRule('value[x]');
+    rule.types = [{ type: 'Quantity' }, { type: 'string' }];
+    rule.indent = 2;
+    expect(rule.toFSH()).toBe('    * value[x] only Quantity or string');
+  });
 });
