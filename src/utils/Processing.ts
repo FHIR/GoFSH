@@ -237,6 +237,10 @@ export function isProcessableContent(content: any, source?: string): content is 
     // The IG Publisher creates weird "Intersection" and "Union" SD files, so this check filters them out
     logger.debug(`Skipping temporary "comparison" resource created by IG Publisher: ${source}`);
     return false;
+  } else if (source?.endsWith(path.join('other', 'validation-oo.json'))) {
+    // The IG Publisher creates a Bundle of OperationOutcome resources based on validation results, which we don't want
+    logger.debug(`Skipping validation outcome resource created by IG Publisher: ${source}`);
+    return false;
   } else {
     return true;
   }

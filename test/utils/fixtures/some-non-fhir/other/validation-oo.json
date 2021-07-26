@@ -1,0 +1,21 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "timestamp": "2021-07-26T15:16:17.018+00:00",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/OperationOutcome/StructureDefinition-some-profile",
+      "resource": {
+        "resourceType": "OperationOutcome",
+        "id": "StructureDefinition-some-profile"
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/OperationOutcome/StructureDefinition-some-extension",
+      "resource": {
+        "resourceType": "OperationOutcome",
+        "id": "StructureDefinition-some-extension"
+      }
+    }
+  ]
+}

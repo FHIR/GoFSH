@@ -197,6 +197,9 @@ describe('Processing', () => {
         /Skipping non-FHIR input: .*non-fhir\.json/
       );
       expect(loggerSpy.getMessageAtIndex(1, 'debug')).toMatch(
+        /Skipping validation outcome resource created by IG Publisher: .*validation-oo\.json/
+      );
+      expect(loggerSpy.getMessageAtIndex(2, 'debug')).toMatch(
         /Skipping temporary "comparison" resource created by IG Publisher: .*sd-us-core-observation-lab-mcode-cancer-disease-status-intersection\.json/
       );
       expect(result.profiles).toHaveLength(1);
