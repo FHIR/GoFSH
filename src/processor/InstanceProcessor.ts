@@ -2,12 +2,32 @@ import { cloneDeep, compact, isEmpty } from 'lodash';
 import { fhirtypes, utils } from 'fsh-sushi';
 import { ExportableAssignmentRule, ExportableInstance } from '../exportable';
 import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
-import { getFSHValue, isFSHValueEmpty, getPathValuePairs, logger } from '../utils';
+import {
+  getFSHValue,
+  isFSHValueEmpty,
+  getPathValuePairs,
+  logger,
+  ProcessingOptions
+} from '../utils';
 import { switchQuantityRules } from '.';
 
 export class InstanceProcessor {
-  static extractKeywords(input: any, target: ExportableInstance, implementationGuide: any): void {
-    target.instanceOf = input.meta?.profile?.[0] ?? input.resourceType;
+  static extractKeywords(
+    input: any,
+    target: ExportableInstance,
+    implementationGuide: any,
+    options: ProcessingOptions = {}
+  ): void {
+    if (options.metaProfile === 'first') {
+      target.instanceOf =
+        input.meta?.profile?.length > 0 ? input.meta.profile[0] : input.resourceType;
+    } else if (options.metaProfile === 'none') {
+      target.instanceOf = input.resourceType;
+    } else {
+      target.instanceOf =
+        input.meta?.profile?.length === 1 ? input.meta.profile[0] : input.resourceType;
+    }
+
     const resource: fhirtypes.ImplementationGuideDefinitionResource = implementationGuide?.definition?.resource?.find(
       (resource: fhirtypes.ImplementationGuideDefinitionResource) =>
         resource.reference?.reference === `${input.resourceType}/${input.id}`
@@ -29,7 +49,12 @@ export class InstanceProcessor {
     }
   }
 
-  static extractRules(input: any, target: ExportableInstance, fisher: utils.Fishable): void {
+  static extractRules(
+    input: any,
+    target: ExportableInstance,
+    fisher: utils.Fishable,
+    options: ProcessingOptions
+  ): void {
     const newRules: ExportableInstance['rules'] = [];
     // Clone input so it can be modified
     const inputJSON = cloneDeep(input);
@@ -42,10 +67,11 @@ export class InstanceProcessor {
     );
 
     if (instanceOfJSON == null) {
-      if (input.meta?.profile?.[0]) {
+      if (input.meta?.profile?.length > 0) {
         logger.warn(
           `InstanceOf definition not found for ${input.id}. The ResourceType of the instance will be used as a base.`
         );
+        target.instanceOf = input.resourceType;
       }
       instanceOfJSON = fisher.fishForFHIR(
         input.resourceType,
@@ -60,19 +86,24 @@ export class InstanceProcessor {
         );
         return;
       }
+    } else if (
+      (inputJSON.meta?.profile?.length === 1 && options.metaProfile !== 'none') ||
+      (inputJSON.meta?.profile?.length > 0 && options.metaProfile === 'first')
+    ) {
+      // If we found JSON for the profile, delete it from meta.profile.
+      inputJSON.meta.profile.splice(0, 1);
+      if (isEmpty(inputJSON.meta.profile)) {
+        delete inputJSON.meta.profile;
+      }
+
+      if (isEmpty(inputJSON.meta)) {
+        delete inputJSON.meta;
+      }
     }
 
     IGNORED_PROPERTIES.forEach(prop => {
       delete inputJSON[prop];
     });
-    // First profile will be used in InstanceOf keyword if present
-    inputJSON.meta?.profile?.splice(0, 1);
-    if (inputJSON.meta?.profile?.length === 0) {
-      delete inputJSON.meta?.profile;
-      if (isEmpty(inputJSON.meta)) {
-        delete inputJSON.meta;
-      }
-    }
     if (inputJSON.text?.status === 'generated') {
       delete inputJSON.text;
     }
@@ -96,10 +127,15 @@ export class InstanceProcessor {
     switchQuantityRules(target.rules);
   }
 
-  static process(input: any, implementationGuide: any, fisher: utils.Fishable): ExportableInstance {
+  static process(
+    input: any,
+    implementationGuide: any,
+    fisher: utils.Fishable,
+    options: ProcessingOptions = {}
+  ): ExportableInstance {
     const instance = new ExportableInstance(input.id);
-    InstanceProcessor.extractKeywords(input, instance, implementationGuide);
-    InstanceProcessor.extractRules(input, instance, fisher);
+    InstanceProcessor.extractKeywords(input, instance, implementationGuide, options);
+    InstanceProcessor.extractRules(input, instance, fisher, options);
     return instance;
   }
 }

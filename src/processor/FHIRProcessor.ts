@@ -1,5 +1,5 @@
 import semver from 'semver';
-import { MasterFisher, logger } from '../utils';
+import { MasterFisher, logger, ProcessingOptions } from '../utils';
 import {
   StructureDefinitionProcessor,
   CodeSystemProcessor,
@@ -87,7 +87,7 @@ export class FHIRProcessor {
     }
   }
 
-  process(config: ExportableConfiguration): Package {
+  process(config: ExportableConfiguration, options: ProcessingOptions = {}): Package {
     const resources = new Package();
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
@@ -139,7 +139,9 @@ export class FHIRProcessor {
             `Instance ${wild.content.id} is especially large. Processing may take a while.`
           );
         }
-        resources.add(InstanceProcessor.process(wild.content, igForConfig?.content, this.fisher));
+        resources.add(
+          InstanceProcessor.process(wild.content, igForConfig?.content, this.fisher, options)
+        );
         this.outputCount(instances, index, 'Instance');
       } catch (ex) {
         logger.error(`Could not process Instance at ${wild.path}: ${ex.message}`);

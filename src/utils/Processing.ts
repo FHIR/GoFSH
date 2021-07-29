@@ -70,14 +70,14 @@ export async function getResources(
   options: ProcessingOptions = {}
 ): Promise<Package> {
   const fisher = processor.getFisher();
-  const resources = processor.process(config);
+  const resources = processor.process(config, options);
   // Dynamically load and run the optimizers
   logger.info('Optimizing FSH definitions to follow best practices...');
   const optimizers = await loadOptimizers();
   optimizers.forEach(opt => {
     if (typeof opt.isEnabled !== 'function' || opt.isEnabled(options)) {
       logger.debug(`Running optimizer ${opt.name}: ${opt.description}`);
-      opt.optimize(resources, fisher);
+      opt.optimize(resources, fisher, options);
     } else {
       logger.debug(`Skipping optimizer ${opt.name}: ${opt.description}`);
     }
@@ -308,6 +308,8 @@ const IGNORED_NON_RESOURCE_DIRECTORIES = [
 ];
 
 export type ProcessingOptions = {
+  indent?: boolean;
+  metaProfile?: 'only-one' | 'first' | 'none';
   [key: string]: boolean | number | string;
 };
 

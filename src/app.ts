@@ -16,7 +16,8 @@ import {
   logger,
   stats,
   fshingTrip,
-  getRandomPun
+  getRandomPun,
+  ProcessingOptions
 } from './utils';
 import { Package } from './processor';
 
@@ -58,6 +59,10 @@ async function app() {
       'specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml'
     )
     .option('--indent', 'output FSH with indented rules using context paths')
+    .option(
+      '--meta-profile <mode>',
+      'specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none'
+    )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -110,10 +115,19 @@ async function app() {
     process.exit(1);
   }
 
-  // Get options for optimizers (currently just the indent flag)
+  const metaProfileBehavior = program.metaProfile?.toLowerCase() ?? 'only-one';
+  if (!['only-one', 'first', 'none'].includes(metaProfileBehavior)) {
+    logger.error(
+      `Unsupported "meta-profile" option: ${metaProfileBehavior}. Valid options are "only-one", "first", and "none".`
+    );
+    process.exit(1);
+  }
+
+  // Get options for processors and optimizers
   const processingOptions = {
-    indent: program.indent === true
-  };
+    indent: program.indent === true,
+    metaProfile: metaProfileBehavior
+  } as ProcessingOptions;
 
   const processor = getFhirProcessor(inDir, defs, fileType);
   const config = processor.processConfig(dependencies);
