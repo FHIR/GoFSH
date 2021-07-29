@@ -34,7 +34,7 @@ export interface OptimizerPlugin {
    * @param pkg - the Package containing all of the definitions that can potentially be optimized
    * @param fisher - a fisher that can be used to look up definitions from local files, FHIR core, and dependencies
    */
-  optimize(pkg: Package, fisher?: MasterFisher): void;
+  optimize(pkg: Package, fisher?: MasterFisher, options?: ProcessingOptions): void;
 
   /**
    * Determines whether to run the optimizer based on provided options. If this function is not present, the optimizer will always run.

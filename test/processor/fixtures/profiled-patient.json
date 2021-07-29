@@ -1,6 +1,8 @@
 {
   "meta": {
-    "profile": ["http://example.org/StructureDefinition/profiled-patient"]
+    "profile": [
+      "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+    ]
   },
   "resourceType": "Patient",
   "id": "profiled-patient"
