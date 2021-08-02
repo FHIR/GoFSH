@@ -1,0 +1,36 @@
+{
+  "resourceType": "CodeSystem",
+  "name": "AvatarCS",
+  "id": "avatar-cs",
+  "concept": [
+    {
+      "code": "water-tribe",
+      "display": "Water Tribe",
+      "definition": "Waterbenders of the Avatar universe",
+      "concept": [
+        {
+          "code": "southern",
+          "display": "Southern Water Tribe",
+          "definition": "Waterbenders of the South Pole"
+        },
+        {
+          "code": "northern",
+          "display": "Northern Water Tribe",
+          "definition": "Waterbenders of the North Pole"
+        },
+        {
+          "code": "colonies",
+          "display": "Water Tribe colonies",
+          "definition": "Colonies set up by the Water Tribe",
+          "concept": [
+            {
+              "code": "swamp-tribe",
+              "display": "Swamp Tribe",
+              "definition": "Waterbenders of the Foggy Swamp"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

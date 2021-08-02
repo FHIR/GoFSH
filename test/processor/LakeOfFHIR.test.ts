@@ -41,7 +41,7 @@ describe('LakeOfHIR', () => {
       expect(lake.docs[6].content.id).toBe('simple.ig');
       expect(lake.docs[7].content.id).toBe('rocky.balboa');
       expect(lake.docs[8].content.id).toBe('unsupported.valueset');
-      expect(lake.docs[9].content.id).toBe('unsupported.codesystem');
+      expect(lake.docs[9].content.id).toBe(undefined);
       expect(lake.docs[10].content.id).toBe('my.string.profile');
     });
   });
@@ -85,14 +85,14 @@ describe('LakeOfHIR', () => {
       const results = lake.getAllCodeSystems();
       expect(results).toHaveLength(2);
       expect(results[0].content.id).toBe('simple.codesystem');
-      expect(results[1].content.id).toBe('unsupported.codesystem');
+      expect(results[1].content.id).toBe(undefined);
     });
 
     it('should get all code systems when includeUnsupported is true', () => {
       const results = lake.getAllCodeSystems(true);
       expect(results).toHaveLength(2);
       expect(results[0].content.id).toBe('simple.codesystem');
-      expect(results[1].content.id).toBe('unsupported.codesystem');
+      expect(results[1].content.id).toBe(undefined);
     });
 
     it('should get only supported code systems when includeUnsupported is false', () => {
@@ -128,7 +128,7 @@ describe('LakeOfHIR', () => {
       expect(results).toHaveLength(3);
       expect(results[0].content.id).toBe('rocky.balboa');
       expect(results[1].content.id).toBe('unsupported.valueset');
-      expect(results[2].content.id).toBe('unsupported.codesystem');
+      expect(results[2].content.id).toBe(undefined);
     });
   });
 
@@ -581,10 +581,7 @@ describe('LakeOfHIR', () => {
 
     it('should log a warning and set a missing id on CodeSystem and ValueSet definitions that will be treated as instances', () => {
       lake = new LakeOfFHIR(
-        getWildFHIRs(
-          'unsupported-codesystem-missing-id.json',
-          'unsupported-valueset-missing-id.json'
-        )
+        getWildFHIRs('unsupported-codesystem.json', 'unsupported-valueset-missing-id.json')
       );
 
       const resultsCSs = lake.getAllCodeSystems();
@@ -602,7 +599,7 @@ describe('LakeOfHIR', () => {
 
       // None have been removed as duplicate and no id is added
       expect(noDupResults).toHaveLength(2);
-      expect(noDupResults[0].content.id).toBe('UnsupportedCodeSystem');
+      expect(noDupResults[0].content.id).toBe('GOFSH-GENERATED-ID-0');
       expect(noDupResults[1].content.id).toBe('UnsupportedValueSet');
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);

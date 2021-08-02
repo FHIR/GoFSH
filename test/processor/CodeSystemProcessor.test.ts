@@ -9,6 +9,7 @@ import {
 } from '../../src/exportable';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { loggerSpy } from '../helpers/loggerSpy';
+import { FshCode } from 'fsh-sushi/dist/fshtypes';
 
 describe('CodeSystemProcessor', () => {
   let defs: fhirdefs.FHIRDefinitions;
@@ -76,40 +77,104 @@ describe('CodeSystemProcessor', () => {
       );
     });
 
-    it('should not convert a CodeSystem with a concept designation', () => {
+    it('should convert a CodeSystem with a concept designation', () => {
       const input = JSON.parse(
-        fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'designation-concept-codesystem.json'),
+          'utf-8'
+        )
       );
-      input.concept[2].designation = {
-        language: 'fr',
-        value: 'diner-dangereux'
-      };
       const result = CodeSystemProcessor.process(input, defs, config);
-      expect(result).toBeUndefined();
+      const caretRule1 = new ExportableCaretValueRule('');
+      caretRule1.caretPath = 'designation[0].language';
+      caretRule1.isCodeCaretRule = true;
+      caretRule1.pathArray = ['dangerous-dinner'];
+      caretRule1.value = new FshCode('fr');
+
+      const caretRule2 = new ExportableCaretValueRule('');
+      caretRule2.caretPath = 'designation[0].value';
+      caretRule2.isCodeCaretRule = true;
+      caretRule2.pathArray = ['dangerous-dinner'];
+      caretRule2.value = 'diner-dangereux';
+
+      expect(result).toBeInstanceOf(ExportableCodeSystem);
+      expect(result.rules).toContainEqual(caretRule1);
+      expect(result.rules).toContainEqual(caretRule2);
     });
 
-    it('should not convert a CodeSystem with a concept property', () => {
+    it('should convert a CodeSystem with a concept property', () => {
       const input = JSON.parse(
-        fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'property-concept-codesystem.json'),
+          'utf-8'
+        )
       );
-      input.concept[0].property = {
-        code: 'healthy',
-        valueCode: 'sometimes'
-      };
       const result = CodeSystemProcessor.process(input, defs, config);
-      expect(result).toBeUndefined();
+      const caretRule1 = new ExportableCaretValueRule('');
+      caretRule1.caretPath = 'property[0].code';
+      caretRule1.isCodeCaretRule = true;
+      caretRule1.pathArray = ['breakfast'];
+      caretRule1.value = new FshCode('healthy');
+
+      const caretRule2 = new ExportableCaretValueRule('');
+      caretRule2.caretPath = 'property[0].valueCode';
+      caretRule2.isCodeCaretRule = true;
+      caretRule2.pathArray = ['breakfast'];
+      caretRule2.value = new FshCode('sometimes');
+
+      expect(result).toBeInstanceOf(ExportableCodeSystem);
+      expect(result.name).toBe('ConceptCodeSystem');
+      expect(result.rules).toContainEqual(caretRule1);
+      expect(result.rules).toContainEqual(caretRule2);
     });
 
-    it('should not convert a CodeSystem with a child concept', () => {
+    it('should convert a CodeSystem with children concepts', () => {
       const input = JSON.parse(
-        fs.readFileSync(path.join(__dirname, 'fixtures', 'concept-codesystem.json'), 'utf-8')
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'nested-concept-codesystem.json'), 'utf-8')
       );
-      input.concept[0].concept = {
-        code: 'breakfast2',
-        display: 'Second breakfast'
-      };
+
+      const conceptRule1 = new ExportableConceptRule(
+        'water-tribe',
+        'Water Tribe',
+        'Waterbenders of the Avatar universe'
+      );
+      conceptRule1.hierarchy = [];
+      const conceptRule2 = new ExportableConceptRule(
+        'southern',
+        'Southern Water Tribe',
+        'Waterbenders of the South Pole'
+      );
+      conceptRule2.hierarchy = ['water-tribe'];
+      const conceptRule3 = new ExportableConceptRule(
+        'northern',
+        'Northern Water Tribe',
+        'Waterbenders of the North Pole'
+      );
+      conceptRule3.hierarchy = ['water-tribe'];
+      const conceptRule4 = new ExportableConceptRule(
+        'colonies',
+        'Water Tribe colonies',
+        'Colonies set up by the Water Tribe'
+      );
+      conceptRule4.hierarchy = ['water-tribe'];
+      const conceptRule5 = new ExportableConceptRule(
+        'swamp-tribe',
+        'Swamp Tribe',
+        'Waterbenders of the Foggy Swamp'
+      );
+      conceptRule5.hierarchy = ['water-tribe', 'colonies'];
+
       const result = CodeSystemProcessor.process(input, defs, config);
-      expect(result).toBeUndefined();
+      expect(result).toBeInstanceOf(ExportableCodeSystem);
+      expect(result.name).toBe('AvatarCS');
+      expect(result.id).toBe('avatar-cs');
+      expect(result.rules).toEqual([
+        conceptRule1,
+        conceptRule2,
+        conceptRule3,
+        conceptRule4,
+        conceptRule5
+      ]);
     });
   });
 

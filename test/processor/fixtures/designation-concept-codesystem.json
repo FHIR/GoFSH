@@ -1,7 +1,6 @@
 {
   "resourceType": "CodeSystem",
-  "title": "Unsupported CodeSystem",
-  "description": "This code system is not supported by CodeSystem FSH syntax because it has a concept designation.",
+  "name": "ConceptCodeSystem",
   "concept": [
     {
       "code": "breakfast"
@@ -18,10 +17,12 @@
       "code": "dangerous-dinner",
       "definition": "Meal eaten during the late evening. Should only be eaten by dinner experts.",
       "display": "Evening meal (dangerous)",
-      "designation": {
-        "language": "fr",
-        "value": "diner-dangereux"
-      }
+      "designation": [
+        {
+          "language": "fr",
+          "value": "diner-dangereux"
+        }
+      ]
     }
   ]
 }
