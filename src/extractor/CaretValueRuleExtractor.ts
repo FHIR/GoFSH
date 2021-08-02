@@ -242,18 +242,18 @@ export class CaretValueRuleExtractor {
 
   static processConcept(
     input: any,
-    conceptHeirarchy: string[],
+    conceptHierarchy: string[],
     codeSystem: ProcessableCodeSystem,
     fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     const caretValueRules = this.processResource(input, fisher, 'Concept');
     caretValueRules.forEach((rule, index) => {
-      rule.pathArray = conceptHeirarchy;
+      rule.pathArray = conceptHierarchy;
       if (isFSHValueEmpty(rule.value)) {
         logger.error(
           `Value in CodeSytem ${
             codeSystem.name ?? codeSystem.id
-          } at concept ${conceptHeirarchy.join('.')} for element ${
+          } at concept ${conceptHierarchy.join('.')} for element ${
             rule.caretPath
           } is empty. No caret value rule will be created.`
         );

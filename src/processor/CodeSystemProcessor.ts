@@ -41,7 +41,7 @@ export class CodeSystemProcessor {
     concept: any,
     codeSystem: ProcessableCodeSystem,
     fisher: utils.Fishable,
-    heirarchy?: string[]
+    hierarchy?: string[]
   ): (ExportableCaretValueRule | ExportableConceptRule)[] {
     const conceptRules: (ExportableConceptRule | ExportableCaretValueRule)[] = [];
     const newConceptRule = new ExportableConceptRule(
@@ -49,7 +49,7 @@ export class CodeSystemProcessor {
       concept.display,
       concept.definition
     );
-    newConceptRule.hierarchy = heirarchy ?? [];
+    newConceptRule.hierarchy = hierarchy ?? [];
     conceptRules.push(
       newConceptRule,
       ...CaretValueRuleExtractor.processConcept(
@@ -60,10 +60,10 @@ export class CodeSystemProcessor {
       )
     );
     if (concept.concept) {
-      const heirarchyArr = clone(newConceptRule.hierarchy);
-      heirarchyArr.push(concept.code);
+      const hierarchyArr = clone(newConceptRule.hierarchy);
+      hierarchyArr.push(concept.code);
       concept.concept.forEach((child: any) => {
-        conceptRules.push(...this.extractConceptRules(child, codeSystem, fisher, heirarchyArr));
+        conceptRules.push(...this.extractConceptRules(child, codeSystem, fisher, hierarchyArr));
       });
     }
     return conceptRules;
