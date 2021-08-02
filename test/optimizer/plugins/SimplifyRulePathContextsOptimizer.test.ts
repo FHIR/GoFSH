@@ -15,7 +15,9 @@ import {
   ExportableExtension,
   ExportableContainsRule,
   ExportableOnlyRule,
-  ExportableCombinedCardFlagRule
+  ExportableCombinedCardFlagRule,
+  ExportableCodeSystem,
+  ExportableConceptRule
 } from '../../../src/exportable';
 import { Package } from '../../../src/processor';
 import { cloneDeep } from 'lodash';
@@ -322,6 +324,152 @@ describe('optimizer', () => {
         expectedSharkId,
         expectedClamCity,
         expectedClamId
+      ]);
+    });
+
+    it('should simplify rule paths in concept rules', () => {
+      // CodeSystem: AvatarCS
+      // * #water-tribe "Water Tribe"
+      // * #water-tribe #southern "Southern Water Tribe"
+      // * #water-tribe #northern "Northern Water Tribe"
+      // * #water-tribe #colonies "Water Tribe colonies"
+      // * #water-tribe #colonies #swamp-tribe "Swamp Colony"
+
+      const cs = new ExportableCodeSystem('AvatarCS');
+      const concept1 = new ExportableConceptRule('water-tribe', 'Water Tribe');
+      const concept2 = new ExportableConceptRule('southern', 'Southern Water Tribe');
+      concept2.hierarchy = ['water-tribe'];
+      const concept3 = new ExportableConceptRule('northern', 'Northern Water Tribe');
+      concept3.hierarchy = ['water-tribe'];
+      const concept4 = new ExportableConceptRule('colonies', 'Water Tribe Colonies');
+      concept4.hierarchy = ['water-tribe'];
+      const concept5 = new ExportableConceptRule('swamp-tribe', 'Swamp Colony');
+      concept5.hierarchy = ['water-tribe', 'colonies'];
+      cs.rules.push(concept1, concept2, concept3, concept4, concept5);
+
+      // CodeSystem: AvatarCS
+      // * #water-tribe "Water Tribe"
+      //   * #southern "Southern Water Tribe"
+      //   * #northern "Northern Water Tribe"
+      //   * #colonies "Water Tribe colonies"
+      //     * #swamp-tribe "Swamp Colony"
+      const expectedConcept1 = cloneDeep(concept1);
+      expectedConcept1.indent = 0;
+      const expectedConcept2 = cloneDeep(concept2);
+      expectedConcept2.indent = 1;
+      expectedConcept2.hierarchy = [];
+      const expectedConcept3 = cloneDeep(concept3);
+      expectedConcept3.indent = 1;
+      expectedConcept3.hierarchy = [];
+      const expectedConcept4 = cloneDeep(concept4);
+      expectedConcept4.indent = 1;
+      expectedConcept4.hierarchy = [];
+      const expectedConcept5 = cloneDeep(concept5);
+      expectedConcept5.indent = 2;
+      expectedConcept5.hierarchy = [];
+
+      myPackage.add(cs);
+      optimizer.optimize(myPackage);
+      expect(cs.rules).toEqual([
+        expectedConcept1,
+        expectedConcept2,
+        expectedConcept3,
+        expectedConcept4,
+        expectedConcept5
+      ]);
+    });
+
+    it('should simplify rule paths in concept rules and CodeCaretValue rules', () => {
+      // CodeSystem: AvatarCS
+      // * #water-tribe "Water Tribe"
+      // * #water-tribe ^designation.code = 'en'
+      // * #water-tribe #southern "Southern Water Tribe"
+      // * #water-tribe #southern ^designation.code = 'en'
+      // * #water-tribe #northern "Northern Water Tribe"
+      // * #water-tribe #colonies "Water Tribe colonies"
+      // * #water-tribe #colonies #swamp-tribe "Swamp Colony"
+      // * #water-tribe #colonies #swamp-tribe ^designation.code = 'en'
+
+      const cs = new ExportableCodeSystem('AvatarCS');
+      const concept1 = new ExportableConceptRule('water-tribe', 'Water Tribe');
+      const designation1 = new ExportableCaretValueRule('');
+      designation1.isCodeCaretRule = true;
+      designation1.caretPath = 'designation.code';
+      designation1.pathArray = ['water-tribe'];
+      designation1.value = new FshCode('en');
+      const concept2 = new ExportableConceptRule('southern', 'Southern Water Tribe');
+      concept2.hierarchy = ['water-tribe'];
+      const designation2 = new ExportableCaretValueRule('');
+      designation2.isCodeCaretRule = true;
+      designation2.caretPath = 'designation.code';
+      designation2.pathArray = ['water-tribe', 'southern'];
+      designation2.value = new FshCode('en');
+      const concept3 = new ExportableConceptRule('northern', 'Northern Water Tribe');
+      concept3.hierarchy = ['water-tribe'];
+      const concept4 = new ExportableConceptRule('colonies', 'Water Tribe Colonies');
+      concept4.hierarchy = ['water-tribe'];
+      const concept5 = new ExportableConceptRule('swamp-tribe', 'Swamp Colony');
+      concept5.hierarchy = ['water-tribe', 'colonies'];
+      const designation3 = new ExportableCaretValueRule('');
+      designation3.isCodeCaretRule = true;
+      designation3.caretPath = 'designation.code';
+      designation3.pathArray = ['water-tribe', 'colonies', 'swamp-tribe'];
+      designation3.value = new FshCode('en');
+      cs.rules.push(
+        concept1,
+        designation1,
+        concept2,
+        designation2,
+        concept3,
+        concept4,
+        concept5,
+        designation3
+      );
+
+      // CodeSystem: AvatarCS
+      // * #water-tribe "Water Tribe"
+      //   * ^designation.code = 'en'
+      //   * #southern "Southern Water Tribe"
+      //     * ^designation.code = 'en'
+      //   * #northern "Northern Water Tribe"
+      //   * #colonies "Water Tribe colonies"
+      //     * #swamp-tribe "Swamp Colony"
+      //     * ^designation.code = 'en'
+      const expectedConcept1 = cloneDeep(concept1);
+      expectedConcept1.indent = 0;
+      const expectedDesignation1 = cloneDeep(designation1);
+      expectedDesignation1.indent = 1;
+      expectedDesignation1.pathArray = [];
+      const expectedConcept2 = cloneDeep(concept2);
+      expectedConcept2.indent = 1;
+      expectedConcept2.hierarchy = [];
+      const expectedDesignation2 = cloneDeep(designation2);
+      expectedDesignation2.indent = 2;
+      expectedDesignation2.pathArray = [];
+      const expectedConcept3 = cloneDeep(concept3);
+      expectedConcept3.indent = 1;
+      expectedConcept3.hierarchy = [];
+      const expectedConcept4 = cloneDeep(concept4);
+      expectedConcept4.indent = 1;
+      expectedConcept4.hierarchy = [];
+      const expectedConcept5 = cloneDeep(concept5);
+      expectedConcept5.indent = 2;
+      expectedConcept5.hierarchy = [];
+      const expectedDesignation3 = cloneDeep(designation3);
+      expectedDesignation3.indent = 3;
+      expectedDesignation3.pathArray = [];
+
+      myPackage.add(cs);
+      optimizer.optimize(myPackage);
+      expect(cs.rules).toEqual([
+        expectedConcept1,
+        expectedDesignation1,
+        expectedConcept2,
+        expectedDesignation2,
+        expectedConcept3,
+        expectedConcept4,
+        expectedConcept5,
+        expectedDesignation3
       ]);
     });
 

@@ -221,13 +221,12 @@ export class CaretValueRuleExtractor {
         }
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
+        caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
         if (resourceType === 'Concept') {
           caretValueRule.isCodeCaretRule = true;
-          caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
           caretValueRules.push(caretValueRule);
           return;
         }
-        caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
         if (isFSHValueEmpty(caretValueRule.value)) {
           logger.error(
             `Value in ${resourceType} ${
