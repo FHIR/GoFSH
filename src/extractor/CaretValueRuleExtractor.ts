@@ -1,10 +1,6 @@
 import { fshtypes, utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
-import {
-  ProcessableCodeSystem,
-  ProcessableElementDefinition,
-  ProcessableStructureDefinition
-} from '../processor';
+import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
 import { getFSHValue, getPath, getPathValuePairs, logger, isFSHValueEmpty } from '../utils';
 
@@ -203,7 +199,7 @@ export class CaretValueRuleExtractor {
   static processResource(
     input: any,
     fisher: utils.Fishable,
-    resourceType: 'ValueSet' | 'CodeSystem' | 'Concept',
+    resourceType: 'ValueSet' | 'CodeSystem',
     config?: fshtypes.Configuration
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
@@ -222,11 +218,6 @@ export class CaretValueRuleExtractor {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
         caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
-        if (resourceType === 'Concept') {
-          caretValueRule.isCodeCaretRule = true;
-          caretValueRules.push(caretValueRule);
-          return;
-        }
         if (isFSHValueEmpty(caretValueRule.value)) {
           logger.error(
             `Value in ${resourceType} ${
@@ -243,23 +234,36 @@ export class CaretValueRuleExtractor {
   static processConcept(
     input: any,
     conceptHierarchy: string[],
-    codeSystem: ProcessableCodeSystem,
+    codeSystemName: string,
     fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
-    const caretValueRules = this.processResource(input, fisher, 'Concept');
-    caretValueRules.forEach((rule, index) => {
-      rule.pathArray = conceptHierarchy;
-      if (isFSHValueEmpty(rule.value)) {
-        logger.error(
-          `Value in CodeSytem ${
-            codeSystem.name ?? codeSystem.id
-          } at concept ${conceptHierarchy.join('.')} for element ${
-            rule.caretPath
-          } is empty. No caret value rule will be created.`
-        );
-        delete caretValueRules[index];
-      }
-    });
+    const caretValueRules: ExportableCaretValueRule[] = [];
+    const flatVS = getPathValuePairs(input);
+    Object.keys(flatVS)
+      .filter(
+        key =>
+          !RESOURCE_IGNORED_PROPERTIES.Concept.some(
+            property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
+          )
+      )
+      .forEach(key => {
+        const caretValueRule = new ExportableCaretValueRule('');
+        caretValueRule.caretPath = key;
+        caretValueRule.value = getFSHValue(key, flatVS, 'Concept', fisher);
+        caretValueRule.isCodeCaretRule = true;
+        caretValueRule.pathArray = conceptHierarchy;
+        if (isFSHValueEmpty(caretValueRule.value)) {
+          logger.error(
+            `Value in CodeSytem ${codeSystemName} at concept ${conceptHierarchy.join(
+              '.'
+            )} for element ${
+              caretValueRule.caretPath
+            } is empty. No caret value rule will be created.`
+          );
+        } else {
+          caretValueRules.push(caretValueRule);
+        }
+      });
     return caretValueRules;
   }
 

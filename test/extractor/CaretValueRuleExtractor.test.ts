@@ -593,6 +593,74 @@ describe('CaretValueRuleExtractor', () => {
     });
   });
 
+  describe('Concepts', () => {
+    it('should extract caret value rules on concept', () => {
+      const testConcept = {
+        code: 'testConcept',
+        display: 'Test Concept',
+        definition: 'A concept, just for tests though',
+        property: [{ valueString: 'This is just for tests' }]
+      };
+
+      const caretRules = CaretValueRuleExtractor.processConcept(
+        testConcept,
+        ['testConcept'],
+        'testCS',
+        defs
+      );
+      expect(caretRules).toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'property[0].valueString'
+        })
+      );
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'code'
+        })
+      );
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'display'
+        })
+      );
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'definition'
+        })
+      );
+    });
+
+    it('should not extract Concept caret rules when the value of the rule is empty', () => {
+      const testConcept = {
+        code: 'testConcept',
+        display: 'Test Concept',
+        definition: 'A concept, just for tests though',
+        property: [{}]
+      };
+
+      const caretRules = CaretValueRuleExtractor.processConcept(
+        testConcept,
+        ['testConcept'],
+        'testCS',
+        defs
+      );
+
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'property[0]'
+        })
+      );
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'Value in CodeSytem testCS at concept testConcept for element property[0] is empty. No caret value rule will be created.'
+      );
+    });
+  });
+
   describe('Elements', () => {
     it('should extract a single top-level caret value rule', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
