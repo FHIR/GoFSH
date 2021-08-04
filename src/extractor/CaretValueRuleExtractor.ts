@@ -200,7 +200,7 @@ export class CaretValueRuleExtractor {
     input: any,
     fisher: utils.Fishable,
     resourceType: 'ValueSet' | 'CodeSystem',
-    config?: fshtypes.Configuration
+    config: fshtypes.Configuration
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
     const flatVS = getPathValuePairs(input);
@@ -238,18 +238,18 @@ export class CaretValueRuleExtractor {
     fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
-    const flatVS = getPathValuePairs(input);
-    Object.keys(flatVS)
+    const flatConcept = getPathValuePairs(input);
+    Object.keys(flatConcept)
       .filter(
         key =>
-          !RESOURCE_IGNORED_PROPERTIES.Concept.some(
+          !CONCEPT_IGNORED_PROPERTIES.some(
             property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
           )
       )
       .forEach(key => {
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatVS, 'Concept', fisher);
+        caretValueRule.value = getFSHValue(key, flatConcept, 'Concept', fisher);
         caretValueRule.isCodeCaretRule = true;
         caretValueRule.pathArray = conceptHierarchy;
         if (isFSHValueEmpty(caretValueRule.value)) {
@@ -293,6 +293,8 @@ function findMatchingSnapshot(differentialId: string, structDef: ProcessableStru
   });
 }
 
+const CONCEPT_IGNORED_PROPERTIES = ['code', 'display', 'definition', 'concept'];
+
 const RESOURCE_IGNORED_PROPERTIES = {
   ValueSet: [
     'resourceType',
@@ -304,7 +306,6 @@ const RESOURCE_IGNORED_PROPERTIES = {
     'compose.exclude'
   ],
   CodeSystem: ['resourceType', 'id', 'name', 'title', 'description', 'concept'],
-  Concept: ['code', 'display', 'definition', 'concept'],
   StructureDefinition: [
     'resourceType',
     'id',
