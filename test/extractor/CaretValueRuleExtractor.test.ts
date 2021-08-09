@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { cloneDeep } from 'lodash';
-import { fhirdefs, fshtypes } from 'fsh-sushi';
+import { fhirdefs, fhirtypes, fshtypes } from 'fsh-sushi';
 import { CaretValueRuleExtractor } from '../../src/extractor';
 import { ExportableCaretValueRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
@@ -599,7 +599,7 @@ describe('CaretValueRuleExtractor', () => {
         code: 'testConcept',
         display: 'Test Concept',
         definition: 'A concept, just for tests though',
-        property: [{ valueString: 'This is just for tests' }]
+        property: [{ code: 'test', valueString: 'This is just for tests' }]
       };
 
       const caretRules = CaretValueRuleExtractor.processConcept(
@@ -639,7 +639,7 @@ describe('CaretValueRuleExtractor', () => {
         code: 'testConcept',
         display: 'Test Concept',
         definition: 'A concept, just for tests though',
-        property: [{}]
+        property: [{} as fhirtypes.CodeSystemConceptProperty]
       };
 
       const caretRules = CaretValueRuleExtractor.processConcept(

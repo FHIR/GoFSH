@@ -1,4 +1,4 @@
-import { fshtypes, utils } from 'fsh-sushi';
+import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
@@ -232,7 +232,7 @@ export class CaretValueRuleExtractor {
   }
 
   static processConcept(
-    input: any,
+    input: fhirtypes.CodeSystemConcept,
     conceptHierarchy: string[],
     codeSystemName: string,
     fisher: utils.Fishable
