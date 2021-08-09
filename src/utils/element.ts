@@ -54,11 +54,15 @@ export function getFSHValue(
   fisher: utils.Fishable
 ): number | boolean | string | fshtypes.FshCode | bigint {
   const value = flatObject[key];
+  const fishingType = resourceType === 'Concept' ? 'CodeSystem' : resourceType;
   const definition = fhirtypes.StructureDefinition.fromJSON(
-    fisher.fishForFHIR(resourceType, utils.Type.Resource, utils.Type.Type)
+    fisher.fishForFHIR(fishingType, utils.Type.Resource, utils.Type.Type)
   );
   // Finding element by path works without array information and _ from children of primitives
-  const pathWithoutIndex = removeUnderscoreForPrimitiveChildPath(key).replace(/\[\d+\]/g, '');
+  let pathWithoutIndex = removeUnderscoreForPrimitiveChildPath(key).replace(/\[\d+\]/g, '');
+  if (resourceType === 'Concept') {
+    pathWithoutIndex = `concept.${pathWithoutIndex}`;
+  }
   const element = definition.findElementByPath(pathWithoutIndex, fisher);
   // If the path is one on an entry/contained resource, find the element on the ResourceType of the entry/contained resource
   if (

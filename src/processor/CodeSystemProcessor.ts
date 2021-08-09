@@ -1,11 +1,12 @@
-import { capitalize, compact, difference } from 'lodash';
-import { flatten } from 'flat';
+import { capitalize, compact, clone } from 'lodash';
 import { utils, fhirtypes, fshtypes } from 'fsh-sushi';
-import { ExportableCodeSystem, ExportableConceptRule } from '../exportable';
+import {
+  ExportableCodeSystem,
+  ExportableConceptRule,
+  ExportableCaretValueRule
+} from '../exportable';
 import { CaretValueRuleExtractor } from '../extractor';
 import { makeNameSushiSafe } from './common';
-
-const SUPPORTED_CONCEPT_PATHS = ['code', 'display', 'definition'];
 
 export class CodeSystemProcessor {
   static extractKeywords(input: ProcessableCodeSystem, target: ExportableCodeSystem): void {
@@ -30,10 +31,42 @@ export class CodeSystemProcessor {
     newRules.push(
       ...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType, config)
     );
-    input.concept?.forEach((concept: any) => {
-      newRules.push(new ExportableConceptRule(concept.code, concept.display, concept.definition));
+    input.concept?.forEach((concept: fhirtypes.CodeSystemConcept) => {
+      newRules.push(...this.extractConceptRules(concept, input.name || input.id, fisher));
     });
     target.rules = compact(newRules);
+  }
+
+  static extractConceptRules(
+    concept: fhirtypes.CodeSystemConcept,
+    codeSystemName: string,
+    fisher: utils.Fishable,
+    hierarchy?: string[]
+  ): (ExportableCaretValueRule | ExportableConceptRule)[] {
+    const conceptRules: (ExportableConceptRule | ExportableCaretValueRule)[] = [];
+    const newConceptRule = new ExportableConceptRule(
+      concept.code,
+      concept.display,
+      concept.definition
+    );
+    newConceptRule.hierarchy = hierarchy ?? [];
+    conceptRules.push(
+      newConceptRule,
+      ...CaretValueRuleExtractor.processConcept(
+        concept,
+        [...newConceptRule.hierarchy, concept.code],
+        codeSystemName,
+        fisher
+      )
+    );
+    if (concept.concept) {
+      const hierarchyArr = clone(newConceptRule.hierarchy);
+      hierarchyArr.push(concept.code);
+      concept.concept.forEach((child: fhirtypes.CodeSystemConcept) => {
+        conceptRules.push(...this.extractConceptRules(child, codeSystemName, fisher, hierarchyArr));
+      });
+    }
+    return conceptRules;
   }
 
   static process(
@@ -54,26 +87,9 @@ export class CodeSystemProcessor {
   }
 
   // Ensures that a CodeSystem instance is fully representable using the CodeSystem syntax in FSH.
-  // For example, if there is no name or id we cannot process it.  In addition, if a concept has an
-  // extension, designation, property, etc., then we can't represent it in FSH CodeSystem syntax.
-  // It must be represented using Instance instead.
+  // If there is no name or id we cannot process it.
   static isProcessableCodeSystem(input: any): input is ProcessableCodeSystem {
-    if (input.resourceType !== 'CodeSystem' || (input.name == null && input.id == null)) {
-      return false;
-    }
-    // We support all higher-level paths via caret rules.  We only need to worry about the
-    // concept paths because there is no easy way to associate caret rules with them when the special
-    // FSH concept syntax is used. First get the flat paths of concept.
-    let flatPaths = Object.keys(flatten(input.concept ?? []));
-    // Then remove the array indices from the paths (we don't care about them)
-    flatPaths = flatPaths.map(p => {
-      return p
-        .split('.')
-        .filter(k => isNaN(parseInt(k)))
-        .join('.');
-    });
-    // Check if there are any paths that are not a supported path
-    return difference(flatPaths, SUPPORTED_CONCEPT_PATHS).length === 0;
+    return input.resourceType === 'CodeSystem' && (input.name || input.id);
   }
 }
 

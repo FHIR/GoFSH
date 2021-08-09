@@ -6,7 +6,7 @@ export class ExportableInsertRule extends fshrules.InsertRule implements Exporta
   indent: number;
 
   constructor() {
-    super();
+    super('');
   }
 
   toFSH(): string {

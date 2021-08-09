@@ -1,7 +1,5 @@
 {
   "resourceType": "CodeSystem",
-  "name": "UnsupportedCodeSystem",
-  "id": "unsupported.codesystem",
   "url": "http://example.org/tests/CodeSystem/unsupported.codesystem",
   "title": "Unsupported CodeSystem",
   "description": "This code system is not supported by CodeSystem FSH syntax because it has a concept designation.",

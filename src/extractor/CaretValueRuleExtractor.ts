@@ -1,4 +1,4 @@
-import { fshtypes, utils } from 'fsh-sushi';
+import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith } from 'lodash';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
@@ -231,6 +231,42 @@ export class CaretValueRuleExtractor {
     return caretValueRules;
   }
 
+  static processConcept(
+    input: fhirtypes.CodeSystemConcept,
+    conceptHierarchy: string[],
+    codeSystemName: string,
+    fisher: utils.Fishable
+  ): ExportableCaretValueRule[] {
+    const caretValueRules: ExportableCaretValueRule[] = [];
+    const flatConcept = getPathValuePairs(input);
+    Object.keys(flatConcept)
+      .filter(
+        key =>
+          !CONCEPT_IGNORED_PROPERTIES.some(
+            property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
+          )
+      )
+      .forEach(key => {
+        const caretValueRule = new ExportableCaretValueRule('');
+        caretValueRule.caretPath = key;
+        caretValueRule.value = getFSHValue(key, flatConcept, 'Concept', fisher);
+        caretValueRule.isCodeCaretRule = true;
+        caretValueRule.pathArray = conceptHierarchy;
+        if (isFSHValueEmpty(caretValueRule.value)) {
+          logger.error(
+            `Value in CodeSytem ${codeSystemName} at concept ${conceptHierarchy.join(
+              '.'
+            )} for element ${
+              caretValueRule.caretPath
+            } is empty. No caret value rule will be created.`
+          );
+        } else {
+          caretValueRules.push(caretValueRule);
+        }
+      });
+    return caretValueRules;
+  }
+
   static isStandardURL(resourceType: string, config: fshtypes.Configuration, input: any): boolean {
     return input.url == `${config.canonical}/${resourceType}/${input.id}`;
   }
@@ -256,6 +292,8 @@ function findMatchingSnapshot(differentialId: string, structDef: ProcessableStru
     return false;
   });
 }
+
+const CONCEPT_IGNORED_PROPERTIES = ['code', 'display', 'definition', 'concept'];
 
 const RESOURCE_IGNORED_PROPERTIES = {
   ValueSet: [
