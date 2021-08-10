@@ -189,7 +189,14 @@ function loadPrimaryFiles(files: string[], docs: WildFHIR[]) {
         docs.push(new WildFHIR(loadedFile, file));
       }
     } catch (ex) {
-      logger.error(`Could not load ${file}: ${ex.message}`);
+      // If an "Unknown resource type" error is logged, we can be almost
+      // certain that it is an xml file that should be ignored, so only log
+      // a debug and not an error
+      if (path.extname(file) === '.xml' && /Unknown resource type:/.test(ex.message)) {
+        logger.debug(`Skipping non-FHIR XML: ${file}`);
+      } else {
+        logger.error(`Could not load ${file}: ${ex.message}`);
+      }
     }
   });
 }
