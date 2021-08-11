@@ -21,7 +21,7 @@ import {
 } from './utils';
 import { Package } from './processor';
 
-const FSH_VERSION = '1.0.0';
+const FSH_VERSION = '1.2.0';
 
 app().catch(e => {
   logger.error(`Unexpected error: ${e.message}`);
