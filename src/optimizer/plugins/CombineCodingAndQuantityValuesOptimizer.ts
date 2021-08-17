@@ -1,4 +1,4 @@
-import { fshtypes, fshrules } from 'fsh-sushi';
+import { fshtypes, fshrules, fhirtypes } from 'fsh-sushi';
 import { pullAt } from 'lodash';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { getTypesForCaretPath, getTypesForInstancePath } from '../utils';
@@ -51,6 +51,8 @@ export default {
     [...pkg.profiles, ...pkg.extensions, ...pkg.valueSets, ...pkg.codeSystems].forEach(def => {
       const rulesToRemove: number[] = [];
       const rules: fshrules.Rule[] = def.rules; // <-- this assignment makes TypeScript happier in the next chunk of code
+      const typeCache: Map<string, fhirtypes.ElementDefinitionType[]> = new Map();
+
       rules.forEach(rule => {
         if (
           rule instanceof ExportableCaretValueRule &&
@@ -58,7 +60,14 @@ export default {
           rule.value instanceof FshCode
         ) {
           const basePath = rule.caretPath.replace(/\.code$/, '');
-          const types = getTypesForCaretPath(def, rule.path, basePath, fisher);
+          const normalizedPath = basePath.replace(/\[[^\]]+\]/g, '');
+          let types: fhirtypes.ElementDefinitionType[];
+          if (typeCache.has(normalizedPath)) {
+            types = typeCache.get(normalizedPath);
+          } else {
+            types = getTypesForCaretPath(def, rule.path, basePath, fisher);
+            typeCache.set(normalizedPath, types);
+          }
           if (types && !types.some(t => OPTIMIZABLE_TYPES.indexOf(t.code) >= 0)) {
             return;
           }
@@ -114,6 +123,7 @@ export default {
     });
     pkg.instances.forEach(instance => {
       const rulesToRemove: number[] = [];
+      const typeCache: Map<string, fhirtypes.ElementDefinitionType[]> = new Map();
       instance.rules.forEach(rule => {
         if (
           rule instanceof ExportableAssignmentRule &&
@@ -121,7 +131,14 @@ export default {
           rule.value instanceof FshCode
         ) {
           const basePath = rule.path.replace(/\.code$/, '');
-          const types = getTypesForInstancePath(instance, basePath, fisher);
+          const normalizedPath = basePath.replace(/\[[^\]]+\]/g, '');
+          let types: fhirtypes.ElementDefinitionType[];
+          if (typeCache.has(normalizedPath)) {
+            types = typeCache.get(normalizedPath);
+          } else {
+            types = getTypesForInstancePath(instance, basePath, fisher);
+            typeCache.set(normalizedPath, types);
+          }
           if (types && !types.some(t => OPTIMIZABLE_TYPES.indexOf(t.code) >= 0)) {
             return;
           }
