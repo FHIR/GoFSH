@@ -75,6 +75,8 @@ export function getFSHValue(
   // If the path is one on an entry/contained resource, find the element on the ResourceType of the entry/contained resource
   if (pathWithoutIndex.startsWith('entry.resource.') || pathWithoutIndex.startsWith('contained.')) {
     const [, baseKey, newKey] = key.match(/^(entry\[\d+\].resource|contained\[\d+\])\.(.+)/);
+    // We can safely assume that all of the paths for a given contained resource are
+    // sequential in the flatArray, so find the start and end of that sequence and slice it out
     const nestedResourceStartIndex = flatArray.findIndex(([key]) => key.startsWith(baseKey));
     let nestedResourceEndIndex = nestedResourceStartIndex + 1;
     while (flatArray[nestedResourceEndIndex]?.[0].startsWith(baseKey)) {

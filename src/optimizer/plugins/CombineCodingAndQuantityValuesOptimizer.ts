@@ -121,9 +121,13 @@ export default {
       });
       pullAt(rules, rulesToRemove);
     });
+    const typeCache: Map<string, Map<string, fhirtypes.ElementDefinitionType[]>> = new Map();
     pkg.instances.forEach(instance => {
       const rulesToRemove: number[] = [];
-      const typeCache: Map<string, fhirtypes.ElementDefinitionType[]> = new Map();
+      if (!typeCache.has(instance.instanceOf)) {
+        typeCache.set(instance.instanceOf, new Map());
+      }
+      const instanceTypeCache = typeCache.get(instance.instanceOf);
       instance.rules.forEach(rule => {
         if (
           rule instanceof ExportableAssignmentRule &&
@@ -133,11 +137,11 @@ export default {
           const basePath = rule.path.replace(/\.code$/, '');
           const normalizedPath = basePath.replace(/\[[^\]]+\]/g, '');
           let types: fhirtypes.ElementDefinitionType[];
-          if (typeCache.has(normalizedPath)) {
-            types = typeCache.get(normalizedPath);
+          if (instanceTypeCache.has(normalizedPath)) {
+            types = instanceTypeCache.get(normalizedPath);
           } else {
             types = getTypesForInstancePath(instance, basePath, fisher);
-            typeCache.set(normalizedPath, types);
+            instanceTypeCache.set(normalizedPath, types);
           }
           if (types && !types.some(t => OPTIMIZABLE_TYPES.indexOf(t.code) >= 0)) {
             return;
