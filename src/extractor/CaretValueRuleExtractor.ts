@@ -1,5 +1,5 @@
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
-import { cloneDeep, isEqual, differenceWith } from 'lodash';
+import { cloneDeep, isEqual, differenceWith, toPairs } from 'lodash';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
 import { getFSHValue, getPath, getPathValuePairs, logger, isFSHValueEmpty } from '../utils';
@@ -14,13 +14,15 @@ export class CaretValueRuleExtractor {
     const path = getPath(input);
     const inputJSON = input.toJSON() as any;
     input.processedPaths.push('id', 'path');
-    const flatElement = getPathValuePairs(inputJSON);
     const caretValueRules: ExportableCaretValueRule[] = [];
-    const remainingPaths = Object.keys(flatElement).filter(p => !input.processedPaths.includes(p));
-    remainingPaths.forEach(key => {
+    const flatElementArray = toPairs(getPathValuePairs(inputJSON));
+    const remainingFlatElementArray = flatElementArray.filter(
+      ([key]) => !input.processedPaths.includes(key)
+    );
+    remainingFlatElementArray.forEach(([key], i) => {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(key, flatElement, 'ElementDefinition', fisher);
+      caretValueRule.value = getFSHValue(i, remainingFlatElementArray, 'ElementDefinition', fisher);
       // If the value is empty, we can't use it. Log an error and give up on trying to use this key.
       if (isFSHValueEmpty(caretValueRule.value)) {
         logger.error(
@@ -169,8 +171,9 @@ export class CaretValueRuleExtractor {
 
     const caretValueRules: ExportableCaretValueRule[] = [];
     const flatSD = getPathValuePairs(sd);
+    const flatArray = toPairs(flatSD);
     const flatParent = getPathValuePairs(parent);
-    Object.keys(flatSD).forEach(key => {
+    flatArray.forEach(([key], i) => {
       if (
         flatParent[key] == null ||
         !isEqual(flatSD[key], flatParent[key]) ||
@@ -182,7 +185,7 @@ export class CaretValueRuleExtractor {
         }
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatSD, 'StructureDefinition', fisher);
+        caretValueRule.value = getFSHValue(i, flatArray, 'StructureDefinition', fisher);
         if (isFSHValueEmpty(caretValueRule.value)) {
           logger.error(
             `Value in StructureDefinition ${input.name} for element ${key} is empty. No caret value rule will be created.`
@@ -203,31 +206,30 @@ export class CaretValueRuleExtractor {
     config: fshtypes.Configuration
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
-    const flatVS = getPathValuePairs(input);
-    Object.keys(flatVS)
-      .filter(
-        key =>
-          !RESOURCE_IGNORED_PROPERTIES[resourceType].some(
-            property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
-          )
-      )
-      .forEach(key => {
-        if (key === 'url' && this.isStandardURL(resourceType, config, input)) {
-          return;
-        }
-        const caretValueRule = new ExportableCaretValueRule('');
-        caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatVS, resourceType, fisher);
-        if (isFSHValueEmpty(caretValueRule.value)) {
-          logger.error(
-            `Value in ${resourceType} ${
-              input.name ?? input.id
-            } for element ${key} is empty. No caret value rule will be created.`
-          );
-        } else {
-          caretValueRules.push(caretValueRule);
-        }
-      });
+    const flatArray = toPairs(getPathValuePairs(input)).filter(
+      ([key]) =>
+        !RESOURCE_IGNORED_PROPERTIES[resourceType].some(
+          property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
+        )
+    );
+
+    flatArray.forEach(([key], i) => {
+      if (key === 'url' && this.isStandardURL(resourceType, config, input)) {
+        return;
+      }
+      const caretValueRule = new ExportableCaretValueRule('');
+      caretValueRule.caretPath = key;
+      caretValueRule.value = getFSHValue(i, flatArray, resourceType, fisher);
+      if (isFSHValueEmpty(caretValueRule.value)) {
+        logger.error(
+          `Value in ${resourceType} ${
+            input.name ?? input.id
+          } for element ${key} is empty. No caret value rule will be created.`
+        );
+      } else {
+        caretValueRules.push(caretValueRule);
+      }
+    });
     return caretValueRules;
   }
 
@@ -238,32 +240,28 @@ export class CaretValueRuleExtractor {
     fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
-    const flatConcept = getPathValuePairs(input);
-    Object.keys(flatConcept)
-      .filter(
-        key =>
-          !CONCEPT_IGNORED_PROPERTIES.some(
-            property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
-          )
-      )
-      .forEach(key => {
-        const caretValueRule = new ExportableCaretValueRule('');
-        caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(key, flatConcept, 'Concept', fisher);
-        caretValueRule.isCodeCaretRule = true;
-        caretValueRule.pathArray = conceptHierarchy;
-        if (isFSHValueEmpty(caretValueRule.value)) {
-          logger.error(
-            `Value in CodeSytem ${codeSystemName} at concept ${conceptHierarchy.join(
-              '.'
-            )} for element ${
-              caretValueRule.caretPath
-            } is empty. No caret value rule will be created.`
-          );
-        } else {
-          caretValueRules.push(caretValueRule);
-        }
-      });
+    const flatArray = toPairs(getPathValuePairs(input)).filter(
+      ([key]) =>
+        !CONCEPT_IGNORED_PROPERTIES.some(
+          property => key === property || new RegExp(`${property}(\\[\\d+\\])?\\.`).test(key)
+        )
+    );
+    flatArray.forEach(([key], i) => {
+      const caretValueRule = new ExportableCaretValueRule('');
+      caretValueRule.caretPath = key;
+      caretValueRule.value = getFSHValue(i, flatArray, 'Concept', fisher);
+      caretValueRule.isCodeCaretRule = true;
+      caretValueRule.pathArray = conceptHierarchy;
+      if (isFSHValueEmpty(caretValueRule.value)) {
+        logger.error(
+          `Value in CodeSytem ${codeSystemName} at concept ${conceptHierarchy.join(
+            '.'
+          )} for element ${caretValueRule.caretPath} is empty. No caret value rule will be created.`
+        );
+      } else {
+        caretValueRules.push(caretValueRule);
+      }
+    });
     return caretValueRules;
   }
 

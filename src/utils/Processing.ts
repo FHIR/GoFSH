@@ -76,7 +76,7 @@ export async function getResources(
   const optimizers = await loadOptimizers();
   optimizers.forEach(opt => {
     if (typeof opt.isEnabled !== 'function' || opt.isEnabled(options)) {
-      logger.debug(`Running optimizer ${opt.name}: ${opt.description}`);
+      logger.info(`Running optimizer ${opt.name}: ${opt.description}`);
       opt.optimize(resources, fisher, options);
     } else {
       logger.debug(`Skipping optimizer ${opt.name}: ${opt.description}`);

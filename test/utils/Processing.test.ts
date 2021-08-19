@@ -366,10 +366,10 @@ describe('Processing', () => {
         const processor = getFhirProcessor(inDir, undefined, 'json-only');
         const config = processor.processConfig();
         await getResources(processor, config, { aName: 'A', bFlag: true });
-        const debugMessages = loggerSpy.getAllMessages('debug');
-        expect(debugMessages).toContainEqual('Running optimizer a: A Optimizer');
-        expect(debugMessages).toContainEqual('Running optimizer b: B Optimizer');
-        expect(debugMessages).toContainEqual('Running optimizer c: C Optimizer');
+        const infoMessages = loggerSpy.getAllMessages('info');
+        expect(infoMessages).toContainEqual('Running optimizer a: A Optimizer');
+        expect(infoMessages).toContainEqual('Running optimizer b: B Optimizer');
+        expect(infoMessages).toContainEqual('Running optimizer c: C Optimizer');
       });
 
       it('should not run optimizers with an isEnabled function when that function returns false', async () => {
@@ -378,10 +378,11 @@ describe('Processing', () => {
         const processor = getFhirProcessor(inDir, undefined, 'json-only');
         const config = processor.processConfig();
         await getResources(processor, config, { aName: 'Z' });
+        const infoMessages = loggerSpy.getAllMessages('info');
         const debugMessages = loggerSpy.getAllMessages('debug');
         expect(debugMessages).toContainEqual('Skipping optimizer a: A Optimizer');
         expect(debugMessages).toContainEqual('Skipping optimizer b: B Optimizer');
-        expect(debugMessages).toContainEqual('Running optimizer c: C Optimizer');
+        expect(infoMessages).toContainEqual('Running optimizer c: C Optimizer');
       });
     });
   });
