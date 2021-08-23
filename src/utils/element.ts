@@ -1,5 +1,5 @@
 import { flatten } from 'flat';
-import { pickBy, mapKeys, flatMap, flatten as flat, isObject, isEmpty, isNil } from 'lodash';
+import { flatMap, flatten as flat, isObject, isEmpty, isNil } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
@@ -47,55 +47,68 @@ export function getPathValuePairs(object: object): FlatObject {
   return flatFSHObject;
 }
 
+const typeCache: Map<string, Map<string, string>> = new Map();
+
 export function getFSHValue(
-  key: string,
-  flatObject: FlatObject,
+  index: number,
+  flatArray: [string, string | number | boolean][],
   resourceType: string,
   fisher: utils.Fishable
 ): number | boolean | string | fshtypes.FshCode | bigint {
-  const value = flatObject[key];
+  const [key, value] = flatArray[index];
   const fishingType = resourceType === 'Concept' ? 'CodeSystem' : resourceType;
-  const definition = fhirtypes.StructureDefinition.fromJSON(
-    fisher.fishForFHIR(fishingType, utils.Type.Resource, utils.Type.Type)
-  );
   // Finding element by path works without array information and _ from children of primitives
   let pathWithoutIndex = removeUnderscoreForPrimitiveChildPath(key).replace(/\[\d+\]/g, '');
   if (resourceType === 'Concept') {
     pathWithoutIndex = `concept.${pathWithoutIndex}`;
   }
-  const element = definition.findElementByPath(pathWithoutIndex, fisher);
+  // If we have already looked up this path for this resource, get it from cache
+  const type = typeCache.get(resourceType)?.get(pathWithoutIndex);
+  if (type === 'code') {
+    return new fshtypes.FshCode(value.toString());
+  } else if (type === 'integer64') {
+    return BigInt(value);
+  } else if (type) {
+    return value;
+  }
+
   // If the path is one on an entry/contained resource, find the element on the ResourceType of the entry/contained resource
-  if (
-    element == null &&
-    (pathWithoutIndex.startsWith('entry.resource.') || pathWithoutIndex.startsWith('contained.'))
-  ) {
-    let basePath: string;
-    if (element == null && pathWithoutIndex.startsWith('entry.resource.')) {
-      basePath = key.split('.').slice(0, 2).join('.') + '.';
-    } else if (element == null && pathWithoutIndex.startsWith('contained.')) {
-      basePath = key.split('.').slice(0, 1).join('.') + '.';
+  if (pathWithoutIndex.startsWith('entry.resource.') || pathWithoutIndex.startsWith('contained.')) {
+    const [, baseKey, newKey] = key.match(/^(entry\[\d+\].resource|contained\[\d+\])\.(.+)/);
+    // We can safely assume that all of the paths for a given contained resource are
+    // sequential in the flatArray, so find the start and end of that sequence and slice it out
+    const nestedResourceStartIndex = flatArray.findIndex(([key]) => key.startsWith(baseKey));
+    let nestedResourceEndIndex = nestedResourceStartIndex + 1;
+    while (flatArray[nestedResourceEndIndex]?.[0].startsWith(baseKey)) {
+      nestedResourceEndIndex++;
     }
-    // Only need to worry about fixed values of entry/contained resource
-    let filteredFlatObject = pickBy(flatObject, (value, key) => key.startsWith(basePath));
-    // Modify the object to make paths relative to the entry/contained resource
-    filteredFlatObject = mapKeys(filteredFlatObject, (value, key) =>
-      key.substring(basePath.length)
-    );
-    const containedResourceType = filteredFlatObject['resourceType'] as string;
+    const subArray = flatArray
+      .slice(nestedResourceStartIndex, nestedResourceEndIndex)
+      .map(([key, value]) => [
+        key.replace(/^(entry\[\d+\].resource|contained\[\d+\])\./, ''),
+        value
+      ]) as [string, string | number | boolean][];
+    const containedResourceType = subArray.find(([key]) => key === 'resourceType')?.[1] as string;
+    const newIndex = subArray.findIndex(([key]) => key === newKey);
 
     // Get the FSH value based on the contained resource type. Use paths relative to the contained resource.
-    return getFSHValue(
-      key.replace(basePath, ''),
-      filteredFlatObject,
-      containedResourceType,
-      fisher
-    );
+    return getFSHValue(newIndex, subArray, containedResourceType, fisher);
   }
+  if (!typeCache.has(resourceType)) {
+    typeCache.set(resourceType, new Map());
+  }
+  const definition = fhirtypes.StructureDefinition.fromJSON(
+    fisher.fishForFHIR(fishingType, utils.Type.Resource, utils.Type.Type)
+  );
+  const element = definition.findElementByPath(pathWithoutIndex, fisher);
   if (element?.type?.[0]?.code === 'code') {
+    typeCache.get(resourceType).set(pathWithoutIndex, 'code');
     return new fshtypes.FshCode(value.toString());
   } else if (element?.type?.[0]?.code === 'integer64') {
+    typeCache.get(resourceType).set(pathWithoutIndex, 'integer64');
     return BigInt(value);
   }
+  typeCache.get(resourceType).set(pathWithoutIndex, typeof value);
   return value;
 }
 

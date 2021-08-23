@@ -1,4 +1,4 @@
-import { cloneDeep, compact, isEmpty } from 'lodash';
+import { cloneDeep, compact, isEmpty, toPairs } from 'lodash';
 import { fhirtypes, utils } from 'fsh-sushi';
 import { ExportableAssignmentRule, ExportableInstance } from '../exportable';
 import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
@@ -108,12 +108,12 @@ export class InstanceProcessor {
       delete inputJSON.text;
     }
 
-    const flatInstance = getPathValuePairs(inputJSON);
-    Object.keys(flatInstance).forEach(key => {
+    const flatInstanceArray = toPairs(getPathValuePairs(inputJSON));
+    flatInstanceArray.forEach(([key], i) => {
       // Remove any _ at the start of any path part
       const path = removeUnderscoreForPrimitiveChildPath(key);
       const assignmentRule = new ExportableAssignmentRule(path);
-      assignmentRule.value = getFSHValue(key, flatInstance, instanceOfJSON.type, fisher);
+      assignmentRule.value = getFSHValue(i, flatInstanceArray, instanceOfJSON.type, fisher);
       // if the value is empty, we can't use that
       if (isFSHValueEmpty(assignmentRule.value)) {
         logger.error(

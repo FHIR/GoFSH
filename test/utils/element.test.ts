@@ -129,8 +129,8 @@ describe('element', () => {
   describe('#getFSHValue', () => {
     it('should convert a code value into a FSHCode', () => {
       const value = getFSHValue(
-        'type[0].aggregation[0]',
-        { 'type[0].aggregation[0]': 'contained' },
+        0,
+        [['type[0].aggregation[0]', 'contained']],
         'ElementDefinition',
         defs
       );
@@ -139,8 +139,8 @@ describe('element', () => {
 
     it('should leave a non-code value as is', () => {
       const value = getFSHValue(
-        'type[0].profile[0]',
-        { 'type[0].profile[0]': 'http://foo.com/bar' },
+        0,
+        [['type[0].profile[0]', 'http://foo.com/bar']],
         'ElementDefinition',
         defs
       );
