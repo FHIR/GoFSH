@@ -478,6 +478,14 @@ describe('Processing', () => {
         FHIRProcessor.xmlToObj(fs.readFileSync(XMLFilePath).toString())
       );
     });
+
+    it('should not log an error when JSON files begin with a Byte Order Mark', () => {
+      const JSONFilePath = path.join(__dirname, 'fixtures', 'with-BOM', 'badBOM.json');
+
+      const jsonFileImport = readJSONorXML(JSONFilePath);
+      expect(jsonFileImport.content).toEqual(fs.readJSONSync(JSONFilePath));
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+    });
   });
 
   describe('loadExternalDependencies', () => {
