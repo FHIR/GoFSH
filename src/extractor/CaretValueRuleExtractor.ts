@@ -102,7 +102,8 @@ export class CaretValueRuleExtractor {
         utils.Type.Resource,
         utils.Type.Type,
         utils.Type.Profile,
-        utils.Type.Extension
+        utils.Type.Extension,
+        utils.Type.Logical
       )
     );
 
