@@ -50,7 +50,7 @@ describe('ExportableAssignmentRule', () => {
       'speed setting \\"high\\"'
     );
     expect(rule.toFSH()).toEqual(
-      '* code = http://example.com/codes#573 "speed setting \\"high\\""'
+      '* code = http://example.com/codes#573 "speed setting \\\\\\"high\\\\\\""'
     );
   });
 
