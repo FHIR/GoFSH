@@ -10,6 +10,7 @@ describe('LakeOfHIR', () => {
   beforeAll(() => {
     lake = new LakeOfFHIR(
       getWildFHIRs(
+        'logical-profile.json',
         'simple-profile.json',
         'simple-extension.json',
         'simple-logical-model.json',
@@ -31,30 +32,32 @@ describe('LakeOfHIR', () => {
 
   describe('#constructor', () => {
     it('should store all the passed in values', () => {
-      expect(lake.docs).toHaveLength(11);
-      expect(lake.docs[0].content.id).toBe('simple.profile');
-      expect(lake.docs[1].content.id).toBe('simple.extension');
-      expect(lake.docs[2].content.id).toBe('simple.logical');
-      expect(lake.docs[3].content.id).toBe('simple.resource');
-      expect(lake.docs[4].content.id).toBe('simple.codesystem');
-      expect(lake.docs[5].content.id).toBe('simple.valueset');
-      expect(lake.docs[6].content.id).toBe('simple.ig');
-      expect(lake.docs[7].content.id).toBe('rocky.balboa');
-      expect(lake.docs[8].content.id).toBe('unsupported.valueset');
-      expect(lake.docs[9].content.id).toBe(undefined);
-      expect(lake.docs[10].content.id).toBe('my.string.profile');
+      expect(lake.docs).toHaveLength(12);
+      expect(lake.docs[0].content.id).toBe('logical.profile');
+      expect(lake.docs[1].content.id).toBe('simple.profile');
+      expect(lake.docs[2].content.id).toBe('simple.extension');
+      expect(lake.docs[3].content.id).toBe('simple.logical');
+      expect(lake.docs[4].content.id).toBe('simple.resource');
+      expect(lake.docs[5].content.id).toBe('simple.codesystem');
+      expect(lake.docs[6].content.id).toBe('simple.valueset');
+      expect(lake.docs[7].content.id).toBe('simple.ig');
+      expect(lake.docs[8].content.id).toBe('rocky.balboa');
+      expect(lake.docs[9].content.id).toBe('unsupported.valueset');
+      expect(lake.docs[10].content.id).toBe(undefined);
+      expect(lake.docs[11].content.id).toBe('my.string.profile');
     });
   });
 
   describe('#getAllStructureDefinitions', () => {
     it('should get all structure definitions', () => {
       const results = lake.getAllStructureDefinitions();
-      expect(results).toHaveLength(5);
-      expect(results[0].content.id).toBe('simple.profile');
-      expect(results[1].content.id).toBe('simple.extension');
-      expect(results[2].content.id).toBe('simple.logical');
-      expect(results[3].content.id).toBe('simple.resource');
-      expect(results[4].content.id).toBe('my.string.profile');
+      expect(results).toHaveLength(6);
+      expect(results[0].content.id).toBe('logical.profile');
+      expect(results[1].content.id).toBe('simple.profile');
+      expect(results[2].content.id).toBe('simple.extension');
+      expect(results[3].content.id).toBe('simple.logical');
+      expect(results[4].content.id).toBe('simple.resource');
+      expect(results[5].content.id).toBe('my.string.profile');
     });
   });
 

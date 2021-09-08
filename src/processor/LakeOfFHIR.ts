@@ -94,7 +94,7 @@ export class LakeOfFHIR implements utils.Fishable {
   // The first four are handled by the StructureDefinitionProcessor, but Instances are handled by InstanceProcessor.
   // Thus, splitting the categories based on that is useful.
   // The important fields here are kind and derivation.
-  // A Profile has kind "resource", "complex-type", or "primitive-type" and derivation "constraint".
+  // A Profile has kind "resource", "complex-type", "logical", or "primitive-type" and derivation "constraint".
   // An Extension has kind "complex-type", derivation "constraint", and type "Extension". It's a special case of Profile.
   // A Logical has kind "logical" and derivation "specialization".
   // A Resource has kind "resource" and derivation "specialization".
@@ -104,7 +104,7 @@ export class LakeOfFHIR implements utils.Fishable {
       if (d.content.derivation === 'specialization') {
         return ['primitive-type', 'complex-type'].includes(d.content.kind);
       } else {
-        return d.content.kind === 'logical';
+        return false;
       }
     } else {
       return false;

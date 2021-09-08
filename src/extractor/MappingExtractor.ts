@@ -24,7 +24,8 @@ export class MappingExtractor {
       utils.Type.Resource,
       utils.Type.Type,
       utils.Type.Profile,
-      utils.Type.Extension
+      utils.Type.Extension,
+      utils.Type.Logical
     );
 
     // If there is no parent found, all the mappings should be exported.

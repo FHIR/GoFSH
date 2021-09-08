@@ -52,7 +52,7 @@ export class StructureDefinitionProcessor {
         input.type === 'Extension'
       ) {
         sd = new ExportableExtension(name);
-      } else if (input.kind !== 'logical' && input.derivation === 'constraint') {
+      } else if (input.derivation === 'constraint') {
         sd = new ExportableProfile(name);
       } else {
         // this should never be encountered when running normally, hopefully,
