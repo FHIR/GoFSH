@@ -33,6 +33,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/antlr4": "^4.7.2",
     "@types/diff": "^4.0.2",
     "@types/flat": "^5.0.1",
     "@types/fs-extra": "^9.0.1",

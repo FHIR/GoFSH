@@ -9,6 +9,7 @@ import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
 import {
   ensureOutputDir,
   getInputDir,
+  getAliasFile,
   getFhirProcessor,
   getResources,
   loadExternalDependencies,
@@ -19,7 +20,8 @@ import {
   getRandomPun,
   ProcessingOptions
 } from './utils';
-import { Package } from './processor';
+import { Package, AliasProcessor } from './processor';
+import { ExportableAlias } from './exportable';
 
 const FSH_VERSION = '1.2.0';
 
@@ -63,6 +65,10 @@ async function app() {
     .option(
       '--meta-profile <mode>',
       'specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none'
+    )
+    .option(
+      '-a, --alias-file <alias-filePath>',
+      'specify an existing FSH file containing aliases to be loaded.'
     )
     .option('--no-alias', 'output FSH without generating Aliases')
     .version(getVersion(), '-v, --version', 'print goFSH version')
@@ -126,6 +132,12 @@ async function app() {
     process.exit(1);
   }
 
+  // Load alias file
+  let aliases: ExportableAlias[];
+  if (program.aliasFile) {
+    const aliasFile = getAliasFile(program.aliasFile);
+    aliases = AliasProcessor.process(aliasFile);
+  }
   // Get options for processors and optimizers
   const processingOptions = {
     indent: programOptions.indent === true,
@@ -151,7 +163,7 @@ async function app() {
 
   let pkg: Package;
   try {
-    pkg = await getResources(processor, config, processingOptions);
+    pkg = await getResources(processor, config, processingOptions, aliases);
   } catch (err) {
     logger.error(`Could not use input directory: ${err.message}`);
     process.exit(1);
@@ -168,6 +180,7 @@ async function app() {
   const instNum = pad(pkg.instances.length.toString(), 18);
   const invNum = pad(pkg.invariants.length.toString(), 17);
   const mapNum = pad(pkg.mappings.length.toString(), 18);
+  const aliasNum = pad(pkg.aliases.length.toString(), 18);
   const errNumMsg = pad(`${stats.numError} Error${stats.numError !== 1 ? 's' : ''}`, 12);
   const wrnNumMsg = padStart(`${stats.numWarn} Warning${stats.numWarn !== 1 ? 's' : ''}`, 12);
   const aWittyMessageInvolvingABadFishPun = padEnd(getRandomPun(stats.numError, stats.numWarn), 37);
@@ -191,6 +204,11 @@ async function app() {
     clr('║') + ' │     Instances      │    Invariants     │      Mappings      │ ' + clr('║'),
     clr('║') + ' ├────────────────────┼───────────────────┼────────────────────┤ ' + clr('║'),
     clr('║') + ` │ ${    instNum    } │ ${    invNum    } │ ${    mapNum     } │ ` + clr('║'),
+    clr('║') + ' ╰────────────────────┴───────────────────┴────────────────────╯ ' + clr('║'),
+    clr('║') + ' ╭────────────────────┬───────────────────┬────────────────────╮ ' + clr('║'),
+    clr('║') + ' │     Aliases        │                   │                    │ ' + clr('║'),
+    clr('║') + ' ├────────────────────┼───────────────────┼────────────────────┤ ' + clr('║'),
+    clr('║') + ` │ ${    aliasNum   } │                   │                    │ ` + clr('║'),
     clr('║') + ' ╰────────────────────┴───────────────────┴────────────────────╯ ' + clr('║'),
     clr('║') + '                                                                 ' + clr('║'),
     clr('╠'  + '═════════════════════════════════════════════════════════════════' +     '╣'),

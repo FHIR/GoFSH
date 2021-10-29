@@ -33,6 +33,7 @@ Options:
   -t, --file-type <type>            specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml
   --indent                          output FSH with indented rules using context paths
   --meta-profile <mode>             specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none
+  -a, --alias-file <alias-filePath> specify an existing FSH file containing aliases to be loaded.
   --no-alias                        output FSH without generating Aliases
   -v, --version                     print goFSH version
   -h, --help                        display help for command

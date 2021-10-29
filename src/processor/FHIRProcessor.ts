@@ -9,6 +9,7 @@ import {
   WildFHIR
 } from '.';
 import { ExportableConfiguration } from '../exportable';
+import { ExportableAlias } from '../exportable';
 import { ConfigurationExtractor } from '../extractor';
 import { InstanceProcessor } from './InstanceProcessor';
 
@@ -87,12 +88,18 @@ export class FHIRProcessor {
     }
   }
 
-  process(config: ExportableConfiguration, options: ProcessingOptions = {}): Package {
+  process(
+    config: ExportableConfiguration,
+    options: ProcessingOptions = {},
+    aliases: ExportableAlias[] = []
+  ): Package {
     const resources = new Package();
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
       this.lake.getAllImplementationGuides()[0];
     resources.add(config);
+    if (aliases.length > 0) logger.info('Processing Aliases...');
+    aliases.forEach(alias => resources.add(alias));
     const structureDefs = this.lake.getAllStructureDefinitions();
     if (structureDefs.length > 0) logger.info('Processing StructureDefinitions...');
     structureDefs.forEach((wild, index) => {
