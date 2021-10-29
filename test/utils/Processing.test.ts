@@ -14,7 +14,8 @@ import {
   getIgPathFromIgIni,
   getFhirProcessor,
   getLakeOfFHIR,
-  readJSONorXML
+  readJSONorXML,
+  getAliasFile
 } from '../../src/utils/Processing';
 import { Package } from '../../src/processor';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
@@ -485,6 +486,22 @@ describe('Processing', () => {
       const jsonFileImport = readJSONorXML(JSONFilePath);
       expect(jsonFileImport.content).toEqual(fs.readJSONSync(JSONFilePath));
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+    });
+  });
+
+  describe('getAliasFile', () => {
+    beforeEach(() => {
+      loggerSpy.reset();
+    });
+
+    it('should get specified alias file', () => {
+      const programAliasFile = 'alias.fsh';
+      const aliasFile = getAliasFile(programAliasFile);
+      return Promise.all(aliasFile).then(() => {
+        expect(aliasFile).toBe(programAliasFile);
+        expect(loggerSpy.getLastMessage('info')).toMatch('Using alias file: ' + programAliasFile);
+        expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      });
     });
   });
 

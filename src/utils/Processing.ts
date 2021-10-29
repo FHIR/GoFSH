@@ -15,6 +15,7 @@ import {
 import { FSHExporter } from '../export/FSHExporter';
 import { loadOptimizers } from '../optimizer';
 import { MasterFisher } from '../utils';
+import { ExportableAlias } from '../exportable';
 import { ExportableConfiguration } from '../exportable';
 import { Fhir as FHIR } from 'fhir/fhir';
 
@@ -23,6 +24,11 @@ const FHIRConverter = new FHIR();
 export function getInputDir(input = '.'): string {
   // default to current directory
   logger.info(`Using input directory: ${input}`);
+  return input;
+}
+
+export function getAliasFile(input = ''): string {
+  logger.info(`Using alias file: ${input}`);
   return input;
 }
 
@@ -67,10 +73,11 @@ export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions, 
 export async function getResources(
   processor: FHIRProcessor,
   config: ExportableConfiguration,
-  options: ProcessingOptions = {}
+  options: ProcessingOptions = {},
+  aliases: ExportableAlias[] = []
 ): Promise<Package> {
   const fisher = processor.getFisher();
-  const resources = processor.process(config, options);
+  const resources = processor.process(config, options, aliases);
   // Dynamically load and run the optimizers
   logger.info('Optimizing FSH definitions to follow best practices...');
   const optimizers = await loadOptimizers();
