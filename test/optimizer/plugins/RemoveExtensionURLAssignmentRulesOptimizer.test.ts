@@ -9,9 +9,20 @@ import {
   ExportableProfile
 } from '../../../src/exportable';
 import optimizer from '../../../src/optimizer/plugins/RemoveExtensionURLAssignmentRules';
+import { loggerSpy } from '../../helpers/loggerSpy';
+import { loadTestDefinitions, stockLake } from '../../helpers';
+import { MasterFisher } from '../../../src/utils';
 
 describe('optimizer', () => {
   describe('#remove_extension_url_assignment_rules', () => {
+    let fisher: MasterFisher;
+
+    beforeAll(() => {
+      const defs = loadTestDefinitions();
+      const lake = stockLake();
+      fisher = new MasterFisher(lake, defs);
+    });
+
     it('should have appropriate metadata', () => {
       expect(optimizer.name).toBe('remove_extension_url_assignment_rules');
       expect(optimizer.description).toBeDefined();
@@ -112,6 +123,41 @@ describe('optimizer', () => {
       myPackage.add(extension);
       optimizer.optimize(myPackage);
       expect(extension.rules).toEqual([assignmentRule]);
+    });
+
+    it('should log an error when a URL assignment rule value does not match the extension sliceName', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableAssignmentRule('extension[foo].url');
+      assignmentRule.value = 'bar';
+      extension.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+      myPackage.add(extension);
+      optimizer.optimize(myPackage);
+      // The url rule is ignored, and the sliceName will be used
+      expect(extension.rules).toEqual([containsRule]);
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        /has sliceName "foo" but "bar" is assigned/
+      );
+    });
+
+    it('should log an error when a URL assignment rule is incorrectly used instead of type.profile', () => {
+      const extension = new ExportableExtension('MyExtension');
+      const containsRule = new ExportableContainsRule('extension');
+      containsRule.items.push({ name: 'foo' });
+      const assignmentRule = new ExportableAssignmentRule('extension[foo].url');
+      assignmentRule.value = 'http://hl7.org/fhir/StructureDefinition/geolocation';
+      extension.rules = [containsRule, assignmentRule];
+      const myPackage = new Package();
+
+      myPackage.add(extension);
+      optimizer.optimize(myPackage, fisher);
+      // The url rule is ignored, and the sliceName will be used
+      expect(extension.rules).toEqual([containsRule]);
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        /refers to .*geolocation but does not set this value in type\.profile/
+      );
     });
   });
 });
