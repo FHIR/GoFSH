@@ -323,6 +323,7 @@ const IGNORED_NON_RESOURCE_DIRECTORIES = [
 export type ProcessingOptions = {
   indent?: boolean;
   metaProfile?: 'only-one' | 'first' | 'none';
+  alias?: boolean;
   [key: string]: boolean | number | string;
 };
 

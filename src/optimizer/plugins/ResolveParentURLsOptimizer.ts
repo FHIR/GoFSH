@@ -2,7 +2,7 @@ import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { optimizeURL } from '../utils';
 import { Package } from '../../processor';
-import { MasterFisher } from '../../utils';
+import { MasterFisher, ProcessingOptions } from '../../utils';
 
 const FISHER_TYPES = [
   utils.Type.Resource,
@@ -16,7 +16,7 @@ export default {
   name: 'resolve_parent_urls',
   description: 'Replace declared parent URLs with their names or aliases',
 
-  optimize(pkg: Package, fisher: MasterFisher): void {
+  optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
     for (const resource of [
       ...pkg.profiles,
       ...pkg.extensions,
@@ -24,7 +24,13 @@ export default {
       ...pkg.resources
     ]) {
       if (resource.parent) {
-        resource.parent = optimizeURL(resource.parent, pkg.aliases, FISHER_TYPES, fisher);
+        resource.parent = optimizeURL(
+          resource.parent,
+          pkg.aliases,
+          FISHER_TYPES,
+          fisher,
+          options.alias ?? true
+        );
       }
     }
   }

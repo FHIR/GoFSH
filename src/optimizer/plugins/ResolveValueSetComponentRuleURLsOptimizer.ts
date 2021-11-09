@@ -2,7 +2,7 @@ import { utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { optimizeURL } from '../utils';
 import { Package } from '../../processor';
-import { MasterFisher } from '../../utils';
+import { MasterFisher, ProcessingOptions } from '../../utils';
 import {
   ExportableValueSetConceptComponentRule,
   ExportableValueSetFilterComponentRule
@@ -12,7 +12,7 @@ export default {
   name: 'resolve_value_set_component_rule_urls',
   description: 'Replace URLs in value set rules with their names or aliases',
 
-  optimize(pkg: Package, fisher: MasterFisher): void {
+  optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
     pkg.valueSets.forEach(vs => {
       vs.rules.forEach(rule => {
         if (
@@ -24,12 +24,19 @@ export default {
               rule.from.system,
               pkg.aliases,
               [utils.Type.CodeSystem],
-              fisher
+              fisher,
+              options.alias ?? true
             );
           }
           if (rule.from.valueSets) {
             rule.from.valueSets = rule.from.valueSets.map(vsURL => {
-              return optimizeURL(vsURL, pkg.aliases, [utils.Type.ValueSet], fisher);
+              return optimizeURL(
+                vsURL,
+                pkg.aliases,
+                [utils.Type.ValueSet],
+                fisher,
+                options.alias ?? true
+              );
             });
           }
           if (rule instanceof ExportableValueSetConceptComponentRule) {
@@ -39,7 +46,8 @@ export default {
                   concept.system,
                   pkg.aliases,
                   [utils.Type.CodeSystem],
-                  fisher
+                  fisher,
+                  options.alias ?? true
                 );
               }
             });

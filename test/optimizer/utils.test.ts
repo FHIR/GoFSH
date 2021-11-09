@@ -40,6 +40,19 @@ describe('optimizer', () => {
       ]);
     });
 
+    it('should return the original URL if it can not be resolved and makeAlias is false', () => {
+      const aliases: ExportableAlias[] = [];
+      const result = optimizeURL(
+        'https://not-resolved/StructureDefinition/Patient',
+        aliases,
+        [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
+        fisher,
+        false
+      );
+      expect(result).toBe('https://not-resolved/StructureDefinition/Patient');
+      expect(aliases).toHaveLength(0);
+    });
+
     it('should return the original URL if it can not be resolved or aliased', () => {
       const aliases: ExportableAlias[] = [];
       const result = optimizeURL(

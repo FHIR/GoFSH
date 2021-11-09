@@ -79,7 +79,28 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should alias filter rule system url when it is same as local code system name', () => {
+    it('should alias filter rule system url when it is same as local code system name when alias is true', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { system: 'http://hl7.org/fhir/observation-status' };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+
+      // Use a modified lake and fisher to force the local CS to have the same name
+      const modLake = cloneDeep(lake);
+      modLake.docs[0].content.name = 'ObservationStatus';
+      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: true });
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { system: '$observation-status' };
+      expect(valueset.rules).toContainEqual(expectedRule);
+      expect(myPackage.aliases).toEqual([
+        { alias: '$observation-status', url: 'http://hl7.org/fhir/observation-status' }
+      ]);
+    });
+
+    it('should alias filter rule system url when it is same as local code system name when alias is undefined', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://hl7.org/fhir/observation-status' };
@@ -98,6 +119,23 @@ describe('optimizer', () => {
       expect(myPackage.aliases).toEqual([
         { alias: '$observation-status', url: 'http://hl7.org/fhir/observation-status' }
       ]);
+    });
+
+    it('should not alias filter rule system url when it is same as local code system name when alias is false', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { system: 'http://hl7.org/fhir/observation-status' };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+
+      // Use a modified lake and fisher to force the local CS to have the same name
+      const modLake = cloneDeep(lake);
+      modLake.docs[0].content.name = 'ObservationStatus';
+      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: false });
+
+      expect(valueset.rules).toContainEqual(rule);
+      expect(myPackage.aliases).toHaveLength(0);
     });
 
     // TODO: Revisit this when SUSHI supports fishing for Instance CodeSystems by name/id
@@ -157,7 +195,28 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should alias the filter rule system url when it is same as local code system name', () => {
+    it('should alias the filter rule system url when it is same as local code system name when alias is true', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+
+      // Use a modified lake and fisher to force the local CS to have the same name
+      const modLake = cloneDeep(lake);
+      modLake.docs[2].content.name = 'ObservationStatus';
+      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: true });
+
+      const expectedRule = new ExportableValueSetFilterComponentRule(true);
+      expectedRule.from = { valueSets: ['$observation-status'] };
+      expect(valueset.rules).toContainEqual(expectedRule);
+      expect(myPackage.aliases).toEqual([
+        { alias: '$observation-status', url: 'http://hl7.org/fhir/ValueSet/observation-status' }
+      ]);
+    });
+
+    it('should alias the filter rule system url when it is same as local code system name when alias is undefined', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
@@ -176,6 +235,23 @@ describe('optimizer', () => {
       expect(myPackage.aliases).toEqual([
         { alias: '$observation-status', url: 'http://hl7.org/fhir/ValueSet/observation-status' }
       ]);
+    });
+
+    it('should not alias the filter rule system url when it is same as local code system name when alias is false', () => {
+      const valueset = new ExportableValueSet('MyValueSet');
+      const rule = new ExportableValueSetFilterComponentRule(true);
+      rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
+      valueset.rules.push(rule);
+      const myPackage = new Package();
+      myPackage.add(valueset);
+
+      // Use a modified lake and fisher to force the local CS to have the same name
+      const modLake = cloneDeep(lake);
+      modLake.docs[2].content.name = 'ObservationStatus';
+      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: false });
+
+      expect(valueset.rules[0]).toEqual(rule);
+      expect(myPackage.aliases).toHaveLength(0);
     });
 
     // TODO: Revisit this when SUSHI supports fishing for Instance ValueSets by name/id
