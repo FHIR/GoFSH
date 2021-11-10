@@ -44,9 +44,19 @@ export default {
               } else if (urlRule.value !== item.name) {
                 logger.error(
                   `${sd.name}: Inline extension at "${rule.path}[${item.name}]" has sliceName "${item.name}" but "${urlRule.value}" is assigned to url. ` +
-                    'SUSHI requires that these values match exactly, so the url assignment will be ignored, ' +
-                    `and the sliceName of "${item.name}" will be assigned to the url.`
+                    'SUSHI requires that these values match exactly, so the value assigned to the url will be used as the sliceName.'
                 );
+                // If the value set by the url rule and the sliceName do not match, prefer the value set by the url rule
+                // and replace all occurrences of the old sliceName in other rules
+                const newSliceName = urlRule.value as string;
+                [...sd.rules, ...rule.cardRules, ...rule.flagRules].forEach(r => {
+                  r.path = r.path.replace(
+                    new RegExp(`^${rule.path}\\[${item.name}\\]`),
+                    `${rule.path}[${newSliceName}]`
+                  );
+                });
+
+                item.name = newSliceName;
               }
             }
           });

@@ -2,6 +2,7 @@ import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { Package } from '../../../src/processor/Package';
 import {
   ExportableAssignmentRule,
+  ExportableCardRule,
   ExportableConfiguration,
   ExportableContainsRule,
   ExportableExtension,
@@ -129,14 +130,26 @@ describe('optimizer', () => {
       const extension = new ExportableExtension('MyExtension');
       const containsRule = new ExportableContainsRule('extension');
       containsRule.items.push({ name: 'foo' });
+      const cardRule = new ExportableCardRule('extension[foo]');
+      cardRule.max = '1';
+      containsRule.cardRules.push(cardRule);
+      const flagRule = new ExportableFlagRule('extension[foo]');
+      flagRule.mustSupport = true;
       const assignmentRule = new ExportableAssignmentRule('extension[foo].url');
       assignmentRule.value = 'bar';
-      extension.rules = [containsRule, assignmentRule];
+      extension.rules = [containsRule, assignmentRule, flagRule];
       const myPackage = new Package();
       myPackage.add(extension);
       optimizer.optimize(myPackage);
-      // The url rule is ignored, and the sliceName will be used
-      expect(extension.rules).toEqual([containsRule]);
+      // The sliceName is replaced with the url rule, and other rules are updated as needed
+      const expectedContainsRule = new ExportableContainsRule('extension');
+      expectedContainsRule.items.push({ name: 'bar' });
+      const expectedCardRule = new ExportableCardRule('extension[bar]');
+      expectedCardRule.max = '1';
+      expectedContainsRule.cardRules.push(expectedCardRule);
+      const expectedFlagRule = new ExportableFlagRule('extension[bar]');
+      expectedFlagRule.mustSupport = true;
+      expect(extension.rules).toEqual([expectedContainsRule, expectedFlagRule]);
       expect(loggerSpy.getLastMessage('error')).toMatch(
         /has sliceName "foo" but "bar" is assigned/
       );
