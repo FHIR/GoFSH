@@ -168,7 +168,7 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage, fisher);
       // The url rule is ignored, and the sliceName will be used
       expect(extension.rules).toEqual([containsRule]);
-      expect(loggerSpy.getLastMessage('error')).toMatch(
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
         /refers to .*geolocation but does not set this value in type\.profile/
       );
     });

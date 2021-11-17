@@ -34,7 +34,7 @@ export default {
                   utils.Type.Extension
                 )?.name;
                 if (item.type) {
-                  logger.error(
+                  logger.warn(
                     `${sd.name}: Extension at "${rule.path}[${item.name}]" refers to ${urlRule.value} but does not set this value in type.profile. ` +
                       'The generated "contains" rule will be updated to use the "named" syntax so that SUSHI can process it without error. ' +
                       'This will cause type.profile to be set on the SUSHI output, which is likely the desired behavior. If this is not desired, ' +
