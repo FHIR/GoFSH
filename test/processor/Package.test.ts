@@ -7,7 +7,8 @@ import {
   ExportableCodeSystem,
   ExportableConfiguration,
   ExportableInvariant,
-  ExportableMapping
+  ExportableMapping,
+  ExportableAlias
 } from '../../src/exportable';
 import { loggerSpy } from '../helpers/loggerSpy';
 
@@ -60,6 +61,12 @@ describe('Package', () => {
       const myMapping = new ExportableMapping('MyMapping');
       myPackage.add(myMapping);
       expect(myPackage.mappings[0]).toBe(myMapping);
+    });
+
+    it('should add an ExportableAlias to the aliases array', () => {
+      const myAlias = new ExportableAlias('MyAlias', 'http://example.org/');
+      myPackage.add(myAlias);
+      expect(myPackage.aliases[0]).toBe(myAlias);
     });
 
     it('should set the configuration when adding an ExportableConfiguration', () => {
@@ -167,6 +174,39 @@ describe('Package', () => {
       expect(loggerSpy.getMessageAtIndex(6, 'error')).toMatch(
         /Encountered mapping with a duplicate name, MyMapping/
       );
+    });
+
+    it('should not log an error when a second alias is added with a different name', () => {
+      const myAlias = new ExportableAlias('MyAlias', 'http://example.org/');
+      const anotherAlias = new ExportableAlias('AnotherAlias', 'http://different-example.org/');
+      myPackage.add(myAlias);
+      myPackage.add(anotherAlias);
+      expect(myPackage.aliases).toHaveLength(2);
+      expect(myPackage.aliases[0]).toBe(myAlias);
+      expect(myPackage.aliases[1]).toBe(anotherAlias);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+    });
+
+    it('should log an error and not add the alias when an alias with a duplicate name and different url is added', () => {
+      const myAlias = new ExportableAlias('MyAlias', 'http://example.org/');
+      const duplicateAlias = new ExportableAlias('MyAlias', 'http://different-example.org/');
+      myPackage.add(myAlias);
+      myPackage.add(duplicateAlias);
+      expect(myPackage.aliases).toHaveLength(1);
+      expect(myPackage.aliases[0]).toBe(myAlias);
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        /Encountered alias with a duplicate name, MyAlias/s
+      );
+    });
+
+    it('should not log an error and not add the alias when an alias with a duplicate name and matching url is added', () => {
+      const myAlias = new ExportableAlias('MyAlias', 'http://example.org/');
+      const duplicateAlias = new ExportableAlias('MyAlias', 'http://example.org/');
+      myPackage.add(myAlias);
+      myPackage.add(duplicateAlias);
+      expect(myPackage.aliases).toHaveLength(1);
+      expect(myPackage.aliases[0]).toBe(myAlias);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
   });
 });

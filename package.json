@@ -62,6 +62,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "antlr4": "~4.8.0",
     "chalk": "^4.1.0",
     "commander": "^6.0.0",
     "diff": "^5.0.0",

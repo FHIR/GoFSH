@@ -134,8 +134,8 @@ async function app() {
 
   // Load alias file
   let aliases: ExportableAlias[];
-  if (program.aliasFile) {
-    const aliasFile = getAliasFile(program.aliasFile);
+  if (programOptions.aliasFile) {
+    const aliasFile = getAliasFile(programOptions.aliasFile);
     aliases = AliasProcessor.process(aliasFile);
   }
   // Get options for processors and optimizers
@@ -206,7 +206,7 @@ async function app() {
     clr('║') + ` │ ${    instNum    } │ ${    invNum    } │ ${    mapNum     } │ ` + clr('║'),
     clr('║') + ' ╰────────────────────┴───────────────────┴────────────────────╯ ' + clr('║'),
     clr('║') + ' ╭────────────────────┬───────────────────┬────────────────────╮ ' + clr('║'),
-    clr('║') + ' │     Aliases        │                   │                    │ ' + clr('║'),
+    clr('║') + ' │      Aliases       │                   │                    │ ' + clr('║'),
     clr('║') + ' ├────────────────────┼───────────────────┼────────────────────┤ ' + clr('║'),
     clr('║') + ` │ ${    aliasNum   } │                   │                    │ ` + clr('║'),
     clr('║') + ' ╰────────────────────┴───────────────────┴────────────────────╯ ' + clr('║'),
