@@ -71,12 +71,16 @@ export class Package {
       checkDuplicateDefinition(this.mappings, resource, 'mapping');
       this.mappings.push(resource);
     } else if (resource instanceof ExportableAlias) {
-      if (this.aliases.find(e => e.alias === resource.alias)) {
-        logger.error(
-          `Encountered alias with a duplicate name, ${resource.alias}, which GoFSH cannot make unique. Fix the source file to resolve this error or update the resulting FSH definition.`
-        );
+      const duplicateAlias = this.aliases.find(e => e.alias === resource.alias);
+      if (duplicateAlias != null) {
+        if (duplicateAlias.url !== resource.url) {
+          logger.error(
+            `Encountered alias with a duplicate name, ${resource.alias}, which GoFSH cannot make unique. Fix the source file to resolve this error or update the resulting FSH definition.`
+          );
+        }
+      } else {
+        this.aliases.push(resource);
       }
-      this.aliases.push(resource);
     } else if (resource instanceof ExportableConfiguration) {
       if (this.configuration) {
         logger.warn(
