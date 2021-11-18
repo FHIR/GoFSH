@@ -15,9 +15,13 @@ export function optimizeURL(
   url: string,
   aliases: ExportableAlias[],
   types: utils.Type[],
-  fisher: MasterFisher
+  fisher: MasterFisher,
+  makeAlias = true
 ): string {
-  return resolveURL(url, types, fisher) ?? resolveAliasFromURL(url, aliases) ?? url;
+  if (makeAlias) {
+    return resolveURL(url, types, fisher) ?? resolveAliasFromURL(url, aliases) ?? url;
+  }
+  return resolveURL(url, types, fisher) ?? url;
 }
 
 /**

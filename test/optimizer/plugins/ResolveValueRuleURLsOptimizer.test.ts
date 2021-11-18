@@ -20,7 +20,22 @@ describe('optimizer', () => {
       expect(optimizer.runAfter).toEqual([CombineCodingAndQuantityValuesOptimizer.name]);
     });
 
-    it('should alias a system in an AssignmentRule', () => {
+    it('should alias a system in an AssignmentRule when alias is true', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const codeRule = new ExportableAssignmentRule('code');
+      codeRule.value = new fshtypes.FshCode('10-9', 'http://loinc.org');
+      instance.rules = [codeRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, undefined, { alias: true });
+
+      const expectedRule = cloneDeep(codeRule);
+      (expectedRule.value as fshtypes.FshCode).system = '$loinc';
+      expect(instance.rules[0]).toEqual(expectedRule);
+    });
+
+    it('should alias a system in an AssignmentRule when alias is undefined', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Observation';
       const codeRule = new ExportableAssignmentRule('code');
@@ -35,7 +50,36 @@ describe('optimizer', () => {
       expect(instance.rules[0]).toEqual(expectedRule);
     });
 
-    it('should alias a system in an CaretValueRule', () => {
+    it('should not alias a system in an AssignmentRule when alias is false', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const codeRule = new ExportableAssignmentRule('code');
+      codeRule.value = new fshtypes.FshCode('10-9', 'http://loinc.org');
+      instance.rules = [codeRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, undefined, { alias: false });
+
+      expect(instance.rules[0]).toEqual(codeRule);
+    });
+
+    it('should alias a system in an CaretValueRule when alias is true', () => {
+      const profile = new ExportableProfile('Foo');
+      profile.parent = 'Observation';
+      const jurisdictionRule = new ExportableCaretValueRule('');
+      jurisdictionRule.caretPath = 'jurisdiction';
+      jurisdictionRule.value = new fshtypes.FshCode('MA', 'http://jurisdiction.org/bar');
+      profile.rules = [jurisdictionRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, undefined, { alias: true });
+
+      const expectedRule = cloneDeep(jurisdictionRule);
+      (expectedRule.value as fshtypes.FshCode).system = '$bar';
+      expect(profile.rules[0]).toEqual(expectedRule);
+    });
+
+    it('should alias a system in an CaretValueRule when alias is undefined', () => {
       const profile = new ExportableProfile('Foo');
       profile.parent = 'Observation';
       const jurisdictionRule = new ExportableCaretValueRule('');
@@ -49,6 +93,20 @@ describe('optimizer', () => {
       const expectedRule = cloneDeep(jurisdictionRule);
       (expectedRule.value as fshtypes.FshCode).system = '$bar';
       expect(profile.rules[0]).toEqual(expectedRule);
+    });
+
+    it('should not alias a system in an CaretValueRule when alias is false', () => {
+      const profile = new ExportableProfile('Foo');
+      profile.parent = 'Observation';
+      const jurisdictionRule = new ExportableCaretValueRule('');
+      jurisdictionRule.caretPath = 'jurisdiction';
+      jurisdictionRule.value = new fshtypes.FshCode('MA', 'http://jurisdiction.org/bar');
+      profile.rules = [jurisdictionRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, undefined, { alias: false });
+
+      expect(profile.rules[0]).toEqual(jurisdictionRule);
     });
 
     it('should maintain the original value when it cannot be aliased', () => {

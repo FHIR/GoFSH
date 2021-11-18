@@ -33,6 +33,7 @@ async function app() {
   program
     .name('goFSH')
     .usage('[path-to-fhir-resources] [options]')
+    .storeOptionsAsProperties(false)
     .option('-o, --out <out>', 'the path to the output folder')
     .option(
       '-l, --log-level <level>',
@@ -63,6 +64,7 @@ async function app() {
       '--meta-profile <mode>',
       'specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none'
     )
+    .option('--no-alias', 'output FSH without generating Aliases')
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -77,7 +79,8 @@ async function app() {
     .parse(process.argv);
 
   // Set the log level. If no level specified, loggers default to info
-  const { logLevel } = program;
+  const programOptions = program.opts();
+  const { logLevel } = programOptions;
   if (logLevel === 'debug' || logLevel === 'warn' || logLevel === 'error') {
     logger.level = logLevel; // GoFSH logger
     utils.logger.level = logLevel; // SUSHI logger
@@ -89,7 +92,7 @@ async function app() {
 
   let outDir: string;
   try {
-    outDir = ensureOutputDir(program.out);
+    outDir = ensureOutputDir(programOptions.out);
   } catch (err) {
     logger.error(`Could not use output directory: ${err.message}`);
     process.exit(1);
@@ -104,10 +107,10 @@ async function app() {
   const defs = new fhirdefs.FHIRDefinitions();
 
   // Trim empty spaces from command line dependencies
-  const dependencies = program.dependency?.map((dep: string) => dep.trim());
+  const dependencies = programOptions.dependency?.map((dep: string) => dep.trim());
 
   // Load FhirProcessor and config object
-  const fileType = program.fileType?.toLowerCase() ?? 'json-only';
+  const fileType = programOptions.fileType?.toLowerCase() ?? 'json-only';
   if (!['json-only', 'xml-only', 'json-and-xml'].includes(fileType)) {
     logger.error(
       `Unsupported "file-type" option: ${fileType}. Valid options are "json-only", "xml-only", and "json-and-xml".`
@@ -115,7 +118,7 @@ async function app() {
     process.exit(1);
   }
 
-  const metaProfileBehavior = program.metaProfile?.toLowerCase() ?? 'only-one';
+  const metaProfileBehavior = programOptions.metaProfile?.toLowerCase() ?? 'only-one';
   if (!['only-one', 'first', 'none'].includes(metaProfileBehavior)) {
     logger.error(
       `Unsupported "meta-profile" option: ${metaProfileBehavior}. Valid options are "only-one", "first", and "none".`
@@ -125,8 +128,9 @@ async function app() {
 
   // Get options for processors and optimizers
   const processingOptions = {
-    indent: program.indent === true,
-    metaProfile: metaProfileBehavior
+    indent: programOptions.indent === true,
+    metaProfile: metaProfileBehavior,
+    alias: programOptions.alias
   } as ProcessingOptions;
 
   const processor = getFhirProcessor(inDir, defs, fileType);
@@ -153,7 +157,7 @@ async function app() {
     process.exit(1);
   }
 
-  writeFSH(pkg, outDir, program.style);
+  writeFSH(pkg, outDir, programOptions.style);
 
   const proNum = pad(pkg.profiles.length.toString(), 18);
   const extNum = pad(pkg.extensions.length.toString(), 17);
@@ -197,7 +201,7 @@ async function app() {
   console.log();
   results.forEach(r => console.log(r));
 
-  if (program.fshingTrip) {
+  if (programOptions.fshingTrip) {
     if (fileType === 'xml-only') {
       logger.error('FSHing Trip is not supported for XML inputs.');
       process.exit(1);
@@ -206,7 +210,7 @@ async function app() {
         'FSHing Trip is not supported for XML inputs. Comparisons will only be generated for JSON input files.'
       );
     }
-    fshingTrip(inDir, outDir, program.installedSushi);
+    fshingTrip(inDir, outDir, programOptions.installedSushi);
   }
 
   process.exit(0);

@@ -107,7 +107,19 @@ describe('optimizer', () => {
       expect(resource.parent).toBe('Resource');
     });
 
-    it('should alias a core FHIR resource if it shares a name with a local StructureDefinition', () => {
+    it('should alias a core FHIR resource if it shares a name with a local StructureDefinition and alias is true', () => {
+      const profile = new ExportableProfile('MyPatient');
+      profile.parent = 'http://hl7.org/fhir/StructureDefinition/Patient';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+      expect(profile.parent).toBe('$Patient');
+      expect(myPackage.aliases).toEqual([
+        { alias: '$Patient', url: 'http://hl7.org/fhir/StructureDefinition/Patient' }
+      ]);
+    });
+
+    it('should alias a core FHIR resource if it shares a name with a local StructureDefinition and alias is undefined', () => {
       const profile = new ExportableProfile('MyPatient');
       profile.parent = 'http://hl7.org/fhir/StructureDefinition/Patient';
       const myPackage = new Package();
@@ -119,7 +131,29 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should alias the profile parent url if the parent is not found', () => {
+    it('should not alias a core FHIR resource if it shares a name with a local StructureDefinition and alias is false', () => {
+      const profile = new ExportableProfile('MyPatient');
+      profile.parent = 'http://hl7.org/fhir/StructureDefinition/Patient';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+      expect(profile.parent).toBe('http://hl7.org/fhir/StructureDefinition/Patient');
+      expect(myPackage.aliases).toHaveLength(0);
+    });
+
+    it('should alias the profile parent url if the parent is not found and alias is true', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'https://demo.org/StructureDefinition/MediumProfile';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+      expect(profile.parent).toBe('$MediumProfile');
+      expect(myPackage.aliases).toEqual([
+        { alias: '$MediumProfile', url: 'https://demo.org/StructureDefinition/MediumProfile' }
+      ]);
+    });
+
+    it('should alias the profile parent url if the parent is not found and alias is undefined', () => {
       const profile = new ExportableProfile('ExtraProfile');
       profile.parent = 'https://demo.org/StructureDefinition/MediumProfile';
       const myPackage = new Package();
@@ -129,6 +163,16 @@ describe('optimizer', () => {
       expect(myPackage.aliases).toEqual([
         { alias: '$MediumProfile', url: 'https://demo.org/StructureDefinition/MediumProfile' }
       ]);
+    });
+
+    it('should not alias the profile parent url if the parent is not found and alias is false', () => {
+      const profile = new ExportableProfile('ExtraProfile');
+      profile.parent = 'https://demo.org/StructureDefinition/MediumProfile';
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+      expect(profile.parent).toBe('https://demo.org/StructureDefinition/MediumProfile');
+      expect(myPackage.aliases).toHaveLength(0);
     });
   });
 });
