@@ -198,6 +198,21 @@ describe('StructureDefinitionProcessor', () => {
       expect(result).toHaveLength(0);
     });
 
+    it('should log an error and fix an incorrect "kind" value on an extension', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'invalid-kind-extension.json'), 'utf-8')
+      );
+      const result = StructureDefinitionProcessor.process(input, defs, config);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(ExportableExtension);
+      expect(result[0].name).toBe('SimpleExtension');
+      expect(result[0].rules).toHaveLength(0);
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        /Extension \"SimpleExtension\" should have \"kind\" set to \"complex-type\"/
+      );
+    });
+
     it('should convert a Profile whose name includes whitespace', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-profile.json'), 'utf-8')

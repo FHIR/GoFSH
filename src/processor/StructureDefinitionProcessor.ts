@@ -46,11 +46,13 @@ export class StructureDefinitionProcessor {
         sd = new ExportableLogical(name);
       } else if (input.kind === 'resource' && input.derivation === 'specialization') {
         sd = new ExportableResource(name);
-      } else if (
-        input.kind === 'complex-type' &&
-        input.derivation === 'constraint' &&
-        input.type === 'Extension'
-      ) {
+      } else if (input.derivation === 'constraint' && input.type === 'Extension') {
+        if (input.kind !== 'complex-type') {
+          logger.error(
+            `Extension "${name}" should have "kind" set to "complex-type" but has "${input.kind}" instead. The generated FSH will set "kind" to "complex-type".`
+          );
+          input.kind = 'complex-type';
+        }
         sd = new ExportableExtension(name);
       } else if (input.derivation === 'constraint') {
         sd = new ExportableProfile(name);

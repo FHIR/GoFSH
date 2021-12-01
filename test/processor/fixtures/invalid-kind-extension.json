@@ -1,0 +1,9 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "simple.extension",
+  "kind": "resource",
+  "type": "Extension",
+  "name": "SimpleExtension",
+  "derivation": "constraint",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension"
+}
