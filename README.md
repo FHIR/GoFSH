@@ -8,7 +8,7 @@ For more information about the evolving FSH syntax see the [FHIR Shorthand Refer
 
 # Installation for GoFSH Users
 
-GoFSH requires [Node.js](https://nodejs.org/) to be installed on the user's system.  Users should install Node.js 12 (LTS), although the previous LTS version (Node.js 10) is also expected to work.
+GoFSH requires [Node.js](https://nodejs.org/) to be installed on the user's system. Users should install Node.js 12 (LTS), although the previous LTS version (Node.js 10) is also expected to work.
 
 Once Node.js is installed, run the following command to install or update GoFSH:
 
@@ -33,13 +33,14 @@ Options:
   -t, --file-type <type>            specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml
   --indent                          output FSH with indented rules using context paths
   --meta-profile <mode>             specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none
+  --no-alias                        output FSH without generating Aliases
   -v, --version                     print goFSH version
   -h, --help                        display help for command
 ```
 
 # Installation for Developers
 
-GoFSH is a [TypeScript](https://www.typescriptlang.org/) project.  At a minimum, GoFSH requires [Node.js](https://nodejs.org/) to build, test, and run the CLI.  Developers should install Node.js 12 (LTS), although the previous LTS version (Node.js 10) is also expected to work.
+GoFSH is a [TypeScript](https://www.typescriptlang.org/) project. At a minimum, GoFSH requires [Node.js](https://nodejs.org/) to build, test, and run the CLI. Developers should install Node.js 12 (LTS), although the previous LTS version (Node.js 10) is also expected to work.
 
 Once Node.js is installed, run the following command from this project's root folder:
 
@@ -51,21 +52,21 @@ $ npm install
 
 The following NPM tasks are useful in development:
 
-| Task | Description |
-| ---- | ----------- |
-| **build** | compiles `src/**/*.ts` files to `dist/**/*.js` files using the TypeScript compiler (tsc) |
-| **test** | runs all unit tests using Jest |
-| **test:watch** | similar to _test_, but automatically runs affected tests when changes are detected in src files |
-| **coverage** | launches your browser to display the test coverage report |
-| **lint** | checks all src files to ensure they follow project code styles and rules |
-| **lint:fix** | fixes lint errors when automatic fixes are available for them |
-| **prettier** | checks all src files to ensure they follow project formatting conventions |
-| **prettier:fix** | fixes prettier errors by rewriting files using project formatting conventions |
-| **check** | runs all the checks performed as part of ci (test, lint, prettier) |
-| **prepare** | runs the build task before this project is packed or published |
-| **prepublishOnly** | runs the check task before this project is published |
+| Task               | Description                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| **build**          | compiles `src/**/*.ts` files to `dist/**/*.js` files using the TypeScript compiler (tsc)        |
+| **test**           | runs all unit tests using Jest                                                                  |
+| **test:watch**     | similar to _test_, but automatically runs affected tests when changes are detected in src files |
+| **coverage**       | launches your browser to display the test coverage report                                       |
+| **lint**           | checks all src files to ensure they follow project code styles and rules                        |
+| **lint:fix**       | fixes lint errors when automatic fixes are available for them                                   |
+| **prettier**       | checks all src files to ensure they follow project formatting conventions                       |
+| **prettier:fix**   | fixes prettier errors by rewriting files using project formatting conventions                   |
+| **check**          | runs all the checks performed as part of ci (test, lint, prettier)                              |
+| **prepare**        | runs the build task before this project is packed or published                                  |
+| **prepublishOnly** | runs the check task before this project is published                                            |
 
-To run any of these tasks, use `npm run`.  For example:
+To run any of these tasks, use `npm run`. For example:
 
 ```sh
 $ npm run check
@@ -75,15 +76,15 @@ $ npm run check
 
 For the best experience, developers should use [Visual Studio Code](https://code.visualstudio.com/) with the following plugins:
 
-* [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-* [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-  * Consider configuring the formatOnSave feature in VS Code settings:
+- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+- [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+  - Consider configuring the formatOnSave feature in VS Code settings:
     ```json
     "[typescript]": {
         "editor.formatOnSave": true
     }
     ```
-* [vscode-language-fsh](https://marketplace.visualstudio.com/items?itemName=kmahalingam.vscode-language-fsh)
+- [vscode-language-fsh](https://marketplace.visualstudio.com/items?itemName=kmahalingam.vscode-language-fsh)
 
 # License
 

@@ -8,6 +8,7 @@ import {
 } from '../../exportable';
 import { resolveAliasFromURL } from '../utils';
 import CombineCodingAndQuantityValuesOptimizer from './CombineCodingAndQuantityValuesOptimizer';
+import { ProcessingOptions } from '../../utils';
 
 export default {
   name: 'resolve_value_rule_urls',
@@ -32,5 +33,8 @@ export default {
         }
       });
     });
+  },
+  isEnabled(options: ProcessingOptions): boolean {
+    return options.alias === true;
   }
 } as OptimizerPlugin;

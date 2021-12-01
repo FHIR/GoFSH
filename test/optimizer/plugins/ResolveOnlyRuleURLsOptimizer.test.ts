@@ -92,7 +92,35 @@ describe('optimizer', () => {
       expect(profile.rules).toContainEqual(expectedValue);
     });
 
-    it('should alias an only rule type url if it shares a name with a local StructureDefinition', () => {
+    it('should alias an only rule type url if it shares a name with a local StructureDefinition and alias is true', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Patient',
+          isReference: true
+        }
+      ];
+
+      profile.rules.push(onlySubject);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+
+      const expectedSubject = new ExportableOnlyRule('subject');
+      expectedSubject.types = [
+        {
+          type: '$Patient',
+          isReference: true
+        }
+      ];
+      expect(profile.rules).toContainEqual(expectedSubject);
+      expect(myPackage.aliases).toEqual([
+        { alias: '$Patient', url: 'http://hl7.org/fhir/StructureDefinition/Patient' }
+      ]);
+    });
+
+    it('should alias an only rule type url if it shares a name with a local StructureDefinition and alias is undefined', () => {
       const profile = new ExportableProfile('MyObservation');
       const onlySubject = new ExportableOnlyRule('subject');
       onlySubject.types = [
@@ -120,7 +148,54 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should alias an only rule type url if the StructureDefinition is not resolved from the definitions', () => {
+    it('should not alias an only rule type url if it shares a name with a local StructureDefinition and alias is false', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'http://hl7.org/fhir/StructureDefinition/Patient',
+          isReference: true
+        }
+      ];
+
+      profile.rules.push(onlySubject);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+
+      expect(profile.rules[0]).toEqual(onlySubject);
+      expect(myPackage.aliases).toHaveLength(0);
+    });
+
+    it('should alias an only rule type url if the StructureDefinition is not resolved from the definitions and alias is true', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'http://foo/StructureDefinition/Foo',
+          isReference: true
+        }
+      ];
+
+      profile.rules.push(onlySubject);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+
+      const expectedSubject = new ExportableOnlyRule('subject');
+      expectedSubject.types = [
+        {
+          type: '$Foo',
+          isReference: true
+        }
+      ];
+      expect(profile.rules).toContainEqual(expectedSubject);
+      expect(myPackage.aliases).toEqual([
+        { alias: '$Foo', url: 'http://foo/StructureDefinition/Foo' }
+      ]);
+    });
+
+    it('should alias an only rule type url if the StructureDefinition is not resolved from the definitions and alias is undefined', () => {
       const profile = new ExportableProfile('MyObservation');
       const onlySubject = new ExportableOnlyRule('subject');
       onlySubject.types = [
@@ -146,6 +221,25 @@ describe('optimizer', () => {
       expect(myPackage.aliases).toEqual([
         { alias: '$Foo', url: 'http://foo/StructureDefinition/Foo' }
       ]);
+    });
+
+    it('should not alias an only rule type url if the StructureDefinition is not resolved from the definitions and alias is false', () => {
+      const profile = new ExportableProfile('MyObservation');
+      const onlySubject = new ExportableOnlyRule('subject');
+      onlySubject.types = [
+        {
+          type: 'http://foo/StructureDefinition/Foo',
+          isReference: true
+        }
+      ];
+
+      profile.rules.push(onlySubject);
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+
+      expect(profile.rules[0]).toEqual(onlySubject);
+      expect(myPackage.aliases).toHaveLength(0);
     });
   });
 });

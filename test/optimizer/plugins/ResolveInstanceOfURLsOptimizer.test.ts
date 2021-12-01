@@ -32,7 +32,19 @@ describe('optimizer', () => {
       expect(instance.instanceOf).toBe('Patient');
     });
 
-    it('should alias the instanceOf url if the instanceOf is not found', () => {
+    it('should alias the instanceOf url if the instanceOf is not found and alias is true', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'https://demo.org/StructureDefinition/MediumProfile';
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+      expect(instance.instanceOf).toBe('$MediumProfile');
+      expect(myPackage.aliases).toEqual([
+        { alias: '$MediumProfile', url: 'https://demo.org/StructureDefinition/MediumProfile' }
+      ]);
+    });
+
+    it('should alias the instanceOf url if the instanceOf is not found and alias is undefined', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'https://demo.org/StructureDefinition/MediumProfile';
       const myPackage = new Package();
@@ -42,6 +54,16 @@ describe('optimizer', () => {
       expect(myPackage.aliases).toEqual([
         { alias: '$MediumProfile', url: 'https://demo.org/StructureDefinition/MediumProfile' }
       ]);
+    });
+
+    it('should not alias the instanceOf url if the instanceOf is not found and alias is false', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'https://demo.org/StructureDefinition/MediumProfile';
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+      expect(instance.instanceOf).toBe('https://demo.org/StructureDefinition/MediumProfile');
+      expect(myPackage.aliases).toHaveLength(0);
     });
   });
 });

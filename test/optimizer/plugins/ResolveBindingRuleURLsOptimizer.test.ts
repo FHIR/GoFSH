@@ -39,7 +39,23 @@ describe('optimizer', () => {
       expect(profile.rules[0]).toEqual(expectedRule);
     });
 
-    it('should alias the valueSet url on a binding rule if it cannot be resolved', () => {
+    it('should alias the valueSet url on a binding rule if it cannot be resolved and alias is true', () => {
+      const profile = new ExportableProfile('Foo');
+      profile.parent = 'Observation';
+      const codeRule = new ExportableBindingRule('code');
+      codeRule.valueSet = 'http://loinc.org';
+      profile.rules = [codeRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+
+      const expectedRule = cloneDeep(codeRule);
+      expectedRule.valueSet = '$loinc';
+      expect(profile.rules[0]).toEqual(expectedRule);
+      expect(myPackage.aliases).toEqual([{ alias: '$loinc', url: 'http://loinc.org' }]);
+    });
+
+    it('should alias the valueSet url on a binding rule if it cannot be resolved and alias is undefined', () => {
       const profile = new ExportableProfile('Foo');
       profile.parent = 'Observation';
       const codeRule = new ExportableBindingRule('code');
@@ -53,6 +69,20 @@ describe('optimizer', () => {
       expectedRule.valueSet = '$loinc';
       expect(profile.rules[0]).toEqual(expectedRule);
       expect(myPackage.aliases).toEqual([{ alias: '$loinc', url: 'http://loinc.org' }]);
+    });
+
+    it('should not alias the valueSet url on a binding rule if alias is false', () => {
+      const profile = new ExportableProfile('Foo');
+      profile.parent = 'Observation';
+      const codeRule = new ExportableBindingRule('code');
+      codeRule.valueSet = 'http://loinc.org';
+      profile.rules = [codeRule];
+      const myPackage = new Package();
+      myPackage.add(profile);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+
+      expect(profile.rules[0]).toEqual(codeRule);
+      expect(myPackage.aliases).toHaveLength(0);
     });
 
     it('should maintain the original value when it cannot be aliased', () => {
