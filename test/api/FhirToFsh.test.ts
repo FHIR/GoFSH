@@ -18,6 +18,7 @@ describe('fhirToFsh', () => {
           '..',
           'helpers',
           'testdefs',
+          'package',
           'StructureDefinition-StructureDefinition.json'
         ),
         'utf-8'
@@ -25,7 +26,14 @@ describe('fhirToFsh', () => {
     );
     const patient = JSON.parse(
       fs.readFileSync(
-        path.join(__dirname, '..', 'helpers', 'testdefs', 'StructureDefinition-Patient.json'),
+        path.join(
+          __dirname,
+          '..',
+          'helpers',
+          'testdefs',
+          'package',
+          'StructureDefinition-Patient.json'
+        ),
         'utf-8'
       )
     );
