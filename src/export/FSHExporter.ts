@@ -19,6 +19,7 @@ import {
 import { Package } from '../processor';
 import { logger } from '../utils';
 import { fshMap, exportStyle, ResourceMap } from '../api';
+import sanitize from 'sanitize-filename';
 
 export class FSHExporter {
   constructor(public readonly fshPackage: Package) {}
@@ -172,39 +173,39 @@ export class FSHExporter {
 
     // Other definitions are each placed in an individual file
     for (const invariant of this.fshPackage.invariants) {
-      const filename = path.join('invariants', `${invariant.name}.fsh`);
+      const filename = path.join('invariants', `${this.cleanFileName(invariant.name)}.fsh`);
       files.set(filename, [invariant]);
     }
     for (const mapping of this.fshPackage.mappings) {
-      const filename = path.join('mappings', `${mapping.name}.fsh`);
+      const filename = path.join('mappings', `${this.cleanFileName(mapping.name)}.fsh`);
       files.set(filename, [mapping]);
     }
     for (const profile of this.fshPackage.profiles) {
-      const filename = path.join('profiles', `${profile.name}.fsh`);
+      const filename = path.join('profiles', `${this.cleanFileName(profile.name)}.fsh`);
       files.set(filename, [profile]);
     }
     for (const extension of this.fshPackage.extensions) {
-      const filename = path.join('extensions', `${extension.name}.fsh`);
+      const filename = path.join('extensions', `${this.cleanFileName(extension.name)}.fsh`);
       files.set(filename, [extension]);
     }
     for (const logical of this.fshPackage.logicals) {
-      const filename = path.join('logicals', `${logical.name}.fsh`);
+      const filename = path.join('logicals', `${this.cleanFileName(logical.name)}.fsh`);
       files.set(filename, [logical]);
     }
     for (const resource of this.fshPackage.resources) {
-      const filename = path.join('resources', `${resource.name}.fsh`);
+      const filename = path.join('resources', `${this.cleanFileName(resource.name)}.fsh`);
       files.set(filename, [resource]);
     }
     for (const codeSystem of this.fshPackage.codeSystems) {
-      const filename = path.join('codesystems', `${codeSystem.name}.fsh`);
+      const filename = path.join('codesystems', `${this.cleanFileName(codeSystem.name)}.fsh`);
       files.set(filename, [codeSystem]);
     }
     for (const valueSet of this.fshPackage.valueSets) {
-      const filename = path.join('valuesets', `${valueSet.name}.fsh`);
+      const filename = path.join('valuesets', `${this.cleanFileName(valueSet.name)}.fsh`);
       files.set(filename, [valueSet]);
     }
     for (const instance of this.fshPackage.instances) {
-      const filename = path.join('instances', `${instance.name}.fsh`);
+      const filename = path.join('instances', `${this.cleanFileName(instance.name)}.fsh`);
       files.set(filename, [instance]);
     }
 
@@ -235,7 +236,7 @@ export class FSHExporter {
       ...this.fshPackage.logicals,
       ...this.fshPackage.resources
     ].forEach(fshEntity => {
-      files.set(`${fshEntity.name}.fsh`, [fshEntity]);
+      files.set(`${this.cleanFileName(fshEntity.name)}.fsh`, [fshEntity]);
     });
 
     files.set('instances.fsh', []);
@@ -247,8 +248,11 @@ export class FSHExporter {
     // If a non-inline instance is an example of a profile or resource, it is written to the file
     // for that entity. Otherwise it is written to instances.fsh
     nonInlineInstances.forEach(instance => {
-      if (instance.usage === 'Example' && files.has(`${instance.instanceOf}.fsh`)) {
-        files.get(`${instance.instanceOf}.fsh`).push(instance);
+      if (
+        instance.usage === 'Example' &&
+        files.has(`${this.cleanFileName(instance.instanceOf)}.fsh`)
+      ) {
+        files.get(`${this.cleanFileName(instance.instanceOf)}.fsh`).push(instance);
       } else {
         files.get('instances.fsh').push(instance);
       }
@@ -280,6 +284,10 @@ export class FSHExporter {
     files.set('mappings.fsh', this.fshPackage.mappings);
 
     return files;
+  }
+
+  private cleanFileName(entityName: string): string {
+    return sanitize(entityName, { replacement: '-' });
   }
 
   private inlineInstanceUsedIn(
