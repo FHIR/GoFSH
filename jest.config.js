@@ -1,15 +1,13 @@
 module.exports = {
   globals: {
     'ts-jest': {
-      tsConfig: 'tsconfig.json'
+      tsconfig: 'tsconfig.json'
     }
   },
-  moduleFileExtensions: ['ts', 'js'],
-  transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
-  },
+  moduleFileExtensions: ['js', 'ts'],
   testMatch: ['**/test/**/*.test.(ts|js)'],
   testEnvironment: 'node',
-  setupFilesAfterEnv: ['jest-extended'],
-  collectCoverageFrom: ['src/**/*.ts']
+  setupFilesAfterEnv: ['jest-extended/all'],
+  collectCoverageFrom: ['src/**/*.ts'],
+  preset: 'ts-jest'
 };
