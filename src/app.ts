@@ -23,7 +23,7 @@ import {
 import { Package, AliasProcessor } from './processor';
 import { ExportableAlias } from './exportable';
 
-const FSH_VERSION = '1.2.0';
+const FSH_VERSION = '2.0.0';
 
 app().catch(e => {
   logger.error(`Unexpected error: ${e.message}`);
