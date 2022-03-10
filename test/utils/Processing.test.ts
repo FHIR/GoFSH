@@ -28,30 +28,23 @@ import {
 } from '../../src/exportable';
 import * as loadOptimizers from '../../src/optimizer/loadOptimizers';
 
-jest.mock('fsh-sushi', () => {
-  const original = jest.requireActual('fsh-sushi');
+jest.mock('fhir-package-loader', () => {
+  const original = jest.requireActual('fhir-package-loader');
   const newStyle = {
     ...original,
-    fhirdefs: {
-      ...original.fhirdefs
-    }
-  };
-  newStyle.fhirdefs.loadDependency = async (
-    packageName: string,
-    version: string,
-    FHIRDefs: any
-  ) => {
-    // the mock loader can find hl7.fhir.r4.core, hl7.fhir.r4b.core, and hl7.fhir.us.core
-    if (
-      packageName === 'hl7.fhir.r4.core' ||
-      packageName === 'hl7.fhir.us.core' ||
-      packageName === 'hl7.fhir.r4b.core'
-    ) {
-      FHIRDefs.packages.push(`${packageName}#${version}`);
-      return Promise.resolve(FHIRDefs);
-    } else {
-      throw new Error();
-    }
+    loadDependency: jest.fn(async (packageName: string, version: string, FHIRDefs: any) => {
+      // the mock loader can find hl7.fhir.r4.core, hl7.fhir.r4b.core, and hl7.fhir.us.core
+      if (
+        packageName === 'hl7.fhir.r4.core' ||
+        packageName === 'hl7.fhir.us.core' ||
+        packageName === 'hl7.fhir.r4b.core'
+      ) {
+        FHIRDefs.packages.push(`${packageName}#${version}`);
+        return Promise.resolve(FHIRDefs);
+      } else {
+        throw new Error();
+      }
+    })
   };
   return newStyle;
 });

@@ -3,6 +3,7 @@ import path from 'path';
 import ini from 'ini';
 import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
+import { loadDependency } from 'fhir-package-loader';
 import { logger } from './GoFSHLogger';
 import {
   Package,
@@ -133,9 +134,8 @@ export function loadExternalDependencies(
       continue;
     }
     dependencyDefs.push(
-      fhirdefs
-        .loadDependency(packageId, version, defs)
-        .then(def => {
+      loadDependency(packageId, version, defs)
+        .then((def: fhirdefs.FHIRDefinitions) => {
           return def;
         })
         .catch(e => {
