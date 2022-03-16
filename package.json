@@ -4,7 +4,7 @@
   "description": "GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON to FSH.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && tsc && copyfiles -u 3 \"src/utils/template.html/*\" dist/utils",
+    "build": "rm -rf dist && tsc && copyfiles -u 2 \"src/utils/template.html\" dist/utils",
     "check": "npm run test && npm run lint && npm run prettier",
     "test": "jest --maxWorkers=4 --coverage",
     "test:watch": "npm run test -- --watchAll",
