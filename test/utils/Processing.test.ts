@@ -6,6 +6,7 @@ import readlineSync from 'readline-sync';
 import { fhirdefs } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
 import {
+  determineCorePackageId,
   ensureOutputDir,
   getInputDir,
   getResources,
@@ -40,8 +41,12 @@ jest.mock('fsh-sushi', () => {
     version: string,
     FHIRDefs: any
   ) => {
-    // the mock loader can find hl7.fhir.r4.core and hl7.fhir.us.core
-    if (packageName === 'hl7.fhir.r4.core' || packageName === 'hl7.fhir.us.core') {
+    // the mock loader can find hl7.fhir.r4.core, hl7.fhir.r4b.core, and hl7.fhir.us.core
+    if (
+      packageName === 'hl7.fhir.r4.core' ||
+      packageName === 'hl7.fhir.us.core' ||
+      packageName === 'hl7.fhir.r4b.core'
+    ) {
       FHIRDefs.packages.push(`${packageName}#${version}`);
       return Promise.resolve(FHIRDefs);
     } else {
@@ -560,6 +565,17 @@ describe('Processing', () => {
         expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       });
     });
+
+    it('should load FHIR R4B if specified', () => {
+      const defs = new fhirdefs.FHIRDefinitions();
+      const dependencies = ['hl7.fhir.r4b.core@4.3.0-snapshot1'];
+      const dependencyDefs = loadExternalDependencies(defs, dependencies);
+      return Promise.all(dependencyDefs).then(() => {
+        expect(defs.packages).toHaveLength(1);
+        expect(defs.packages).toContain('hl7.fhir.r4b.core#4.3.0-snapshot1'); // Only contains r4b, doesn't load r4
+        expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      });
+    });
   });
 
   describe('getIgPathFromIgIni', () => {
@@ -592,6 +608,28 @@ describe('Processing', () => {
     it('should return nothing if no ig.ini file present', () => {
       const ig = getIgPathFromIgIni(path.join(__dirname, 'fixtures', 'all-good'));
       expect(ig).toBeUndefined();
+    });
+  });
+
+  describe('determineCorePackageId', () => {
+    it('should get R4 package id with R4 version', () => {
+      expect(determineCorePackageId('4.0.1')).toEqual('hl7.fhir.r4.core');
+    });
+
+    it('should get R4B package id with R4B versions', () => {
+      expect(determineCorePackageId('4.1.0')).toEqual('hl7.fhir.r4b.core');
+      expect(determineCorePackageId('4.3.0')).toEqual('hl7.fhir.r4b.core');
+      expect(determineCorePackageId('4.3.0-snapshot1')).toEqual('hl7.fhir.r4b.core');
+    });
+
+    it('should get R5 package id with R5 version', () => {
+      expect(determineCorePackageId('4.6.0')).toEqual('hl7.fhir.r5.core');
+      expect(determineCorePackageId('5.0.0')).toEqual('hl7.fhir.r5.core');
+      expect(determineCorePackageId('5.0.0-snapshot1')).toEqual('hl7.fhir.r5.core');
+    });
+
+    it('should default to R5 package id when version is unrecognized', () => {
+      expect(determineCorePackageId('6.0.0')).toEqual('hl7.fhir.r5.core');
     });
   });
 
