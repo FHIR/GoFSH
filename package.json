@@ -32,6 +32,10 @@
     "Mint Thompson <mathompson@mitre.org>",
     "Guhan B. Thuran <gthuran@mitre.org>"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FHIR/GoFSH.git"
+  },
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/antlr4": "^4.7.2",
@@ -69,6 +73,7 @@
     "diff": "^5.0.0",
     "diff2html": "^3.1.18",
     "fhir": "^4.10.0",
+    "fhir-package-loader": "^0.1.0",
     "flat": "^5.0.2",
     "fs-extra": "^9.0.1",
     "fsh-sushi": "^2.5.0",
