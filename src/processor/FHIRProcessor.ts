@@ -41,6 +41,7 @@ export class FHIRProcessor {
     if (igForConfig) {
       resources.push(igForConfig.content);
     }
+    //pass in here
     const config = ConfigurationExtractor.process(resources);
     if (externalDeps?.length > 0) {
       const existingIds: string[] = [];

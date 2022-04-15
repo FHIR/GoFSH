@@ -24,19 +24,20 @@ $ gofsh --help
 Usage: goFSH [path-to-fhir-resources] [options]
 
 Options:
-  -o, --out <out>                   the path to the output folder
-  -l, --log-level <level>           specify the level of log messages: error, warn, info (default), debug
-  -d, --dependency <dependency...>  specify dependencies to be loaded using format dependencyId@version (FHIR R4 included by default)
-  -s, --style <style>               specify how the output is organized into files: file-per-definition (default), group-by-fsh-type, group-by-profile, single-file
-  -f, --fshing-trip                 run SUSHI on the output of GoFSH and generate a comparison of the round trip results
-  -i, --installed-sushi             use the locally installed version of SUSHI when generating comparisons with the "-f" option
-  -t, --file-type <type>            specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml
-  --indent                          output FSH with indented rules using context paths
-  --meta-profile <mode>             specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none
-  -a, --alias-file <alias-filePath> specify an existing FSH file containing aliases to be loaded.
-  --no-alias                        output FSH without generating Aliases
-  -v, --version                     print goFSH version
-  -h, --help                        display help for command
+  -o, --out <out>                    the path to the output folder
+  -l, --log-level <level>            specify the level of log messages: error, warn, info (default), debug
+  -d, --dependency <dependency...>   specify dependencies to be loaded using format dependencyId@version (FHIR R4 included by default)
+  -s, --style <style>                specify how the output is organized into files: file-per-definition (default), group-by-fsh-type, group-by-profile, single-file
+  -f, --fshing-trip                  run SUSHI on the output of GoFSH and generate a comparison of the round trip results
+  -i, --installed-sushi              use the locally installed version of SUSHI when generating comparisons with the "-f" option
+  -t, --file-type <type>             specify which file types GoFSH should accept as input: json-only (default), xml-only, json-and-xml
+  --indent                           output FSH with indented rules using context paths
+  --meta-profile <mode>              specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none
+  -a, --alias-file <alias-filePath>  specify an existing FSH file containing aliases to be loaded.
+  --no-alias                         output FSH without generating Aliases
+  -u, --useFHIRVersion <fhirVersion> specifiy which FHIR version to run instances on
+  -v, --version                      print goFSH version
+  -h, --help                         display help for command
 ```
 
 # Installation for Developers

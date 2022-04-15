@@ -29,7 +29,8 @@
     "Julian Carter <jacarter@mitre.org",
     "Nick Freiter <nfreiter@mitre.org>",
     "Chris Moesel <cmoesel@mitre.org>",
-    "Mint Thompson <mathompson@mitre.org>"
+    "Mint Thompson <mathompson@mitre.org>",
+    "Guhan B. Thuran <gthuran@mitre.org>"
   ],
   "license": "Apache-2.0",
   "devDependencies": {

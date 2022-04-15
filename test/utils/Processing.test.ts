@@ -437,6 +437,18 @@ describe('Processing', () => {
     });
   });
 
+  describe('useGivenFhirVersion', () => {
+    it("should fail when user doesn't input a correct FHIR version", () => {
+      //finish
+    });
+    it('should use the FHIR version is input if it is valid', () => {
+      //finish
+    });
+    it('case for if FHIR version is different in files than the one passed in', () => {
+      //finish
+    });
+  });
+
   describe('readJSONorXML', () => {
     it('should return a FileImport object with the "large" property set to true for big files', () => {
       const JSONFilePath = path.join(
@@ -681,6 +693,19 @@ describe('Processing', () => {
       expect(lake.docs[3].content.id).toBe('xml-patient');
       expect(loggerSpy.getMessageAtIndex(-2, 'info')).toMatch(/Found 2 JSON files\./);
       expect(loggerSpy.getMessageAtIndex(-1, 'info')).toMatch(/Found 2 XML files\./);
+      expect(loggerSpy.getLastMessage('warn')).toBeUndefined();
+    });
+
+    it('should log "file" in singular tense when directory contains 1 JSON file and 1 XML file', () => {
+      const lake = getLakeOfFHIR(
+        path.join(fixtures, 'json-and-xml-non-duplicates-singular'),
+        'json-and-xml'
+      );
+      expect(lake.docs).toHaveLength(2);
+      expect(lake.docs[0].content.id).toBe('json-observation');
+      expect(lake.docs[1].content.id).toBe('xml-observation');
+      expect(loggerSpy.getMessageAtIndex(-2, 'info')).toMatch(/Found 1 JSON file\./);
+      expect(loggerSpy.getMessageAtIndex(-1, 'info')).toMatch(/Found 1 XML file\./);
       expect(loggerSpy.getLastMessage('warn')).toBeUndefined();
     });
   });

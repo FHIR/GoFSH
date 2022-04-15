@@ -14,6 +14,7 @@ import {
   getResources,
   loadExternalDependencies,
   writeFSH,
+  useGivenFhirVersion,
   logger,
   stats,
   fshingTrip,
@@ -71,6 +72,7 @@ async function app() {
       'specify an existing FSH file containing aliases to be loaded.'
     )
     .option('--no-alias', 'output FSH without generating Aliases')
+    .option('-u, --useFHIRVersion <fhirVersion>', 'specifiy which FHIR version to run instances on')
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -115,6 +117,10 @@ async function app() {
   // Trim empty spaces from command line dependencies
   const dependencies = programOptions.dependency?.map((dep: string) => dep.trim());
 
+  // Use specified FHIR Version
+  //logger.info(`${programOptions.useFHIRVersion}`);
+  useGivenFhirVersion(programOptions.useFHIRVersion);
+
   // Load FhirProcessor and config object
   const fileType = programOptions.fileType?.toLowerCase() ?? 'json-only';
   if (!['json-only', 'xml-only', 'json-and-xml'].includes(fileType)) {
@@ -146,6 +152,7 @@ async function app() {
   } as ProcessingOptions;
 
   const processor = getFhirProcessor(inDir, defs, fileType);
+  //pass in here
   const config = processor.processConfig(dependencies);
 
   // Load dependencies from config for GoFSH processing
@@ -153,6 +160,7 @@ async function app() {
     config.config.dependencies?.map(
       (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
     ) ?? [];
+  //check fhirVersion below (we can exit)
   const fhirPackageId = config.config.fhirVersion[0].startsWith('4.0')
     ? 'hl7.fhir.r4.core'
     : 'hl7.fhir.r5.core';

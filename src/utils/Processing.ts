@@ -112,6 +112,15 @@ export function writeFSH(resources: Package, outDir: string, style: string): voi
   }
 }
 
+export function useGivenFhirVersion(desiredVersion: string): void {
+  logger.info(desiredVersion);
+  //finish
+  //if FHIR version is valid, use it
+  //if FHIR version is valid, but the one used in the files are a different version, error
+  //in above case, use the FHIR version that they passed in
+  //if it is not valid, fail/throw error
+}
+
 export function loadExternalDependencies(
   defs: fhirdefs.FHIRDefinitions,
   dependencies: string[] = []
@@ -151,9 +160,18 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
   const jsonFiles = files.filter(f => f.endsWith('.json'));
   const xmlFiles = files.filter(f => f.endsWith('.xml'));
   const docs: WildFHIR[] = [];
+  let pluralJsonFiles = '';
+  let pluralXmlFiles = '';
+
+  if (jsonFiles.length != 1) {
+    pluralJsonFiles = 's';
+  }
+  if (xmlFiles.length != 1) {
+    pluralXmlFiles = 's';
+  }
 
   if (fileType === 'json-only') {
-    logger.info(`Found ${jsonFiles.length} JSON files.`);
+    logger.info(`Found ${jsonFiles.length} JSON file${pluralJsonFiles}.`);
     loadPrimaryFiles(jsonFiles, docs);
     const nonDuplicateXMLFiles = findNonDuplicateSecondaryFiles(xmlFiles, docs);
     if (nonDuplicateXMLFiles.length > 0) {
@@ -166,7 +184,7 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
       );
     }
   } else if (fileType === 'xml-only') {
-    logger.info(`Found ${xmlFiles.length} XML files.`);
+    logger.info(`Found ${xmlFiles.length} XML file${pluralXmlFiles}.`);
     loadPrimaryFiles(xmlFiles, docs);
     const nonDuplicateJSONFiles = findNonDuplicateSecondaryFiles(jsonFiles, docs);
     if (nonDuplicateJSONFiles.length > 0) {
@@ -179,9 +197,9 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
       );
     }
   } else if (fileType === 'json-and-xml') {
-    logger.info(`Found ${jsonFiles.length} JSON files.`);
+    logger.info(`Found ${jsonFiles.length} JSON file${pluralJsonFiles}.`);
     loadPrimaryFiles(jsonFiles, docs);
-    logger.info(`Found ${xmlFiles.length} XML files.`);
+    logger.info(`Found ${xmlFiles.length} XML file${pluralXmlFiles}.`);
     loadPrimaryFiles(xmlFiles, docs);
   }
 

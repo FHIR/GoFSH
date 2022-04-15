@@ -35,11 +35,14 @@ export class ConfigurationExtractor {
       igResource?.url?.replace(/\/ImplementationGuide\/[^/]+$/, '') ??
       (ConfigurationExtractor.inferCanonical(resources) || 'http://example.org');
     if (!fhirVersion?.length) {
+      //below checks the file version of fhirVersion
       const fhirVersionFromResources = ConfigurationExtractor.inferString(resources, 'fhirVersion');
       fhirVersion = utils.isSupportedFHIRVersion(fhirVersionFromResources)
         ? [fhirVersionFromResources]
         : ['4.0.1'];
+      //use the one that was passed in, otherwise use 4.0.1
     }
+    //if one was passed in, check the fhir version in files. if mismatch, log error
     const config = new ExportableConfiguration({
       canonical: canonical,
       fhirVersion: fhirVersion,
