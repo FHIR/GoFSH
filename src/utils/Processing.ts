@@ -163,10 +163,10 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
   let pluralJsonFiles = '';
   let pluralXmlFiles = '';
 
-  if (jsonFiles.length != 1) {
+  if (jsonFiles.length !== 1) {
     pluralJsonFiles = 's';
   }
-  if (xmlFiles.length != 1) {
+  if (xmlFiles.length !== 1) {
     pluralXmlFiles = 's';
   }
 

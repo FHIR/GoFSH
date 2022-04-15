@@ -696,7 +696,7 @@ describe('Processing', () => {
       expect(loggerSpy.getLastMessage('warn')).toBeUndefined();
     });
 
-    it('should log "file" in singular tense when directory contains 1 JSON file and 1 XML file', () => {
+    it('should log "file" in singular tense when directory contains 1 JSON file and/or 1 XML file', () => {
       const lake = getLakeOfFHIR(
         path.join(fixtures, 'json-and-xml-non-duplicates-singular'),
         'json-and-xml'
