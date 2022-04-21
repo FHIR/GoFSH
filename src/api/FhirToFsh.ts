@@ -1,5 +1,6 @@
 import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import {
+  determineCorePackageId,
   getResources,
   isProcessableContent,
   loadExternalDependencies,
@@ -79,13 +80,12 @@ export async function fhirToFsh(
   );
 
   // Load dependencies, including those inferred from an IG file, and those given as input
-  const dependencies = configuration.config.dependencies?.map(
-    (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
-  );
-  if (dependencies) {
-    const fhirPackageId = configuration.config.fhirVersion[0].startsWith('4.0')
-      ? 'hl7.fhir.r4.core'
-      : 'hl7.fhir.r5.core';
+  const dependencies =
+    configuration.config.dependencies?.map(
+      (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
+    ) ?? [];
+  const fhirPackageId = determineCorePackageId(configuration.config.fhirVersion[0]);
+  if (!dependencies.includes(`${fhirPackageId}@${configuration.config.fhirVersion[0]}`)) {
     dependencies.push(`${fhirPackageId}@${configuration.config.fhirVersion[0]}`);
   }
   await Promise.all(loadExternalDependencies(defs, dependencies));

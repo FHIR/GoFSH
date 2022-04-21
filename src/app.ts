@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import { pad, padStart, padEnd } from 'lodash';
 import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
 import {
+  determineCorePackageId,
   ensureOutputDir,
   getInputDir,
   getAliasFile,
@@ -153,9 +154,7 @@ async function app() {
     config.config.dependencies?.map(
       (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
     ) ?? [];
-  const fhirPackageId = config.config.fhirVersion[0].startsWith('4.0')
-    ? 'hl7.fhir.r4.core'
-    : 'hl7.fhir.r5.core';
+  const fhirPackageId = determineCorePackageId(config.config.fhirVersion[0]);
   allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
   const dependencyDefs = loadExternalDependencies(defs, allDependencies);
 
