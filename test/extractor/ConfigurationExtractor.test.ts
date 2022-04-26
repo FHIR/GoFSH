@@ -59,6 +59,33 @@ describe('ConfigurationExtractor', () => {
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
     });
 
+    it('should be able to handle a specified FHIR version', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
+      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+    });
+
+    it('should be able to handle a specified FHIR version when FHIR version is missing', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
+      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+    });
+
+    it('should log an error when the specified FHIR version is different from detected FHIR version', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
+      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'FHIR Version mismatch error: specified version is: 5.0.0 while detected version is: 4.5.0'
+      );
+    });
+
     describe('non-IG resources', () => {
       it('should return a configuration with elements inferred from the canonical', () => {
         const result = ConfigurationExtractor.process(resources);

@@ -112,21 +112,12 @@ export function writeFSH(resources: Package, outDir: string, style: string): voi
   }
 }
 
-export function useGivenFhirVersion(desiredVersion: string): void {
-  logger.info(desiredVersion);
-  //finish
-  //if FHIR version is valid, use it
-  //if FHIR version is valid, but the one used in the files are a different version, error
-  //in above case, use the FHIR version that they passed in
-  //if it is not valid, fail/throw error
-}
-
 export function loadExternalDependencies(
   defs: fhirdefs.FHIRDefinitions,
   dependencies: string[] = []
 ): Promise<fhirdefs.FHIRDefinitions | void>[] {
   // Automatically include FHIR R4 if no other versions of FHIR are already included
-  if (!dependencies.some(dep => /hl7\.fhir\.r[45]\.core/.test(dep))) {
+  if (!dependencies.some(dep => /hl7\.fhir\.r(4|5|4b)\.core/.test(dep))) {
     dependencies.push('hl7.fhir.r4.core@4.0.1');
   }
 
@@ -318,6 +309,20 @@ export function getFilesRecursive(dir: string): string[] {
       return [];
     }
     return [dir];
+  }
+}
+
+export function determineCorePackageId(fhirVersion: string): string {
+  if (/^4\.0\./.test(fhirVersion)) {
+    return 'hl7.fhir.r4.core';
+  } else if (/^(4\.1\.|4\.3.\d+-)/.test(fhirVersion)) {
+    return 'hl7.fhir.r4b.core';
+  } else if (/^4\.3.\d+$/.test(fhirVersion)) {
+    return 'hl7.fhir.r4b.core';
+  } else if (/^5\.0.\d+$/.test(fhirVersion)) {
+    return 'hl7.fhir.r5.core';
+  } else {
+    return 'hl7.fhir.r5.core';
   }
 }
 

@@ -132,6 +132,27 @@ describe('fhirToFsh', () => {
     ]);
   });
 
+  it('should load FHIR R4B when specified in config fhirVersion', async () => {
+    // Loads R4B from fhirVersion
+    const results = await fhirToFsh([
+      JSON.stringify({
+        resourceType: 'StructureDefinition',
+        name: 'Foo',
+        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
+        derivation: 'constraint',
+        fhirVersion: '4.3.0' // FHIR R4B
+      })
+    ]);
+    expect(results.errors).toHaveLength(0);
+    expect(results.warnings).toHaveLength(0);
+    expect(results.configuration).toEqual({
+      ...defaultConfig,
+      fhirVersion: ['4.3.0']
+    });
+    expect(loadSpy.mock.calls).toHaveLength(1);
+    expect(loadSpy.mock.calls[0][1]).toEqual(['hl7.fhir.r4b.core@4.3.0']);
+  });
+
   it('should parse a string input into JSON', async () => {
     const results = await fhirToFsh([
       JSON.stringify({

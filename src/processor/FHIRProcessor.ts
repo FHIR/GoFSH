@@ -29,7 +29,7 @@ export class FHIRProcessor {
     return this.fisher;
   }
 
-  processConfig(externalDeps?: string[]): ExportableConfiguration {
+  processConfig(externalDeps?: string[], specifiedFHIRVersion?: string): ExportableConfiguration {
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
       this.lake.getAllImplementationGuides()[0];
@@ -41,8 +41,7 @@ export class FHIRProcessor {
     if (igForConfig) {
       resources.push(igForConfig.content);
     }
-    //pass in here
-    const config = ConfigurationExtractor.process(resources);
+    const config = ConfigurationExtractor.process(resources, specifiedFHIRVersion);
     if (externalDeps?.length > 0) {
       const existingIds: string[] = [];
       config.config.dependencies = config.config.dependencies || [];

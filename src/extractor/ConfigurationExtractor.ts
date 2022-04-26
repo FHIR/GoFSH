@@ -6,7 +6,7 @@ import { ExportableConfiguration } from '../exportable';
 type ImplementationGuideStatus = fhirtypes.ImplementationGuideStatus;
 
 export class ConfigurationExtractor {
-  static process(resources: any[]): ExportableConfiguration {
+  static process(resources: any[], specifiedFHIRVersion?: string): ExportableConfiguration {
     const igResource = ConfigurationExtractor.getIGResource(resources);
     const missingIGProperties: string[] = [];
     if (igResource && !igResource.url) {
@@ -35,14 +35,27 @@ export class ConfigurationExtractor {
       igResource?.url?.replace(/\/ImplementationGuide\/[^/]+$/, '') ??
       (ConfigurationExtractor.inferCanonical(resources) || 'http://example.org');
     if (!fhirVersion?.length) {
-      //below checks the file version of fhirVersion
       const fhirVersionFromResources = ConfigurationExtractor.inferString(resources, 'fhirVersion');
-      fhirVersion = utils.isSupportedFHIRVersion(fhirVersionFromResources)
-        ? [fhirVersionFromResources]
-        : ['4.0.1'];
-      //use the one that was passed in, otherwise use 4.0.1
+      if (utils.isSupportedFHIRVersion(fhirVersionFromResources)) {
+        fhirVersion = [fhirVersionFromResources];
+      }
     }
-    //if one was passed in, check the fhir version in files. if mismatch, log error
+    if (specifiedFHIRVersion) {
+      // fhirVersion can sometimes not be detected
+      if (fhirVersion?.length && fhirVersion.indexOf(specifiedFHIRVersion) === -1) {
+        // should this be error or warn?
+        logger.error(
+          `FHIR Version mismatch error: specified version is: ${specifiedFHIRVersion} while detected version is: ${fhirVersion.join(
+            ', '
+          )}`
+        );
+      }
+      fhirVersion = [specifiedFHIRVersion];
+    }
+    //if fhirVersion is still not known, default to 4.0.1
+    if (!fhirVersion?.length) {
+      fhirVersion = ['4.0.1'];
+    }
     const config = new ExportableConfiguration({
       canonical: canonical,
       fhirVersion: fhirVersion,

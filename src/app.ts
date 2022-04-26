@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import { pad, padStart, padEnd } from 'lodash';
 import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
 import {
+  determineCorePackageId,
   ensureOutputDir,
   getInputDir,
   getAliasFile,
@@ -14,7 +15,6 @@ import {
   getResources,
   loadExternalDependencies,
   writeFSH,
-  useGivenFhirVersion,
   logger,
   stats,
   fshingTrip,
@@ -23,6 +23,7 @@ import {
 } from './utils';
 import { Package, AliasProcessor } from './processor';
 import { ExportableAlias } from './exportable';
+import { isSupportedFHIRVersion } from 'fsh-sushi/dist/utils';
 
 const FSH_VERSION = '2.0.0';
 
@@ -118,8 +119,11 @@ async function app() {
   const dependencies = programOptions.dependency?.map((dep: string) => dep.trim());
 
   // Use specified FHIR Version
-  //logger.info(`${programOptions.useFHIRVersion}`);
-  useGivenFhirVersion(programOptions.useFHIRVersion);
+  const specifiedFHIRVersion = programOptions.useFHIRVersion;
+  if (specifiedFHIRVersion && !isSupportedFHIRVersion(specifiedFHIRVersion)) {
+    logger.error(`Specified FHIR version is invalid: ${specifiedFHIRVersion}`);
+    process.exit(1);
+  }
 
   // Load FhirProcessor and config object
   const fileType = programOptions.fileType?.toLowerCase() ?? 'json-only';
@@ -152,18 +156,14 @@ async function app() {
   } as ProcessingOptions;
 
   const processor = getFhirProcessor(inDir, defs, fileType);
-  //pass in here
-  const config = processor.processConfig(dependencies);
+  const config = processor.processConfig(dependencies, specifiedFHIRVersion);
 
   // Load dependencies from config for GoFSH processing
   const allDependencies =
     config.config.dependencies?.map(
       (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
     ) ?? [];
-  //check fhirVersion below (we can exit)
-  const fhirPackageId = config.config.fhirVersion[0].startsWith('4.0')
-    ? 'hl7.fhir.r4.core'
-    : 'hl7.fhir.r5.core';
+  const fhirPackageId = determineCorePackageId(config.config.fhirVersion[0]);
   allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
   const dependencyDefs = loadExternalDependencies(defs, allDependencies);
 
