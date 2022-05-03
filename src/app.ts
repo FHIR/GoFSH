@@ -73,7 +73,7 @@ async function app() {
       'specify an existing FSH file containing aliases to be loaded.'
     )
     .option('--no-alias', 'output FSH without generating Aliases')
-    .option('-u, --useFHIRVersion <fhirVersion>', 'specifiy which FHIR version to run instances on')
+    .option('-u, --useFHIRVersion <fhirVersion>', 'specify which FHIR version to use when it cannot be inferred')
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
