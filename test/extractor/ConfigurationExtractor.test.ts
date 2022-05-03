@@ -63,8 +63,9 @@ describe('ConfigurationExtractor', () => {
       const ig = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
       );
-      const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
-      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+      const result = ConfigurationExtractor.process([ig, ...resources], '4.5.0');
+      expect(result.config.fhirVersion).toEqual(['4.5.0']);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
     });
 
     it('should be able to handle a specified FHIR version when FHIR version is missing', () => {
@@ -73,6 +74,16 @@ describe('ConfigurationExtractor', () => {
       );
       const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
       expect(result.config.fhirVersion).toEqual(['5.0.0']);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(3);
+      expect(loggerSpy.getMessageAtIndex(-3, 'warn')).toMatch(
+        'ImplementationGuide missing properties needed to generate configuration file: fhirVersion. These properties will be inferred based on FHIR definitions.'
+      );
+      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
+        'FHIR Version mismatch error: specified version is: 5.0.0 while detected version is: 4.0.1'
+      );
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
+      );
     });
 
     it('should log an error when the specified FHIR version is different from detected FHIR version', () => {
@@ -81,8 +92,11 @@ describe('ConfigurationExtractor', () => {
       );
       const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
       expect(result.config.fhirVersion).toEqual(['5.0.0']);
-      expect(loggerSpy.getLastMessage('error')).toMatch(
+      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
         'FHIR Version mismatch error: specified version is: 5.0.0 while detected version is: 4.5.0'
+      );
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
       );
     });
 

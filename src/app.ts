@@ -23,7 +23,6 @@ import {
 } from './utils';
 import { Package, AliasProcessor } from './processor';
 import { ExportableAlias } from './exportable';
-import { isSupportedFHIRVersion } from 'fsh-sushi/dist/utils';
 
 const FSH_VERSION = '2.0.0';
 
@@ -73,7 +72,10 @@ async function app() {
       'specify an existing FSH file containing aliases to be loaded.'
     )
     .option('--no-alias', 'output FSH without generating Aliases')
-    .option('-u, --useFHIRVersion <fhirVersion>', 'specify which FHIR version to use when it cannot be inferred')
+    .option(
+      '-u, --useFHIRVersion <fhirVersion>',
+      'specify which FHIR version to use when it cannot be inferred'
+    )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -120,7 +122,7 @@ async function app() {
 
   // Use specified FHIR Version
   const specifiedFHIRVersion = programOptions.useFHIRVersion;
-  if (specifiedFHIRVersion && !isSupportedFHIRVersion(specifiedFHIRVersion)) {
+  if (specifiedFHIRVersion && !utils.isSupportedFHIRVersion(specifiedFHIRVersion)) {
     logger.error(`Specified FHIR version is invalid: ${specifiedFHIRVersion}`);
     process.exit(1);
   }
