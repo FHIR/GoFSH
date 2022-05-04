@@ -74,15 +74,12 @@ describe('ConfigurationExtractor', () => {
       );
       const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
       expect(result.config.fhirVersion).toEqual(['5.0.0']);
-      expect(loggerSpy.getAllMessages('warn')).toHaveLength(3);
-      expect(loggerSpy.getMessageAtIndex(-3, 'warn')).toMatch(
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(2);
+      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
         'ImplementationGuide missing properties needed to generate configuration file: fhirVersion. These properties will be inferred based on FHIR definitions.'
       );
-      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
-        'FHIR Version mismatch error: specified version is: 5.0.0 while detected version is: 4.0.1'
-      );
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        'GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
+        'FHIR Version mismatch error: specified version is: 5.0.0 while detected version is: 4.0.1. GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
       );
     });
 
@@ -92,11 +89,8 @@ describe('ConfigurationExtractor', () => {
       );
       const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
       expect(result.config.fhirVersion).toEqual(['5.0.0']);
-      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
-        'FHIR Version mismatch error: specified version is: 5.0.0 while detected version is: 4.5.0'
-      );
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        'GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
+        'FHIR Version mismatch error: specified version is: 5.0.0 while detected version is: 4.5.0. GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
       );
     });
 

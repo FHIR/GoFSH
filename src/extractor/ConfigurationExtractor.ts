@@ -46,10 +46,7 @@ export class ConfigurationExtractor {
         logger.warn(
           `FHIR Version mismatch error: specified version is: ${specifiedFHIRVersion} while detected version is: ${fhirVersion.join(
             ', '
-          )}`
-        );
-        logger.warn(
-          `GoFSH will use the specified version (${specifiedFHIRVersion}), but this may result in additional processing errors.`
+          )}. GoFSH will use the specified version (${specifiedFHIRVersion}), but this may result in additional processing errors.`
         );
       }
       fhirVersion = [specifiedFHIRVersion];
