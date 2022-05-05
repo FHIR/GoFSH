@@ -1,6 +1,7 @@
-import { fhirdefs, fhirtypes, fshtypes, utils } from 'fsh-sushi';
+import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import {
   determineCorePackageId,
+  FHIRDefinitions,
   getResources,
   isProcessableContent,
   loadExternalDependencies,
@@ -70,7 +71,7 @@ export async function fhirToFsh(
 
   // Set up the FHIRProcessor
   const lake = new LakeOfFHIR(docs);
-  const defs = new fhirdefs.FHIRDefinitions();
+  const defs = new FHIRDefinitions();
   const fisher = new MasterFisher(lake, defs);
   const processor = new FHIRProcessor(lake, fisher);
 

@@ -1,6 +1,5 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirdefs } from 'fsh-sushi';
 import { ContainsRuleExtractor } from '../../src/extractor';
 import { ProcessableElementDefinition } from '../../src/processor';
 import {
@@ -8,12 +7,13 @@ import {
   ExportableCardRule,
   ExportableFlagRule
 } from '../../src/exportable';
+import { FHIRDefinitions } from '../../src/utils';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { loggerSpy } from '../helpers/loggerSpy';
 
 describe('ContainsRuleExtractor', () => {
   let looseSD: any;
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
 
   beforeAll(() => {
     looseSD = JSON.parse(

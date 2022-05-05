@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fshtypes, fhirdefs } from 'fsh-sushi';
+import { fshtypes } from 'fsh-sushi';
 import { ValueSetProcessor } from '../../src/processor';
 import {
   ExportableCaretValueRule,
@@ -8,12 +8,13 @@ import {
   ExportableValueSet,
   ExportableValueSetConceptComponentRule
 } from '../../src/exportable';
+import { FHIRDefinitions } from '../../src/utils';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { loggerSpy } from '../helpers/loggerSpy';
 const { FshCode } = fshtypes;
 
 describe('ValueSetProcessor', () => {
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
   let config: fshtypes.Configuration;
 
   beforeAll(() => {

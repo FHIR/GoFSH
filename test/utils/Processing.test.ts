@@ -3,7 +3,6 @@ import path from 'path';
 import temp from 'temp';
 import { Fhir } from 'fhir/fhir';
 import readlineSync from 'readline-sync';
-import { fhirdefs } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
 import {
   determineCorePackageId,
@@ -26,6 +25,7 @@ import {
   ExportableProfile,
   ExportableAssignmentRule
 } from '../../src/exportable';
+import { FHIRDefinitions } from '../../src/utils';
 import * as loadOptimizers from '../../src/optimizer/loadOptimizers';
 
 let loadedPackages: string[] = [];
@@ -528,7 +528,7 @@ describe('Processing', () => {
     });
 
     it('should load specified dependencies', () => {
-      const defs = new fhirdefs.FHIRDefinitions();
+      const defs = new FHIRDefinitions();
       const dependencies = ['hl7.fhir.us.core@3.1.0'];
       const dependencyDefs = loadExternalDependencies(defs, dependencies);
       return Promise.all(dependencyDefs).then(() => {
@@ -540,7 +540,7 @@ describe('Processing', () => {
     });
 
     it('should log an error when it fails to load a dependency', () => {
-      const defs = new fhirdefs.FHIRDefinitions();
+      const defs = new FHIRDefinitions();
       const badDependencies = ['hl7.does.not.exist@current'];
       const dependencyDefs = loadExternalDependencies(defs, badDependencies);
       return Promise.all(dependencyDefs).then(() => {
@@ -554,7 +554,7 @@ describe('Processing', () => {
     });
 
     it('should log an error when a dependency has no specified version', () => {
-      const defs = new fhirdefs.FHIRDefinitions();
+      const defs = new FHIRDefinitions();
       const badDependencies = ['hl7.fhir.us.core']; // No version
       const dependencyDefs = loadExternalDependencies(defs, badDependencies);
       return Promise.all(dependencyDefs).then(() => {
@@ -568,7 +568,7 @@ describe('Processing', () => {
     });
 
     it('should load only FHIR if no dependencies specified', () => {
-      const defs = new fhirdefs.FHIRDefinitions();
+      const defs = new FHIRDefinitions();
       // No dependencies specified on CLI will pass in undefined
       const dependencyDefs = loadExternalDependencies(defs, undefined);
       return Promise.all(dependencyDefs).then(() => {
