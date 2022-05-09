@@ -35,7 +35,7 @@ Options:
   --meta-profile <mode>              specify how meta.profile on Instances should be applied to the InstanceOf keyword: only-one (default), first, none
   -a, --alias-file <alias-filePath>  specify an existing FSH file containing aliases to be loaded.
   --no-alias                         output FSH without generating Aliases
-  -u, --useFHIRVersion <fhirVersion> specifiy which FHIR version to run instances on
+  -u, --useFHIRVersion <fhirVersion> specify which FHIR version to use when it cannot be inferred
   -v, --version                      print goFSH version
   -h, --help                         display help for command
 ```
