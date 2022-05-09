@@ -123,7 +123,7 @@ async function app() {
   // Use specified FHIR Version
   const specifiedFHIRVersion = programOptions.useFHIRVersion;
   if (specifiedFHIRVersion && !utils.isSupportedFHIRVersion(specifiedFHIRVersion)) {
-    logger.error(`Specified FHIR version is invalid: ${specifiedFHIRVersion}`);
+    logger.error(`Specified FHIR version is not supported: ${specifiedFHIRVersion}`);
     process.exit(1);
   }
 
