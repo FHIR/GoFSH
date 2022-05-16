@@ -54,6 +54,9 @@ export class ConfigurationExtractor {
     //if fhirVersion is still not known, default to 4.0.1
     if (!fhirVersion?.length) {
       fhirVersion = ['4.0.1'];
+      if (!specifiedFHIRVersion) {
+        logger.warn(`Could not determine FHIR version. Using ${fhirVersion[0]}.`);
+      }
     }
     const config = new ExportableConfiguration({
       canonical: canonical,

@@ -94,6 +94,34 @@ describe('ConfigurationExtractor', () => {
       );
     });
 
+    it('should send warnings when there is no specified FHIR version and no detected FHIR version', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, { resourceType: 'Patient', id: 'abc' }]);
+      expect(result.config.fhirVersion).toEqual(['4.0.1']);
+      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
+        'ImplementationGuide missing properties needed to generate configuration file: fhirVersion. These properties will be inferred based on FHIR definitions.'
+      );
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'Could not determine FHIR version. Using 4.0.1.'
+      );
+    });
+
+    it("should warn once when user specifies FHIR version but it doesn't exist in files", () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process(
+        [ig, { resourceType: 'Patient', id: 'abc' }],
+        '5.0.0'
+      );
+      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'ImplementationGuide missing properties needed to generate configuration file: fhirVersion. These properties will be inferred based on FHIR definitions.'
+      );
+    });
+
     describe('non-IG resources', () => {
       it('should return a configuration with elements inferred from the canonical', () => {
         const result = ConfigurationExtractor.process(resources);
