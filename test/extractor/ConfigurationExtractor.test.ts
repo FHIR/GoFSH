@@ -56,7 +56,10 @@ describe('ConfigurationExtractor', () => {
       expect(result.config.fhirVersion).toEqual(['4.0.1']);
       expect(result.config.FSHOnly).toBe(true);
       expect(result.config.applyExtensionMetadataToRoot).toBe(false);
-      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'Could not determine FHIR version. Using 4.0.1.'
+      );
     });
 
     it('should be able to handle a specified FHIR version', () => {
@@ -198,9 +201,12 @@ describe('ConfigurationExtractor', () => {
         expect(result.config.FSHOnly).toBe(true);
         expect(result.config.applyExtensionMetadataToRoot).toBe(false);
         expect(loggerSpy.getLastMessage('warn')).toMatch(
+          'Could not determine FHIR version. Using 4.0.1.'
+        );
+        expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
           /ImplementationGuide missing properties.*fhirVersion/s
         );
-        expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(/Unsupported fhirVersion 99\.0\.0/);
+        expect(loggerSpy.getMessageAtIndex(-3, 'warn')).toMatch(/Unsupported fhirVersion 99\.0\.0/);
       });
 
       it('should create a Configuration with additional properties', () => {

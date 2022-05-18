@@ -60,7 +60,7 @@ describe('fhirToFsh', () => {
   it('should use the "info" logging level by default', async () => {
     await expect(fhirToFsh([])).resolves.toEqual({
       errors: [],
-      warnings: [],
+      warnings: [{ message: 'Could not determine FHIR version. Using 4.0.1.' }],
       fsh: '',
       configuration: defaultConfig
     });
@@ -71,7 +71,8 @@ describe('fhirToFsh', () => {
     const results = await fhirToFsh(['not json'], { logLevel: 'error' });
     expect(results.errors).toHaveLength(1);
     expect(results.errors[0].message).toMatch(/Could not parse Input_0/);
-    expect(results.warnings).toHaveLength(0);
+    expect(results.warnings).toHaveLength(1);
+    expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
     expect(results.fsh).toEqual('');
     expect(results.configuration).toEqual(defaultConfig);
     expect(logger.level).toBe('error');
@@ -82,7 +83,8 @@ describe('fhirToFsh', () => {
     expect(results.errors).toHaveLength(1);
     // errors are still tracked, even when the logger is silent
     expect(results.errors[0].message).toMatch(/Could not parse Input_0/);
-    expect(results.warnings).toHaveLength(0);
+    expect(results.warnings).toHaveLength(1);
+    expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
     expect(results.fsh).toEqual('');
     expect(results.configuration).toEqual(defaultConfig);
     expect(logger.transports[0].silent).toBe(true);
@@ -96,6 +98,7 @@ describe('fhirToFsh', () => {
       /Invalid logLevel: 11. Valid levels include: silly, debug, verbose, http, info, warn, error, silent/
     );
     expect(results.warnings).toHaveLength(0);
+    // expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
     expect(results.fsh).toBeNull();
     expect(results.configuration).toBeNull();
   });
@@ -103,7 +106,8 @@ describe('fhirToFsh', () => {
   it('should ignore non-FHIR JSON ', async () => {
     const results = await fhirToFsh([{ notResourceType: 'notStructureDefinition' }]);
     expect(results.errors).toHaveLength(0);
-    expect(results.warnings).toHaveLength(0);
+    expect(results.warnings).toHaveLength(1);
+    expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
     expect(results.fsh).toEqual('');
     expect(results.configuration).toEqual(defaultConfig);
   });
@@ -114,7 +118,8 @@ describe('fhirToFsh', () => {
       dependencies: ['hl7.fhir.us.core#3.1.0', 'hl7.fhir.us.mcode@1.0.0']
     });
     expect(results.errors).toHaveLength(0);
-    expect(results.warnings).toHaveLength(0);
+    expect(results.warnings).toHaveLength(1);
+    expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
     expect(results.fsh).toEqual('');
     expect(results.configuration).toEqual({
       ...defaultConfig,
@@ -160,7 +165,8 @@ describe('fhirToFsh', () => {
         name: 'Foo',
         baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
         kind: 'resource',
-        derivation: 'constraint'
+        derivation: 'constraint',
+        fhirVersion: '4.0.1'
       })
     ]);
     expect(results.errors).toHaveLength(0);
@@ -176,7 +182,8 @@ describe('fhirToFsh', () => {
         name: 'Foo',
         baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
         kind: 'resource',
-        derivation: 'constraint'
+        derivation: 'constraint',
+        fhirVersion: '4.0.1'
       }
     ]);
     expect(results.errors).toHaveLength(0);
@@ -192,7 +199,8 @@ describe('fhirToFsh', () => {
         name: 'Foo',
         baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
         kind: 'resource',
-        derivation: 'constraint'
+        derivation: 'constraint',
+        fhirVersion: '4.0.1'
       },
       { style: 'boo' }
     ]);
@@ -210,7 +218,8 @@ describe('fhirToFsh', () => {
           name: 'Foo',
           baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
           kind: 'resource',
-          derivation: 'constraint'
+          derivation: 'constraint',
+          fhirVersion: '4.0.1'
         }
       ],
       { style: 'string' }
@@ -229,7 +238,8 @@ describe('fhirToFsh', () => {
           name: 'Foo',
           baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
           kind: 'resource',
-          derivation: 'constraint'
+          derivation: 'constraint',
+          fhirVersion: '4.0.1'
         }
       ],
       { style: 'map' }
