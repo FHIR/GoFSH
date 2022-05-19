@@ -98,7 +98,6 @@ describe('fhirToFsh', () => {
       /Invalid logLevel: 11. Valid levels include: silly, debug, verbose, http, info, warn, error, silent/
     );
     expect(results.warnings).toHaveLength(0);
-    // expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
     expect(results.fsh).toBeNull();
     expect(results.configuration).toBeNull();
   });
