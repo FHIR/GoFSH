@@ -58,6 +58,7 @@ export class ConfigurationExtractor {
         logger.warn(`Could not determine FHIR version. Using ${fhirVersion[0]}.`);
       }
     }
+    logger.info(`Using FHIR Version ${fhirVersion[0]}`);
     const config = new ExportableConfiguration({
       canonical: canonical,
       fhirVersion: fhirVersion,
