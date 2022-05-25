@@ -56,7 +56,73 @@ describe('ConfigurationExtractor', () => {
       expect(result.config.fhirVersion).toEqual(['4.0.1']);
       expect(result.config.FSHOnly).toBe(true);
       expect(result.config.applyExtensionMetadataToRoot).toBe(false);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'Could not determine FHIR version. Using 4.0.1.'
+      );
+    });
+
+    it('should be able to handle a specified FHIR version', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, ...resources], '4.5.0');
+      expect(result.config.fhirVersion).toEqual(['4.5.0']);
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+    });
+
+    it('should be able to handle a specified FHIR version when FHIR version is missing', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
+      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(2);
+      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
+        'ImplementationGuide missing properties needed to generate configuration file: fhirVersion. These properties will be inferred based on FHIR definitions.'
+      );
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'FHIR Version mismatch warning: specified version is: 5.0.0 while detected version is: 4.0.1. GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
+      );
+    });
+
+    it('should log a warning when the specified FHIR version is different from detected FHIR version', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, ...resources], '5.0.0');
+      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'FHIR Version mismatch warning: specified version is: 5.0.0 while detected version is: 4.5.0. GoFSH will use the specified version (5.0.0), but this may result in additional processing errors.'
+      );
+    });
+
+    it('should send warnings when there is no specified FHIR version and no detected FHIR version', () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process([ig, { resourceType: 'Patient', id: 'abc' }]);
+      expect(result.config.fhirVersion).toEqual(['4.0.1']);
+      expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
+        'ImplementationGuide missing properties needed to generate configuration file: fhirVersion. These properties will be inferred based on FHIR definitions.'
+      );
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'Could not determine FHIR version. Using 4.0.1.'
+      );
+    });
+
+    it("should warn once when user specifies FHIR version but it doesn't exist in files", () => {
+      const ig = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-fhir-version-ig.json'), 'utf-8')
+      );
+      const result = ConfigurationExtractor.process(
+        [ig, { resourceType: 'Patient', id: 'abc' }],
+        '5.0.0'
+      );
+      expect(result.config.fhirVersion).toEqual(['5.0.0']);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        'ImplementationGuide missing properties needed to generate configuration file: fhirVersion. These properties will be inferred based on FHIR definitions.'
+      );
     });
 
     describe('non-IG resources', () => {
@@ -135,9 +201,12 @@ describe('ConfigurationExtractor', () => {
         expect(result.config.FSHOnly).toBe(true);
         expect(result.config.applyExtensionMetadataToRoot).toBe(false);
         expect(loggerSpy.getLastMessage('warn')).toMatch(
+          'Could not determine FHIR version. Using 4.0.1.'
+        );
+        expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(
           /ImplementationGuide missing properties.*fhirVersion/s
         );
-        expect(loggerSpy.getMessageAtIndex(-2, 'warn')).toMatch(/Unsupported fhirVersion 99\.0\.0/);
+        expect(loggerSpy.getMessageAtIndex(-3, 'warn')).toMatch(/Unsupported fhirVersion 99\.0\.0/);
       });
 
       it('should create a Configuration with additional properties', () => {
