@@ -737,5 +737,18 @@ describe('Processing', () => {
       expect(loggerSpy.getMessageAtIndex(-1, 'info')).toMatch(/Found 2 XML files\./);
       expect(loggerSpy.getLastMessage('warn')).toBeUndefined();
     });
+
+    it('should log "file" in singular tense when directory contains 1 JSON file and/or 1 XML file', () => {
+      const lake = getLakeOfFHIR(
+        path.join(fixtures, 'json-and-xml-non-duplicates-singular'),
+        'json-and-xml'
+      );
+      expect(lake.docs).toHaveLength(2);
+      expect(lake.docs[0].content.id).toBe('json-observation');
+      expect(lake.docs[1].content.id).toBe('xml-observation');
+      expect(loggerSpy.getMessageAtIndex(-2, 'info')).toMatch(/Found 1 JSON file\./);
+      expect(loggerSpy.getMessageAtIndex(-1, 'info')).toMatch(/Found 1 XML file\./);
+      expect(loggerSpy.getLastMessage('warn')).toBeUndefined();
+    });
   });
 });

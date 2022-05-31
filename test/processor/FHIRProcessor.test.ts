@@ -46,7 +46,7 @@ describe('FHIRProcessor', () => {
     processor.processConfig();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const simpleIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'simple-ig.json'));
-    expect(configurationSpy).toHaveBeenCalledWith([simpleIgContent]); // Uses first and only IG in lake if no path provided
+    expect(configurationSpy).toHaveBeenCalledWith([simpleIgContent], undefined); // Uses first and only IG in lake if no path provided
   });
 
   it('should resolve version numbers between command lines deps and ImplementationGuide deps', () => {
@@ -54,7 +54,7 @@ describe('FHIRProcessor', () => {
     const config = processor.processConfig(['hl7.fhir.us.core@2.1.0']);
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
-    expect(configurationSpy).toHaveBeenCalledWith([biggerIgContent]); // Uses first and only IG in lake if no path provided
+    expect(configurationSpy).toHaveBeenCalledWith([biggerIgContent], undefined); // Uses first and only IG in lake if no path provided
     expect(config.config.dependencies[0].version).toEqual('3.1.0');
   });
 
@@ -78,7 +78,7 @@ describe('FHIRProcessor', () => {
     processorWithIg.processConfig();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
-    expect(configurationSpy).toHaveBeenCalledWith([biggerIgContent]); // Uses path provided instead of first IG in lake
+    expect(configurationSpy).toHaveBeenCalledWith([biggerIgContent], undefined); // Uses path provided instead of first IG in lake
   });
 
   it('should try to process a Profile with the StructureDefinitionProcessor', () => {
@@ -146,5 +146,11 @@ describe('FHIRProcessor', () => {
     expect(loggerSpy.getLastMessage('info')).toMatch(
       'Instance large-instance is especially large. Processing may take a while.'
     );
+  });
+
+  it('should be able to handle a specified FHIR version when extracting ImplementationGuide from ConfigurationGenerator', () => {
+    restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+    const config = processor.processConfig(['hl7.fhir.us.core@2.1.0'], '5.0.0');
+    expect(config.config.fhirVersion).toEqual(['5.0.0']);
   });
 });
