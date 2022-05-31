@@ -327,7 +327,9 @@ const IGNORED_RESOURCE_LIKE_FILES = [
   // These template files do not contain valid JSON. Since they are template files, we skip processing them.
   `template${path.sep}onGenerate-validation.json`,
   `template${path.sep}ongenerate-validation-igqa.json`,
-  `template${path.sep}ongenerate-validation-jira.json`
+  `template${path.sep}ongenerate-validation-jira.json`,
+  //Ignore ig-r4.json because it contains the same information as the original IG file
+  'ig-r4.json'
 ];
 
 // Certain directories are common in IG Publisher output, but don't contain any FHIR, and processing
