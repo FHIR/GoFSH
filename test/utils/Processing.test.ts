@@ -332,6 +332,22 @@ describe('Processing', () => {
       expect(result.mappings).toHaveLength(0);
     });
 
+    it('should ignore ig-r4 when it is in a specified path', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'ig-r4');
+      const processor = await getFhirProcessor(inDir, loadTestDefinitions(), 'json-only');
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+      expect(result.profiles).toHaveLength(1);
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
+    });
+
     it('should throw an error when the input directory does not exist', async () => {
       expect.assertions(1);
       const inDir = path.join(__dirname, 'wrong-fixtures');

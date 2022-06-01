@@ -1,0 +1,7 @@
+{
+  "resourceType": "StructureDefinition",
+  "name": "SimpleProfile",
+  "kind": "resource",
+  "derivation": "constraint",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Observation"
+}
