@@ -579,12 +579,12 @@ describe('Processing', () => {
     });
 
     it('should load FHIR R4B if specified', () => {
-      const defs = new fhirdefs.FHIRDefinitions();
+      const defs = new FHIRDefinitions();
       const dependencies = ['hl7.fhir.r4b.core@4.3.0-snapshot1'];
       const dependencyDefs = loadExternalDependencies(defs, dependencies);
       return Promise.all(dependencyDefs).then(() => {
-        expect(defs.packages).toHaveLength(1);
-        expect(defs.packages).toContain('hl7.fhir.r4b.core#4.3.0-snapshot1'); // Only contains r4b, doesn't load r4
+        expect(loadedPackages).toHaveLength(1);
+        expect(loadedPackages).toContain('hl7.fhir.r4b.core#4.3.0-snapshot1'); // Only contains r4b, doesn't load r4
         expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       });
     });
