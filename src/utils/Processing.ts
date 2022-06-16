@@ -151,9 +151,18 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
   const jsonFiles = files.filter(f => f.endsWith('.json'));
   const xmlFiles = files.filter(f => f.endsWith('.xml'));
   const docs: WildFHIR[] = [];
+  let pluralJsonFiles = '';
+  let pluralXmlFiles = '';
+
+  if (jsonFiles.length !== 1) {
+    pluralJsonFiles = 's';
+  }
+  if (xmlFiles.length !== 1) {
+    pluralXmlFiles = 's';
+  }
 
   if (fileType === 'json-only') {
-    logger.info(`Found ${jsonFiles.length} JSON files.`);
+    logger.info(`Found ${jsonFiles.length} JSON file${pluralJsonFiles}.`);
     loadPrimaryFiles(jsonFiles, docs);
     const nonDuplicateXMLFiles = findNonDuplicateSecondaryFiles(xmlFiles, docs);
     if (nonDuplicateXMLFiles.length > 0) {
@@ -166,7 +175,7 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
       );
     }
   } else if (fileType === 'xml-only') {
-    logger.info(`Found ${xmlFiles.length} XML files.`);
+    logger.info(`Found ${xmlFiles.length} XML file${pluralXmlFiles}.`);
     loadPrimaryFiles(xmlFiles, docs);
     const nonDuplicateJSONFiles = findNonDuplicateSecondaryFiles(jsonFiles, docs);
     if (nonDuplicateJSONFiles.length > 0) {
@@ -179,9 +188,9 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
       );
     }
   } else if (fileType === 'json-and-xml') {
-    logger.info(`Found ${jsonFiles.length} JSON files.`);
+    logger.info(`Found ${jsonFiles.length} JSON file${pluralJsonFiles}.`);
     loadPrimaryFiles(jsonFiles, docs);
-    logger.info(`Found ${xmlFiles.length} XML files.`);
+    logger.info(`Found ${xmlFiles.length} XML file${pluralXmlFiles}.`);
     loadPrimaryFiles(xmlFiles, docs);
   }
 
@@ -327,7 +336,9 @@ const IGNORED_RESOURCE_LIKE_FILES = [
   // These template files do not contain valid JSON. Since they are template files, we skip processing them.
   `template${path.sep}onGenerate-validation.json`,
   `template${path.sep}ongenerate-validation-igqa.json`,
-  `template${path.sep}ongenerate-validation-jira.json`
+  `template${path.sep}ongenerate-validation-jira.json`,
+  //Ignore ig-r4.json because it contains the same information as the original IG file
+  'ig-r4.json'
 ];
 
 // Certain directories are common in IG Publisher output, but don't contain any FHIR, and processing

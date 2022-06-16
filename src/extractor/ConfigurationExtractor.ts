@@ -6,7 +6,7 @@ import { ExportableConfiguration } from '../exportable';
 type ImplementationGuideStatus = fhirtypes.ImplementationGuideStatus;
 
 export class ConfigurationExtractor {
-  static process(resources: any[]): ExportableConfiguration {
+  static process(resources: any[], specifiedFHIRVersion?: string): ExportableConfiguration {
     const igResource = ConfigurationExtractor.getIGResource(resources);
     const missingIGProperties: string[] = [];
     if (igResource && !igResource.url) {
@@ -36,10 +36,29 @@ export class ConfigurationExtractor {
       (ConfigurationExtractor.inferCanonical(resources) || 'http://example.org');
     if (!fhirVersion?.length) {
       const fhirVersionFromResources = ConfigurationExtractor.inferString(resources, 'fhirVersion');
-      fhirVersion = utils.isSupportedFHIRVersion(fhirVersionFromResources)
-        ? [fhirVersionFromResources]
-        : ['4.0.1'];
+      if (utils.isSupportedFHIRVersion(fhirVersionFromResources)) {
+        fhirVersion = [fhirVersionFromResources];
+      }
     }
+    if (specifiedFHIRVersion) {
+      // If there is a detected version, check if it matches the specified version
+      if (fhirVersion?.length && fhirVersion.indexOf(specifiedFHIRVersion) === -1) {
+        logger.warn(
+          `FHIR Version mismatch warning: specified version is: ${specifiedFHIRVersion} while detected version is: ${fhirVersion.join(
+            ', '
+          )}. GoFSH will use the specified version (${specifiedFHIRVersion}), but this may result in additional processing errors.`
+        );
+      }
+      fhirVersion = [specifiedFHIRVersion];
+    }
+    //if fhirVersion is still not known, default to 4.0.1
+    if (!fhirVersion?.length) {
+      fhirVersion = ['4.0.1'];
+      if (!specifiedFHIRVersion) {
+        logger.warn(`Could not determine FHIR version. Using ${fhirVersion[0]}.`);
+      }
+    }
+    logger.info(`Using FHIR Version ${fhirVersion[0]}`);
     const config = new ExportableConfiguration({
       canonical: canonical,
       fhirVersion: fhirVersion,

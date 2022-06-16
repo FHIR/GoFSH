@@ -332,6 +332,22 @@ describe('Processing', () => {
       expect(result.mappings).toHaveLength(0);
     });
 
+    it('should ignore ig-r4 when it is in a specified path', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'ig-r4');
+      const processor = await getFhirProcessor(inDir, loadTestDefinitions(), 'json-only');
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+      expect(result.profiles).toHaveLength(1);
+      expect(result.codeSystems).toHaveLength(0);
+      expect(result.valueSets).toHaveLength(0);
+      expect(result.extensions).toHaveLength(0);
+      expect(result.instances).toHaveLength(0);
+      expect(result.invariants).toHaveLength(0);
+      expect(result.mappings).toHaveLength(0);
+    });
+
     it('should throw an error when the input directory does not exist', async () => {
       expect.assertions(1);
       const inDir = path.join(__dirname, 'wrong-fixtures');
@@ -719,6 +735,19 @@ describe('Processing', () => {
       expect(lake.docs[3].content.id).toBe('xml-patient');
       expect(loggerSpy.getMessageAtIndex(-2, 'info')).toMatch(/Found 2 JSON files\./);
       expect(loggerSpy.getMessageAtIndex(-1, 'info')).toMatch(/Found 2 XML files\./);
+      expect(loggerSpy.getLastMessage('warn')).toBeUndefined();
+    });
+
+    it('should log "file" in singular tense when directory contains 1 JSON file and/or 1 XML file', () => {
+      const lake = getLakeOfFHIR(
+        path.join(fixtures, 'json-and-xml-non-duplicates-singular'),
+        'json-and-xml'
+      );
+      expect(lake.docs).toHaveLength(2);
+      expect(lake.docs[0].content.id).toBe('json-observation');
+      expect(lake.docs[1].content.id).toBe('xml-observation');
+      expect(loggerSpy.getMessageAtIndex(-2, 'info')).toMatch(/Found 1 JSON file\./);
+      expect(loggerSpy.getMessageAtIndex(-1, 'info')).toMatch(/Found 1 XML file\./);
       expect(loggerSpy.getLastMessage('warn')).toBeUndefined();
     });
   });

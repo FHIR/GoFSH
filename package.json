@@ -1,6 +1,6 @@
 {
   "name": "gofsh",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "GoFSH is a FHIR Shorthand (FSH) decompiler, able to convert formal FHIR definitions from JSON to FSH.",
   "main": "dist/index.js",
   "scripts": {
@@ -29,7 +29,8 @@
     "Julian Carter <jacarter@mitre.org",
     "Nick Freiter <nfreiter@mitre.org>",
     "Chris Moesel <cmoesel@mitre.org>",
-    "Mint Thompson <mathompson@mitre.org>"
+    "Mint Thompson <mathompson@mitre.org>",
+    "Guhan B. Thuran <gthuran@mitre.org>"
   ],
   "license": "Apache-2.0",
   "devDependencies": {
@@ -70,7 +71,7 @@
     "fhir": "^4.10.0",
     "flat": "^5.0.2",
     "fs-extra": "^9.0.1",
-    "fsh-sushi": "^2.3.0",
+    "fsh-sushi": "^2.5.0",
     "ini": "^1.3.8",
     "lodash": "^4.17.21",
     "readline-sync": "^1.4.10",
