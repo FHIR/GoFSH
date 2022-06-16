@@ -3,7 +3,7 @@ import path from 'path';
 import ini from 'ini';
 import readlineSync from 'readline-sync';
 import { mergeDependency } from 'fhir-package-loader';
-import { logger } from './GoFSHLogger';
+import { logger, logMessage } from './GoFSHLogger';
 import {
   Package,
   FHIRProcessor,
@@ -133,7 +133,7 @@ export function loadExternalDependencies(
       continue;
     }
     dependencyDefs.push(
-      mergeDependency(packageId, version, defs)
+      mergeDependency(packageId, version, defs, undefined, logMessage)
         .then((def: FHIRDefinitions) => {
           return def;
         })
