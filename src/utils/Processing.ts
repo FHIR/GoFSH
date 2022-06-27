@@ -2,8 +2,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import ini from 'ini';
 import readlineSync from 'readline-sync';
-import { fhirdefs } from 'fsh-sushi';
-import { logger } from './GoFSHLogger';
+import { mergeDependency } from 'fhir-package-loader';
+import { logger, logMessage } from './GoFSHLogger';
 import {
   Package,
   FHIRProcessor,
@@ -14,7 +14,7 @@ import {
 } from '../processor';
 import { FSHExporter } from '../export/FSHExporter';
 import { loadOptimizers } from '../optimizer';
-import { MasterFisher } from '../utils';
+import { FHIRDefinitions, MasterFisher } from '../utils';
 import { ExportableAlias } from '../exportable';
 import { ExportableConfiguration } from '../exportable';
 import { Fhir as FHIR } from 'fhir/fhir';
@@ -57,7 +57,7 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   return output;
 }
 
-export function getFhirProcessor(inDir: string, defs: fhirdefs.FHIRDefinitions, fileType: string) {
+export function getFhirProcessor(inDir: string, defs: FHIRDefinitions, fileType: string) {
   const lake = getLakeOfFHIR(inDir, fileType);
 
   // Assign any missing ids where we can before filtering out duplicates so that all
@@ -113,16 +113,16 @@ export function writeFSH(resources: Package, outDir: string, style: string): voi
 }
 
 export function loadExternalDependencies(
-  defs: fhirdefs.FHIRDefinitions,
+  defs: FHIRDefinitions,
   dependencies: string[] = []
-): Promise<fhirdefs.FHIRDefinitions | void>[] {
+): Promise<FHIRDefinitions | void>[] {
   // Automatically include FHIR R4 if no other versions of FHIR are already included
   if (!dependencies.some(dep => /hl7\.fhir\.r(4|5|4b)\.core/.test(dep))) {
     dependencies.push('hl7.fhir.r4.core@4.0.1');
   }
 
   // Load dependencies
-  const dependencyDefs: Promise<fhirdefs.FHIRDefinitions | void>[] = [];
+  const dependencyDefs: Promise<FHIRDefinitions | void>[] = [];
   for (const dep of dependencies) {
     const [packageId, version] = dep.split('@');
     if (version == null) {
@@ -133,9 +133,8 @@ export function loadExternalDependencies(
       continue;
     }
     dependencyDefs.push(
-      fhirdefs
-        .loadDependency(packageId, version, defs)
-        .then(def => {
+      mergeDependency(packageId, version, defs, undefined, logMessage)
+        .then((def: FHIRDefinitions) => {
           return def;
         })
         .catch(e => {

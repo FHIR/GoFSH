@@ -1,5 +1,6 @@
-import { utils, fhirdefs, fhirtypes } from 'fsh-sushi';
+import { utils, fhirtypes } from 'fsh-sushi';
 import { LakeOfFHIR } from '../processor';
+import { FHIRDefinitions } from '../utils';
 
 /**
  * The MasterFisher can fish from the LakeOfFHIR and external definitions. When the MasterFisher fishes,
@@ -7,10 +8,7 @@ import { LakeOfFHIR } from '../processor';
  * definitions first (when there are naming clashes) - matching the SUSHI MasterFisher behavior.
  */
 export class MasterFisher implements utils.Fishable {
-  constructor(
-    public lakeOfFHIR = new LakeOfFHIR([]),
-    public external = new fhirdefs.FHIRDefinitions()
-  ) {}
+  constructor(public lakeOfFHIR = new LakeOfFHIR([]), public external = new FHIRDefinitions()) {}
 
   fishForStructureDefinition(item: string) {
     const json = this.fishForFHIR(

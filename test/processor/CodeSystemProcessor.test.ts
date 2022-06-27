@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirdefs, fshtypes } from 'fsh-sushi';
+import { fshtypes } from 'fsh-sushi';
 import { CodeSystemProcessor } from '../../src/processor';
 import {
   ExportableCodeSystem,
@@ -8,11 +8,12 @@ import {
   ExportableCaretValueRule
 } from '../../src/exportable';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { FHIRDefinitions } from '../../src/utils';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { FshCode } from 'fsh-sushi/dist/fshtypes';
 
 describe('CodeSystemProcessor', () => {
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
   let config: fshtypes.Configuration;
 
   beforeAll(() => {

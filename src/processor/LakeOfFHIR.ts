@@ -1,11 +1,11 @@
-import { fhirdefs, utils } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import { uniqWith } from 'lodash';
 import { CodeSystemProcessor } from './CodeSystemProcessor';
 import { CONFORMANCE_AND_TERMINOLOGY_RESOURCES } from './InstanceProcessor';
 import { StructureDefinitionProcessor } from './StructureDefinitionProcessor';
 import { ValueSetProcessor } from './ValueSetProcessor';
 import { WildFHIR } from './WildFHIR';
-import { logger } from '../utils';
+import { FHIRDefinitions, logger } from '../utils';
 
 // Like FSHTank in SUSHI, but it doesn't contain FSH, it contains FHIR.  And who ever heard of a tank of FHIR?  But a lake of FHIR...
 export class LakeOfFHIR implements utils.Fishable {
@@ -116,7 +116,7 @@ export class LakeOfFHIR implements utils.Fishable {
     // the only safe way to do this is by rebuilding a FHIRDefinitions object each time we need it.  If this becomes a performance
     // concern, we can optimize it later -- but performance isn't a huge concern in GoFSH. Note also that this approach may need to be
     // updated if we ever need to support fishing for Instances.
-    const defs = new fhirdefs.FHIRDefinitions();
+    const defs = new FHIRDefinitions();
     this.docs.forEach(d => defs.add(d.content));
     return defs.fishForFHIR(item, ...types);
   }
@@ -126,7 +126,7 @@ export class LakeOfFHIR implements utils.Fishable {
     // the only safe way to do this is by rebuilding a FHIRDefinitions object each time we need it.  If this becomes a performance
     // concern, we can optimize it later -- but performance isn't a huge concern in GoFSH. Note also that this approach may need to be
     // updated if we ever need to support fishing for Instances.
-    const defs = new fhirdefs.FHIRDefinitions();
+    const defs = new FHIRDefinitions();
     this.docs.forEach(d => defs.add(d.content));
     return defs.fishForMetadata(item, ...types);
   }
