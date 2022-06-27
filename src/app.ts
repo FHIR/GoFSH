@@ -111,16 +111,16 @@ async function app() {
   if (programOptions.installedSushi) {
     logger.info('  --installed-sushi');
   }
+  if (programOptions.fileType) {
+    logger.info(`  --file-type ${programOptions.fileType}`);
+  }
   if (programOptions.indent) {
     logger.info('  --indent');
-  }
-  if (programOptions.installedSushi) {
-    logger.info('  --installed-sushi');
   }
   if (programOptions.metaProfile) {
     logger.info(`  --meta-profile ${programOptions.metaProfile}`);
   }
-  if (programOptions.aliasFile) {
+  if (!programOptions.aliasFile) {
     logger.info(`  --alias-file ${programOptions.aliasFile}`);
   }
   if (programOptions.alias) {
@@ -130,7 +130,7 @@ async function app() {
     logger.info(`  --useFHIRVersion ${programOptions.useFHIRVersion}`);
   }
   if (programOptions.out) {
-    logger.info(`  --out ${path.resolve(programOptions.out)}`);
+    logger.info('  --out');
   }
   logger.info(`  ${path.resolve(inDir)}`);
 
