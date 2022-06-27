@@ -72,6 +72,10 @@ async function app() {
       'specify an existing FSH file containing aliases to be loaded.'
     )
     .option('--no-alias', 'output FSH without generating Aliases')
+    .option(
+      '-u, --useFHIRVersion <fhirVersion>',
+      'specify which FHIR version to use when it cannot be inferred'
+    )
     .version(getVersion(), '-v, --version', 'print goFSH version')
     .on('--help', () => {
       console.log('');
@@ -155,6 +159,13 @@ async function app() {
   // Trim empty spaces from command line dependencies
   const dependencies = programOptions.dependency?.map((dep: string) => dep.trim());
 
+  // Use specified FHIR Version
+  const specifiedFHIRVersion = programOptions.useFHIRVersion;
+  if (specifiedFHIRVersion && !utils.isSupportedFHIRVersion(specifiedFHIRVersion)) {
+    logger.error(`Specified FHIR version is not supported: ${specifiedFHIRVersion}`);
+    process.exit(1);
+  }
+
   // Load FhirProcessor and config object
   const fileType = programOptions.fileType?.toLowerCase() ?? 'json-only';
   if (!['json-only', 'xml-only', 'json-and-xml'].includes(fileType)) {
@@ -186,7 +197,7 @@ async function app() {
   } as ProcessingOptions;
 
   const processor = getFhirProcessor(inDir, defs, fileType);
-  const config = processor.processConfig(dependencies);
+  const config = processor.processConfig(dependencies, specifiedFHIRVersion);
 
   // Load dependencies from config for GoFSH processing
   const allDependencies =
