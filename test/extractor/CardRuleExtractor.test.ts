@@ -1,17 +1,17 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirdefs } from 'fsh-sushi';
 import { cloneDeep } from 'lodash';
 import { CardRuleExtractor } from '../../src/extractor';
 import { ExportableCardRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { FHIRDefinitions } from '../../src/utils';
 
 describe('CardRuleExtractor', () => {
   let looseSD: any;
   let looseSDWithSlices: any;
   let looseSDWithInheritedSlices: any;
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
 
   beforeAll(() => {
     looseSD = JSON.parse(

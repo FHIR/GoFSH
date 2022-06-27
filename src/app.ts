@@ -5,10 +5,11 @@ import fs from 'fs-extra';
 import program from 'commander';
 import chalk from 'chalk';
 import { pad, padStart, padEnd } from 'lodash';
-import { fhirdefs, fhirtypes, utils } from 'fsh-sushi';
+import { fhirtypes, utils } from 'fsh-sushi';
 import {
   determineCorePackageId,
   ensureOutputDir,
+  FHIRDefinitions,
   getInputDir,
   getAliasFile,
   getFhirProcessor,
@@ -154,7 +155,7 @@ async function app() {
   }
 
   // Load dependencies
-  const defs = new fhirdefs.FHIRDefinitions();
+  const defs = new FHIRDefinitions();
 
   // Trim empty spaces from command line dependencies
   const dependencies = programOptions.dependency?.map((dep: string) => dep.trim());

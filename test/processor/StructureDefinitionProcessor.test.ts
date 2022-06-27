@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirdefs, fshtypes } from 'fsh-sushi';
+import { fshtypes } from 'fsh-sushi';
 import {
   StructureDefinitionProcessor,
   ProcessableElementDefinition,
@@ -20,12 +20,13 @@ import {
   ExportableInvariant,
   ExportableBindingRule
 } from '../../src/exportable';
+import { FHIRDefinitions } from '../../src/utils';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { ContainsRuleExtractor } from '../../src/extractor';
 
 describe('StructureDefinitionProcessor', () => {
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
   let config: fshtypes.Configuration;
 
   beforeAll(() => {

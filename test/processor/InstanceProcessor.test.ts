@@ -1,14 +1,15 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirdefs, fshtypes } from 'fsh-sushi';
+import { fshtypes } from 'fsh-sushi';
 import { InstanceProcessor } from '../../src/processor';
 import { ExportableAssignmentRule, ExportableInstance } from '../../src/exportable';
+import { FHIRDefinitions } from '../../src/utils';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { loggerSpy } from '../helpers/loggerSpy';
 
 describe('InstanceProcessor', () => {
   let simpleIg: any;
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
 
   beforeEach(() => {
     simpleIg = JSON.parse(

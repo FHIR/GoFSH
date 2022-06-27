@@ -1,8 +1,9 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { fhirtypes, fhirdefs, fshtypes } from 'fsh-sushi';
+import { fhirtypes, fshtypes } from 'fsh-sushi';
 import { cloneDeep } from 'lodash';
 import {
+  FHIRDefinitions,
   getFSHValue,
   getPath,
   getPathValuePairs,
@@ -15,7 +16,7 @@ import { ProcessableElementDefinition, ProcessableStructureDefinition } from '..
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('element', () => {
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
 
   beforeAll(() => {
     defs = loadTestDefinitions();
@@ -244,7 +245,7 @@ describe('element', () => {
   });
 
   describe('#getAncestorSliceDefinition', () => {
-    let defs: fhirdefs.FHIRDefinitions;
+    let defs: FHIRDefinitions;
     let parentJson: any;
     let childJson: any;
 

@@ -1,7 +1,6 @@
-import { utils, fhirdefs } from 'fsh-sushi';
-import { FHIRDefinitions } from 'fsh-sushi/dist/fhirdefs';
+import { utils } from 'fsh-sushi';
 import { LakeOfFHIR } from '../../src/processor';
-import { MasterFisher } from '../../src/utils';
+import { FHIRDefinitions, MasterFisher } from '../../src/utils';
 
 const RESOURCE_A_FHIR = { resourceType: 'TypeA', id: 'resource-a', name: 'ResourceA' };
 const RESOURCE_A_METADATA = { id: 'resource-a', name: 'ResourceA' };
@@ -10,7 +9,7 @@ const RESOURCE_B_METADATA = { id: 'resource-b', name: 'ResourceB' };
 
 describe('MasterFisher', () => {
   let lake: LakeOfFHIR;
-  let fhir: fhirdefs.FHIRDefinitions;
+  let fhir: FHIRDefinitions;
   let fisher: MasterFisher;
 
   beforeAll(() => {
