@@ -124,10 +124,10 @@ async function app() {
   if (programOptions.metaProfile) {
     logger.info(`  --meta-profile ${programOptions.metaProfile}`);
   }
-  if (!programOptions.aliasFile) {
+  if (programOptions.aliasFile) {
     logger.info(`  --alias-file ${programOptions.aliasFile}`);
   }
-  if (programOptions.alias) {
+  if (!programOptions.alias) {
     logger.info('  --no-alias');
   }
   if (programOptions.useFHIRVersion) {
