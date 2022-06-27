@@ -134,7 +134,7 @@ async function app() {
     logger.info(`  --useFHIRVersion ${programOptions.useFHIRVersion}`);
   }
   if (programOptions.out) {
-    logger.info('  --out');
+    logger.info(`  --out ${path.resolve(programOptions.out)}`);
   }
   logger.info(`  ${path.resolve(inDir)}`);
 
