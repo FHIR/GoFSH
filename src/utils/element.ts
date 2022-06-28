@@ -73,8 +73,14 @@ export function getFSHValue(
   }
 
   // If the path is one on an entry/contained resource, find the element on the ResourceType of the entry/contained resource
-  if (pathWithoutIndex.startsWith('entry.resource.') || pathWithoutIndex.startsWith('contained.')) {
-    const [, baseKey, newKey] = key.match(/^(entry\[\d+\].resource|contained\[\d+\])\.(.+)/);
+  if (
+    pathWithoutIndex.startsWith('entry.resource.') ||
+    pathWithoutIndex.startsWith('parameter.resource.') ||
+    pathWithoutIndex.startsWith('contained.')
+  ) {
+    const [, baseKey, newKey] = key.match(
+      /^((?:entry|parameter)\[\d+\].resource|contained\[\d+\])\.(.+)/
+    );
     // We can safely assume that all of the paths for a given contained resource are
     // sequential in the flatArray, so find the start and end of that sequence and slice it out
     const nestedResourceStartIndex = flatArray.findIndex(([key]) => key.startsWith(baseKey));
@@ -85,7 +91,7 @@ export function getFSHValue(
     const subArray = flatArray
       .slice(nestedResourceStartIndex, nestedResourceEndIndex)
       .map(([key, value]) => [
-        key.replace(/^(entry\[\d+\].resource|contained\[\d+\])\./, ''),
+        key.replace(/^((entry|parameter)\[\d+\].resource|contained\[\d+\])\./, ''),
         value
       ]) as [string, string | number | boolean][];
     const containedResourceType = subArray.find(([key]) => key === 'resourceType')?.[1] as string;

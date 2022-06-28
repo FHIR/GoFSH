@@ -472,6 +472,20 @@ describe('InstanceProcessor', () => {
       expect(result.rules).toContainEqual(status);
     });
 
+    it('should use entry resource type to determine assignment rule value types on parameter entry resources', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'parameters-example.json'), 'utf-8')
+      );
+      const result = InstanceProcessor.process(input, simpleIg, defs);
+      expect(result).toBeInstanceOf(ExportableInstance);
+      expect(result.name).toBe('example-of-Parameters');
+      expect(result.id).toBe('example');
+
+      const nameUse = new ExportableAssignmentRule('parameter[2].resource.name[0].use');
+      nameUse.value = new fshtypes.FshCode('official');
+      expect(result.rules).toContainEqual(nameUse);
+    });
+
     it('should use contained resource type to determine assignment rule value type on contained resources', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'patient-with-contained.json'), 'utf-8')
