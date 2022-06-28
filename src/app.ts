@@ -99,6 +99,45 @@ async function app() {
 
   logger.info(`Starting ${getVersion()}`);
 
+  logger.info('Arguments:');
+  if (programOptions.logLevel) {
+    logger.info(`  --log-level ${programOptions.logLevel}`);
+  }
+  if (programOptions.dependency) {
+    logger.info(`  --dependency ${programOptions.dependency}`);
+  }
+  if (programOptions.style) {
+    logger.info(`  --style ${programOptions.style}`);
+  }
+  if (programOptions.fshingTrip) {
+    logger.info('  --fshing-trip');
+  }
+  if (programOptions.installedSushi) {
+    logger.info('  --installed-sushi');
+  }
+  if (programOptions.fileType) {
+    logger.info(`  --file-type ${programOptions.fileType}`);
+  }
+  if (programOptions.indent) {
+    logger.info('  --indent');
+  }
+  if (programOptions.metaProfile) {
+    logger.info(`  --meta-profile ${programOptions.metaProfile}`);
+  }
+  if (programOptions.aliasFile) {
+    logger.info(`  --alias-file ${programOptions.aliasFile}`);
+  }
+  if (!programOptions.alias) {
+    logger.info('  --no-alias');
+  }
+  if (programOptions.useFHIRVersion) {
+    logger.info(`  --useFHIRVersion ${programOptions.useFHIRVersion}`);
+  }
+  if (programOptions.out) {
+    logger.info(`  --out ${path.resolve(programOptions.out)}`);
+  }
+  logger.info(`  ${path.resolve(inDir)}`);
+
   inDir = getInputDir(inDir);
 
   let outDir: string;
