@@ -36,8 +36,13 @@ export function fshingTrip(
   const outputFilesMap = getFilesMap(outDir);
   const files = union(Array.from(inputFilesMap.keys()), Array.from(outputFilesMap.keys())).filter(
     file =>
-      !['.index.json', 'ig-r4.json', 'package.json'].includes(file) &&
-      !file.endsWith('openapi.json')
+      ![
+        '.index.json',
+        'ig-r4.json',
+        'package.json',
+        'validation-oo.json',
+        'validation-summary.json'
+      ].includes(file) && !file.endsWith('openapi.json')
   );
   files.sort();
 

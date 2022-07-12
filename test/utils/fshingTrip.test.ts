@@ -43,7 +43,7 @@ describe('fshingTrip', () => {
     );
   });
 
-  it('should correctly generate a temporary differential file', () => {
+  it('should correctly generate an HTML diff file', () => {
     const inDir = path.join(__dirname, 'fixtures', 'fshing-trip-input');
     const outDir = path.join(__dirname, 'fixtures', 'fshing-trip-output');
     const lake = getLakeOfFHIR(inDir, 'json-only');
@@ -56,17 +56,17 @@ describe('fshingTrip', () => {
     expect(writeFileSyncSpy.mock.calls[0][0]).toMatch(/fshing-trip-comparison\.html/);
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(/Files changed \(3\)/);
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
-      /test\/utils\/fixtures\/\{fshing-trip-input → fshing-trip-output\}\/Observation-some-observation.json/
+      /test\/utils\/fixtures\/\{fshing-trip-input → fshing-trip-output\}\/Observation-some-observation\.json/
     );
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
-      /test\/utils\/fixtures\/\{fshing-trip-input → fshing-trip-output\}\/Patient-some-patient.json/
+      /test\/utils\/fixtures\/\{fshing-trip-input → fshing-trip-output\}\/Patient-some-patient\.json/
     );
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
-      /test\/utils\/fixtures\/\{fshing-trip-input → fshing-trip-output\}\/Practitioner-some-practitioner.json/
+      /test\/utils\/fixtures\/\{fshing-trip-input → fshing-trip-output\}\/Practitioner-some-practitioner\.json/
     );
   });
 
-  it('should correctly generate a temporary differential file when input file names are arbitrary', () => {
+  it('should correctly generate an HTML diff file when input file names are arbitrary', () => {
     const inDir = path.join(__dirname, 'fixtures', 'fshing-trip-arbitrary-input');
     const outDir = path.join(__dirname, 'fixtures', 'fshing-trip-output');
     const lake = getLakeOfFHIR(inDir, 'json-only');
@@ -79,13 +79,42 @@ describe('fshingTrip', () => {
     expect(writeFileSyncSpy.mock.calls[0][0]).toMatch(/fshing-trip-comparison\.html/);
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(/Files changed \(3\)/);
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
-      /test\/utils\/fixtures\/\{fshing-trip-arbitrary-input\/observe-this-punk.json → fshing-trip-output\/Observation-some-observation.json\}/
+      /test\/utils\/fixtures\/\{fshing-trip-arbitrary-input\/observe-this-punk\.json → fshing-trip-output\/Observation-some-observation\.json\}/
     );
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
-      /test\/utils\/fixtures\/\{fshing-trip-arbitrary-input\/all-you-need-is-just-a-little-patients.json → fshing-trip-output\/Patient-some-patient.json\}/
+      /test\/utils\/fixtures\/\{fshing-trip-arbitrary-input\/all-you-need-is-just-a-little-patients\.json → fshing-trip-output\/Patient-some-patient\.json\}/
     );
     expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
-      /test\/utils\/fixtures\/{fshing-trip-arbitrary-input → fshing-trip-output}\/Practitioner-some-practitioner.json/
+      /test\/utils\/fixtures\/{fshing-trip-arbitrary-input → fshing-trip-output}\/Practitioner-some-practitioner\.json/
     );
+  });
+
+  it('should exclude known non-FHIR files from the HTML diff file', () => {
+    const inDir = path.join(__dirname, 'fixtures', 'fshing-trip-extra-input');
+    const outDir = path.join(__dirname, 'fixtures', 'fshing-trip-output');
+    const lake = getLakeOfFHIR(inDir, 'json-only');
+    fshingTrip(inDir, outDir, lake, false);
+    expect(execSyncSpy).toHaveBeenCalledTimes(1);
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      `npx sushi ${path.join(__dirname, 'fixtures', 'fshing-trip-output')}`
+    );
+    expect(writeFileSyncSpy).toHaveBeenCalledTimes(1);
+    expect(writeFileSyncSpy.mock.calls[0][0]).toMatch(/fshing-trip-comparison\.html/);
+    expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(/Files changed \(3\)/);
+    expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
+      /test\/utils\/fixtures\/\{fshing-trip-extra-input → fshing-trip-output\}\/Observation-some-observation\.json/
+    );
+    expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
+      /test\/utils\/fixtures\/\{fshing-trip-extra-input → fshing-trip-output\}\/Patient-some-patient\.json/
+    );
+    expect(writeFileSyncSpy.mock.calls[0][1]).toMatch(
+      /test\/utils\/fixtures\/\{fshing-trip-extra-input → fshing-trip-output\}\/Practitioner-some-practitioner\.json/
+    );
+    expect(writeFileSyncSpy.mock.calls[0][1]).not.toMatch(/\.index\.json/);
+    expect(writeFileSyncSpy.mock.calls[0][1]).not.toMatch(/ig-r4\.json/);
+    expect(writeFileSyncSpy.mock.calls[0][1]).not.toMatch(/package\.json/);
+    expect(writeFileSyncSpy.mock.calls[0][1]).not.toMatch(/validation-*\.json/);
+    expect(writeFileSyncSpy.mock.calls[0][1]).not.toMatch(/\.index\.json/);
+    expect(writeFileSyncSpy.mock.calls[0][1]).not.toMatch(/openapi\.json/);
   });
 });
