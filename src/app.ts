@@ -189,6 +189,7 @@ async function app() {
     const aliasFile = getAliasFile(programOptions.aliasFile);
     aliases = AliasProcessor.process(aliasFile);
   }
+
   // Get options for processors and optimizers
   const processingOptions = {
     indent: programOptions.indent === true,
@@ -277,7 +278,8 @@ async function app() {
         'FSHing Trip is not supported for XML inputs. Comparisons will only be generated for JSON input files.'
       );
     }
-    fshingTrip(inDir, outDir, programOptions.installedSushi);
+
+    fshingTrip(inDir, outDir, processor.getLakeOfFHIR(), programOptions.installedSushi);
   }
 
   process.exit(0);

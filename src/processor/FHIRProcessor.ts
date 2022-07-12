@@ -29,6 +29,10 @@ export class FHIRProcessor {
     return this.fisher;
   }
 
+  getLakeOfFHIR(): LakeOfFHIR {
+    return this.lake;
+  }
+
   processConfig(externalDeps?: string[], specifiedFHIRVersion?: string): ExportableConfiguration {
     const igForConfig =
       this.lake.getAllImplementationGuides().find(doc => doc.path === this.igPath) ??
