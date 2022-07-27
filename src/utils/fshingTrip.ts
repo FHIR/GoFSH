@@ -6,10 +6,16 @@ import { execSync } from 'child_process';
 import temp from 'temp';
 import { cloneDeep, isEqual, union } from 'lodash';
 import fs from 'fs-extra';
+import { LakeOfFHIR } from '../processor';
 
 import { getFilesRecursive, logger } from '.';
 
-export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean): void {
+export function fshingTrip(
+  inDir: string,
+  outDir: string,
+  lake: LakeOfFHIR,
+  useLocalSUSHI: boolean
+): void {
   // Make a pretty box to let the user know we are going into SUSHI mode
   const clr = chalk.rgb(77, 166, 255);
   // prettier-ignore
@@ -26,12 +32,17 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
   } catch {
     logger.warn('SUSHI finished with errors, this may affect the resulting comparison');
   }
-  const inputFilesMap = getFilesMap(inDir);
+  const inputFilesMap = getFilesMap(inDir, lake);
   const outputFilesMap = getFilesMap(outDir);
   const files = union(Array.from(inputFilesMap.keys()), Array.from(outputFilesMap.keys())).filter(
     file =>
-      !['.index.json', 'ig-r4.json', 'package.json'].includes(file) &&
-      !file.endsWith('openapi.json')
+      ![
+        '.index.json',
+        'ig-r4.json',
+        'package.json',
+        'validation-oo.json',
+        'validation-summary.json'
+      ].includes(file) && !file.endsWith('openapi.json')
   );
   files.sort();
 
@@ -112,9 +123,23 @@ export function fshingTrip(inDir: string, outDir: string, useLocalSUSHI: boolean
   }
 }
 
-function getFilesMap(dir: string): Map<string, string> {
+function getFilesMap(dir: string, lake?: LakeOfFHIR): Map<string, string> {
   const files = getFilesRecursive(dir).filter(file => file.endsWith('.json'));
   const filesMap = new Map<string, string>();
-  files.forEach(file => filesMap.set(path.basename(file), file));
+  // If a lake was passed in, then build a map of path -> expected filename so that
+  // we preserver the original file paths when doing fshing trip comparisons.
+  // NOTE: This relies on SUSHI using the file name pattern: {type}-{id}.json.
+  const lakeMap = new Map<string, string>();
+  if (lake) {
+    lake.docs.forEach(r => {
+      if (r.path && r.content.resourceType && r.content.id) {
+        lakeMap.set(r.path, `${r.content.resourceType}-${r.content.id}.json`);
+      }
+    });
+  }
+  files.forEach(file => {
+    const fileName = lakeMap.get(file) ?? path.basename(file);
+    filesMap.set(fileName, file);
+  });
   return filesMap;
 }
