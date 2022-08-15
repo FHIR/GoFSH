@@ -136,7 +136,7 @@ async function app() {
   if (programOptions.out) {
     logger.info(`  --out ${path.resolve(programOptions.out)}`);
   }
-  logger.info(`  ${path.resolve(inDir)}`);
+  logger.info(`  ${path.resolve(inDir || '.')}`);
 
   inDir = getInputDir(inDir);
 
