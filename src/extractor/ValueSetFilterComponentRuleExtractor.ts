@@ -56,7 +56,9 @@ export class ValueSetFilterComponentRuleExtractor {
           default:
             // unknown operator type; default to a string value
             value = f.value;
-            logger.error(`Unsupported filter operator in ValueSet ${valueSet.id}: ${f.op}`);
+            logger.error(
+              `Unsupported filter operator in ValueSet ${valueSet.name ?? valueSet.id}: ${f.op}`
+            );
         }
         return {
           property: f.property,

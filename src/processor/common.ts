@@ -50,6 +50,7 @@ export function makeNameSushiSafe(
     | ExportableCodeSystem
 ) {
   if (/\s/.test(entity.name)) {
+    const fixedEntityName = entity.name.replace(/\s/g, '_');
     let entityType: string;
     if (entity instanceof ExportableValueSet) {
       entityType = 'ValueSet';
@@ -59,12 +60,12 @@ export function makeNameSushiSafe(
       entityType = 'StructureDefinition';
     }
     logger.warn(
-      `${entityType} with id ${entity.id} has name with whitespace. Converting whitespace to underscores.`
+      `${entityType} with id ${entity.id} has name with whitespace (${entity.name}). Converting whitespace to underscores (${fixedEntityName}).`
     );
     const nameRule = new ExportableCaretValueRule('');
     nameRule.caretPath = 'name';
     nameRule.value = entity.name;
-    entity.name = entity.name.replace(/\s/g, '_');
+    entity.name = fixedEntityName;
     entity.rules.unshift(nameRule);
   }
 }

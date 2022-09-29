@@ -103,9 +103,12 @@ function checkDuplicateDefinition(
   resource: NamedExportable,
   type: string
 ): boolean {
-  if (array.find(e => e.name === resource.name)) {
+  const existing = array.find(e => e.name === resource.name);
+  if (existing) {
     logger.error(
-      `Encountered ${type} with a duplicate name, ${resource.name}, which GoFSH cannot make unique. Fix the source file to resolve this error or update the resulting FSH definition.`
+      `Encountered ${type}s (id: ${existing.id} and id: ${resource.id}) with duplicate name: ` +
+        `${resource.name}. SUSHI requires named to be unique. Fix the source file for one of ` +
+        `these ${type}s to resolve this error or update the resulting FSH definition.`
     );
     return true;
   }

@@ -97,7 +97,9 @@ describe('Package', () => {
 
     it('should log an error and add duplicate named exports to the corresponding arrays', () => {
       const myProfile = new ExportableProfile('MyProfile');
+      myProfile.id = 'my-profile';
       const myDupProfile = new ExportableProfile('MyProfile');
+      myDupProfile.id = 'my-other-profile';
       myPackage.add(myProfile);
       myPackage.add(myDupProfile);
       expect(myPackage.profiles).toHaveLength(2);
@@ -105,7 +107,9 @@ describe('Package', () => {
       expect(myPackage.profiles[1]).toBe(myDupProfile);
 
       const myExtension = new ExportableExtension('MyExtension');
+      myExtension.id = 'my-extension';
       const myDupExtension = new ExportableExtension('MyExtension');
+      myDupExtension.id = 'my-other-extension';
       myPackage.add(myExtension);
       myPackage.add(myDupExtension);
       expect(myPackage.extensions).toHaveLength(2);
@@ -113,7 +117,9 @@ describe('Package', () => {
       expect(myPackage.extensions[1]).toBe(myDupExtension);
 
       const myInstance = new ExportableInstance('MyInstance');
+      // (no separate id to set)
       const myDupInstance = new ExportableInstance('MyInstance');
+      // (no separate id to set)
       myPackage.add(myInstance);
       myPackage.add(myDupInstance);
       expect(myPackage.instances).toHaveLength(2);
@@ -121,7 +127,9 @@ describe('Package', () => {
       expect(myPackage.instances[1]).toBe(myDupInstance);
 
       const myValueSet = new ExportableValueSet('MyValueSet');
+      myValueSet.id = 'my-value-set';
       const myDupValueSet = new ExportableValueSet('MyValueSet');
+      myDupValueSet.id = 'my-other-value-set';
       myPackage.add(myValueSet);
       myPackage.add(myDupValueSet);
       expect(myPackage.valueSets).toHaveLength(2);
@@ -129,7 +137,9 @@ describe('Package', () => {
       expect(myPackage.valueSets[1]).toBe(myDupValueSet);
 
       const myCodeSystem = new ExportableCodeSystem('MyCodeSystem');
+      myCodeSystem.id = 'my-code-system';
       const myDupCodeSystem = new ExportableCodeSystem('MyCodeSystem');
+      myDupCodeSystem.id = 'my-other-code-system';
       myPackage.add(myCodeSystem);
       myPackage.add(myDupCodeSystem);
       expect(myPackage.codeSystems).toHaveLength(2);
@@ -137,7 +147,9 @@ describe('Package', () => {
       expect(myPackage.codeSystems[1]).toBe(myDupCodeSystem);
 
       const myInvariant = new ExportableInvariant('inv-1');
+      // (no separate id to set)
       const myDupInvariant = new ExportableInvariant('inv-1');
+      // (no separate id to set)
       myPackage.add(myInvariant);
       myPackage.add(myDupInvariant);
       expect(myPackage.invariants).toHaveLength(2);
@@ -145,7 +157,9 @@ describe('Package', () => {
       expect(myPackage.invariants[1]).toBe(myDupInvariant);
 
       const myMapping = new ExportableMapping('MyMapping');
+      // (no separate id to set)
       const myDupMapping = new ExportableMapping('MyMapping');
+      // (no separate id to set)
       myPackage.add(myMapping);
       myPackage.add(myDupMapping);
       expect(myPackage.mappings).toHaveLength(2);
@@ -154,25 +168,25 @@ describe('Package', () => {
 
       expect(loggerSpy.getAllMessages('error')).toHaveLength(7);
       expect(loggerSpy.getMessageAtIndex(0, 'error')).toMatch(
-        /Encountered profile with a duplicate name, MyProfile/
+        /Encountered profiles \(id: my-profile and id: my-other-profile\) with duplicate name: MyProfile\./
       );
       expect(loggerSpy.getMessageAtIndex(1, 'error')).toMatch(
-        /Encountered extension with a duplicate name, MyExtension/
+        /Encountered extensions \(id: my-extension and id: my-other-extension\) with duplicate name: MyExtension\./
       );
       expect(loggerSpy.getMessageAtIndex(2, 'error')).toMatch(
-        /Encountered instance with a duplicate name, MyInstance/
+        /Encountered instances \(id: MyInstance and id: MyInstance\) with duplicate name: MyInstance\./
       );
       expect(loggerSpy.getMessageAtIndex(3, 'error')).toMatch(
-        /Encountered value set with a duplicate name, MyValueSet/
+        /Encountered value sets \(id: my-value-set and id: my-other-value-set\) with duplicate name: MyValueSet\./
       );
       expect(loggerSpy.getMessageAtIndex(4, 'error')).toMatch(
-        /Encountered code system with a duplicate name, MyCodeSystem/
+        /Encountered code systems \(id: my-code-system and id: my-other-code-system\) with duplicate name: MyCodeSystem\./
       );
       expect(loggerSpy.getMessageAtIndex(5, 'error')).toMatch(
-        /Encountered invariant with a duplicate name, inv-1/
+        /Encountered invariants \(id: inv-1 and id: inv-1\) with duplicate name: inv-1\./
       );
       expect(loggerSpy.getMessageAtIndex(6, 'error')).toMatch(
-        /Encountered mapping with a duplicate name, MyMapping/
+        /Encountered mappings \(id: MyMapping and id: MyMapping\) with duplicate name: MyMapping\./
       );
     });
 

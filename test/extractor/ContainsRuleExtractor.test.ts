@@ -81,7 +81,7 @@ describe('ContainsRuleExtractor', () => {
     expect(containsRule).toEqual<ExportableContainsRule>(expectedRule);
     expect(element.processedPaths).toEqual(['min', 'max', 'sliceName']);
     expect(loggerSpy.getLastMessage('error')).toMatch(
-      /Element sliceName \"Plums\".*Observation.extension:Nectarines/
+      /StructureDefinition ObservationWithContains.*id \(Observation.extension:Nectarines\).*sliceName \(Plums\).*sliceName "Nectarines"/
     );
   });
 
