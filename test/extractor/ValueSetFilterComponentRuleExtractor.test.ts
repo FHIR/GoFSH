@@ -5,7 +5,7 @@ import { ProcessableValueSet } from '../../src/processor';
 import { loggerSpy } from '../helpers';
 
 // We need to pass this in to ever call, but it's only used when logging an error message
-const VALUESET: ProcessableValueSet = { id: 'test-vs' };
+const VALUESET: ProcessableValueSet = { name: 'TestVS', id: 'test-vs' };
 
 describe('ValueSetFilterComponentRuleExtractor', () => {
   it('should extract a filter rule that includes all codes from a system', () => {
@@ -179,7 +179,7 @@ describe('ValueSetFilterComponentRuleExtractor', () => {
     loggerSpy.reset();
     const filter = ValueSetFilterComponentRuleExtractor.process(input, VALUESET, false);
     expect(loggerSpy.getLastMessage('error')).toBe(
-      'Unsupported filter operator in ValueSet test-vs: begets'
+      'Unsupported filter operator in ValueSet TestVS: begets'
     );
     const expectedFilter = new ExportableValueSetFilterComponentRule(false);
     expectedFilter.from = { system: 'http://mycodesystem.org' };

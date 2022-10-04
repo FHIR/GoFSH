@@ -73,7 +73,7 @@ describe('CodeSystemProcessor', () => {
       expect(result.name).toBe('Simple_CodeSystem');
       expect(result.rules).toContainEqual(expectedNameRule);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        'CodeSystem with id simple.codesystem has name with whitespace. Converting whitespace to underscores.'
+        'CodeSystem with id simple.codesystem has name with whitespace (Simple\nCodeSystem). Converting whitespace to underscores (Simple_CodeSystem).'
       );
     });
 

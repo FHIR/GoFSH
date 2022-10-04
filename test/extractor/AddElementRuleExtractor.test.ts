@@ -22,7 +22,7 @@ describe('AddElementRuleExtractor', () => {
   describe('#process', () => {
     it('should extract an add element rule with a cardinality and one type', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('bread');
       expectedRule.min = 1;
       expectedRule.max = '1';
@@ -36,7 +36,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with multiple types', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('apple[x]');
       expectedRule.min = 0;
       expectedRule.max = '3';
@@ -50,7 +50,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with a reference type', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('orange');
       expectedRule.min = 0;
       expectedRule.max = '1';
@@ -67,7 +67,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with a profiled type', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[4]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('banana');
       expectedRule.min = 1;
       expectedRule.max = '*';
@@ -84,7 +84,7 @@ describe('AddElementRuleExtractor', () => {
     it('should extract an add element rule with the must support flag', () => {
       // SUSHI does not allow this flag on AddElementRule, but that's something for SUSHI to complain about.
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[5]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('potato');
       expectedRule.min = 1;
       expectedRule.max = '3';
@@ -101,7 +101,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the summary flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[6]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('peppers');
       expectedRule.min = 0;
       expectedRule.max = '*';
@@ -118,7 +118,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the modifier flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[7]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('onions');
       expectedRule.min = 0;
       expectedRule.max = '3';
@@ -135,7 +135,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the draft flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[8]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('cabbage');
       expectedRule.min = 0;
       expectedRule.max = '1';
@@ -159,7 +159,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the trial use flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[9]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('milk');
       expectedRule.min = 0;
       expectedRule.max = '1';
@@ -183,7 +183,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the normative flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[10]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('coffee');
       expectedRule.min = 0;
       expectedRule.max = '2';
@@ -207,7 +207,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with multiple flags', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[11]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('peanuts');
       expectedRule.min = 0;
       expectedRule.max = '*';
@@ -233,7 +233,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with definition text', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[12]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('spice');
       expectedRule.min = 0;
       expectedRule.max = '*';
@@ -248,7 +248,7 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with multiple types, flags, and definition text', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[13]);
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       const expectedRule = new ExportableAddElementRule('cookies');
       expectedRule.min = 0;
       expectedRule.max = '2';
@@ -277,10 +277,10 @@ describe('AddElementRuleExtractor', () => {
         ProcessableElementDefinition.fromJSON(looseSD.differential.element[12])
       );
       delete element.type;
-      const elementRule = AddElementRuleExtractor.process(element);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
       expect(elementRule.types).toEqual([{ type: 'BackboneElement' }]);
       expect(loggerSpy.getLastMessage('warn')).toBe(
-        'No types found for element MyResource.spice. Defaulting to BackboneElement.'
+        'No types found for element MyResource.spice in MyResource. Defaulting to BackboneElement.'
       );
     });
   });

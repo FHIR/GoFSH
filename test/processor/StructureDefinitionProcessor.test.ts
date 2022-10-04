@@ -229,7 +229,7 @@ describe('StructureDefinitionProcessor', () => {
       expect(result[0].name).toBe('Simple_Profile');
       expect(result[0].rules).toContainEqual(expectedNameRule);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        'StructureDefinition with id simple.profile has name with whitespace. Converting whitespace to underscores.'
+        'StructureDefinition with id simple.profile has name with whitespace (Simple Profile). Converting whitespace to underscores (Simple_Profile).'
       );
     });
 

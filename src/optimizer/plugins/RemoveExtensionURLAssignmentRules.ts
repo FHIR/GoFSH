@@ -43,8 +43,9 @@ export default {
                 }
               } else if (urlRule.value !== item.name) {
                 logger.error(
-                  `${sd.name}: Inline extension at "${rule.path}[${item.name}]" has sliceName "${item.name}" but "${urlRule.value}" is assigned to url. ` +
-                    'SUSHI requires that these values match exactly, so the value assigned to the url will be used as the sliceName.'
+                  `${sd.name}: Inline extension at "${rule.path}[${item.name}]" has sliceName "${item.name}" but ` +
+                    `"${urlRule.value}" is assigned to url. SUSHI requires that these values match exactly, so the value assigned to the url ` +
+                    'will be used as the sliceName.'
                 );
                 // If the value set by the url rule and the sliceName do not match, prefer the value set by the url rule
                 // and replace all occurrences of the old sliceName in other rules

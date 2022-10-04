@@ -1,12 +1,15 @@
 import { isEmpty } from 'lodash';
-import { ProcessableElementDefinition } from '../processor';
+import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
 import { ExportableAddElementRule } from '../exportable';
 import { getPath, logger } from '../utils';
 import { FlagRuleExtractor } from '.';
 import { OnlyRuleExtractor } from './OnlyRuleExtractor';
 
 export class AddElementRuleExtractor {
-  static process(input: ProcessableElementDefinition): ExportableAddElementRule {
+  static process(
+    input: ProcessableElementDefinition,
+    structDef: ProcessableStructureDefinition
+  ): ExportableAddElementRule {
     const addElementRule = new ExportableAddElementRule(getPath(input));
     // we always have cardinality
     // don't use CardRuleExtractor here, since that has extra logic
@@ -19,7 +22,9 @@ export class AddElementRuleExtractor {
     // if types were missing, default to BackboneElement
     if (isEmpty(addElementRule.types)) {
       addElementRule.types = [{ type: 'BackboneElement' }];
-      logger.warn(`No types found for element ${input.id}. Defaulting to BackboneElement.`);
+      logger.warn(
+        `No types found for element ${input.id} in ${structDef.name}. Defaulting to BackboneElement.`
+      );
     }
     // we might have flags, so use FlagRuleExtractor
     const flagRule = FlagRuleExtractor.process(input);

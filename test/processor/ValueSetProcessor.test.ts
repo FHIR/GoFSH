@@ -61,7 +61,7 @@ describe('ValueSetProcessor', () => {
       expect(result.name).toBe('Simple_Value__Set');
       expect(result.rules).toContainEqual(expectedNameRule);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        'ValueSet with id simple.valueset has name with whitespace. Converting whitespace to underscores.'
+        'ValueSet with id simple.valueset has name with whitespace (Simple\tValue\t\tSet). Converting whitespace to underscores (Simple_Value__Set).'
       );
     });
 

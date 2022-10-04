@@ -149,7 +149,7 @@ export class StructureDefinitionProcessor {
             element.processedPaths.push('min', 'max');
           } else {
             // For all other elements, make a rule to add them.
-            const addElementRule = AddElementRuleExtractor.process(element);
+            const addElementRule = AddElementRuleExtractor.process(element, input);
             newRules.push(addElementRule);
           }
         }
