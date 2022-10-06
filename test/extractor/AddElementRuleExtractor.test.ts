@@ -81,6 +81,22 @@ describe('AddElementRuleExtractor', () => {
       );
     });
 
+    it('should extract an add element rule with a content reference', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[14]);
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const expectedRule = new ExportableAddElementRule('moreCookies');
+      expectedRule.min = 0;
+      expectedRule.max = '*';
+      expectedRule.short = 'Additional cookie information';
+      expectedRule.definition = 'Sometimes you need many more cookies';
+      expectedRule.contentReference = 'cookies';
+      expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(element.processedPaths).toEqual(
+        expect.arrayContaining(['min', 'max', 'short', 'definition', 'contentReference'])
+      );
+      expect(loggerSpy.getAllMessages()).toHaveLength(0);
+    });
+
     it('should extract an add element rule with the must support flag', () => {
       // SUSHI does not allow this flag on AddElementRule, but that's something for SUSHI to complain about.
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[5]);
@@ -272,7 +288,7 @@ describe('AddElementRuleExtractor', () => {
       );
     });
 
-    it('should log a warning and default to BackboneElement when an element has no types', () => {
+    it('should log a warning and default to BackboneElement when an element has no types and no contentReference', () => {
       const element = cloneDeep(
         ProcessableElementDefinition.fromJSON(looseSD.differential.element[12])
       );
@@ -280,7 +296,25 @@ describe('AddElementRuleExtractor', () => {
       const elementRule = AddElementRuleExtractor.process(element, looseSD);
       expect(elementRule.types).toEqual([{ type: 'BackboneElement' }]);
       expect(loggerSpy.getLastMessage('warn')).toBe(
-        'No types found for element MyResource.spice in MyResource. Defaulting to BackboneElement.'
+        'No types or contentReference found for element MyResource.spice in MyResource. Defaulting to BackboneElement.'
+      );
+    });
+
+    it('should log a warning when an element has types and a contentReference', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
+      element.contentReference = 'cookies';
+      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const expectedRule = new ExportableAddElementRule('bread');
+      expectedRule.min = 1;
+      expectedRule.max = '1';
+      expectedRule.short = 'Always get bread';
+      expectedRule.types.push({ type: 'CodeableConcept' });
+      expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(element.processedPaths).toEqual(
+        expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'contentReference'])
+      );
+      expect(loggerSpy.getLastMessage('warn')).toBe(
+        'Found types and contentReference for element MyResource.bread in MyResource. The contentReference will be ignored.'
       );
     });
   });

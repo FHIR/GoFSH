@@ -18,12 +18,22 @@ export class AddElementRuleExtractor {
     addElementRule.max = input.max;
     input.processedPaths.push('min', 'max');
     // get types using OnlyRuleExtractor
-    addElementRule.types = OnlyRuleExtractor.process(input)?.types;
-    // if types were missing, default to BackboneElement
-    if (isEmpty(addElementRule.types)) {
+    addElementRule.types = OnlyRuleExtractor.process(input)?.types ?? [];
+    if (input.contentReference) {
+      if (isEmpty(addElementRule.types)) {
+        addElementRule.contentReference = input.contentReference;
+      } else {
+        logger.warn(
+          `Found types and contentReference for element ${input.id} in ${structDef.name}. The contentReference will be ignored.`
+        );
+      }
+      input.processedPaths.push('contentReference');
+    }
+    // if types and contentReference were missing, default to BackboneElement
+    if (isEmpty(addElementRule.types) && isEmpty(addElementRule.contentReference)) {
       addElementRule.types = [{ type: 'BackboneElement' }];
       logger.warn(
-        `No types found for element ${input.id} in ${structDef.name}. Defaulting to BackboneElement.`
+        `No types or contentReference found for element ${input.id} in ${structDef.name}. Defaulting to BackboneElement.`
       );
     }
     // we might have flags, so use FlagRuleExtractor

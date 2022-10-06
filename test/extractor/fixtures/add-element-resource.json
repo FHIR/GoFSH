@@ -229,6 +229,15 @@
           }
         ],
         "isSummary": true
+      },
+      {
+        "id": "MyResource.moreCookies",
+        "path": "MyResource.moreCookies",
+        "short": "Additional cookie information",
+        "definition": "Sometimes you need many more cookies",
+        "min": 0,
+        "max": "*",
+        "contentReference": "cookies"
       }
     ]
   }
