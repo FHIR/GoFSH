@@ -17,7 +17,8 @@ import {
   ExportableOnlyRule,
   ExportableCombinedCardFlagRule,
   ExportableCodeSystem,
-  ExportableConceptRule
+  ExportableConceptRule,
+  ExportablePathRule
 } from '../../../src/exportable';
 import { Package } from '../../../src/processor';
 import { cloneDeep } from 'lodash';
@@ -974,6 +975,43 @@ describe('optimizer', () => {
         expectedComponentFlag,
         expectedComponentOnly
       ]);
+    });
+
+    it('should indent based on path rules', () => {
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address
+      // * address.city = "Tokyo"
+      // * address.country = "CN"
+      const instance = new ExportableInstance('ChainsawPatient');
+      instance.instanceOf = 'Patient';
+      instance.usage = 'Example';
+      const addressPathRule = new ExportablePathRule('address');
+      const tokyoCity = new ExportableAssignmentRule('address.city');
+      tokyoCity.value = 'Tokyo';
+      const chinaCountry = new ExportableAssignmentRule('address.country');
+      chinaCountry.value = 'CN';
+      instance.rules.push(addressPathRule, tokyoCity, chinaCountry);
+
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address
+      //   * city = "Tokyo"
+      //   * country = "CN"
+      const expectedPathRule = cloneDeep(addressPathRule);
+      expectedPathRule.indent = 0;
+      const expectedTokyoCity = new ExportableAssignmentRule('city');
+      expectedTokyoCity.value = 'Tokyo';
+      expectedTokyoCity.indent = 1;
+      const expectedChinaCountry = new ExportableAssignmentRule('country');
+      expectedChinaCountry.value = 'CN';
+      expectedChinaCountry.indent = 1;
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+      expect(instance.rules).toEqual([expectedPathRule, expectedTokyoCity, expectedChinaCountry]);
     });
   });
 });

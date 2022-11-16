@@ -5,7 +5,8 @@ import {
   ExportableAssignmentRule,
   ExportableCaretValueRule,
   ExportableInstance,
-  ExportableSdRule
+  ExportableSdRule,
+  ExportablePathRule
 } from '../../exportable';
 import { hasGeneratedText } from './RemoveGeneratedTextRulesOptimizer';
 import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
@@ -57,12 +58,16 @@ export default {
             return;
           }
 
-          rulesToRemove.push(i);
           if (rule instanceof ExportableCaretValueRule) {
             const newRule = new ExportableAssignmentRule(rule.caretPath);
             newRule.value = rule.value;
             rule = newRule;
           }
+          if (rule instanceof ExportablePathRule) {
+            return;
+          }
+          rulesToRemove.push(i);
+
           // id and resourceType and meta.profile should be used for keywords, all other rules are added
           if (
             rule.path === `${basePath}.id` &&
@@ -153,7 +158,7 @@ export default {
   }
 } as OptimizerPlugin;
 
-function getRulePath(rule: ExportableSdRule): string {
+function getRulePath(rule: ExportableSdRule | ExportablePathRule): string {
   return rule instanceof ExportableCaretValueRule ? rule.caretPath : rule.path;
 }
 

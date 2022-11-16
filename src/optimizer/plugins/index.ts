@@ -1,3 +1,4 @@
+import AddPathRulesOptimizer from './AddPathRulesOptimizer';
 import AddReferenceKeywordOptimizer from './AddReferenceKeywordOptimizer';
 import CombineCardAndFlagRulesOptimizer from './CombineCardAndFlagRulesOptimizer';
 import CombineCodingAndQuantityValuesOptimizer from './CombineCodingAndQuantityValuesOptimizer';
@@ -27,6 +28,7 @@ import SimplifyObeysRuleDotPathsOptimizer from './SimplifyObeysRuleDotPathsOptim
 import SimplifyRulePathContextsOptimizer from './SimplifyRulePathContextsOptimizer';
 
 export {
+  AddPathRulesOptimizer,
   AddReferenceKeywordOptimizer,
   CombineCardAndFlagRulesOptimizer,
   CombineCodingAndQuantityValuesOptimizer,
