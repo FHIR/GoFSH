@@ -17,6 +17,7 @@ export * from './ExportableMapping';
 export * from './ExportableMappingRule';
 export * from './ExportableObeysRule';
 export * from './ExportableOnlyRule';
+export * from './ExportablePathRule';
 export * from './ExportableProfile';
 export * from './ExportableLogical';
 export * from './ExportableResource';

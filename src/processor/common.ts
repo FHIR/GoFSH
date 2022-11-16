@@ -9,12 +9,15 @@ import {
   ExportableValueSet,
   ExportableCodeSystem,
   ExportableLogical,
-  ExportableResource
+  ExportableResource,
+  ExportablePathRule
 } from '../exportable';
 import { logger } from '../utils';
 
 // Places general Quantity-setting rules ahead of Quantity.unit setting rules
-export function switchQuantityRules(rules: (ExportableSdRule | ExportableAddElementRule)[]): void {
+export function switchQuantityRules(
+  rules: (ExportableSdRule | ExportableAddElementRule | ExportablePathRule)[]
+): void {
   let unitIndex: number;
   let lastSiblingIndex: number;
   let basePath: string;
