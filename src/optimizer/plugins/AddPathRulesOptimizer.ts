@@ -1,14 +1,15 @@
 import { Package } from '../../processor';
 import { OptimizerPlugin } from '../OptimizerPlugin';
-import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 import { ProcessingOptions } from '../../utils';
-import { ExportablePathRule, ExportableSdRule } from '../../exportable';
-import { cloneDeep } from 'lodash';
+import { ExportablePathRule } from '../../exportable';
+import ConstructInlineInstanceOptimizer from './ConstructInlineInstanceOptimizer';
+import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 import SimplifyRulePathContextsOptimizer from './SimplifyRulePathContextsOptimizer';
 
 export default {
   name: 'add_path_rules',
   description: 'Add path rules to support indenting.',
+  runAfter: [ConstructInlineInstanceOptimizer.name],
   runBefore: [SimplifyArrayIndexingOptimizer.name, SimplifyRulePathContextsOptimizer.name],
   optimize(pkg: Package): void {
     [
@@ -16,43 +17,43 @@ export default {
       ...pkg.extensions,
       ...pkg.logicals,
       ...pkg.resources,
-      ...pkg.instances
+      ...pkg.instances,
+      ...pkg.mappings
     ].forEach(entity => {
-      let currentRulePath: string;
-      let slicedRulePath: string;
-      let previousSlicedRulePath: string;
       const seenPathList: string[] = [];
-      const parentList: string[] = [];
-      let entityIndex = -1;
-      const cloneEntity = cloneDeep(entity);
-      cloneEntity.rules.forEach(rule => {
-        currentRulePath = rule.path;
-        entityIndex++;
-        //skip over empty rule paths
-        if (!currentRulePath || currentRulePath === '.') return;
-        //if it's a parent rule path, push it to a seperate list then skip
-        if (!currentRulePath.includes('.')) {
-          if (!parentList.includes(currentRulePath)) parentList.push(currentRulePath);
-          return;
-        }
-        const index = currentRulePath.lastIndexOf('.');
-        slicedRulePath = currentRulePath.slice(0, index);
+      // Iterate the rules, looking at the current rule and next rule
+      for (let i = 0; i < entity.rules.length - 1; i++) {
+        const rule = entity.rules[i];
+        const nextRule = entity.rules[i + 1];
 
-        if (
-          slicedRulePath === previousSlicedRulePath &&
-          //slicedRulePath &&
-          !seenPathList.includes(slicedRulePath) &&
-          !parentList.includes(slicedRulePath)
-        ) {
-          const newParent = new ExportablePathRule(slicedRulePath);
-          //insert the new path rule above the initial duplicate rule path
-          entity.rules.splice(entityIndex - 1, 0, newParent as ExportableSdRule);
-          seenPathList.push(slicedRulePath);
-          entityIndex++;
+        // Mark the current path as seen so we never repeat it
+        seenPathList.push(rule.path);
+
+        // Skip over empty rule paths and top-level rule paths since they don't have a parent
+        if (!rule.path || rule.path.indexOf('.') <= 0) {
+          continue;
         }
-        //set previous path for the next loop
-        previousSlicedRulePath = slicedRulePath;
-      });
+
+        // Similarly, if the next rule is empty or top-level, it can't have a common ancestor
+        if (!nextRule.path || nextRule.path.indexOf('.') <= 0) {
+          continue;
+        }
+
+        // Walk the current rule's path backwards, looking for common ancestor path; but start
+        // with 2nd-to-last part since we never need a path rule matching a real rule path
+        const splitPath = rule.path.split('.');
+        while (splitPath.pop() && splitPath.length) {
+          const ancestorPath = splitPath.join('.');
+          if (nextRule.path.startsWith(ancestorPath) && !seenPathList.includes(ancestorPath)) {
+            // It's a common ancestor that we haven't seen so splice it in!
+            entity.rules.splice(i, 0, new ExportablePathRule(ancestorPath));
+            seenPathList.push(ancestorPath);
+            // Increment i so it still references the right item (since we spliced something in)
+            i++;
+            break; // We only want to pull out one ancestor
+          }
+        }
+      }
     });
   },
   isEnabled(options: ProcessingOptions): boolean {

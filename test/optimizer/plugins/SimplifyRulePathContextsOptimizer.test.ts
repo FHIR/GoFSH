@@ -1013,5 +1013,75 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage);
       expect(instance.rules).toEqual([expectedPathRule, expectedTokyoCity, expectedChinaCountry]);
     });
+
+    it('should indent based on path rules for deeper paths', () => {
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address
+      // * address.city = "Tokyo"
+      // * address.country = "JP"
+      // * address.period
+      // * address.period.start = "2021-01-01"
+      // * address.period.end = "2021-12-31"
+      const instance = new ExportableInstance('ChainsawPatient');
+      instance.instanceOf = 'Patient';
+      instance.usage = 'Example';
+      const addressRule = new ExportablePathRule('address');
+      const tokyoCity = new ExportableAssignmentRule('address.city');
+      tokyoCity.value = 'Tokyo';
+      const japanCountry = new ExportableAssignmentRule('address.country');
+      japanCountry.value = 'JP';
+      const addressPeriodRule = new ExportablePathRule('address.period');
+      const startPeriod = new ExportableAssignmentRule('address.period.start');
+      startPeriod.value = '2021-01-01';
+      const endPeriod = new ExportableAssignmentRule('address.period.end');
+      endPeriod.value = '2021-12-31';
+      instance.rules.push(
+        addressRule,
+        tokyoCity,
+        japanCountry,
+        addressPeriodRule,
+        startPeriod,
+        endPeriod
+      );
+
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address
+      //   * city = "Tokyo"
+      //   * country = "JP"
+      //   * period
+      //     * start = "2021-01-01"
+      //     * end = "2021-12-31"
+      const expectedAddressRule = new ExportablePathRule('address');
+      expectedAddressRule.indent = 0;
+      const expectedTokyoCity = new ExportableAssignmentRule('city');
+      expectedTokyoCity.value = 'Tokyo';
+      expectedTokyoCity.indent = 1;
+      const expectedJapanCountry = new ExportableAssignmentRule('country');
+      expectedJapanCountry.value = 'JP';
+      expectedJapanCountry.indent = 1;
+      const expectedAddressPeriodRule = new ExportablePathRule('period');
+      expectedAddressPeriodRule.indent = 1;
+      const expectedStartPeriod = new ExportableAssignmentRule('start');
+      expectedStartPeriod.value = '2021-01-01';
+      expectedStartPeriod.indent = 2;
+      const expectedEndPeriod = new ExportableAssignmentRule('end');
+      expectedEndPeriod.value = '2021-12-31';
+      expectedEndPeriod.indent = 2;
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+      expect(instance.rules).toEqual([
+        expectedAddressRule,
+        expectedTokyoCity,
+        expectedJapanCountry,
+        expectedAddressPeriodRule,
+        expectedStartPeriod,
+        expectedEndPeriod
+      ]);
+    });
   });
 });

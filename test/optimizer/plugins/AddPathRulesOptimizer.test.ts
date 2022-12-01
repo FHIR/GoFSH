@@ -7,10 +7,8 @@ import {
   ExportableFlagRule
 } from '../../../src/exportable';
 import { Package } from '../../../src/processor';
-import { cloneDeep } from 'lodash';
+import { fshtypes } from 'fsh-sushi';
 
-//test for profile too
-//make sure indents are occuring in simplify rule path contexts optimizer
 describe('optimizer', () => {
   describe('add_rule_paths', () => {
     let myPackage: Package;
@@ -41,15 +39,10 @@ describe('optimizer', () => {
       // * address.city = "Tokyo"
       // * address.country = "JP"
       const addressPathRule = new ExportablePathRule('address');
-      const expectedPathRule = cloneDeep(addressPathRule);
-      const expectedTokyoCity = new ExportableAssignmentRule('address.city');
-      expectedTokyoCity.value = 'Tokyo';
-      const expectedJapanCountry = new ExportableAssignmentRule('address.country');
-      expectedJapanCountry.value = 'JP';
 
       myPackage.add(instance);
       optimizer.optimize(myPackage);
-      expect(instance.rules).toEqual([expectedPathRule, expectedTokyoCity, expectedJapanCountry]);
+      expect(instance.rules).toEqual([addressPathRule, tokyoCity, japanCountry]);
     });
 
     it('should add path rules if the parent paths are numbered', () => {
@@ -85,21 +78,17 @@ describe('optimizer', () => {
       // * address[1].country = "AU"
 
       const expectedPathRule0 = new ExportablePathRule('address[0]');
-      const expectedTokyoCity = cloneDeep(tokyoCity);
-      const expectedJapanCountry = cloneDeep(japanCountry);
       const expectedPathRule1 = new ExportablePathRule('address[1]');
-      const expectedSydneyCity = cloneDeep(sydneyCity);
-      const expectedAustraliaCountry = cloneDeep(australiaCountry);
 
       myPackage.add(instance);
       optimizer.optimize(myPackage);
       expect(instance.rules).toEqual([
         expectedPathRule0,
-        expectedTokyoCity,
-        expectedJapanCountry,
+        tokyoCity,
+        japanCountry,
         expectedPathRule1,
-        expectedSydneyCity,
-        expectedAustraliaCountry
+        sydneyCity,
+        australiaCountry
       ]);
     });
 
@@ -134,36 +123,145 @@ describe('optimizer', () => {
       // * address.period.start = "2021-01-01"
       // * address.period.end = "2021-12-31"
       const expectedPathRule = new ExportablePathRule('address');
-      const expectedTokyoCity = cloneDeep(tokyoCity);
-      const expectedJapanCountry = cloneDeep(japanCountry);
       const expectedPeriodRule = new ExportablePathRule('address.period');
-      const expectedStartPeriod = cloneDeep(startPeriod);
-      const expectedEndPeriod = cloneDeep(endPeriod);
 
       myPackage.add(instance);
       optimizer.optimize(myPackage);
       expect(instance.rules).toEqual([
         expectedPathRule,
-        expectedTokyoCity,
-        expectedJapanCountry,
+        tokyoCity,
+        japanCountry,
         expectedPeriodRule,
-        expectedStartPeriod,
-        expectedEndPeriod
+        startPeriod,
+        endPeriod
       ]);
     });
 
-    it('should add path rules for deeper paths', () => {
+    it('should add path rules for common ancestor paths even when rules paths are different depths', () => {
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address.country = "JP"
+      // * address.period.start = "2021-01-01"
+      const instance = new ExportableInstance('ChainsawPatient');
+      instance.instanceOf = 'Patient';
+      instance.usage = 'Example';
+      const japanCountry = new ExportableAssignmentRule('address.country');
+      japanCountry.value = 'JP';
+      const startPeriod = new ExportableAssignmentRule('address.period.start');
+      startPeriod.value = '2021-01-01';
+      instance.rules.push(japanCountry, startPeriod);
+
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address
+      // * address.country = "JP"
+      // * address.period.start = "2021-01-01"
+      const expectedPathRule = new ExportablePathRule('address');
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+      expect(instance.rules).toEqual([expectedPathRule, japanCountry, startPeriod]);
+    });
+
+    it('should not add path rules when previous rule already has parent path', () => {
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * maritalStatus = http://terminology.hl7.org/CodeSystem/v3-MaritalStatus#Married
+      // * maritalStatus.coding.userSelected = true
+      // * maritalStatus.text = "Married"
+      const instance = new ExportableInstance('ChainsawPatient');
+      instance.instanceOf = 'Patient';
+      instance.usage = 'Example';
+      const maritalStatus = new ExportableAssignmentRule('maritalStatus');
+      maritalStatus.value = new fshtypes.FshCode(
+        'Married',
+        'http://terminology.hl7.org/CodeSystem/v3-MaritalStatus'
+      );
+      const martialStatusUserSelected = new ExportableAssignmentRule(
+        'maritalStatus.coding.userSelected'
+      );
+      martialStatusUserSelected.value = true;
+      const martialStatusText = new ExportableAssignmentRule('maritalStatus.text');
+      martialStatusText.value = 'Married';
+      instance.rules.push(maritalStatus, martialStatusUserSelected, martialStatusText);
+
+      // The above definition should not be affected at all
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+      expect(instance.rules).toEqual([maritalStatus, martialStatusUserSelected, martialStatusText]);
+    });
+
+    it('should not add path rules when previous rule already has parent path', () => {
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * maritalStatus.coding = http://terminology.hl7.org/CodeSystem/v3-MaritalStatus#Married
+      // * maritalStatus.coding.version = "2.1.0"
+      // * maritalStatus.coding.userSelected = true
+      const instance = new ExportableInstance('ChainsawPatient');
+      instance.instanceOf = 'Patient';
+      instance.usage = 'Example';
+      const maritalStatusCoding = new ExportableAssignmentRule('maritalStatus.coding');
+      maritalStatusCoding.value = new fshtypes.FshCode(
+        'Married',
+        'http://terminology.hl7.org/CodeSystem/v3-MaritalStatus'
+      );
+      const martialStatusVersion = new ExportableAssignmentRule('maritalStatus.coding.version');
+      martialStatusVersion.value = '2.1.0';
+      const martialStatusUserSelected = new ExportableAssignmentRule(
+        'maritalStatus.coding.userSelected'
+      );
+      martialStatusUserSelected.value = true;
+      instance.rules.push(maritalStatusCoding, martialStatusVersion, martialStatusUserSelected);
+
+      // Instance: ChainsawPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * maritalStatus
+      // * maritalStatus.coding = http://terminology.hl7.org/CodeSystem/v3-MaritalStatus#Married
+      // * maritalStatus.coding.version = "2.1.0"
+      // * maritalStatus.coding.userSelected = true
+
+      // NOTE: maritalStatus should be added, but not maritalStatus.coding
+      const expectedMaritalStatus = new ExportablePathRule('maritalStatus');
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+      expect(instance.rules).toEqual([
+        expectedMaritalStatus,
+        maritalStatusCoding,
+        martialStatusVersion,
+        martialStatusUserSelected
+      ]);
+    });
+
+    it('should add path rules for profiles', () => {
       // Profile: MyPatient
       // Parent: Patient
-      // * name MS
-      // * name.period.end TU
+      // * name.given MS
+      // * name.family MS
       const profile = new ExportableProfile('MyPatient');
       profile.parent = 'Patient';
-      const nameRule = new ExportableFlagRule('name');
-      nameRule.mustSupport = true;
-      const endRule = new ExportableFlagRule('name.period.end');
-      endRule.trialUse = true;
-      profile.rules.push(nameRule, endRule);
+      const nameGivenRule = new ExportableFlagRule('name.given');
+      nameGivenRule.mustSupport = true;
+      const nameFamilyRule = new ExportableFlagRule('name.family');
+      nameFamilyRule.mustSupport = true;
+      profile.rules.push(nameGivenRule, nameFamilyRule);
+
+      // Profile: MyPatient
+      // Parent: Patient
+      // * name
+      // * name.given MS
+      // * name.family MS
+      const expectedNameRule = new ExportablePathRule('name');
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+      expect(profile.rules).toEqual([expectedNameRule, nameGivenRule, nameFamilyRule]);
     });
   });
 });

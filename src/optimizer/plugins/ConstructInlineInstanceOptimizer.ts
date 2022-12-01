@@ -53,20 +53,19 @@ export default {
 
         // Find all rules on the instance that are children of the base path and should be
         // added to the inline instance
-        resource.rules.forEach((rule, i) => {
-          if (!(rule instanceof ruleType && getRulePath(rule).startsWith(basePath))) {
+        resource.rules.forEach((r, i) => {
+          if (!(r instanceof ruleType && getRulePath(r).startsWith(basePath))) {
             return;
           }
 
+          rulesToRemove.push(i);
+
+          let rule = r as ExportableAssignmentRule | ExportableCaretValueRule;
           if (rule instanceof ExportableCaretValueRule) {
             const newRule = new ExportableAssignmentRule(rule.caretPath);
             newRule.value = rule.value;
             rule = newRule;
           }
-          if (rule instanceof ExportablePathRule) {
-            return;
-          }
-          rulesToRemove.push(i);
 
           // id and resourceType and meta.profile should be used for keywords, all other rules are added
           if (
