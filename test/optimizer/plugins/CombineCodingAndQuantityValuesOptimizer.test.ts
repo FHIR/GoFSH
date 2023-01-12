@@ -233,6 +233,26 @@ describe('optimizer', () => {
         expect(valueSet.rules[1]).toEqual(expectedDisplayRule);
       });
 
+      it('should not combine rules on code and system for ValueSet.expansion.contains.contains', () => {
+        const valueSet = new ExportableValueSet('ValueSet');
+        const codeRule = new ExportableCaretValueRule('');
+        codeRule.caretPath = 'expansion.contains[0].contains[0].code';
+        codeRule.value = new FshCode('gooseberry');
+        const systemRule = new ExportableCaretValueRule('');
+        systemRule.caretPath = 'expansion.contains[0].contains[0].system';
+        systemRule.value = 'https://fruit.net/CodeSystems/FruitCS';
+        valueSet.rules.push(codeRule, systemRule);
+        const myPackage = new Package();
+        myPackage.add(valueSet);
+
+        const expectedCodeRule = cloneDeep(codeRule);
+        const expectedSystemRule = cloneDeep(systemRule);
+        optimizer.optimize(myPackage, fisher);
+        expect(valueSet.rules.length).toBe(2);
+        expect(valueSet.rules[0]).toEqual(expectedCodeRule);
+        expect(valueSet.rules[1]).toEqual(expectedSystemRule);
+      });
+
       it('should combine rules on code and unit into a single rule', () => {
         const extension = new ExportableExtension('MyExtension');
         const codeRule = new ExportableCaretValueRule('');

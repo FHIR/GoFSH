@@ -164,6 +164,12 @@ function getTypesForPath(
     const instanceOfSD = fhirtypes.StructureDefinition.fromJSON(instanceOfDef);
     // NOTE: Normalize the path to remove indices and/or slice references
     const element = instanceOfSD.findElementByPath(path.replace(/\[[^\]]+\]/g, ''), fisher);
-    return element?.type;
+    if (element?.contentReference) {
+      return instanceOfSD.findElement(
+        element.contentReference.slice(element.contentReference.indexOf('#') + 1)
+      )?.type;
+    } else {
+      return element?.type;
+    }
   }
 }
