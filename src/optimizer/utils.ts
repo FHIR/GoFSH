@@ -165,7 +165,9 @@ function getTypesForPath(
     // NOTE: Normalize the path to remove indices and/or slice references
     const element = instanceOfSD.findElementByPath(path.replace(/\[[^\]]+\]/g, ''), fisher);
     if (element?.contentReference) {
-      return instanceOfSD.findElement(element.contentReference.slice(1))?.type;
+      return instanceOfSD.findElement(
+        element.contentReference.slice(element.contentReference.indexOf('#') + 1)
+      )?.type;
     } else {
       return element?.type;
     }
