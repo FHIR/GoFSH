@@ -51,6 +51,11 @@ export default {
             // Increment i so it still references the right item (since we spliced something in)
             i++;
             break; // We only want to pull out one ancestor
+          } else if (seenPathList.some(l => ancestorPath.includes(l))) {
+            // Otherwise, if a path rule that has already been added is a more specific path than
+            // the current ancestor path, then stop. This prevents us from adding a path for
+            // meta.extension and later a path for meta.
+            break;
           }
         }
       }

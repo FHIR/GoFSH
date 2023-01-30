@@ -137,6 +137,61 @@ describe('optimizer', () => {
       ]);
     });
 
+    it('should add path rules for deeper paths with numeric indices', () => {
+      // Instance: ExtendedPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * birthDate.extension[0].url = "http://example.com/party"
+      // * birthDate.extension[0].valueString = "surprise"
+      // * birthDate.extension[1].url = "http://example.com/cake"
+      // * birthDate.extension[1].valueString = "ice cream"
+      const instance = new ExportableInstance('ExtendedPatient');
+      instance.instanceOf = 'Patient';
+      instance.usage = 'Example';
+      const partyExtensionUrl = new ExportableAssignmentRule('birthDate.extension[0].url');
+      partyExtensionUrl.value = 'http://example.com/party';
+      const partyExtensionValueString = new ExportableAssignmentRule(
+        'birthDate.extension[0].valueString'
+      );
+      partyExtensionValueString.value = 'surprise';
+      const cakeExtensionUrl = new ExportableAssignmentRule('birthDate.extension[1].url');
+      cakeExtensionUrl.value = 'http://example.com/cake';
+      const cakeExtensionValueString = new ExportableAssignmentRule(
+        'birthDate.extension[1].valueString'
+      );
+      cakeExtensionValueString.value = 'ice cream';
+      instance.rules.push(
+        partyExtensionUrl,
+        partyExtensionValueString,
+        cakeExtensionUrl,
+        cakeExtensionValueString
+      );
+      myPackage.add(instance);
+
+      optimizer.optimize(myPackage);
+
+      // Instance: ExtendedPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * birthDate.extension[0]
+      // * birthDate.extension[0].url = "http://example.com/party"
+      // * birthDate.extension[0].valueString = "surprise"
+      // * birthDate.extension[1]
+      // * birthDate.extension[1].url = "http://example.com/cake"
+      // * birthDate.extension[1].valueString = "ice cream"
+
+      const partyPathRule = new ExportablePathRule('birthDate.extension[0]');
+      const cakePathRule = new ExportablePathRule('birthDate.extension[1]');
+      expect(instance.rules).toEqual([
+        partyPathRule,
+        partyExtensionUrl,
+        partyExtensionValueString,
+        cakePathRule,
+        cakeExtensionUrl,
+        cakeExtensionValueString
+      ]);
+    });
+
     it('should add path rules for common ancestor paths even when rules paths are different depths', () => {
       // Instance: ChainsawPatient
       // InstanceOf: Patient
