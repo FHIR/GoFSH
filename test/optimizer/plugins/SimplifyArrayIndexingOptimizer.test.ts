@@ -69,10 +69,10 @@ describe('optimizer', () => {
       nameRule1.value = 'John';
 
       const nameRule2 = new ExportableAssignmentRule('name[0].family');
-      nameRule1.value = 'Doe';
+      nameRule2.value = 'Doe';
 
       const nameRule3 = new ExportableAssignmentRule('name[5].given[0]');
-      nameRule2.value = 'James';
+      nameRule3.value = 'James';
 
       instance.rules.push(nameRule1, nameRule2, nameRule3);
       const myPackage = new Package();

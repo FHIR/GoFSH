@@ -328,6 +328,55 @@ describe('optimizer', () => {
       ]);
     });
 
+    it('should simplify rule paths that use soft indexing but start with a 0 index', () => {
+      // Instance: OceanPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address[0].city = "Shark Park"
+      // * address[=].city.id = "shark-park"
+      // * address[+].city = "Clam Valley"
+      // * address[=].city.id = "clam-valley"
+      const instance = new ExportableInstance('OceanPatient');
+      instance.instanceOf = 'Patient';
+      instance.usage = 'Example';
+      const sharkCity = new ExportableAssignmentRule('address[0].city');
+      sharkCity.value = 'Shark Park';
+      const sharkId = new ExportableAssignmentRule('address[=].city.id');
+      sharkId.value = 'shark-park';
+      const clamCity = new ExportableAssignmentRule('address[+].city');
+      clamCity.value = 'Clam Valley';
+      const clamId = new ExportableAssignmentRule('address[=].city.id');
+      clamId.value = 'clam-valley';
+      instance.rules.push(sharkCity, sharkId, clamCity, clamId);
+
+      // Instance: OceanPatient
+      // InstanceOf: Patient
+      // Usage: #example
+      // * address[0].city = "Shark Park"
+      //   * id = "shark-park"
+      // * address[+].city = "Clam Valley"
+      //   * id = "clam-valley"
+      const expectedSharkCity = cloneDeep(sharkCity);
+      expectedSharkCity.indent = 0;
+      const expectedSharkId = cloneDeep(sharkId);
+      expectedSharkId.path = 'id';
+      expectedSharkId.indent = 1;
+      const expectedClamCity = cloneDeep(clamCity);
+      expectedClamCity.indent = 0;
+      const expectedClamId = cloneDeep(clamId);
+      expectedClamId.path = 'id';
+      expectedClamId.indent = 1;
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+      expect(instance.rules).toEqual([
+        expectedSharkCity,
+        expectedSharkId,
+        expectedClamCity,
+        expectedClamId
+      ]);
+    });
+
     it('should simplify rule paths in concept rules', () => {
       // CodeSystem: AvatarCS
       // * #water-tribe "Water Tribe"

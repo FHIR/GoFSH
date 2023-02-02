@@ -1,10 +1,91 @@
 import { Package } from '../../processor';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { ProcessingOptions } from '../../utils';
-import { ExportablePathRule } from '../../exportable';
+import {
+  ExportableAddElementRule,
+  ExportableMappingRule,
+  ExportablePathRule,
+  ExportableSdRule
+} from '../../exportable';
 import ConstructInlineInstanceOptimizer from './ConstructInlineInstanceOptimizer';
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
 import SimplifyRulePathContextsOptimizer from './SimplifyRulePathContextsOptimizer';
+
+// NOTE: These are the rule types that are allowed on the entities that are optimized
+// by this optimizer. Type is created to allow specificity and convenience.
+type AllowedRule =
+  | ExportableMappingRule
+  | ExportablePathRule
+  | ExportableAddElementRule
+  | ExportableSdRule;
+
+type PathNode = {
+  path: string;
+  rule?: AllowedRule;
+  children: PathNode[];
+};
+
+// Create a tree with a node for each path part for all rules
+function buildPathTree(parent: PathNode, rule: AllowedRule) {
+  // We want to process each part, so split at each . not within []
+  // Because we want to consider each slice and index within the path as a
+  // unique path, we don't want to use the full parseFSHPath.
+  const pathParts = rule.path.split(/\.(?![^\[]*\])/g);
+  let currentPath = '';
+  let lastParent: PathNode;
+  pathParts.forEach(part => {
+    currentPath = currentPath === '' ? part : `${currentPath}.${part}`; // build the path back up
+    lastParent = parent.children.find(child => child.path === currentPath);
+    if (lastParent == null) {
+      // If this path hasn't been seen, create a node for it in the tree
+      const newNode: PathNode = { path: currentPath, children: [] };
+      // If the current path is also the rule path, we want to include the rule on the node
+      if (currentPath === rule.path) {
+        newNode.rule = rule;
+      }
+      parent.children.push(newNode);
+
+      // Use the current path's node as the parent for the next path part
+      parent = newNode;
+    } else {
+      // If the current path is also the rule path but that path's node was previously added to the tree,
+      // we still want to add the rule to node so the rule is tracked
+      if (currentPath === rule.path) {
+        lastParent.rule = rule;
+      }
+
+      // Use the current path's node as the parent for the next path part
+      parent = lastParent;
+    }
+  });
+}
+
+// Build the list of rules that will create optimal context.
+function createAndOrganizeRules(pathNodes: PathNode[], rules: AllowedRule[]) {
+  pathNodes?.forEach(node => {
+    if (node.children.length > 1) {
+      // There are at least 2 children. Create a path rule if necessary,
+      // otherwise just include the rule at that path.
+      if (node.rule == null) {
+        rules.push(new ExportablePathRule(node.path));
+      } else {
+        rules.push(node.rule);
+      }
+      // Continue processing all child nodes
+      createAndOrganizeRules(node.children, rules);
+    } else {
+      // If there are 0 or 1 rules at the path, we don't need to create a path rule,
+      // but we do need to include the rule if there is one at that path.
+      if (node.rule != null) {
+        rules.push(node.rule);
+      }
+      // If this path has a child, continue processing the child node.
+      if (node.children.length > 0) {
+        createAndOrganizeRules(node.children, rules);
+      }
+    }
+  });
+}
 
 export default {
   name: 'add_path_rules',
@@ -20,45 +101,23 @@ export default {
       ...pkg.instances,
       ...pkg.mappings
     ].forEach(entity => {
-      const seenPathList: string[] = [];
-      // Iterate the rules, looking at the current rule and next rule
-      for (let i = 0; i < entity.rules.length - 1; i++) {
-        const rule = entity.rules[i];
-        const nextRule = entity.rules[i + 1];
+      const root: PathNode = {
+        path: '',
+        rule: null,
+        children: []
+      };
 
-        // Mark the current path as seen so we never repeat it
-        seenPathList.push(rule.path);
+      // Build a tree of paths used in rules
+      entity.rules.forEach(rule => {
+        buildPathTree(root, rule);
+      });
 
-        // Skip over empty rule paths and top-level rule paths since they don't have a parent
-        if (!rule.path || rule.path.indexOf('.') <= 0) {
-          continue;
-        }
-
-        // Similarly, if the next rule is empty or top-level, it can't have a common ancestor
-        if (!nextRule.path || nextRule.path.indexOf('.') <= 0) {
-          continue;
-        }
-
-        // Walk the current rule's path backwards, looking for common ancestor path; but start
-        // with 2nd-to-last part since we never need a path rule matching a real rule path
-        const splitPath = rule.path.split('.');
-        while (splitPath.pop() && splitPath.length) {
-          const ancestorPath = splitPath.join('.');
-          if (nextRule.path.startsWith(ancestorPath) && !seenPathList.includes(ancestorPath)) {
-            // It's a common ancestor that we haven't seen so splice it in!
-            entity.rules.splice(i, 0, new ExportablePathRule(ancestorPath));
-            seenPathList.push(ancestorPath);
-            // Increment i so it still references the right item (since we spliced something in)
-            i++;
-            break; // We only want to pull out one ancestor
-          } else if (seenPathList.some(l => ancestorPath.includes(l))) {
-            // Otherwise, if a path rule that has already been added is a more specific path than
-            // the current ancestor path, then stop. This prevents us from adding a path for
-            // meta.extension and later a path for meta.
-            break;
-          }
-        }
-      }
+      // Create a new list of rules which will have optimal path context.
+      // This may mean adding path rules as necessary and changing the order
+      // of rules in order to optimize context.
+      const rulesWithPathRules: AllowedRule[] = [];
+      createAndOrganizeRules(root.children, rulesWithPathRules);
+      entity.rules = rulesWithPathRules;
     });
   },
   isEnabled(options: ProcessingOptions): boolean {

@@ -173,6 +173,7 @@ describe('optimizer', () => {
       // Instance: ExtendedPatient
       // InstanceOf: Patient
       // Usage: #example
+      // * birthDate
       // * birthDate.extension[0]
       // * birthDate.extension[0].url = "http://example.com/party"
       // * birthDate.extension[0].valueString = "surprise"
@@ -180,9 +181,11 @@ describe('optimizer', () => {
       // * birthDate.extension[1].url = "http://example.com/cake"
       // * birthDate.extension[1].valueString = "ice cream"
 
+      const birthDatePathRule = new ExportablePathRule('birthDate');
       const partyPathRule = new ExportablePathRule('birthDate.extension[0]');
       const cakePathRule = new ExportablePathRule('birthDate.extension[1]');
       expect(instance.rules).toEqual([
+        birthDatePathRule,
         partyPathRule,
         partyExtensionUrl,
         partyExtensionValueString,
@@ -276,21 +279,69 @@ describe('optimizer', () => {
       // Instance: ChainsawPatient
       // InstanceOf: Patient
       // Usage: #example
-      // * maritalStatus
       // * maritalStatus.coding = http://terminology.hl7.org/CodeSystem/v3-MaritalStatus#Married
       // * maritalStatus.coding.version = "2.1.0"
       // * maritalStatus.coding.userSelected = true
 
-      // NOTE: maritalStatus should be added, but not maritalStatus.coding
-      const expectedMaritalStatus = new ExportablePathRule('maritalStatus');
+      // NOTE: maritalStatus and maritalStatus.coding path rules are not needed because
+      // maritalStatus.coding assignment rule sets sufficient context
 
       myPackage.add(instance);
       optimizer.optimize(myPackage);
       expect(instance.rules).toEqual([
-        expectedMaritalStatus,
         maritalStatusCoding,
         martialStatusVersion,
         martialStatusUserSelected
+      ]);
+    });
+
+    it('should add path rules and reorder assignment rules to set optimal context', () => {
+      // Instance: ObservationWithValueCC
+      // InstanceOf: Observation
+      // Usage: #example
+      // * valueCodeableConcept.coding.extension.url = "http://example.com/important-value"
+      // * valueCodeableConcept.coding.extension.valueDecimal = 2
+      // * valueCodeableConcept.coding = http://example.com#12345 "Favorite Numbers"
+      // * valueCodeableConcept.text = "2. Favorite and Important"
+      const instance = new ExportableInstance('ObservationWithValueCC');
+      instance.instanceOf = 'Observation';
+      instance.usage = 'Example';
+      const ccCodingExtUrl = new ExportableAssignmentRule(
+        'valueCodeableConcept.coding.extension.url'
+      );
+      ccCodingExtUrl.value = 'http://example.com/important-value';
+      const ccCodingExtValue = new ExportableAssignmentRule(
+        'valueCodeableConcept.coding.extension.valueDecimal'
+      );
+      ccCodingExtValue.value = '2';
+      const ccCoding = new ExportableAssignmentRule('valueCodeableConcept.coding');
+      ccCoding.value = new fshtypes.FshCode('12345', 'http://example.com', 'Favorite Numbers');
+      const ccText = new ExportableAssignmentRule('valueCodeableConcept.text');
+      ccText.value = '2. Favorite and Important';
+      instance.rules.push(ccCodingExtUrl, ccCodingExtValue, ccCoding, ccText);
+
+      myPackage.add(instance);
+      optimizer.optimize(myPackage);
+
+      // Instance: ObservationWithValueCC
+      // InstanceOf: Observation
+      // Usage: #example
+      // * valueCodeableConcept
+      // * valueCodeableConcept.coding = http://example.com#12345 "Favorite Numbers"
+      // * valueCodeableConcept.coding.extension
+      // * valueCodeableConcept.coding.extension.url = "http://example.com/important-value"
+      // * valueCodeableConcept.coding.extension.valueDecimal = 2
+      // * valueCodeableConcept.text = "2. Favorite and Important"
+
+      const ccPathRule = new ExportablePathRule('valueCodeableConcept');
+      const ccCodingExtPathRule = new ExportablePathRule('valueCodeableConcept.coding.extension');
+      expect(instance.rules).toEqual([
+        ccPathRule, // path rule added
+        ccCoding, // coding moved before coding.extension rules to properly set context in later optimizer
+        ccCodingExtPathRule, // path rule added
+        ccCodingExtUrl,
+        ccCodingExtValue,
+        ccText
       ]);
     });
 
