@@ -4,7 +4,10 @@ import {
   ExportableAssignmentRule,
   ExportablePathRule,
   ExportableProfile,
-  ExportableFlagRule
+  ExportableFlagRule,
+  ExportableCaretValueRule,
+  ExportableOnlyRule,
+  ExportableCardRule
 } from '../../../src/exportable';
 import { Package } from '../../../src/processor';
 import { fshtypes } from 'fsh-sushi';
@@ -368,6 +371,252 @@ describe('optimizer', () => {
       myPackage.add(profile);
       optimizer.optimize(myPackage);
       expect(profile.rules).toEqual([expectedNameRule, nameGivenRule, nameFamilyRule]);
+    });
+
+    it('should handle caret value rules with no path', () => {
+      // Profile: VersionedObservation
+      // Parent: Observation
+      // * ^version = "2.3.0"
+      // * ^status = #draft
+      const profile = new ExportableProfile('VersionedObservation');
+      profile.parent = 'Observation';
+      const versionRule = new ExportableCaretValueRule('');
+      versionRule.caretPath = 'version';
+      versionRule.value = '2.3.0';
+      const statusRule = new ExportableCaretValueRule('');
+      statusRule.caretPath = 'status';
+      statusRule.value = new fshtypes.FshCode('draft');
+      profile.rules.push(versionRule, statusRule);
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+
+      // Keeps both rules at same path, different caret path
+      expect(profile.rules).toEqual([versionRule, statusRule]);
+    });
+
+    it('should handle . ^caret rules', () => {
+      // Profile: EDChangesObservation
+      // Parent: Observation
+      // * . ^short = "Brief test"
+      // * . ^definition = "My definition."
+      // * . ^comment = "Well created!"
+      const profile = new ExportableProfile('EDChangesObservation');
+      profile.parent = 'Observation';
+      const short = new ExportableCaretValueRule('.');
+      short.caretPath = 'short';
+      short.value = 'Brief test';
+      const definition = new ExportableCaretValueRule('.');
+      definition.caretPath = 'definition';
+      definition.value = 'My definition.';
+      const comment = new ExportableCaretValueRule('.');
+      comment.caretPath = 'comment';
+      comment.value = 'Well created!';
+      profile.rules.push(short, definition, comment);
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+
+      expect(profile.rules).toEqual([short, definition, comment]);
+    });
+
+    it('should handle caret values on paths', () => {
+      // Profile: CategoryCaretObservation
+      // Parent: Observation
+      // * category ^slicing.ordered = false
+      // * category ^slicing.rules = #open
+      const profile = new ExportableProfile('CategoryCaretObservation');
+      profile.parent = 'Observation';
+      const categorySlicingOrdered = new ExportableCaretValueRule('category');
+      categorySlicingOrdered.caretPath = 'slicing.ordered';
+      categorySlicingOrdered.value = false;
+      const categorySlicingRules = new ExportableCaretValueRule('category');
+      categorySlicingRules.caretPath = 'slicing.rules';
+      categorySlicingRules.value = new fshtypes.FshCode('open');
+      profile.rules.push(categorySlicingOrdered, categorySlicingRules);
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+
+      expect(profile.rules).toEqual([categorySlicingOrdered, categorySlicingRules]);
+    });
+
+    it('should handle caret paths after another rule', () => {
+      // Profile: CategoryCaretObservation
+      // Parent: Observation
+      // * category only CodeableConcept
+      // * category ^slicing.ordered = false
+      // * category ^slicing.rules = #open
+      const profile = new ExportableProfile('CategoryCaretObservation');
+      profile.parent = 'Observation';
+      const categoryOnlyCC = new ExportableOnlyRule('category');
+      categoryOnlyCC.types = [{ type: 'CodeableConcept' }];
+      const categorySlicingOrdered = new ExportableCaretValueRule('category');
+      categorySlicingOrdered.caretPath = 'slicing.ordered';
+      categorySlicingOrdered.value = false;
+      const categorySlicingRules = new ExportableCaretValueRule('category');
+      categorySlicingRules.caretPath = 'slicing.rules';
+      categorySlicingRules.value = new fshtypes.FshCode('open');
+      profile.rules.push(categoryOnlyCC, categorySlicingOrdered, categorySlicingRules);
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+
+      expect(profile.rules).toEqual([categoryOnlyCC, categorySlicingOrdered, categorySlicingRules]);
+    });
+
+    it('should handle paths that require multiple rules at the same path', () => {
+      // Profile: MultipleRulesPerPathObs
+      // Parent: Observation
+      // * category 1..1 MS
+      // * category only CodeableConcept
+      // * category.coding 1..* MS
+      // * category.coding only Coding
+      // * category.coding.system 1..1 MS
+      // * category.coding.system only uri
+      const profile = new ExportableProfile('MultipleRulesPerPathObs');
+      profile.parent = 'Observation';
+      const categoryCard = new ExportableCardRule('category');
+      categoryCard.min = 1;
+      categoryCard.max = '1';
+      const categoryMS = new ExportableFlagRule('category');
+      categoryMS.mustSupport = true;
+      const categoryOnlyCC = new ExportableOnlyRule('category');
+      categoryOnlyCC.types = [{ type: 'CodeableConcept' }];
+
+      const categoryCodingCard = new ExportableCardRule('category.coding');
+      categoryCodingCard.min = 1;
+      categoryCodingCard.max = '*';
+      const categoryCodingMS = new ExportableFlagRule('category.coding');
+      categoryCodingMS.mustSupport = true;
+      const categoryCodingOnlyCC = new ExportableOnlyRule('category.coding');
+      categoryCodingOnlyCC.types = [{ type: 'Coding' }];
+
+      const categoryCodingSystemCard = new ExportableCardRule('category.coding.system');
+      categoryCodingSystemCard.min = 1;
+      categoryCodingSystemCard.max = '1';
+      const categoryCodingSystemMS = new ExportableFlagRule('category.coding.system');
+      categoryCodingSystemMS.mustSupport = true;
+      const categoryCodingSystemOnlyCC = new ExportableOnlyRule('category.coding.system');
+      categoryCodingSystemOnlyCC.types = [{ type: 'uri' }];
+
+      profile.rules.push(
+        categoryCard,
+        categoryMS,
+        categoryOnlyCC,
+        categoryCodingCard,
+        categoryCodingMS,
+        categoryCodingOnlyCC,
+        categoryCodingSystemCard,
+        categoryCodingSystemMS,
+        categoryCodingSystemOnlyCC
+      );
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+
+      expect(profile.rules).toEqual([
+        categoryCard,
+        categoryMS,
+        categoryOnlyCC,
+        categoryCodingCard,
+        categoryCodingMS,
+        categoryCodingOnlyCC,
+        categoryCodingSystemCard,
+        categoryCodingSystemMS,
+        categoryCodingSystemOnlyCC
+      ]);
+    });
+
+    it('should optimize order for rules that require multiple rules at the same path', () => {
+      // Profile: MultipleRulesPerPathObs
+      // Parent: Observation
+      // * category 1..1 MS
+      // * category only CodeableConcept
+      // * category.coding 1..* MS
+      // * category.coding only Coding
+      // * category.coding.system 1..1 MS
+      // * category.coding.system only uri
+      const profile = new ExportableProfile('MultipleRulesPerPathObs');
+      profile.parent = 'Observation';
+      const categoryCard = new ExportableCardRule('category');
+      categoryCard.min = 1;
+      categoryCard.max = '1';
+      const categoryMS = new ExportableFlagRule('category');
+      categoryMS.mustSupport = true;
+      const categoryOnlyCC = new ExportableOnlyRule('category');
+      categoryOnlyCC.types = [{ type: 'CodeableConcept' }];
+
+      const categoryCodingCard = new ExportableCardRule('category.coding');
+      categoryCodingCard.min = 1;
+      categoryCodingCard.max = '*';
+      const categoryCodingMS = new ExportableFlagRule('category.coding');
+      categoryCodingMS.mustSupport = true;
+      const categoryCodingOnlyCC = new ExportableOnlyRule('category.coding');
+      categoryCodingOnlyCC.types = [{ type: 'Coding' }];
+
+      const categoryCodingSystemCard = new ExportableCardRule('category.coding.system');
+      categoryCodingSystemCard.min = 1;
+      categoryCodingSystemCard.max = '1';
+      const categoryCodingSystemMS = new ExportableFlagRule('category.coding.system');
+      categoryCodingSystemMS.mustSupport = true;
+      const categoryCodingSystemOnlyCC = new ExportableOnlyRule('category.coding.system');
+      categoryCodingSystemOnlyCC.types = [{ type: 'uri' }];
+
+      profile.rules.push(
+        categoryCard,
+        categoryMS,
+        categoryCodingCard,
+        categoryCodingMS,
+        categoryCodingSystemCard,
+        categoryCodingSystemMS,
+        categoryCodingSystemOnlyCC,
+        categoryCodingOnlyCC, // at the end
+        categoryOnlyCC // at the end
+      );
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+
+      // Back to optimized order
+      expect(profile.rules).toEqual([
+        categoryCard,
+        categoryMS,
+        categoryOnlyCC, // moved earlier
+        categoryCodingCard,
+        categoryCodingMS,
+        categoryCodingOnlyCC, // moved earlier
+        categoryCodingSystemCard,
+        categoryCodingSystemMS,
+        categoryCodingSystemOnlyCC
+      ]);
+    });
+
+    it('should sort caret rules above deeper path rules', () => {
+      // Profile: CaretAbovePathsObservation
+      // Parent: Observation
+      // * component MS
+      // * component.code MS
+      // * component ^short = "This should be above component.code"
+      const profile = new ExportableProfile('CaretAbovePathsObservation');
+      profile.parent = 'Observation';
+      const componentMS = new ExportableFlagRule('component');
+      componentMS.mustSupport = true;
+      const componentCodeMS = new ExportableFlagRule('component.code');
+      componentCodeMS.mustSupport = true;
+      const componentShort = new ExportableCaretValueRule('component');
+      componentShort.caretPath = 'short';
+      componentShort.value = 'This should be above component.code';
+      profile.rules.push(componentMS, componentCodeMS, componentShort);
+
+      myPackage.add(profile);
+      optimizer.optimize(myPackage);
+
+      expect(profile.rules).toEqual([
+        componentMS,
+        componentShort, // ^short comes before code
+        componentCodeMS
+      ]);
     });
   });
 });

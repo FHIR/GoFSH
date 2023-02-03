@@ -21,7 +21,7 @@ type AllowedRule =
 
 type PathNode = {
   path: string;
-  rule?: AllowedRule;
+  rule?: AllowedRule[];
   children: PathNode[];
 };
 
@@ -30,18 +30,18 @@ function buildPathTree(parent: PathNode, rule: AllowedRule) {
   // We want to process each part, so split at each . not within []
   // Because we want to consider each slice and index within the path as a
   // unique path, we don't want to use the full parseFSHPath.
-  const pathParts = rule.path.split(/\.(?![^\[]*\])/g);
+  const pathParts = rule.path === '.' ? [rule.path] : rule.path.split(/\.(?![^\[]*\])/g);
   let currentPath = '';
-  let lastParent: PathNode;
+  let currentPathNode: PathNode;
   pathParts.forEach(part => {
     currentPath = currentPath === '' ? part : `${currentPath}.${part}`; // build the path back up
-    lastParent = parent.children.find(child => child.path === currentPath);
-    if (lastParent == null) {
+    currentPathNode = parent.children.find(child => child.path === currentPath);
+    if (currentPathNode == null) {
       // If this path hasn't been seen, create a node for it in the tree
       const newNode: PathNode = { path: currentPath, children: [] };
       // If the current path is also the rule path, we want to include the rule on the node
       if (currentPath === rule.path) {
-        newNode.rule = rule;
+        newNode.rule = [rule];
       }
       parent.children.push(newNode);
 
@@ -51,11 +51,11 @@ function buildPathTree(parent: PathNode, rule: AllowedRule) {
       // If the current path is also the rule path but that path's node was previously added to the tree,
       // we still want to add the rule to node so the rule is tracked
       if (currentPath === rule.path) {
-        lastParent.rule = rule;
+        currentPathNode.rule = (currentPathNode.rule ?? []).concat(rule);
       }
 
       // Use the current path's node as the parent for the next path part
-      parent = lastParent;
+      parent = currentPathNode;
     }
   });
 }
@@ -69,7 +69,7 @@ function createAndOrganizeRules(pathNodes: PathNode[], rules: AllowedRule[]) {
       if (node.rule == null) {
         rules.push(new ExportablePathRule(node.path));
       } else {
-        rules.push(node.rule);
+        rules.push(...node.rule);
       }
       // Continue processing all child nodes
       createAndOrganizeRules(node.children, rules);
@@ -77,7 +77,7 @@ function createAndOrganizeRules(pathNodes: PathNode[], rules: AllowedRule[]) {
       // If there are 0 or 1 rules at the path, we don't need to create a path rule,
       // but we do need to include the rule if there is one at that path.
       if (node.rule != null) {
-        rules.push(node.rule);
+        rules.push(...node.rule);
       }
       // If this path has a child, continue processing the child node.
       if (node.children.length > 0) {
