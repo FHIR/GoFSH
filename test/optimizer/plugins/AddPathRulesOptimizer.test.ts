@@ -532,11 +532,11 @@ describe('optimizer', () => {
       // Profile: MultipleRulesPerPathObs
       // Parent: Observation
       // * category 1..1 MS
-      // * category only CodeableConcept
       // * category.coding 1..* MS
-      // * category.coding only Coding
       // * category.coding.system 1..1 MS
       // * category.coding.system only uri
+      // * category.coding only Coding
+      // * category only CodeableConcept
       const profile = new ExportableProfile('MultipleRulesPerPathObs');
       profile.parent = 'Observation';
       const categoryCard = new ExportableCardRule('category');
