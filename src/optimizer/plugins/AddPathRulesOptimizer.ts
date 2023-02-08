@@ -53,27 +53,12 @@ function buildPathTree(parent: PathNode, rule: AllowedRule) {
 // Build the list of rules that will create optimal context.
 function createAndOrganizeRules(pathNodes: PathNode[], rules: AllowedRule[]) {
   pathNodes?.forEach(node => {
-    if (node.children.length > 1) {
-      // There are at least 2 children. Create a path rule if necessary,
-      // otherwise just include the rule at that path.
-      if (node.rules.length === 0) {
-        rules.push(new ExportablePathRule(node.path));
-      } else {
-        rules.push(...node.rules);
-      }
-      // Continue processing all child nodes
-      createAndOrganizeRules(node.children, rules);
-    } else {
-      // If there are 0 or 1 rules at the path, we don't need to create a path rule,
-      // but we do need to include the rule if there is one at that path.
-      if (node.rules.length > 0) {
-        rules.push(...node.rules);
-      }
-      // If this path has a child, continue processing the child node.
-      if (node.children.length > 0) {
-        createAndOrganizeRules(node.children, rules);
-      }
+    rules.push(...node.rules);
+    if (node.children.length > 1 && node.rules.length === 0) {
+      // There are at least 2 children and no parent rule. Push a path rule.
+      rules.push(new ExportablePathRule(node.path));
     }
+    createAndOrganizeRules(node.children, rules);
   });
 }
 
