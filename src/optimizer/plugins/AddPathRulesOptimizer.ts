@@ -21,7 +21,7 @@ type AllowedRule =
 
 type PathNode = {
   path: string;
-  rule?: AllowedRule[];
+  rule: AllowedRule[];
   children: PathNode[];
 };
 
@@ -38,26 +38,16 @@ function buildPathTree(parent: PathNode, rule: AllowedRule) {
     currentPathNode = parent.children.find(child => child.path === currentPath);
     if (currentPathNode == null) {
       // If this path hasn't been seen, create a node for it in the tree
-      const newNode: PathNode = { path: currentPath, children: [] };
-      // If the current path is also the rule path, we want to include the rule on the node
-      if (currentPath === rule.path) {
-        newNode.rule = [rule];
-      }
+      const newNode: PathNode = { path: currentPath, children: [], rule: [] };
       parent.children.push(newNode);
-
-      // Use the current path's node as the parent for the next path part
-      parent = newNode;
-    } else {
-      // If the current path is also the rule path but that path's node was previously added to the tree,
-      // we still want to add the rule to node so the rule is tracked
-      if (currentPath === rule.path) {
-        currentPathNode.rule = (currentPathNode.rule ?? []).concat(rule);
-      }
-
-      // Use the current path's node as the parent for the next path part
-      parent = currentPathNode;
+      currentPathNode = newNode;
     }
+    // Use the current path's node as the parent for the next path part
+    parent = currentPathNode;
   });
+  // After building the tree, add the rule in at the current node
+  // since the last node will be the full rule path
+  currentPathNode.rule = currentPathNode.rule.concat(rule);
 }
 
 // Build the list of rules that will create optimal context.
@@ -66,7 +56,7 @@ function createAndOrganizeRules(pathNodes: PathNode[], rules: AllowedRule[]) {
     if (node.children.length > 1) {
       // There are at least 2 children. Create a path rule if necessary,
       // otherwise just include the rule at that path.
-      if (node.rule == null) {
+      if (node.rule.length === 0) {
         rules.push(new ExportablePathRule(node.path));
       } else {
         rules.push(...node.rule);
@@ -103,7 +93,7 @@ export default {
     ].forEach(entity => {
       const root: PathNode = {
         path: '',
-        rule: null,
+        rule: [],
         children: []
       };
 
