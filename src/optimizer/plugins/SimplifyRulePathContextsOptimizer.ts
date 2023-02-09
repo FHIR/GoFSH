@@ -101,8 +101,8 @@ export default {
               .join('.');
             // if the rule has any path left after that, push its full path onto the pathContext list
             if (newPath.length) {
-              // change soft-index marker because a matching path should use [=]
-              pathContext.push(rule.path.replace(/\[\+\]/g, '[=]'));
+              // change soft-index or zero-index (because we keep [0] indexes as is) marker because a matching path should use [=]
+              pathContext.push(rule.path.replace(/\[(\+|0)\]/g, '[=]'));
             }
             // assign the new path to the rule
             rule.path = newPath;
@@ -113,7 +113,8 @@ export default {
             pathContext.splice(0);
             // change soft-index marker because a matching path should use [=]
             if (rule.path.length > 0) {
-              pathContext.push(rule.path.replace(/\[\+\]/g, '[=]'));
+              // change soft-index or zero-index (because we keep [0] indexes as is) marker because a matching path should use [=]
+              pathContext.push(rule.path.replace(/\[(\+|0)\]/g, '[=]'));
             }
           }
         });
