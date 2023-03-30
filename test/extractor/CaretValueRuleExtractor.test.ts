@@ -13,6 +13,7 @@ describe('CaretValueRuleExtractor', () => {
   let looseVS: any;
   let looseCS: any;
   let looseBSSD: any;
+  let looseTPESD: any;
   let config: fshtypes.Configuration;
   let defs: fhirdefs.FHIRDefinitions;
 
@@ -36,6 +37,14 @@ describe('CaretValueRuleExtractor', () => {
     looseBSSD = JSON.parse(
       fs
         .readFileSync(path.join(__dirname, 'fixtures', 'caret-value-profile-draft.json'), 'utf-8')
+        .trim()
+    );
+    looseTPESD = JSON.parse(
+      fs
+        .readFileSync(
+          path.join(__dirname, 'fixtures', 'caret-value-targetProfile-extensions.json'),
+          'utf-8'
+        )
         .trim()
     );
   });
@@ -889,6 +898,28 @@ describe('CaretValueRuleExtractor', () => {
       expect(caretRules).toHaveLength(2);
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule1);
       expect(caretRules).toContainEqual<ExportableCaretValueRule>(expectedRule2);
+    });
+
+    it("should extract extensions from a type's targetProfile(s)", () => {
+      // See: https://github.com/FHIR/GoFSH/issues/211
+      const element = ProcessableElementDefinition.fromJSON(looseTPESD.differential.element[0]);
+      const caretRules = CaretValueRuleExtractor.process(element, looseTPESD, defs);
+      console.log(caretRules);
+      expect(caretRules).toHaveLength(10);
+      const expectedRules: ExportableCaretValueRule[] = [];
+      [true, false, false, null, false, true].forEach((value, i) => {
+        if (value != null) {
+          const extUrlRule = new ExportableCaretValueRule('author');
+          extUrlRule.caretPath = `type[0]._targetProfile[${i}].extension[0].url`;
+          extUrlRule.value =
+            'http://hl7.org/fhir/StructureDefinition/elementdefinition-type-must-support';
+          const extValueRule = new ExportableCaretValueRule('author');
+          extValueRule.caretPath = `type[0]._targetProfile[${i}].extension[0].valueBoolean`;
+          extValueRule.value = value;
+          expectedRules.push(extUrlRule, extValueRule);
+        }
+      });
+      expect(caretRules).toEqual(expectedRules);
     });
 
     it('should convert a FHIR code string to a FSH code when extracting', () => {
