@@ -11,6 +11,7 @@ import { MasterFisher } from '../../../src/utils';
 import { loadTestDefinitions, stockLake } from '../../helpers';
 import optimizer from '../../../src/optimizer/plugins/SimplifyInstanceNameOptimizer';
 import ResolveInstanceOfURLsOptimizer from '../../../src/optimizer/plugins/ResolveInstanceOfURLsOptimizer';
+import ConstructInlineInstanceOptimizer from '../../../src/optimizer/plugins/ConstructInlineInstanceOptimizer';
 
 describe('optimizer', () => {
   describe('#simplify_instance_names', () => {
@@ -133,7 +134,7 @@ describe('optimizer', () => {
       expect(myPackage.instances).toEqual([expectedInstance1, expectedInstance2, expectedBundle]);
     });
 
-    it('should updated inlined contained rules in a profile when the inline instance name changes', () => {
+    it('should update inlined contained rules in a profile when the inline instance name changes', () => {
       const instance1 = new ExportableInstance('AmazingThings');
       instance1.instanceOf = 'CodeSystem';
       instance1.name = 'AmazingThings-of-CodeSystem';
@@ -145,15 +146,15 @@ describe('optimizer', () => {
       instance3.name = 'OtherAmazingThings-of-ValueSet';
       const profile = new ExportableProfile('MyObservationProfile');
       profile.parent = 'Observation';
-      const profileContainedRule1 = new ExportableCaretValueRule('.');
+      const profileContainedRule1 = new ExportableCaretValueRule('');
       profileContainedRule1.caretPath = 'contained[0]';
       profileContainedRule1.isInstance = true;
       profileContainedRule1.value = 'AmazingThings-of-CodeSystem';
-      const profileContainedRule2 = new ExportableCaretValueRule('.');
+      const profileContainedRule2 = new ExportableCaretValueRule('');
       profileContainedRule2.caretPath = 'contained[1]';
       profileContainedRule2.isInstance = true;
       profileContainedRule2.value = 'AmazingThings-of-ValueSet';
-      const profileContainedRule3 = new ExportableCaretValueRule('.');
+      const profileContainedRule3 = new ExportableCaretValueRule('');
       profileContainedRule3.caretPath = 'contained[2]';
       profileContainedRule3.isInstance = true;
       profileContainedRule3.value = 'OtherAmazingThings-of-ValueSet';
@@ -183,15 +184,15 @@ describe('optimizer', () => {
       // Now check that names have been updated in inline assignments
       const expectedProfile = new ExportableProfile('MyObservationProfile');
       expectedProfile.parent = 'Observation';
-      const expectedProfileRule1 = new ExportableCaretValueRule('.');
+      const expectedProfileRule1 = new ExportableCaretValueRule('');
       expectedProfileRule1.caretPath = 'contained[0]';
       expectedProfileRule1.isInstance = true;
       expectedProfileRule1.value = 'AmazingThings-of-CodeSystem'; // This name did not get changed
-      const expectedProfileRule2 = new ExportableCaretValueRule('.');
+      const expectedProfileRule2 = new ExportableCaretValueRule('');
       expectedProfileRule2.caretPath = 'contained[1]';
       expectedProfileRule2.isInstance = true;
       expectedProfileRule2.value = 'AmazingThings-of-ValueSet'; // This name did not get changed
-      const expectedProfileRule3 = new ExportableCaretValueRule('.');
+      const expectedProfileRule3 = new ExportableCaretValueRule('');
       expectedProfileRule3.caretPath = 'contained[2]';
       expectedProfileRule3.isInstance = true;
       expectedProfileRule3.value = 'OtherAmazingThings'; // This name was changed
@@ -201,6 +202,60 @@ describe('optimizer', () => {
         expectedInstance2,
         expectedInstance3
       ]);
+      expect(myPackage.profiles).toEqual([expectedProfile]);
+    });
+
+    it('should still rename instances when there is a different instance with the same id but it is inline only', () => {
+      const instance1 = new ExportableInstance('AmazingThings');
+      instance1.instanceOf = 'CodeSystem';
+      instance1.name = 'AmazingThings-of-CodeSystem';
+      const profile = new ExportableProfile('MyObservationProfile');
+      profile.parent = 'Observation';
+      const profileContainedRule1 = new ExportableCaretValueRule('');
+      profileContainedRule1.caretPath = 'contained[0].resourceType';
+      profileContainedRule1.value = 'CodeSystem';
+      const profileContainedRule2 = new ExportableCaretValueRule('');
+      profileContainedRule2.caretPath = 'contained[0].id';
+      profileContainedRule2.value = 'AmazingThings'; // Same id as instance1
+      const profileContainedRule3 = new ExportableCaretValueRule('');
+      profileContainedRule3.caretPath = 'contained[0].title';
+      profileContainedRule3.value = 'Amazing Things'; // The title makes it different than the standalone
+      profile.rules = [profileContainedRule1, profileContainedRule2, profileContainedRule3];
+      const myPackage = new Package();
+      myPackage.add(instance1);
+      myPackage.add(profile);
+
+      // Run the ConstructInlineInstanceOptimizer to convert the inline CodeSystem to an Instance
+      ConstructInlineInstanceOptimizer.optimize(myPackage);
+
+      // Run the SimplifyInstanceNameOptimizer
+      optimizer.optimize(myPackage);
+
+      // The standalone instance instance1 should have been renamed
+      const expectedInstance1 = new ExportableInstance('AmazingThings');
+      expectedInstance1.instanceOf = 'CodeSystem';
+      expectedInstance1.name = 'AmazingThings';
+      // A new inline instance should have been created with the right name/id
+      const expectedInstance2 = new ExportableInstance(
+        'Inline-Instance-for-MyObservationProfile-1'
+      );
+      expectedInstance2.instanceOf = 'CodeSystem';
+      expectedInstance2.name = 'Inline-Instance-for-MyObservationProfile-1';
+      expectedInstance2.usage = 'Inline';
+      const inlineInstanceIdRule = new ExportableAssignmentRule('id');
+      inlineInstanceIdRule.value = 'AmazingThings';
+      const inlineInstanceTitleRule = new ExportableAssignmentRule('title');
+      inlineInstanceTitleRule.value = 'Amazing Things';
+      expectedInstance2.rules = [inlineInstanceIdRule, inlineInstanceTitleRule];
+      // The profile should point to the inline instance
+      const expectedProfile = new ExportableProfile('MyObservationProfile');
+      expectedProfile.parent = 'Observation';
+      const expectedProfileRule1 = new ExportableCaretValueRule('');
+      expectedProfileRule1.caretPath = 'contained[0]';
+      expectedProfileRule1.isInstance = true;
+      expectedProfileRule1.value = 'Inline-Instance-for-MyObservationProfile-1';
+      expectedProfile.rules = [expectedProfileRule1];
+      expect(myPackage.instances).toEqual([expectedInstance1, expectedInstance2]);
       expect(myPackage.profiles).toEqual([expectedProfile]);
     });
   });
