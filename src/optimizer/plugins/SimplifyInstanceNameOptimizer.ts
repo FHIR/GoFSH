@@ -13,7 +13,7 @@ export default {
     const oldNameToNewNameMap = new Map<string, string>();
     const standaloneInstances = pkg.instances.filter(i => i.usage !== 'Inline');
     standaloneInstances.forEach((instance, index) => {
-      // Only match on other standalones because inline instances already depuplicated the name based on id
+      // Only match on other standalones because inline instances already deduplicated the name based on id
       if (!standaloneInstances.find((m, i) => m.id === instance.id && i !== index)) {
         // If the instance does not have the same id as any other instance, it is safe to
         // use the id as the name and remove the InstanceOf information from the name
