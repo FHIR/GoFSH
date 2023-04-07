@@ -1,7 +1,6 @@
 import { flatten } from 'flat';
 import { flatMap, flatten as flat, isObject, isEmpty, isNil } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
-import { removeUnderscoreForPrimitiveChildPath } from '../exportable/common';
 import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
 
 // This function depends on the id of an element to construct the path.
@@ -23,8 +22,10 @@ export function getPath(element: fhirtypes.ElementDefinition): string {
       FSHtokens.push(sliceTokens[0]);
       return;
     }
-    // Construct the FSHToken to be equivalent to the FHIR token but with [] for slicing and reslicing
-    let FSHToken = pathPart;
+    // Construct the FSHToken to be equivalent to the FHIR token except:
+    // - Use [] for slicing and reslicing (instead of ':' and '/')
+    // - Remove leading '_' since FSH does not require them in its paths
+    let FSHToken = pathPart.replace(/^_/, '');
     sliceTokens?.forEach(sliceToken => (FSHToken += `[${sliceToken}]`));
     FSHtokens.push(FSHToken);
   });
@@ -39,10 +40,13 @@ export function getPathValuePairs(object: object): FlatObject {
   Object.keys(flatObject)
     .filter(key => flatObject[key] != null)
     .forEach(key => {
-      // TODO: This assumes that the values can be taken as-is, not the case for something like "code" data types
-      // since they must be converted from a "foo" to "#foo"
-      flatFSHObject[key.replace(/\.(\d+)([\.]|$)/g, (match, p1, p2) => `[${p1}]${p2}`)] =
-        flatObject[key];
+      // Fix up the key:
+      // - Replace numeric properties (made by flatten) into bracketed indices
+      // - Remove leading '_' characters since they are not needed in FSH paths
+      const newKey = key
+        .replace(/\.(\d+)([\.]|$)/g, (_, p1, p2) => `[${p1}]${p2}`)
+        .replace(/(^|\.)_/g, (_, sep) => `${sep}`);
+      flatFSHObject[newKey] = flatObject[key];
     });
   return flatFSHObject;
 }
@@ -57,8 +61,8 @@ export function getFSHValue(
 ): number | boolean | string | fshtypes.FshCode | bigint {
   const [key, value] = flatArray[index];
   const fishingType = resourceType === 'Concept' ? 'CodeSystem' : resourceType;
-  // Finding element by path works without array information and _ from children of primitives
-  let pathWithoutIndex = removeUnderscoreForPrimitiveChildPath(key).replace(/\[\d+\]/g, '');
+  // Finding element by path works without array information (note: leading _ has been removed by this point)
+  let pathWithoutIndex = key.replace(/\[\d+\]/g, '');
   if (resourceType === 'Concept') {
     pathWithoutIndex = `concept.${pathWithoutIndex}`;
   }

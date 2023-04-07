@@ -910,11 +910,11 @@ describe('CaretValueRuleExtractor', () => {
       [true, false, false, null, false, true].forEach((value, i) => {
         if (value != null) {
           const extUrlRule = new ExportableCaretValueRule('author');
-          extUrlRule.caretPath = `type[0]._targetProfile[${i}].extension[0].url`;
+          extUrlRule.caretPath = `type[0].targetProfile[${i}].extension[0].url`;
           extUrlRule.value =
             'http://hl7.org/fhir/StructureDefinition/elementdefinition-type-must-support';
           const extValueRule = new ExportableCaretValueRule('author');
-          extValueRule.caretPath = `type[0]._targetProfile[${i}].extension[0].valueBoolean`;
+          extValueRule.caretPath = `type[0].targetProfile[${i}].extension[0].valueBoolean`;
           extValueRule.value = value;
           expectedRules.push(extUrlRule, extValueRule);
         }
