@@ -1,4 +1,4 @@
-import { fshtypes } from 'fsh-sushi';
+import { fshtypes, utils } from 'fsh-sushi';
 import { OptimizerPlugin } from '../OptimizerPlugin';
 import { Package } from '../../processor';
 import {
@@ -6,16 +6,16 @@ import {
   ExportableCaretValueRule,
   ExportableRule
 } from '../../exportable';
-import { resolveAliasFromURL } from '../utils';
+import { optimizeURL } from '../utils';
 import CombineCodingAndQuantityValuesOptimizer from './CombineCodingAndQuantityValuesOptimizer';
-import { ProcessingOptions } from '../../utils';
+import { ProcessingOptions, MasterFisher } from '../../utils';
 
 export default {
   name: 'resolve_value_rule_urls',
   description: 'Replace URLs in caret and assignment rules with their names or aliases',
   runAfter: [CombineCodingAndQuantityValuesOptimizer.name],
 
-  optimize(pkg: Package): void {
+  optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
     [
       ...pkg.instances,
       ...pkg.profiles,
@@ -28,13 +28,15 @@ export default {
           (rule instanceof ExportableAssignmentRule || rule instanceof ExportableCaretValueRule) &&
           rule.value instanceof fshtypes.FshCode
         ) {
-          rule.value.system =
-            resolveAliasFromURL(rule.value.system, pkg.aliases) ?? rule.value.system;
+          rule.value.system = optimizeURL(
+            rule.value.system,
+            pkg.aliases,
+            [utils.Type.CodeSystem],
+            fisher,
+            options.alias ?? true
+          );
         }
       });
     });
-  },
-  isEnabled(options: ProcessingOptions): boolean {
-    return options.alias === true;
   }
 } as OptimizerPlugin;
