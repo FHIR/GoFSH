@@ -15,7 +15,7 @@ import { MasterFisher } from '../../../src/utils';
 import { loadTestDefinitions, stockLake } from '../../helpers';
 
 describe('optimizer', () => {
-  describe('#resolve_value_rule_urls', () => {
+  describe('#resolve_value_rule_system_system_urls_for_codes', () => {
     let fisher: MasterFisher;
     beforeAll(() => {
       const defs = loadTestDefinitions();
@@ -24,7 +24,7 @@ describe('optimizer', () => {
     });
 
     it('should have appropriate metadata', () => {
-      expect(optimizer.name).toBe('resolve_value_rule_urls');
+      expect(optimizer.name).toBe('resolve_value_rule_system_system_urls_for_codes');
       expect(optimizer.description).toBeDefined();
       expect(optimizer.runBefore).toBeUndefined();
       expect(optimizer.runAfter).toEqual([CombineCodingAndQuantityValuesOptimizer.name]);
@@ -42,6 +42,21 @@ describe('optimizer', () => {
 
       const expectedRule = cloneDeep(codeRule);
       (expectedRule.value as fshtypes.FshCode).system = '$loinc';
+      expect(instance.rules[0]).toEqual(expectedRule);
+    });
+
+    it('should alias a defined non-local system in an AssignmentRule when alias is true', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const statusRule = new ExportableAssignmentRule('status');
+      statusRule.value = new fshtypes.FshCode('final', 'http://hl7.org/fhir/observation-status');
+      instance.rules = [statusRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+
+      const expectedRule = cloneDeep(statusRule);
+      (expectedRule.value as fshtypes.FshCode).system = '$observation-status';
       expect(instance.rules[0]).toEqual(expectedRule);
     });
 
@@ -78,6 +93,21 @@ describe('optimizer', () => {
       expect(instance.rules[0]).toEqual(expectedRule);
     });
 
+    it('should alias a defined non-local system in an AssignmentRule when alias is undefined', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const statusRule = new ExportableAssignmentRule('status');
+      statusRule.value = new fshtypes.FshCode('final', 'http://hl7.org/fhir/observation-status');
+      instance.rules = [statusRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher);
+
+      const expectedRule = cloneDeep(statusRule);
+      (expectedRule.value as fshtypes.FshCode).system = '$observation-status';
+      expect(instance.rules[0]).toEqual(expectedRule);
+    });
+
     it('should use the name of a locally defined system in an AssignmentRule when alias is undefined', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Observation';
@@ -107,6 +137,19 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage, fisher, { alias: false });
 
       expect(instance.rules[0]).toEqual(codeRule);
+    });
+
+    it('should not alias a defined non-local system in an AssignmentRule when alias is false', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const statusRule = new ExportableAssignmentRule('status');
+      statusRule.value = new fshtypes.FshCode('final', 'http://hl7.org/fhir/observation-status');
+      instance.rules = [statusRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+
+      expect(instance.rules[0]).toEqual(statusRule);
     });
 
     it('should use the name of a locally defined system in an AssignmentRule when alias is false', () => {
