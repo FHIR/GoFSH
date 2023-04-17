@@ -15,7 +15,7 @@ import { MasterFisher } from '../../../src/utils';
 import { loadTestDefinitions, stockLake } from '../../helpers';
 
 describe('optimizer', () => {
-  describe('#resolve_value_rule_system_system_urls_for_codes', () => {
+  describe('#resolve_value_rule_system_urls_for_codes', () => {
     let fisher: MasterFisher;
     beforeAll(() => {
       const defs = loadTestDefinitions();
@@ -24,7 +24,7 @@ describe('optimizer', () => {
     });
 
     it('should have appropriate metadata', () => {
-      expect(optimizer.name).toBe('resolve_value_rule_system_system_urls_for_codes');
+      expect(optimizer.name).toBe('resolve_value_rule_system_urls_for_codes');
       expect(optimizer.description).toBeDefined();
       expect(optimizer.runBefore).toBeUndefined();
       expect(optimizer.runAfter).toEqual([CombineCodingAndQuantityValuesOptimizer.name]);

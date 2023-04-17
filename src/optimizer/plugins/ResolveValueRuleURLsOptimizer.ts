@@ -11,9 +11,9 @@ import CombineCodingAndQuantityValuesOptimizer from './CombineCodingAndQuantityV
 import { ProcessingOptions, MasterFisher } from '../../utils';
 
 export default {
-  name: 'resolve_value_rule_system_system_urls_for_codes',
+  name: 'resolve_value_rule_system_urls_for_codes',
   description:
-    'Replace URLs in code values in caret and assignment rules with their names or aliases',
+    'Replace system URLs in code values in caret and assignment rules with their names or aliases',
   runAfter: [CombineCodingAndQuantityValuesOptimizer.name],
 
   optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
