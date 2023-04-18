@@ -1,10 +1,10 @@
 {
   "resourceType": "StructureDefinition",
-  "id": "SmallPatient",
+  "id": "Patient",
   "kind": "resource",
   "type": "Patient",
-  "name": "SmallPatient",
-  "url": "https://demo.org/StructureDefinition/SmallPatient",
+  "name": "Patient",
+  "url": "https://demo.org/StructureDefinition/Patient",
   "derivation": "constraint",
   "snapshot": {
     "element": []

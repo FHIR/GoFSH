@@ -1,0 +1,73 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "caret-value-targetProfile-extensions",
+  "url": "http://hl7.org/fhir/sushi-test/StructureDefinition/caret-value-targetProfile-extensions",
+  "version": "5.0.1",
+  "name": "CaretValueTargetProfileExtensions",
+  "title": "Caret Value Target Profile Extensions",
+  "description": "Inspired by US Core DocumentReference Profile",
+  "status": "active",
+  "experimental": false,
+  "date": "2022-04-20",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "DocumentReference",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DocumentReference",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "DocumentReference.author",
+        "path": "DocumentReference.author",
+        "type": [
+          {
+            "_targetProfile": [
+              {
+                "extension": [
+                  {
+                    "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-type-must-support",
+                    "valueBoolean": true
+                  }
+                ]
+              },
+              {
+                "extension": [
+                  {
+                    "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-type-must-support",
+                    "valueBoolean": false
+                  }
+                ]
+              },
+              {
+                "extension": [
+                  {
+                    "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-type-must-support",
+                    "valueBoolean": false
+                  }
+                ]
+              },
+              null,
+              {
+                "extension": [
+                  {
+                    "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-type-must-support",
+                    "valueBoolean": false
+                  }
+                ]
+              },
+              {
+                "extension": [
+                  {
+                    "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-type-must-support",
+                    "valueBoolean": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

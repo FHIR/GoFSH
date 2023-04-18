@@ -12,6 +12,7 @@ import { hasGeneratedText } from './RemoveGeneratedTextRulesOptimizer';
 import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimizer';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
 import AddReferenceKeywordOptimizer from './AddReferenceKeywordOptimizer';
+import SimplifyInstanceNameOptimizer from './SimplifyInstanceNameOptimizer';
 import { MasterFisher, logger, ProcessingOptions } from '../../utils';
 import { utils } from 'fsh-sushi';
 
@@ -22,11 +23,14 @@ export default {
   runBefore: [
     RemoveGeneratedTextRulesOptimizer.name,
     ResolveInstanceOfURLsOptimizer.name,
-    AddReferenceKeywordOptimizer.name
+    AddReferenceKeywordOptimizer.name,
+    SimplifyInstanceNameOptimizer.name
   ],
 
   optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
     const inlineInstances: ExportableInstance[] = [];
+    // Only construct inline instances in instances, profiles, and extensions.
+    // If we add support for other types, update SimplifyInstanceNameOptimizer as well.
     [...pkg.instances, ...pkg.profiles, ...pkg.extensions].forEach(resource => {
       const ruleType =
         resource instanceof ExportableInstance
@@ -142,13 +146,13 @@ export default {
         if (resource instanceof ExportableInstance) {
           const inlineInstanceRule = new ExportableAssignmentRule(basePath);
           inlineInstanceRule.isInstance = true;
-          inlineInstanceRule.value = newInstance.id;
+          inlineInstanceRule.value = newInstance.name ?? newInstance.id;
           resource.rules.splice(rulesToRemove[0], 0, inlineInstanceRule);
         } else {
           const inlineInstanceRule = new ExportableCaretValueRule('');
           inlineInstanceRule.caretPath = basePath;
           inlineInstanceRule.isInstance = true;
-          inlineInstanceRule.value = newInstance.id;
+          inlineInstanceRule.value = newInstance.name ?? newInstance.id;
           resource.rules.splice(rulesToRemove[0], 0, inlineInstanceRule);
         }
       });

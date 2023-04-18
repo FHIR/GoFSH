@@ -12,7 +12,10 @@ describe('optimizer', () => {
 
     beforeAll(() => {
       const defs = loadTestDefinitions();
-      const lake = stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
+      const lake = stockLake(
+        path.join(__dirname, 'fixtures', 'small-profile.json'),
+        path.join(__dirname, 'fixtures', 'patient-profile.json')
+      );
       fisher = new MasterFisher(lake, defs);
     });
 
@@ -28,7 +31,7 @@ describe('optimizer', () => {
       const onlySubject = new ExportableOnlyRule('subject');
       onlySubject.types = [
         {
-          type: 'https://demo.org/StructureDefinition/Patient',
+          type: 'https://demo.org/StructureDefinition/SmallPatient',
           isReference: true
         }
       ];
@@ -41,7 +44,7 @@ describe('optimizer', () => {
       const expectedSubject = new ExportableOnlyRule('subject');
       expectedSubject.types = [
         {
-          type: 'Patient',
+          type: 'SmallPatient',
           isReference: true
         }
       ];

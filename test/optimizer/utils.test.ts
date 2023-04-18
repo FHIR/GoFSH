@@ -18,12 +18,12 @@ describe('optimizer', () => {
 
     it('should prefer to resolve the URL to a FHIR resource', () => {
       const result = optimizeURL(
-        'https://demo.org/StructureDefinition/Patient',
+        'https://demo.org/StructureDefinition/SmallPatient',
         [],
         [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('Patient');
+      expect(result).toBe('SmallPatient');
     });
 
     it('should resolve the URL to an alias and add that alias if the URL cannot be resolved', () => {
@@ -73,6 +73,7 @@ describe('optimizer', () => {
       const defs = loadTestDefinitions();
       const lake = stockLake(
         path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json'),
+        path.join(__dirname, 'plugins', 'fixtures', 'patient-profile.json'),
         path.join(__dirname, 'plugins', 'fixtures', 'unsupported-codesystem.json'),
         path.join(__dirname, 'plugins', 'fixtures', 'unsupported-valueset.json')
       );
@@ -81,11 +82,11 @@ describe('optimizer', () => {
 
     it('should resolve a URL the name of a local item', () => {
       const result = resolveURL(
-        'https://demo.org/StructureDefinition/Patient',
+        'https://demo.org/StructureDefinition/SmallPatient',
         [utils.Type.Resource, utils.Type.Profile, utils.Type.Extension],
         fisher
       );
-      expect(result).toBe('Patient');
+      expect(result).toBe('SmallPatient');
     });
 
     it('should resolve a URL to the name of a core FHIR resource', () => {

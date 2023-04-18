@@ -25,11 +25,11 @@ describe('optimizer', () => {
 
     it('should replace an instanceOf url with the name of the resource', () => {
       const instance = new ExportableInstance('Foo');
-      instance.instanceOf = 'https://demo.org/StructureDefinition/Patient';
+      instance.instanceOf = 'https://demo.org/StructureDefinition/SmallPatient';
       const myPackage = new Package();
       myPackage.add(instance);
       optimizer.optimize(myPackage, fisher);
-      expect(instance.instanceOf).toBe('Patient');
+      expect(instance.instanceOf).toBe('SmallPatient');
     });
 
     it('should alias the instanceOf url if the instanceOf is not found and alias is true', () => {
