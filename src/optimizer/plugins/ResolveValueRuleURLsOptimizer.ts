@@ -36,7 +36,8 @@ export default {
           if (localSystem?.name) {
             rule.value.system = localSystem.name;
           } else if (options.alias ?? true) {
-            rule.value.system = resolveAliasFromURL(rule.value.system, pkg.aliases);
+            rule.value.system =
+              resolveAliasFromURL(rule.value.system, pkg.aliases) ?? rule.value.system;
           }
         }
       });

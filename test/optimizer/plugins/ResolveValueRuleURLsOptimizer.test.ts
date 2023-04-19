@@ -78,6 +78,19 @@ describe('optimizer', () => {
       expect(instance.rules[0]).toEqual(expectedRule);
     });
 
+    it('should not change the system URI if it is not a web URL when alias is true', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const codeRule = new ExportableAssignmentRule('code');
+      codeRule.value = new fshtypes.FshCode('US', 'urn:iso:std:iso:3166');
+      instance.rules = [codeRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher, { alias: true });
+
+      expect(instance.rules[0]).toEqual(codeRule);
+    });
+
     it('should alias a system in an AssignmentRule when alias is undefined', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Observation';
@@ -126,6 +139,19 @@ describe('optimizer', () => {
       expect(instance.rules[0]).toEqual(expectedRule);
     });
 
+    it('should not change the system URI if it is not a web URL when alias is undefined', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const codeRule = new ExportableAssignmentRule('code');
+      codeRule.value = new fshtypes.FshCode('US', 'urn:iso:std:iso:3166');
+      instance.rules = [codeRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher);
+
+      expect(instance.rules[0]).toEqual(codeRule);
+    });
+
     it('should not alias a system in an AssignmentRule when alias is false', () => {
       const instance = new ExportableInstance('Foo');
       instance.instanceOf = 'Observation';
@@ -168,6 +194,19 @@ describe('optimizer', () => {
       const expectedRule = cloneDeep(codeRule);
       (expectedRule.value as fshtypes.FshCode).system = 'SimpleCodeSystem';
       expect(instance.rules[0]).toEqual(expectedRule);
+    });
+
+    it('should not change the system URI if it is not a web URL when alias is false', () => {
+      const instance = new ExportableInstance('Foo');
+      instance.instanceOf = 'Observation';
+      const codeRule = new ExportableAssignmentRule('code');
+      codeRule.value = new fshtypes.FshCode('US', 'urn:iso:std:iso:3166');
+      instance.rules = [codeRule];
+      const myPackage = new Package();
+      myPackage.add(instance);
+      optimizer.optimize(myPackage, fisher, { alias: false });
+
+      expect(instance.rules[0]).toEqual(codeRule);
     });
 
     it('should alias a system in an CaretValueRule when alias is true', () => {
