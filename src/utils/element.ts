@@ -34,21 +34,40 @@ export function getPath(element: fhirtypes.ElementDefinition): string {
 
 export type FlatObject = { [key: string]: number | string | boolean };
 
-export function getPathValuePairs(object: object): FlatObject {
-  const flatObject: FlatObject = flatten(object);
+export function getPathValuePairs(
+  toasty: object,
+  keyConverter: (x: string) => string = identityKey
+): FlatObject {
+  const flatObject: any = flatten(toasty, { safe: true });
   const flatFSHObject: FlatObject = {};
   Object.keys(flatObject)
     .filter(key => flatObject[key] != null)
     .forEach(key => {
-      // Fix up the key:
-      // - Replace numeric properties (made by flatten) into bracketed indices
-      // - Remove leading '_' characters since they are not needed in FSH paths
-      const newKey = key
-        .replace(/\.(\d+)([\.]|$)/g, (_, p1, p2) => `[${p1}]${p2}`)
-        .replace(/(^|\.)_/g, (_, sep) => `${sep}`);
-      flatFSHObject[newKey] = flatObject[key];
+      const newKey = keyConverter(key).replace(/(^|\.)_/g, (_, sep) => `${sep}`);
+      if (Array.isArray(flatObject[key])) {
+        const subFlat = getPathValuePairs(flatObject[key], arrayIndexKey);
+        Object.keys(subFlat)
+          .filter(subKey => subFlat[subKey] != null)
+          .forEach(subKey => {
+            const combinedKey = newKey + subKey;
+            flatFSHObject[combinedKey] = subFlat[subKey];
+          });
+      } else {
+        flatFSHObject[newKey] = flatObject[key];
+      }
     });
+
   return flatFSHObject;
+}
+
+function identityKey(key: string): string {
+  return key;
+}
+
+function arrayIndexKey(key: string): string {
+  const splitKey = key.split('.');
+  splitKey[0] = `[${splitKey[0]}]`;
+  return splitKey.join('.');
 }
 
 const typeCache: Map<string, Map<string, string>> = new Map();

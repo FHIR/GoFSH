@@ -565,9 +565,6 @@ describe('InstanceProcessor', () => {
           path: 'name[0].given'
         })
       );
-      expect(loggerSpy.getLastMessage('error')).toMatch(
-        'Value in Instance complex-patient-of-http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient at path name[0].given is empty.'
-      );
     });
   });
 });

@@ -161,9 +161,6 @@ describe('CaretValueRuleExtractor', () => {
           caretPath: 'contextInvariant'
         })
       );
-      expect(loggerSpy.getLastMessage('error')).toMatch(
-        'Value in StructureDefinition ObservationWithCaret for element contextInvariant is empty.'
-      );
     });
 
     it('should convert a FHIR code string to a FSH code when extracting', () => {
