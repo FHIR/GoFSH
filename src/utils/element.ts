@@ -35,10 +35,10 @@ export function getPath(element: fhirtypes.ElementDefinition): string {
 export type FlatObject = { [key: string]: number | string | boolean };
 
 export function getPathValuePairs(
-  toasty: object,
+  originalObject: object,
   keyConverter: (x: string) => string = identityKey
 ): FlatObject {
-  const flatObject: any = flatten(toasty, { safe: true });
+  const flatObject: any = flatten(originalObject, { safe: true });
   const flatFSHObject: FlatObject = {};
   Object.keys(flatObject)
     .filter(key => flatObject[key] != null)
