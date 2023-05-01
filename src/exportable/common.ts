@@ -7,11 +7,3 @@ export function fshifyString(input: string): string {
     .replace(/\r/g, '\\r')
     .replace(/\t/g, '\\t');
 }
-
-// Removes the underscore on paths of children of primitive elements
-export function removeUnderscoreForPrimitiveChildPath(input: string): string {
-  return input
-    .split('.')
-    .map(p => p.replace(/^_/, ''))
-    .join('.');
-}

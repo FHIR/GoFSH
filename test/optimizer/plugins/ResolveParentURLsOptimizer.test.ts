@@ -21,7 +21,8 @@ describe('optimizer', () => {
         path.join(__dirname, 'fixtures', 'small-profile.json'),
         path.join(__dirname, 'fixtures', 'small-extension.json'),
         path.join(__dirname, 'fixtures', 'small-logical.json'),
-        path.join(__dirname, 'fixtures', 'small-resource.json')
+        path.join(__dirname, 'fixtures', 'small-resource.json'),
+        path.join(__dirname, 'fixtures', 'patient-profile.json')
       );
       fisher = new MasterFisher(lake, defs);
     });
@@ -35,11 +36,11 @@ describe('optimizer', () => {
 
     it('should replace a profile parent url with the name of the parent', () => {
       const profile = new ExportableProfile('ExtraProfile');
-      profile.parent = 'https://demo.org/StructureDefinition/Patient';
+      profile.parent = 'https://demo.org/StructureDefinition/SmallPatient';
       const myPackage = new Package();
       myPackage.add(profile);
       optimizer.optimize(myPackage, fisher);
-      expect(profile.parent).toBe('Patient');
+      expect(profile.parent).toBe('SmallPatient');
     });
 
     it('should replace an extension parent url with the name of the parent', () => {
