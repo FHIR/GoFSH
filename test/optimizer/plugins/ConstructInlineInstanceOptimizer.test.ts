@@ -225,12 +225,10 @@ describe('optimizer', () => {
         optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(3);
-        const expectedRule1 = cloneDeep(containedId1);
-        expectedRule1.path = 'id';
         assertExportableInstanceWithDifferentName(
           myPackage.instances[1],
-          'Inline-Instance-for-Foo-1',
-          '123',
+          '0123',
+          '0123',
           'Observation',
           'Inline',
           undefined,
@@ -238,11 +236,9 @@ describe('optimizer', () => {
           []
         );
 
-        const expectedRule2 = cloneDeep(containedId2);
-        expectedRule2.path = 'id';
         assertExportableInstanceWithDifferentName(
           myPackage.instances[2],
-          'Inline-Instance-for-Foo-2',
+          '456',
           '456',
           'ValueSet',
           'Inline',
