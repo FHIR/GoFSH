@@ -74,7 +74,6 @@ export default {
           // id and resourceType and meta.profile should be used for keywords, all other rules are added
           if (
             rule.path === `${basePath}.id` &&
-            isNaN(parseInt(rule.value as string)) &&
             ![...pkg.instances, ...inlineInstances].find(
               instance => instance.id === ((rule as ExportableAssignmentRule).value as string)
             )
