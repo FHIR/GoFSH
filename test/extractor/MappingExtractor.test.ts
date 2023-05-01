@@ -1,16 +1,17 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { cloneDeep } from 'lodash';
-import { fhirdefs, fshtypes } from 'fsh-sushi';
+import { fshtypes } from 'fsh-sushi';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 import { MappingExtractor } from '../../src/extractor';
 import { ExportableMapping, ExportableMappingRule } from '../../src/exportable';
+import { FHIRDefinitions } from '../../src/utils';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 
 describe('MappingExtractor', () => {
   let looseSD: ProcessableStructureDefinition;
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
   let elements: ProcessableElementDefinition[];
 
   beforeAll(() => {
