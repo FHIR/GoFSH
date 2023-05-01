@@ -5,8 +5,8 @@ import { logger } from '../utils/GoFSHLogger';
 import { InputStream, CommonTokenStream } from 'antlr4';
 // digging up the lexer/parser so that we can implement with less code duplication
 // it's a little risky, but such is the nature of the sea
-import { FSHLexer } from 'fsh-sushi/dist/import/generated/FSHLexer';
-import { FSHParser } from 'fsh-sushi/dist/import/generated/FSHParser';
+import FSHLexer from 'fsh-sushi/dist/import/generated/FSHLexer';
+import FSHParser from 'fsh-sushi/dist/import/generated/FSHParser';
 
 export class AliasProcessor {
   static process(aliasFile: string): ExportableAlias[] {

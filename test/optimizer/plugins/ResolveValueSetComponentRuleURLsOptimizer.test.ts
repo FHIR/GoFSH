@@ -1,5 +1,4 @@
 import path from 'path';
-import { fhirdefs } from 'fsh-sushi';
 import '../../helpers/loggerSpy'; // side-effect: suppresses logs
 import { LakeOfFHIR, Package } from '../../../src/processor';
 import {
@@ -7,7 +6,7 @@ import {
   ExportableValueSetConceptComponentRule,
   ExportableValueSetFilterComponentRule
 } from '../../../src/exportable';
-import { MasterFisher } from '../../../src/utils';
+import { FHIRDefinitions, MasterFisher } from '../../../src/utils';
 import { loadTestDefinitions, stockLake } from '../../helpers';
 import optimizer from '../../../src/optimizer/plugins/ResolveValueSetComponentRuleURLsOptimizer';
 import { cloneDeep } from 'lodash';
@@ -15,7 +14,7 @@ import { FshCode } from 'fsh-sushi/dist/fshtypes';
 
 describe('optimizer', () => {
   describe('#resolve_value_set_component_rule_urls', () => {
-    let defs: fhirdefs.FHIRDefinitions;
+    let defs: FHIRDefinitions;
     let lake: LakeOfFHIR;
     let fisher: MasterFisher;
 

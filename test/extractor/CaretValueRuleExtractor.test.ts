@@ -1,12 +1,13 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { cloneDeep } from 'lodash';
-import { fhirdefs, fhirtypes, fshtypes } from 'fsh-sushi';
+import { fhirtypes, fshtypes } from 'fsh-sushi';
 import { CaretValueRuleExtractor } from '../../src/extractor';
 import { ExportableCaretValueRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { FHIRDefinitions } from '../../src/utils';
 
 describe('CaretValueRuleExtractor', () => {
   let looseSD: any;
@@ -15,7 +16,7 @@ describe('CaretValueRuleExtractor', () => {
   let looseBSSD: any;
   let looseTPESD: any;
   let config: fshtypes.Configuration;
-  let defs: fhirdefs.FHIRDefinitions;
+  let defs: FHIRDefinitions;
 
   beforeAll(() => {
     defs = loadTestDefinitions();

@@ -99,3 +99,7 @@ export class ErrorsAndWarnings {
 
 export const stats = new LoggerStats();
 export const errorsAndWarnings = new ErrorsAndWarnings();
+
+export const logMessage = (level: string, message: string): void => {
+  logger.log(level, message);
+};
