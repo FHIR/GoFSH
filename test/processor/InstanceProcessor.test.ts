@@ -459,6 +459,28 @@ describe('InstanceProcessor', () => {
       expect(result.rules).toContainEqual(fooExtensionValue);
     });
 
+    it('should add assignment rules for elements with numeric paths', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'my-custom-cube.json'), 'utf-8')
+      );
+      const result = InstanceProcessor.process(input, simpleIg, defs);
+      expect(result).toBeInstanceOf(ExportableInstance);
+      expect(result.name).toBe('my-custom-cube-of-CustomCube');
+      expect(result.id).toBe('my-custom-cube');
+      const cubeRule = new ExportableAssignmentRule('cube');
+      cubeRule.value = true;
+      const facesRule = new ExportableAssignmentRule('35[0].79[0]');
+      facesRule.value = 'A cube has six faces';
+      const verticesRule = new ExportableAssignmentRule('35[1].79[0]');
+      verticesRule.value = 'A cube has eight vertices';
+      const edgesRule = new ExportableAssignmentRule('35[1].79[1]');
+      edgesRule.value = 'A cube has twelve edges';
+      expect(result.rules).toContainEqual(cubeRule);
+      expect(result.rules).toContainEqual(facesRule);
+      expect(result.rules).toContainEqual(verticesRule);
+      expect(result.rules).toContainEqual(edgesRule);
+    });
+
     it('should use entry resource type to determine assignment rule value types on bundle entry resources', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-bundle.json'), 'utf-8')

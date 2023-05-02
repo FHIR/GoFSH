@@ -46,12 +46,12 @@ export function getPathValuePairs(
       const newKey = keyConverter(key).replace(/(^|\.)_/g, (_, sep) => `${sep}`);
       if (Array.isArray(flatObject[key])) {
         const subFlat = getPathValuePairs(flatObject[key], arrayIndexKey);
-        Object.keys(subFlat)
-          .filter(subKey => subFlat[subKey] != null)
-          .forEach(subKey => {
+        Object.keys(subFlat).forEach(subKey => {
+          if (subFlat[subKey] != null) {
             const combinedKey = newKey + subKey;
             flatFSHObject[combinedKey] = subFlat[subKey];
-          });
+          }
+        });
       } else {
         flatFSHObject[newKey] = flatObject[key];
       }

@@ -164,6 +164,21 @@ describe('CaretValueRuleExtractor', () => {
       );
     });
 
+    it('should not extract caret value rules when the array contains an empty object', () => {
+      const sd = cloneDeep(looseSD);
+      sd.contextInvariant = [{}];
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(sd, defs, config);
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          path: '',
+          caretPath: 'contextInvariant[0]'
+        })
+      );
+      expect(loggerSpy.getLastMessage('error')).toMatch(
+        'Value in StructureDefinition ObservationWithCaret for element contextInvariant[0] is empty. No caret value rule will be created.'
+      );
+    });
+
     it('should convert a FHIR code string to a FSH code when extracting', () => {
       const sd = cloneDeep(looseSD);
       sd.status = 'draft';
