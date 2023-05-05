@@ -1,0 +1,18 @@
+{
+  "35": [
+    {
+      "79": [
+        "A cube has six faces"
+      ]
+    },
+    {
+      "79": [
+        "A cube has eight vertices",
+        "A cube has twelve edges"
+      ]
+    }
+  ],
+  "resourceType": "CustomCube",
+  "id": "my-custom-cube",
+  "cube": true
+}

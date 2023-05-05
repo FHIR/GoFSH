@@ -125,6 +125,16 @@ describe('element', () => {
         'test.ing[1].stuff': 'bar'
       });
     });
+
+    it('should convert numeric property names without putting them into brackets', () => {
+      expect(
+        getPathValuePairs({ test: { ing: [{ stuff: 'foo' }, { stuff: 'bar' }], '2': true } })
+      ).toEqual({
+        'test.ing[0].stuff': 'foo',
+        'test.ing[1].stuff': 'bar',
+        'test.2': true
+      });
+    });
   });
 
   describe('#getFSHValue', () => {
