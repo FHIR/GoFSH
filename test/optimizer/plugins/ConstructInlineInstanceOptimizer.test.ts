@@ -212,7 +212,7 @@ describe('optimizer', () => {
       });
 
       it('should create inline instances from contained resources with numerical ids', () => {
-        containedId1.value = '123';
+        containedId1.value = '0123';
         containedId2.value = '456';
         instance.rules = [
           containedResourceType1,
@@ -225,37 +225,33 @@ describe('optimizer', () => {
         optimizer.optimize(myPackage, fisher);
 
         expect(myPackage.instances).toHaveLength(3);
-        const expectedRule1 = cloneDeep(containedId1);
-        expectedRule1.path = 'id';
         assertExportableInstanceWithDifferentName(
           myPackage.instances[1],
-          'Inline-Instance-for-Foo-1',
-          '123',
+          '0123',
+          '0123',
           'Observation',
           'Inline',
           undefined,
           undefined,
-          [expectedRule1]
+          []
         );
 
-        const expectedRule2 = cloneDeep(containedId2);
-        expectedRule2.path = 'id';
         assertExportableInstanceWithDifferentName(
           myPackage.instances[2],
-          'Inline-Instance-for-Foo-2',
+          '456',
           '456',
           'ValueSet',
           'Inline',
           undefined,
           undefined,
-          [expectedRule2]
+          []
         );
 
         const inlineInstanceRule1 = new ExportableAssignmentRule('contained[0]');
-        inlineInstanceRule1.value = 'Inline-Instance-for-Foo-1';
+        inlineInstanceRule1.value = '0123';
         inlineInstanceRule1.isInstance = true;
         const inlineInstanceRule2 = new ExportableAssignmentRule('contained[1]');
-        inlineInstanceRule2.value = 'Inline-Instance-for-Foo-2';
+        inlineInstanceRule2.value = '456';
         inlineInstanceRule2.isInstance = true;
         expect(instance.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
       });
