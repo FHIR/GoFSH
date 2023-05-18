@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { cloneDeep } from 'lodash';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { AddElementRuleExtractor } from '../../src/extractor';
-import { ExportableAddElementRule } from '../../src/exportable';
+import { ExportableAddElementRule, ExportableOnlyRule } from '../../src/exportable';
 import { loggerSpy } from '../helpers';
 
 describe('AddElementRuleExtractor', () => {
@@ -22,13 +22,17 @@ describe('AddElementRuleExtractor', () => {
   describe('#process', () => {
     it('should extract an add element rule with a cardinality and one type', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('bread');
       expectedRule.min = 1;
       expectedRule.max = '1';
       expectedRule.short = 'Always get bread';
       expectedRule.types.push({ type: 'CodeableConcept' });
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code'])
       );
@@ -36,13 +40,17 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with multiple types', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('apple[x]');
       expectedRule.min = 0;
       expectedRule.max = '3';
       expectedRule.short = 'Get some apples';
       expectedRule.types.push({ type: 'string' }, { type: 'CodeableConcept' });
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'type[1].code'])
       );
@@ -50,7 +58,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with a reference type', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('orange');
       expectedRule.min = 0;
       expectedRule.max = '1';
@@ -60,14 +71,81 @@ describe('AddElementRuleExtractor', () => {
         isReference: true
       });
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'type[0].targetProfile[0]'])
       );
     });
 
+    it('should extract an add element rule and an only rule for an element with a CodeableReference type', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[15]);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
+      const expectedElement = new ExportableAddElementRule('melon');
+      expectedElement.min = 0;
+      expectedElement.max = '*';
+      expectedElement.short = 'Large melon';
+      expectedElement.definition = 'There are so many kinds of melon';
+      expectedElement.types.push({ type: 'CodeableReference' });
+      const expectedOnly = new ExportableOnlyRule('melon');
+      expectedOnly.types.push({
+        type: 'http://hl7.org/fhir/StructureDefinition/Substance',
+        isReference: true
+      });
+      expect(elementRule).toEqual<ExportableAddElementRule>(expectedElement);
+      expect(codeableReferenceRule).toEqual<ExportableOnlyRule>(expectedOnly);
+      expect(element.processedPaths).toEqual(
+        expect.arrayContaining([
+          'min',
+          'max',
+          'short',
+          'definition',
+          'type[0].code',
+          'type[0].targetProfile[0]'
+        ])
+      );
+    });
+
+    it('should extract an add element rule and an only rule for a choice element that includes a CodeableReference type', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[16]);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
+      const expectedElement = new ExportableAddElementRule('cheese[x]');
+      expectedElement.min = 0;
+      expectedElement.max = '*';
+      expectedElement.short = 'Cheese is versatile';
+      expectedElement.definition = 'You can put cheese on a lot of things. Sometimes you melt it.';
+      expectedElement.types.push({ type: 'string' }, { type: 'CodeableReference' });
+      const expectedOnly = new ExportableOnlyRule('cheeseCodeableReference');
+      expectedOnly.types.push({
+        type: 'http://hl7.org/fhir/StructureDefinition/Substance',
+        isReference: true
+      });
+      expect(elementRule).toEqual<ExportableAddElementRule>(expectedElement);
+      expect(codeableReferenceRule).toEqual<ExportableOnlyRule>(expectedOnly);
+      expect(element.processedPaths).toEqual(
+        expect.arrayContaining([
+          'min',
+          'max',
+          'short',
+          'definition',
+          'type[0].code',
+          'type[1].code',
+          'type[1].targetProfile[0]'
+        ])
+      );
+    });
+
     it('should extract an add element rule with a profiled type', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[4]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('banana');
       expectedRule.min = 1;
       expectedRule.max = '*';
@@ -76,6 +154,7 @@ describe('AddElementRuleExtractor', () => {
         type: 'http://hl7.org/fhir/StructureDefinition/SimpleQuantity'
       });
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'type[0].profile[0]'])
       );
@@ -83,7 +162,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with a content reference', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[14]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('moreCookies');
       expectedRule.min = 0;
       expectedRule.max = '*';
@@ -91,6 +173,7 @@ describe('AddElementRuleExtractor', () => {
       expectedRule.definition = 'Sometimes you need many more cookies';
       expectedRule.contentReference = 'cookies';
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'definition', 'contentReference'])
       );
@@ -100,7 +183,10 @@ describe('AddElementRuleExtractor', () => {
     it('should extract an add element rule with the must support flag', () => {
       // SUSHI does not allow this flag on AddElementRule, but that's something for SUSHI to complain about.
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[5]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('potato');
       expectedRule.min = 1;
       expectedRule.max = '3';
@@ -110,6 +196,7 @@ describe('AddElementRuleExtractor', () => {
       });
       expectedRule.mustSupport = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'mustSupport'])
       );
@@ -117,7 +204,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the summary flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[6]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('peppers');
       expectedRule.min = 0;
       expectedRule.max = '*';
@@ -127,6 +217,7 @@ describe('AddElementRuleExtractor', () => {
       });
       expectedRule.summary = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'isSummary'])
       );
@@ -134,7 +225,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the modifier flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[7]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('onions');
       expectedRule.min = 0;
       expectedRule.max = '3';
@@ -144,6 +238,7 @@ describe('AddElementRuleExtractor', () => {
       });
       expectedRule.modifier = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'isModifier'])
       );
@@ -151,7 +246,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the draft flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[8]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('cabbage');
       expectedRule.min = 0;
       expectedRule.max = '1';
@@ -161,6 +259,7 @@ describe('AddElementRuleExtractor', () => {
       });
       expectedRule.draft = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining([
           'min',
@@ -175,7 +274,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the trial use flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[9]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('milk');
       expectedRule.min = 0;
       expectedRule.max = '1';
@@ -185,6 +287,7 @@ describe('AddElementRuleExtractor', () => {
       });
       expectedRule.trialUse = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining([
           'min',
@@ -199,7 +302,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with the normative flag', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[10]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('coffee');
       expectedRule.min = 0;
       expectedRule.max = '2';
@@ -209,6 +315,7 @@ describe('AddElementRuleExtractor', () => {
       });
       expectedRule.normative = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining([
           'min',
@@ -223,7 +330,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with multiple flags', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[11]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('peanuts');
       expectedRule.min = 0;
       expectedRule.max = '*';
@@ -234,6 +344,7 @@ describe('AddElementRuleExtractor', () => {
       expectedRule.normative = true;
       expectedRule.summary = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining([
           'min',
@@ -249,7 +360,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with definition text', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[12]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('spice');
       expectedRule.min = 0;
       expectedRule.max = '*';
@@ -257,6 +371,7 @@ describe('AddElementRuleExtractor', () => {
       expectedRule.definition = 'Any kind of spice is allowed';
       expectedRule.types.push({ type: 'CodeableConcept' });
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'definition', 'type[0].code'])
       );
@@ -264,7 +379,10 @@ describe('AddElementRuleExtractor', () => {
 
     it('should extract an add element rule with multiple types, flags, and definition text', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[13]);
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('cookies');
       expectedRule.min = 0;
       expectedRule.max = '2';
@@ -274,6 +392,7 @@ describe('AddElementRuleExtractor', () => {
       expectedRule.normative = true;
       expectedRule.summary = true;
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining([
           'min',
@@ -293,8 +412,12 @@ describe('AddElementRuleExtractor', () => {
         ProcessableElementDefinition.fromJSON(looseSD.differential.element[12])
       );
       delete element.type;
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       expect(elementRule.types).toEqual([{ type: 'BackboneElement' }]);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(loggerSpy.getLastMessage('warn')).toBe(
         'No types or contentReference found for element MyResource.spice in MyResource. Defaulting to BackboneElement.'
       );
@@ -303,13 +426,17 @@ describe('AddElementRuleExtractor', () => {
     it('should log a warning when an element has types and a contentReference', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
       element.contentReference = 'cookies';
-      const elementRule = AddElementRuleExtractor.process(element, looseSD);
+      const [elementRule, codeableReferenceRule] = AddElementRuleExtractor.process(
+        element,
+        looseSD
+      );
       const expectedRule = new ExportableAddElementRule('bread');
       expectedRule.min = 1;
       expectedRule.max = '1';
       expectedRule.short = 'Always get bread';
       expectedRule.types.push({ type: 'CodeableConcept' });
       expect(elementRule).toEqual<ExportableAddElementRule>(expectedRule);
+      expect(codeableReferenceRule).toBeUndefined();
       expect(element.processedPaths).toEqual(
         expect.arrayContaining(['min', 'max', 'short', 'type[0].code', 'contentReference'])
       );

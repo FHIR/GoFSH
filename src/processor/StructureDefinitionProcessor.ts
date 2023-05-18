@@ -148,9 +148,9 @@ export class StructureDefinitionProcessor {
             // so that they don't get CaretValueRules created.
             element.processedPaths.push('min', 'max');
           } else {
-            // For all other elements, make a rule to add them.
-            const addElementRule = AddElementRuleExtractor.process(element, input);
-            newRules.push(addElementRule);
+            // For all other elements, make rules to add them.
+            const addElementRules = AddElementRuleExtractor.process(element, input);
+            newRules.push(...addElementRules);
           }
         }
         newRules.push(BindingRuleExtractor.process(element), ObeysRuleExtractor.process(element));
@@ -164,7 +164,7 @@ export class StructureDefinitionProcessor {
       } else if (isNewSlice) {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fisher),
-          OnlyRuleExtractor.process(element),
+          ...OnlyRuleExtractor.process(element),
           ...AssignmentRuleExtractor.process(element),
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
@@ -172,7 +172,7 @@ export class StructureDefinitionProcessor {
       } else {
         newRules.push(
           CardRuleExtractor.process(element, input, fisher),
-          OnlyRuleExtractor.process(element),
+          ...OnlyRuleExtractor.process(element),
           ...AssignmentRuleExtractor.process(element),
           FlagRuleExtractor.process(element),
           BindingRuleExtractor.process(element),

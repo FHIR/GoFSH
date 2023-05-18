@@ -30,8 +30,46 @@
           },
           {
             "code": "CodeableReference",
-            "profile": ["http://hl7.org/fhir/StructureDefinition/ProfileOfCodeableReference"],
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/ProfileOfCodeableReference"
+            ],
             "versioning": "either"
+          }
+        ]
+      },
+      {
+        "id": "CarePlan.extension:bar.value[x]",
+        "path": "CarePlan.extension:bar.value[x]",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Practitioner",
+              "http://hl7.org/fhir/StructureDefinition/Patient"
+            ]
+          },
+          {
+            "code": "CodeableReference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Observation",
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "CarePlan.extension:cookie.value[x]",
+        "path": "CarePlan.extension:cookie.value[x]",
+        "type": [
+          {
+            "code": "string"
+          },
+          {
+            "code": "CodeableReference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Observation",
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+            ]
           }
         ]
       }

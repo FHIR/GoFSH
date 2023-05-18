@@ -238,6 +238,41 @@
         "min": 0,
         "max": "*",
         "contentReference": "cookies"
+      },
+      {
+        "id": "MyResource.melon",
+        "path": "MyResource.melon",
+        "short": "Large melon",
+        "definition": "There are so many kinds of melon",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableReference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Substance"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "MyResource.cheese[x]",
+        "path": "MyResource.cheese[x]",
+        "short": "Cheese is versatile",
+        "definition": "You can put cheese on a lot of things. Sometimes you melt it.",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          },
+          {
+            "code": "CodeableReference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Substance"
+            ]
+          }
+        ]
       }
     ]
   }
