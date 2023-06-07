@@ -917,7 +917,6 @@ describe('CaretValueRuleExtractor', () => {
       // See: https://github.com/FHIR/GoFSH/issues/211
       const element = ProcessableElementDefinition.fromJSON(looseTPESD.differential.element[0]);
       const caretRules = CaretValueRuleExtractor.process(element, looseTPESD, defs);
-      console.log(caretRules);
       expect(caretRules).toHaveLength(10);
       const expectedRules: ExportableCaretValueRule[] = [];
       [true, false, false, null, false, true].forEach((value, i) => {
