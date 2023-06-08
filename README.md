@@ -8,7 +8,7 @@ For more information about the evolving FSH syntax see the [FHIR Shorthand Refer
 
 # Installation for GoFSH Users
 
-GoFSH requires [Node.js](https://nodejs.org/) to be installed on the user's system. Users should install Node.js 12 (LTS), although the previous LTS version (Node.js 10) is also expected to work.
+GoFSH requires [Node.js](https://nodejs.org/) to be installed on the user's system. Users should install Node.js 18. Although previous versions of Node.js may work, they are not officially supported.
 
 Once Node.js is installed, run the following command to install or update GoFSH:
 
@@ -42,7 +42,7 @@ Options:
 
 # Installation for Developers
 
-GoFSH is a [TypeScript](https://www.typescriptlang.org/) project. At a minimum, GoFSH requires [Node.js](https://nodejs.org/) to build, test, and run the CLI. Developers should install Node.js 12 (LTS), although the previous LTS version (Node.js 10) is also expected to work.
+GoFSH is a [TypeScript](https://www.typescriptlang.org/) project. At a minimum, GoFSH requires [Node.js](https://nodejs.org/) to build, test, and run the CLI. Developers should install Node.js 18. Although previous versions of Node.js may work, they are not officially supported.
 
 Once Node.js is installed, run the following command from this project's root folder:
 
