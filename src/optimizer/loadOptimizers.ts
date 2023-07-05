@@ -8,21 +8,25 @@ import { logger } from '../utils/GoFSHLogger';
  * If there is a circular dependency in the plugins, an error will be logged and the resulting order is undetermined.
  * @param folder - the folder to load optimizers from.  Currently only used in tests.  CLI uses default value.
  */
-export async function loadOptimizers(
-  folder = path.join(__dirname, 'plugins')
-): Promise<OptimizerPlugin[]> {
-  // make an import-friendly relative path (e.g. \Users\bob\dev\optimizers --> ../../../../dev/optimizers)
-  let relativePath = path.relative(__dirname, folder);
-  if (path.sep === '\\') {
-    relativePath = relativePath.replace(/\\/g, '/');
-  }
-  if (!relativePath.startsWith('.')) {
-    relativePath = `./${relativePath}`;
-  }
+export async function loadOptimizers(folder?: string): Promise<OptimizerPlugin[]> {
+  type OptimizerPluginModule = typeof import('./plugins');
+  let Optimizers: OptimizerPluginModule;
 
-  // Import optimizers from the specified folder
-  // relativePath is placed in a dynamic string to allow for FSHOnline compatibility
-  const Optimizers: { property: OptimizerPlugin } = await import(`${relativePath}`);
+  // Import optimizers from the default './plugin' directory or the specified folder
+  if (folder == null) {
+    // Separate default loading case uses hardcoded string in the import for FSH Online compatibility
+    Optimizers = await import('./plugins');
+  } else {
+    // make an import-friendly relative path (e.g. \Users\bob\dev\optimizers --> ../../../../dev/optimizers)
+    let relativePath = path.relative(__dirname, folder);
+    if (path.sep === '\\') {
+      relativePath = relativePath.replace(/\\/g, '/');
+    }
+    if (!relativePath.startsWith('.')) {
+      relativePath = `./${relativePath}`;
+    }
+    Optimizers = await import(relativePath);
+  }
 
   const optimizers = Object.values(Optimizers).filter(
     // Remove non-optimizers
