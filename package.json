@@ -81,12 +81,15 @@
     "lodash": "^4.17.21",
     "readline-sync": "^1.4.10",
     "sanitize-filename": "^1.6.3",
-    "semver": "^7.3.2",
+    "semver": "^7.5.4",
     "temp": "^0.9.1",
     "text-table": "^0.2.0",
     "toposort": "^2.0.2",
     "valid-url": "^1.0.9",
     "winston": "^3.3.3",
     "yaml": "^1.10.0"
+  },
+  "overrides": {
+    "semver": "$semver"
   }
 }
