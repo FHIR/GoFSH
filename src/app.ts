@@ -208,6 +208,12 @@ async function app() {
     ) ?? [];
   const fhirPackageId = determineCorePackageId(config.config.fhirVersion[0]);
   allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
+  await utils.loadAutomaticDependencies(
+    config.config.fhirVersion[0],
+    config.config.dependencies ?? [],
+    // @ts-ignore TODO: this can be removed once SUSHI changes the type signature for this function to use FPL's FHIRDefinitions type
+    defs
+  );
   const dependencyDefs = loadExternalDependencies(defs, allDependencies);
 
   await Promise.all(dependencyDefs);
