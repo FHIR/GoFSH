@@ -82,8 +82,11 @@ describe('OnlyRuleExtractor', () => {
     const onlyRule = OnlyRuleExtractor.process(element);
     const expectedRule = new ExportableOnlyRule('activity.performedActivity');
     expectedRule.types = [
-      { type: 'http://hl7.org/fhir/StructureDefinition/Observation', isReference: true },
-      { type: 'http://hl7.org/fhir/StructureDefinition/MolecularSequence', isReference: true }
+      { type: 'http://hl7.org/fhir/StructureDefinition/Observation', isCodeableReference: true },
+      {
+        type: 'http://hl7.org/fhir/StructureDefinition/MolecularSequence',
+        isCodeableReference: true
+      }
     ];
     expect(onlyRule).toEqual<ExportableOnlyRule>(expectedRule);
     expect(element.processedPaths).toEqual([
@@ -105,6 +108,99 @@ describe('OnlyRuleExtractor', () => {
     ];
     expect(onlyRule).toEqual<ExportableOnlyRule>(expectedRule);
     expect(element.processedPaths).toEqual(['type[0].code', 'type[1].profile[0]', 'type[1].code']);
+  });
+
+  it('should extract an only rule with a subset of a canonical type', () => {
+    const element = ProcessableElementDefinition.fromJSON(
+      sdWithCodeableReference.differential.element[4]
+    );
+    const onlyRule = OnlyRuleExtractor.process(element);
+    const expectedRule = new ExportableOnlyRule('extension[toast].value[x]');
+    expectedRule.types = [
+      { type: 'http://hl7.org/fhir/StructureDefinition/Observation', isCanonical: true },
+      {
+        type: 'http://hl7.org/fhir/StructureDefinition/Patient',
+        isCanonical: true
+      }
+    ];
+    expect(onlyRule).toEqual<ExportableOnlyRule>(expectedRule);
+    expect(element.processedPaths).toEqual([
+      'type[0].targetProfile[0]',
+      'type[0].targetProfile[1]',
+      'type[0].code'
+    ]);
+  });
+
+  it('should extract an only rule on an element with both Reference and CodeableReference types', () => {
+    const element = ProcessableElementDefinition.fromJSON(
+      sdWithCodeableReference.differential.element[2]
+    );
+    const onlyRule = OnlyRuleExtractor.process(element);
+    const expectedRule = new ExportableOnlyRule('extension[bar].value[x]');
+    expectedRule.types = [
+      { type: 'http://hl7.org/fhir/StructureDefinition/Practitioner', isReference: true },
+      { type: 'http://hl7.org/fhir/StructureDefinition/Patient', isReference: true },
+      { type: 'http://hl7.org/fhir/StructureDefinition/Observation', isCodeableReference: true },
+      {
+        type: 'http://hl7.org/fhir/StructureDefinition/DiagnosticReport',
+        isCodeableReference: true
+      }
+    ];
+    expect(onlyRule).toEqual<ExportableOnlyRule>(expectedRule);
+    expect(element.processedPaths).toEqual([
+      'type[0].targetProfile[0]',
+      'type[0].targetProfile[1]',
+      'type[0].code',
+      'type[1].targetProfile[0]',
+      'type[1].targetProfile[1]',
+      'type[1].code'
+    ]);
+  });
+
+  it('should extract an only rule on an element with CodeableReference and non-Reference types', () => {
+    const element = ProcessableElementDefinition.fromJSON(
+      sdWithCodeableReference.differential.element[3]
+    );
+    const onlyRule = OnlyRuleExtractor.process(element);
+    const expectedRule = new ExportableOnlyRule('extension[cookie].value[x]');
+    expectedRule.types = [
+      { type: 'string' },
+      { type: 'http://hl7.org/fhir/StructureDefinition/Observation', isCodeableReference: true },
+      {
+        type: 'http://hl7.org/fhir/StructureDefinition/DiagnosticReport',
+        isCodeableReference: true
+      }
+    ];
+    expect(onlyRule).toEqual<ExportableOnlyRule>(expectedRule);
+    expect(element.processedPaths).toEqual([
+      'type[0].code',
+      'type[1].targetProfile[0]',
+      'type[1].targetProfile[1]',
+      'type[1].code'
+    ]);
+  });
+
+  it('should extract an only rule with canonical and non-canonical types', () => {
+    const element = ProcessableElementDefinition.fromJSON(
+      sdWithCodeableReference.differential.element[5]
+    );
+    const onlyRule = OnlyRuleExtractor.process(element);
+    const expectedRule = new ExportableOnlyRule('extension[blank].value[x]');
+    expectedRule.types = [
+      { type: 'http://hl7.org/fhir/StructureDefinition/Patient', isCanonical: true },
+      {
+        type: 'http://hl7.org/fhir/StructureDefinition/Observation',
+        isCanonical: true
+      },
+      { type: 'Annotation' }
+    ];
+    expect(onlyRule).toEqual<ExportableOnlyRule>(expectedRule);
+    expect(element.processedPaths).toEqual([
+      'type[0].targetProfile[0]',
+      'type[0].targetProfile[1]',
+      'type[0].code',
+      'type[1].code'
+    ]);
   });
 
   it('should return null when the element has no type info', () => {
