@@ -1,14 +1,13 @@
-import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
+import { fshtypes, utils } from 'fsh-sushi';
 import {
-  determineCorePackageId,
   FHIRDefinitions,
   getResources,
   isProcessableContent,
-  loadExternalDependencies,
   MasterFisher,
   logger,
   errorsAndWarnings,
-  ErrorsAndWarnings
+  ErrorsAndWarnings,
+  loadExternalDependencies
 } from '../utils';
 import { FHIRProcessor, LakeOfFHIR, WildFHIR } from '../processor';
 import { FSHExporter } from '../export';
@@ -81,15 +80,7 @@ export async function fhirToFsh(
   );
 
   // Load dependencies, including those inferred from an IG file, and those given as input
-  const dependencies =
-    configuration.config.dependencies?.map(
-      (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
-    ) ?? [];
-  const fhirPackageId = determineCorePackageId(configuration.config.fhirVersion[0]);
-  if (!dependencies.includes(`${fhirPackageId}@${configuration.config.fhirVersion[0]}`)) {
-    dependencies.push(`${fhirPackageId}@${configuration.config.fhirVersion[0]}`);
-  }
-  await Promise.all(loadExternalDependencies(defs, dependencies));
+  await loadExternalDependencies(defs, configuration);
 
   // Process the FHIR to rules, and then export to FSH
   const pkg = await getResources(processor, configuration, processingOptions);

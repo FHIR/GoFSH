@@ -4,6 +4,7 @@ import ini from 'ini';
 import readlineSync from 'readline-sync';
 import { mergeDependency } from 'fhir-package-loader';
 import { logger, logMessage } from './GoFSHLogger';
+import { fhirtypes, utils } from 'fsh-sushi';
 import {
   Package,
   FHIRProcessor,
@@ -112,7 +113,26 @@ export function writeFSH(resources: Package, outDir: string, style: string): voi
   }
 }
 
-export function loadExternalDependencies(
+export async function loadExternalDependencies(
+  defs: FHIRDefinitions,
+  config: ExportableConfiguration
+) {
+  const allDependencies =
+    config.config.dependencies?.map(
+      (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
+    ) ?? [];
+  const fhirPackageId = determineCorePackageId(config.config.fhirVersion[0]);
+  allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
+  await utils.loadAutomaticDependencies(
+    config.config.fhirVersion[0],
+    config.config.dependencies ?? [],
+    // @ts-ignore TODO: this can be removed once SUSHI changes the type signature for this function to use FPL's FHIRDefinitions type
+    defs
+  );
+  await Promise.all(loadConfiguredDependencies(defs, allDependencies));
+}
+
+export function loadConfiguredDependencies(
   defs: FHIRDefinitions,
   dependencies: string[] = []
 ): Promise<FHIRDefinitions | void>[] {
