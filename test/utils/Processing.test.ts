@@ -580,6 +580,29 @@ describe('Processing', () => {
       expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
+
+    it('should not add the identified FHIR core package to the list of dependencies when it is already there', async () => {
+      const config = new ExportableConfiguration({
+        FSHOnly: true,
+        canonical: 'http://example.org',
+        fhirVersion: ['4.0.1'],
+        id: 'example',
+        name: 'Example',
+        applyExtensionMetadataToRoot: false,
+        dependencies: [
+          { packageId: 'hl7.fhir.us.core', version: '3.1.0' },
+          { packageId: 'hl7.fhir.r4.core', version: '4.0.1' }
+        ]
+      });
+      const defs = new FHIRDefinitions();
+      await loadExternalDependencies(defs, config);
+      // the core FHIR package is only present once in the list
+      expect(loadedPackages).toHaveLength(3);
+      expect(loadedPackages).toContain('hl7.fhir.r4.core#4.0.1');
+      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
+      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+    });
   });
 
   describe('loadConfiguredDependencies', () => {

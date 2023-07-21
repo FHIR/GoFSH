@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import * as processing from '../../src/utils/Processing';
 import { fshtypes } from 'fsh-sushi';
-import { logger } from '../../src/utils';
+import { FHIRDefinitions, logger } from '../../src/utils';
 import { fhirToFsh, ResourceMap } from '../../src/api';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { EOL } from 'os';
@@ -109,6 +109,30 @@ describe('fhirToFsh', () => {
     expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
     expect(results.fsh).toEqual('');
     expect(results.configuration).toEqual(defaultConfig);
+  });
+
+  it('should try to load external dependencies', async () => {
+    await fhirToFsh([], {
+      dependencies: ['hl7.fhir.us.core#3.1.0', 'hl7.fhir.us.mcode@1.0.0']
+    });
+    expect(loadSpy).toHaveBeenCalledTimes(1);
+    expect(loadSpy).toHaveBeenCalledWith(
+      expect.any(FHIRDefinitions),
+      expect.objectContaining({
+        config: expect.objectContaining({
+          dependencies: [
+            {
+              packageId: 'hl7.fhir.us.core',
+              version: '3.1.0'
+            },
+            {
+              packageId: 'hl7.fhir.us.mcode',
+              version: '1.0.0'
+            }
+          ]
+        })
+      })
+    );
   });
 
   it('should parse a string input into JSON', async () => {

@@ -122,7 +122,9 @@ export async function loadExternalDependencies(
       (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
     ) ?? [];
   const fhirPackageId = determineCorePackageId(config.config.fhirVersion[0]);
-  allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
+  if (!allDependencies.includes(`${fhirPackageId}@${config.config.fhirVersion[0]}`)) {
+    allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
+  }
   await utils.loadAutomaticDependencies(
     config.config.fhirVersion[0],
     config.config.dependencies ?? [],
