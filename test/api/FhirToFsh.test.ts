@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import * as processing from '../../src/utils/Processing';
 import { fshtypes } from 'fsh-sushi';
-import { logger } from '../../src/utils';
+import { FHIRDefinitions, logger } from '../../src/utils';
 import { fhirToFsh, ResourceMap } from '../../src/api';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { EOL } from 'os';
@@ -40,7 +40,7 @@ describe('fhirToFsh', () => {
     loadSpy = jest.spyOn(processing, 'loadExternalDependencies').mockImplementation(defs => {
       defs.add(sd);
       defs.add(patient);
-      return [undefined];
+      return Promise.resolve();
     });
     defaultConfig = {
       FSHOnly: true,
@@ -111,50 +111,28 @@ describe('fhirToFsh', () => {
     expect(results.configuration).toEqual(defaultConfig);
   });
 
-  it('should load dependencies from user input', async () => {
-    // Should be able to accept both # and @ style for dependencies
-    const results = await fhirToFsh([], {
+  it('should try to load external dependencies', async () => {
+    await fhirToFsh([], {
       dependencies: ['hl7.fhir.us.core#3.1.0', 'hl7.fhir.us.mcode@1.0.0']
     });
-    expect(results.errors).toHaveLength(0);
-    expect(results.warnings).toHaveLength(1);
-    expect(results.warnings[0].message).toMatch('Could not determine FHIR version. Using 4.0.1.');
-    expect(results.fsh).toEqual('');
-    expect(results.configuration).toEqual({
-      ...defaultConfig,
-      dependencies: [
-        { packageId: 'hl7.fhir.us.core', version: '3.1.0' },
-        { packageId: 'hl7.fhir.us.mcode', version: '1.0.0' }
-      ]
-    });
-
-    expect(loadSpy.mock.calls).toHaveLength(1);
-    expect(loadSpy.mock.calls[0][1]).toEqual([
-      'hl7.fhir.us.core@3.1.0',
-      'hl7.fhir.us.mcode@1.0.0',
-      'hl7.fhir.r4.core@4.0.1'
-    ]);
-  });
-
-  it('should load FHIR R4B when specified in config fhirVersion', async () => {
-    // Loads R4B from fhirVersion
-    const results = await fhirToFsh([
-      JSON.stringify({
-        resourceType: 'StructureDefinition',
-        name: 'Foo',
-        baseDefinition: 'http://hl7.org/fhir/StructureDefinition/Patient',
-        derivation: 'constraint',
-        fhirVersion: '4.3.0' // FHIR R4B
+    expect(loadSpy).toHaveBeenCalledTimes(1);
+    expect(loadSpy).toHaveBeenCalledWith(
+      expect.any(FHIRDefinitions),
+      expect.objectContaining({
+        config: expect.objectContaining({
+          dependencies: [
+            {
+              packageId: 'hl7.fhir.us.core',
+              version: '3.1.0'
+            },
+            {
+              packageId: 'hl7.fhir.us.mcode',
+              version: '1.0.0'
+            }
+          ]
+        })
       })
-    ]);
-    expect(results.errors).toHaveLength(0);
-    expect(results.warnings).toHaveLength(0);
-    expect(results.configuration).toEqual({
-      ...defaultConfig,
-      fhirVersion: ['4.3.0']
-    });
-    expect(loadSpy.mock.calls).toHaveLength(1);
-    expect(loadSpy.mock.calls[0][1]).toEqual(['hl7.fhir.r4b.core@4.3.0']);
+    );
   });
 
   it('should parse a string input into JSON', async () => {

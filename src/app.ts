@@ -5,22 +5,21 @@ import fs from 'fs-extra';
 import program from 'commander';
 import chalk from 'chalk';
 import { pad, padStart, padEnd } from 'lodash';
-import { fhirtypes, utils } from 'fsh-sushi';
+import { utils } from 'fsh-sushi';
 import {
-  determineCorePackageId,
   ensureOutputDir,
   FHIRDefinitions,
   getInputDir,
   getAliasFile,
   getFhirProcessor,
   getResources,
-  loadExternalDependencies,
   writeFSH,
   logger,
   stats,
   fshingTrip,
   getRandomPun,
-  ProcessingOptions
+  ProcessingOptions,
+  loadExternalDependencies
 } from './utils';
 import { Package, AliasProcessor } from './processor';
 import { ExportableAlias } from './exportable';
@@ -202,15 +201,7 @@ async function app() {
   const config = processor.processConfig(dependencies, specifiedFHIRVersion);
 
   // Load dependencies from config for GoFSH processing
-  const allDependencies =
-    config.config.dependencies?.map(
-      (dep: fhirtypes.ImplementationGuideDependsOn) => `${dep.packageId}@${dep.version}`
-    ) ?? [];
-  const fhirPackageId = determineCorePackageId(config.config.fhirVersion[0]);
-  allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
-  const dependencyDefs = loadExternalDependencies(defs, allDependencies);
-
-  await Promise.all(dependencyDefs);
+  await loadExternalDependencies(defs, config);
 
   let pkg: Package;
   try {
