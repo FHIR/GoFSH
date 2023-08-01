@@ -1,0 +1,96 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "ParentLogical",
+  "url": "http://example.org/StructureDefinition/ParentLogical",
+  "version": "1.0.0",
+  "name": "ParentLogical",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "rim",
+      "name": "RIM Mapping",
+      "uri": "http://hl7.org/v3"
+    }
+  ],
+  "kind": "logical",
+  "abstract": false,
+  "type": "http://example.org/StructureDefinition/ParentLogical",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base",
+  "derivation": "specialization",
+  "snapshot": {
+    "element": [
+      {
+        "id": "ParentLogical",
+        "path": "ParentLogical",
+        "min": 0,
+        "max": "*",
+        "base": {
+          "path": "ParentLogical",
+          "min": 0,
+          "max": "*"
+        },
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children",
+            "expression": "hasValue() or (children().count() > id.count())",
+            "xpath": "@value|f:*|h:div",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          }
+        ],
+        "isModifier": false
+      },
+      {
+        "id": "ParentLogical.cookie",
+        "path": "ParentLogical.cookie",
+        "short": "Cookies contained within this resource",
+        "definition": "Cookies contained within this resource",
+        "min": 0,
+        "max": "*",
+        "base": {
+          "path": "ParentLogical.cookie",
+          "min": 0,
+          "max": "*"
+        },
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ],
+        "constraint": [
+          {
+            "key": "ele-1",
+            "severity": "error",
+            "human": "All FHIR elements must have a @value or children unless an empty Parameters resource",
+            "expression": "hasValue() or (children().count() > id.count()) or $this is Parameters",
+            "xpath": "@value|f:*|h:div|self::f:Parameters",
+            "source": "http://hl7.org/fhir/StructureDefinition/Element"
+          }
+        ]
+      }
+    ]
+  },
+  "differential": {
+    "element": [
+      {
+        "id": "ParentLogical",
+        "path": "ParentLogical"
+      },
+      {
+        "id": "ParentLogical.cookie",
+        "path": "ParentLogical.cookie",
+        "short": "Cookies contained within this resource",
+        "definition": "Cookies contained within this resource",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -36,6 +36,9 @@ describe('StructureDefinitionProcessor', () => {
         fs.readFileSync(path.join(__dirname, 'fixtures', 'parent-observation.json'), 'utf-8')
       )
     );
+    defs.add(
+      JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'parent-logical.json'), 'utf-8'))
+    );
     config = {
       canonical: 'http://hl7.org/fhir/sushi-test',
       fhirVersion: ['4.0.1']
@@ -511,6 +514,23 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingLogical.rules[4]).toEqual(materialElementRule);
     });
 
+    it('should add rules to a Logical whose parent is another Logical', () => {
+      const input: ProcessableStructureDefinition = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'child-logical.json'), 'utf-8')
+      );
+      const elements =
+        input.differential?.element?.map(rawElement => {
+          return ProcessableElementDefinition.fromJSON(rawElement, false);
+        }) ?? [];
+      const workingLogical = new ExportableLogical('ChildLogical');
+      StructureDefinitionProcessor.extractRules(input, elements, workingLogical, defs, config);
+      expect(workingLogical.rules).toHaveLength(1);
+      const logicalCardRule = new ExportableCardRule('cookie');
+      logicalCardRule.min = 1;
+      expect(workingLogical.rules[0]).toEqual(logicalCardRule);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+    });
+
     it('should show a warning when a Logical contains a slice definition', () => {
       const input: ProcessableStructureDefinition = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-logical.json'), 'utf-8')
@@ -548,7 +568,8 @@ describe('StructureDefinitionProcessor', () => {
       );
     });
 
-    it('should show a warning when a Logical contains a value assignment', () => {
+    it('should not show a warning when a Logical contains a value assignment', () => {
+      // this is technically not allowed by the spec, but it is allowed in SUSHI and therefore also here.
       const input: ProcessableStructureDefinition = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'rules-logical.json'), 'utf-8')
       );
@@ -578,10 +599,7 @@ describe('StructureDefinitionProcessor', () => {
         new fshtypes.FshCode('L', 'http://unitsofmeasure.org')
       );
       expect(workingLogical.rules).toContainEqual(capacityAssignment);
-      // but we also get a warning about it.
-      expect(loggerSpy.getLastMessage('warn')).toMatch(
-        'MyLogical contains value assignment for MyLogical.bag.capacity'
-      );
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
     });
 
     it('should not create contains rules when the extension SD puts the slicename in the choice (#122)', () => {
