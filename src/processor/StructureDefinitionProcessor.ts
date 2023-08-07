@@ -128,9 +128,12 @@ export class StructureDefinitionProcessor {
         element.sliceName &&
         !/\[x]:[a-z][a-z0-9]*[A-Z][A-Za-z0-9]*$/.test(element.id) &&
         ancestorSliceDefinition == null;
+      const idWithoutName = element.id.slice(element.id.indexOf('.') + 1);
       if (
         (target instanceof ExportableResource || target instanceof ExportableLogical) &&
-        !parentDefinition?.snapshot?.element?.some(parentEl => parentEl.id === element.id)
+        !parentDefinition?.snapshot?.element?.some(
+          parentEl => parentEl.id.slice(parentEl.id.indexOf('.') + 1) === idWithoutName
+        )
       ) {
         // a newly defined element on a Resource or Logical needs an AddElementRule
         // AddElementRule contains cardinality, flag, and type information, so those extractors don't need to be called here
@@ -153,14 +156,11 @@ export class StructureDefinitionProcessor {
             newRules.push(addElementRule);
           }
         }
-        newRules.push(BindingRuleExtractor.process(element), ObeysRuleExtractor.process(element));
-        const assignmentRules = AssignmentRuleExtractor.process(element);
-        if (assignmentRules.length > 0) {
-          logger.warn(
-            `${target.constructorName} ${target.name} contains value assignment for ${element.id}. This is not supported by FHIR.`
-          );
-          newRules.push(...assignmentRules);
-        }
+        newRules.push(
+          BindingRuleExtractor.process(element),
+          ObeysRuleExtractor.process(element),
+          ...AssignmentRuleExtractor.process(element)
+        );
       } else if (isNewSlice) {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fisher),

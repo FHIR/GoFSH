@@ -1,0 +1,21 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "ChildLogical",
+  "name": "ChildLogical",
+  "kind": "logical",
+  "baseDefinition": "http://example.org/StructureDefinition/ParentLogical",
+  "derivation": "specialization",
+  "differential": {
+    "element": [
+      {
+        "id": "ChildLogical",
+        "path": "ChildLogical"
+      },
+      {
+        "id": "ChildLogical.cookie",
+        "path": "ChildLogical.cookie",
+        "min": 1
+      }
+    ]
+  }
+}
