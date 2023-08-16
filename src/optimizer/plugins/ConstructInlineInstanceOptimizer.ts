@@ -15,6 +15,7 @@ import AddReferenceKeywordOptimizer from './AddReferenceKeywordOptimizer';
 import SimplifyInstanceNameOptimizer from './SimplifyInstanceNameOptimizer';
 import { MasterFisher, logger, ProcessingOptions } from '../../utils';
 import { utils } from 'fsh-sushi';
+import CombineCodingAndQuantityValuesOptimizer from './CombineCodingAndQuantityValuesOptimizer';
 
 export default {
   name: 'construct_inline_instance',
@@ -24,7 +25,8 @@ export default {
     RemoveGeneratedTextRulesOptimizer.name,
     ResolveInstanceOfURLsOptimizer.name,
     AddReferenceKeywordOptimizer.name,
-    SimplifyInstanceNameOptimizer.name
+    SimplifyInstanceNameOptimizer.name,
+    CombineCodingAndQuantityValuesOptimizer.name
   ],
 
   optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
