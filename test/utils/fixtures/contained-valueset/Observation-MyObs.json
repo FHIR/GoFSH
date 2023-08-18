@@ -1,0 +1,36 @@
+{
+  "resourceType": "Observation",
+  "id": "MyObs",
+  "status": "final",
+  "code": {
+    "coding": [
+      {
+        "code": "something"
+      }
+    ]
+  },
+  "contained": [
+    {
+      "resourceType": "ValueSet",
+      "id": "MyInlineVS",
+      "status": "active",
+      "compose": {
+        "include": [
+          {
+            "system": "http://example.org",
+            "concept": [
+              {
+                "code": "123",
+                "display": "one two three"
+              },
+              {
+                "code": "456",
+                "display": "four five six"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
