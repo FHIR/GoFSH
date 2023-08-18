@@ -27,6 +27,7 @@ import {
 } from '../../src/exportable';
 import { FHIRDefinitions, loadExternalDependencies } from '../../src/utils';
 import * as loadOptimizers from '../../src/optimizer/loadOptimizers';
+import { FshCode } from 'fsh-sushi/dist/fshtypes';
 
 let loadedPackages: string[] = [];
 
@@ -382,6 +383,35 @@ describe('Processing', () => {
       expect(bundle.rules).toContainEqual(inlineInstanceRule);
       const patient = result.instances.find(i => i.id === 'bar');
       expect(patient.usage).toBe('Example');
+    });
+
+    it('should not combine rules on contained ValueSet.compose.include.concept', async () => {
+      const inDir = path.join(__dirname, 'fixtures', 'contained-valueset');
+      const processor = await getFhirProcessor(inDir, loadTestDefinitions(), 'json-only');
+      const config = processor.processConfig();
+      const result = await getResources(processor, config);
+      expect(result.instances).toHaveLength(2);
+      const inlineVS = result.instances.find(i => i.id === 'MyInlineVS');
+      expect(inlineVS?.usage).toBe('Inline');
+      // * status = #active
+      // * compose.include.system = "http://example.org"
+      // * compose.include.concept[0].code = #123
+      // * compose.include.concept[=].display = "one two three"
+      // * compose.include.concept[+].code = #456
+      // * compose.include.concept[=].display = "four five six"
+      const statusRule = new ExportableAssignmentRule('status');
+      statusRule.value = new FshCode('active');
+      const systemRule = new ExportableAssignmentRule('compose.include.system');
+      systemRule.value = 'http://example.org';
+      const code0 = new ExportableAssignmentRule('compose.include.concept[0].code');
+      code0.value = new FshCode('123');
+      const display0 = new ExportableAssignmentRule('compose.include.concept[=].display');
+      display0.value = 'one two three';
+      const code1 = new ExportableAssignmentRule('compose.include.concept[+].code');
+      code1.value = new FshCode('456');
+      const display1 = new ExportableAssignmentRule('compose.include.concept[=].display');
+      display1.value = 'four five six';
+      expect(inlineVS.rules).toEqual([statusRule, systemRule, code0, display0, code1, display1]);
     });
 
     describe('#enableOptimizers', () => {
