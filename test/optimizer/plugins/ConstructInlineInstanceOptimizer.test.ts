@@ -20,6 +20,7 @@ import AddReferenceKeywordOptimizer from '../../../src/optimizer/plugins/AddRefe
 import SimplifyInstanceNameOptimizer from '../../../src/optimizer/plugins/SimplifyInstanceNameOptimizer';
 import { MasterFisher } from '../../../src/utils';
 import { loadTestDefinitions, stockLake } from '../../helpers';
+import { CombineCodingAndQuantityValuesOptimizer } from '../../../src/optimizer/plugins';
 
 describe('optimizer', () => {
   describe('#construct_inline_instance', () => {
@@ -71,7 +72,8 @@ describe('optimizer', () => {
           RemoveGeneratedTextRulesOptimizer.name,
           ResolveInstanceOfURLsOptimizer.name,
           AddReferenceKeywordOptimizer.name,
-          SimplifyInstanceNameOptimizer.name
+          SimplifyInstanceNameOptimizer.name,
+          CombineCodingAndQuantityValuesOptimizer.name
         ]);
         expect(optimizer.runAfter).toBeUndefined();
       });
