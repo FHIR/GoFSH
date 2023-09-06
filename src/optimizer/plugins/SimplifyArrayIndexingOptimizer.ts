@@ -196,14 +196,14 @@ function removeZeroIndices(parsedPaths: any[]) {
     if (!element.brackets) {
       return;
     }
-    const filteredElements = referenceCaretPathElements.filter(
+    const hasOthers = referenceCaretPathElements.some(
       e =>
         e.base === element.base &&
         e.prefix === element.prefix &&
         e.brackets &&
         !(e.brackets.includes('0') || e.brackets.includes('='))
     );
-    if (filteredElements.length === 0) {
+    if (!hasOthers) {
       if (element.brackets.includes('0')) {
         const zeroIndex = element.brackets.indexOf('0');
         delete element.brackets[zeroIndex];
