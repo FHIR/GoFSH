@@ -53,6 +53,14 @@ export default {
       const rules: fshrules.Rule[] = def.rules; // <-- this assignment makes TypeScript happier in the next chunk of code
       const typeCache: Map<string, fhirtypes.ElementDefinitionType[]> = new Map();
 
+      const ruleMap: {[path: string]: {[caretPath: string]: ExportableCaretValueRule[]}} = {};
+      rules.filter(r => r instanceof ExportableCaretValueRule)
+        .forEach((r: ExportableCaretValueRule) => {
+          ruleMap[r.path] = ruleMap[r.path] || {};
+          ruleMap[r.path][r.caretPath] = ruleMap[r.path][r.caretPath] || [];
+          ruleMap[r.path][r.caretPath].push(r);
+        });
+
       rules.forEach(rule => {
         if (
           rule instanceof ExportableCaretValueRule &&
@@ -72,18 +80,13 @@ export default {
             return;
           }
 
-          const siblingPaths = [
+          const siblings = [
             `${basePath}.system`,
             `${basePath}.display`,
             `${basePath}.unit`,
             `${basePath}.value`
-          ];
-          const siblings = rules.filter(
-            otherRule =>
-              otherRule instanceof ExportableCaretValueRule &&
-              rule.path === otherRule.path &&
-              siblingPaths.includes(otherRule.caretPath)
-          ) as ExportableCaretValueRule[];
+          ].filter(sibling => ruleMap[rule.path] && ruleMap[rule.path][sibling] && ruleMap[rule.path][sibling].length)
+            .map(sibling => ruleMap[rule.path][sibling][0]);
           if (siblings.length) {
             const systemSibling = siblings.find(sibling => sibling.caretPath.endsWith('.system'));
             const displaySibling = siblings.find(sibling => sibling.caretPath.endsWith('.display'));
