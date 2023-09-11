@@ -87,7 +87,8 @@ export default {
             `${basePath}.value`
           ]
             .map(sibling => ruleMap[rule.path]?.[sibling])
-            .filter(sibling => !!sibling);
+            .filter(Boolean);
+
           if (siblings.length) {
             const systemSibling = siblings.find(sibling => sibling.caretPath.endsWith('.system'));
             const displaySibling = siblings.find(sibling => sibling.caretPath.endsWith('.display'));
