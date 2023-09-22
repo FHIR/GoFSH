@@ -49,8 +49,8 @@ export class AliasProcessor {
     const ctx = parser.doc() as sushiImport.DocContext;
     ctx.entity().forEach(entity => {
       if (entity.alias()) {
-        const name = entity.alias().SEQUENCE()[0].getText();
-        let value = entity.alias().SEQUENCE()[1]?.getText();
+        const name = entity.alias().name().getText();
+        let value = entity.alias().SEQUENCE()?.getText();
         // When the url contains a fragment (http://example.org#fragment), the grammar will read it as a
         // CODE, so we also accept that for the value here
         if (!value && entity.alias().CODE()) {
