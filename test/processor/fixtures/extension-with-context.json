@@ -1,0 +1,46 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "ExtensionWithContext",
+  "url": "http://hl7.org/fhir/sushi-test/StructureDefinition/ExtensionWithContext",
+  "name": "ExtensionWithContext",
+  "fhirVersion": "4.0.1",
+  "mapping": [
+    {
+      "identity": "rim",
+      "uri": "http://hl7.org/v3",
+      "name": "RIM Mapping"
+    }
+  ],
+  "kind": "complex-type",
+  "abstract": false,
+  "context": [
+    {
+      "expression": "some.fhirpath",
+      "type": "fhirpath"
+    },
+    {
+      "expression": "Observation.value[x]:valueString",
+      "type": "element"
+    },
+    {
+      "expression": "http://hl7.org/fhir/sushi-test/StructureDefinition/MyObservation#Observation.value[x]:valueBoolean",
+      "type": "element"
+    },
+    {
+      "expression": "http://hl7.org/fhir/sushi-test/StructureDefinition/AnotherExtension",
+      "type": "extension"
+    }
+  ],
+  "type": "Extension",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "Extension.url",
+        "path": "Extension.url",
+        "fixedUri": "http://hl7.org/fhir/sushi-test/StructureDefinition/ExtensionWithContext"
+      }
+    ]
+  }
+}

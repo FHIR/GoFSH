@@ -15,6 +15,7 @@ describe('CaretValueRuleExtractor', () => {
   let looseCS: any;
   let looseBSSD: any;
   let looseTPESD: any;
+  let looseExtSD: any;
   let config: fshtypes.Configuration;
   let defs: FHIRDefinitions;
 
@@ -48,6 +49,11 @@ describe('CaretValueRuleExtractor', () => {
         )
         .trim()
     );
+    looseExtSD = JSON.parse(
+      fs
+        .readFileSync(path.join(__dirname, 'fixtures', 'extension-with-context.json'), 'utf-8')
+        .trim()
+    );
   });
 
   beforeEach(() => {
@@ -57,6 +63,15 @@ describe('CaretValueRuleExtractor', () => {
   describe('StructureDefinition', () => {
     it('should not extract any SD caret rules when only keyword-based properties have changed', () => {
       const caretRules = CaretValueRuleExtractor.processStructureDefinition(looseSD, defs, config);
+      expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should not extract any SD caret rules for context on an Extension', () => {
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(
+        looseExtSD,
+        defs,
+        config
+      );
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
     });
 
