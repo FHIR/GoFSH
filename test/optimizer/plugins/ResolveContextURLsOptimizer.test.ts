@@ -64,7 +64,7 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should replace an unquoted context with a resource name and no path when the context value is a URL of a known resource no path', () => {
+    it('should replace an unquoted context with a resource name and no path when the context value is a URL of a known resource with no path', () => {
       const extension = new ExportableExtension('MyExtension');
       extension.contexts = [
         {
@@ -133,7 +133,7 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should not change an unquoted context when the context value is a URL of an unknown resource with a path and the alias option is false', () => {
+    it('should not change an unquoted context when the context value is a URL of an unknown resource with no path and the alias option is false', () => {
       const extension = new ExportableExtension('MyExtension');
       extension.contexts = [
         {
@@ -153,7 +153,7 @@ describe('optimizer', () => {
       expect(myPackage.aliases).toEqual([]);
     });
 
-    it('should not change an unquoted context when the context value is a URL of an unknown resource and the alias option is false', () => {
+    it('should not change an unquoted context when the context value is a URL of an unknown resource with a path and the alias option is false', () => {
       const extension = new ExportableExtension('MyExtension');
       extension.contexts = [
         {
