@@ -24,7 +24,9 @@ import {
   MappingExtractor
 } from '../extractor';
 import { ProcessableElementDefinition, switchQuantityRules, makeNameSushiSafe } from '.';
-import { getAncestorSliceDefinition, logger } from '../utils';
+import { getAncestorSliceDefinition, getPath, logger } from '../utils';
+import { fshifyString } from '../exportable/common';
+import { isUri } from 'valid-url';
 
 export class StructureDefinitionProcessor {
   static process(
@@ -97,6 +99,49 @@ export class StructureDefinitionProcessor {
     }
     if (input.baseDefinition) {
       target.parent = input.baseDefinition;
+    }
+    if (target instanceof ExportableExtension && input.context) {
+      target.contexts = input.context.map(ctx => {
+        if (ctx.type === 'fhirpath') {
+          return {
+            isQuoted: true,
+            value: fshifyString(ctx.expression)
+          };
+        }
+        // element and extension contexts are a little trickier, since they may involve paths.
+        // we'll make a little ElementDefinition to help us out.
+        // if there's a #, or the whole value is a valid URL, wait until later to try to resolve the URL, since it may refer to
+        // another resource being processed.
+        // but either way, we can handle the fhirPath now.
+        if (ctx.expression.indexOf('#') > -1) {
+          const [url, fhirPath] = ctx.expression.split('#');
+          const fakeElement = new fhirtypes.ElementDefinition(fhirPath);
+          const fshPath = getPath(fakeElement);
+          // the fshPath from getPath removes the resource name, which is convenient here
+          return {
+            isQuoted: false,
+            value: `${url}#${fshPath}`
+          };
+        } else if (isUri(ctx.expression)) {
+          return {
+            isQuoted: false,
+            value: ctx.expression
+          };
+        } else {
+          const fakeElement = new fhirtypes.ElementDefinition(ctx.expression);
+          const fshPath = getPath(fakeElement);
+          // the fshPath from getPath removes the resource name, so add the resource name back to the start
+          // it will turn a resource name by itself into the path ".", which we don't need
+          let contextValue = ctx.expression.split('.')[0];
+          if (fshPath !== '.') {
+            contextValue += `.${fshPath}`;
+          }
+          return {
+            isQuoted: false,
+            value: contextValue
+          };
+        }
+      });
     }
   }
 
@@ -230,6 +275,7 @@ export interface ProcessableStructureDefinition {
   kind?: string;
   derivation?: string;
   mapping?: fhirtypes.StructureDefinitionMapping[];
+  context?: fhirtypes.StructureDefinitionContext[];
   differential?: {
     element: any[];
   };

@@ -119,6 +119,12 @@ export class CaretValueRuleExtractor {
       parent = cloneDeep(sd);
     }
 
+    // if this is an Extension, ignore context, since it was covered by a keyword
+    if (sd.derivation === 'constraint' && sd.type === 'Extension') {
+      delete sd.context;
+      delete parent.context;
+    }
+
     // Remove properties that are covered by other extractors or keywords
     RESOURCE_IGNORED_PROPERTIES['StructureDefinition'].forEach(prop => {
       delete sd[prop];

@@ -305,6 +305,32 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingExtension.description).toBe('This is my new Extension. Thank you.');
     });
 
+    it('should get context for an Extension with context', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'extension-with-context.json'), 'utf-8')
+      );
+      const workingExtension = new ExportableExtension(input.name);
+      StructureDefinitionProcessor.extractKeywords(input, workingExtension);
+      expect(workingExtension.contexts).toEqual([
+        {
+          value: 'some.fhirpath',
+          isQuoted: true
+        },
+        {
+          value: 'Observation.valueString',
+          isQuoted: false
+        },
+        {
+          value: 'http://hl7.org/fhir/sushi-test/StructureDefinition/MyObservation#valueBoolean',
+          isQuoted: false
+        },
+        {
+          value: 'http://hl7.org/fhir/sushi-test/StructureDefinition/AnotherExtension',
+          isQuoted: false
+        }
+      ]);
+    });
+
     it('should get keywords for a Resource with simple metadata', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'metadata-resource.json'), 'utf-8')

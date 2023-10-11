@@ -26,7 +26,7 @@ export function optimizeURL(
 
 /**
  * Resolves a URL to a name, if possible; otherwise returns undefined. If the URL resolves to a name,
- * but the name does not resolve back to the same URL, then return udnefined since the name clashes with
+ * but the name does not resolve back to the same URL, then return undefined since the name clashes with
  * a more preferred name. This can happen if a project defines something with the same name as a FHIR
  * definition.
  * @param url - the url to resolve

@@ -15,6 +15,7 @@ import RemoveGeneratedTextRulesOptimizer from './RemoveGeneratedTextRulesOptimiz
 import RemoveImpliedZeroZeroCardRulesOptimize from './RemoveImpliedZeroZeroCardRulesOptimizer';
 import RemovePublisherDerivedDateRulesOptimizer from './RemovePublisherDerivedDateRulesOptimizer';
 import ResolveBindingRuleURLsOptimizer from './ResolveBindingRuleURLsOptimizer';
+import ResolveContextURLsOptimizer from './ResolveContextURLsOptimizer';
 import ResolveInstanceOfURLsOptimizer from './ResolveInstanceOfURLsOptimizer';
 import ResolveOnlyRuleURLsOptimizer from './ResolveOnlyRuleURLsOptimizer';
 import ResolveParentURLsOptimizer from './ResolveParentURLsOptimizer';
@@ -45,6 +46,7 @@ export {
   RemoveImpliedZeroZeroCardRulesOptimize,
   RemovePublisherDerivedDateRulesOptimizer,
   ResolveBindingRuleURLsOptimizer,
+  ResolveContextURLsOptimizer,
   ResolveInstanceOfURLsOptimizer,
   ResolveOnlyRuleURLsOptimizer,
   ResolveParentURLsOptimizer,
