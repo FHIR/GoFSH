@@ -26,13 +26,20 @@ export default {
       const caretPathMap: Map<string, Map<string, number>> = new Map();
       const ruleArr: fshrules.Rule[] = def.rules;
       const parsedPaths = ruleArr.map((rule: fshrules.Rule) => {
-        const parsedPath: { path: fhirtypes.PathPart[]; caretPath?: fhirtypes.PathPart[] } = {
-          path: parseFSHPath(rule.path),
+        const parsedPath: {
+          path: fhirtypes.PathPart[];
+          caretPath?: fhirtypes.PathPart[];
+          codePath?: string;
+        } = {
+          path: utils.parseFSHPath(rule.path),
           caretPath: []
         };
         // If we have a CaretValueRule, we'll need a second round of parsing for the caret path
         if (rule instanceof ExportableCaretValueRule) {
-          parsedPath.caretPath = parseFSHPath(rule.caretPath);
+          parsedPath.caretPath = utils.parseFSHPath(rule.caretPath);
+          if (rule.isCodeCaretRule) {
+            parsedPath.codePath = JSON.stringify(rule.pathArray);
+          }
         }
         return parsedPath;
       });
@@ -44,21 +51,32 @@ export default {
       });
 
       parsedPaths.forEach((parsedRule: any, ruleIndex: number) => {
-        const originalRule = def.rules[ruleIndex];
-        parsedRule.path.forEach((element: fhirtypes.PathPart) => {
-          applySoftIndexing(element, pathMap);
-        });
+        if (parsedRule.codePath == null) {
+          const originalRule = def.rules[ruleIndex];
+          parsedRule.path.forEach((element: fhirtypes.PathPart) => {
+            applySoftIndexing(element, pathMap);
+          });
 
-        parsedRule.caretPath.forEach((element: fhirtypes.PathPart) => {
-          // Caret path indexes should only be resolved in the context of a specific path
-          // Each normal path has a separate map to keep track of the caret path indexes
-          if (!caretPathMap.has(originalRule.path)) {
-            caretPathMap.set(originalRule.path, new Map());
-          }
+          parsedRule.caretPath.forEach((element: fhirtypes.PathPart) => {
+            // Caret path indexes should only be resolved in the context of a specific path
+            // Each normal path has a separate map to keep track of the caret path indexes
+            if (!caretPathMap.has(originalRule.path)) {
+              caretPathMap.set(originalRule.path, new Map());
+            }
 
-          const elementCaretPathMap = caretPathMap.get(originalRule.path);
-          applySoftIndexing(element, elementCaretPathMap);
-        });
+            const elementCaretPathMap = caretPathMap.get(originalRule.path);
+            applySoftIndexing(element, elementCaretPathMap);
+          });
+        } else {
+          parsedRule.caretPath.forEach((element: fhirtypes.PathPart) => {
+            if (!caretPathMap.has(parsedRule.codePath)) {
+              caretPathMap.set(parsedRule.codePath, new Map());
+            }
+
+            const elementCaretPathMap = caretPathMap.get(parsedRule.codePath);
+            applySoftIndexing(element, elementCaretPathMap);
+          });
+        }
       });
 
       removeZeroIndices(parsedPaths);
@@ -86,7 +104,7 @@ function addPrefixes(parsedPath: fhirtypes.PathPart[]) {
 }
 
 /**
- * Converts numeric indeces on a PathPart into soft indexing characters
+ * Converts numeric indices on a PathPart into soft indexing characters
  * @param {PathPart} element - A single element in a rules path
  * @param {Map<string, number} pathMap - A map containing an element's name as the key and that element's updated index as the value
  * @param {Map<string, PathPart[]} singletonArrayElements - A map containing a string unique to each element of type array as the key, and an array of PathParts as the value
@@ -114,51 +132,6 @@ function applySoftIndexing(element: fhirtypes.PathPart, pathMap: Map<string, num
       pathMap.set(mapName, parseInt(currentNumericBracket));
     }
   }
-}
-
-// TODO: remove once sushi has been released with fixes to the parseFSHPath function
-function splitOnPathPeriods(path: string): string[] {
-  return path.split(/\.(?![^\[]*\])/g); // match a period that isn't within square brackets
-}
-
-// TODO: remove once sushi has been released with fixes to the parseFSHPath function
-export function parseFSHPath(fshPath: string): fhirtypes.PathPart[] {
-  const pathParts: fhirtypes.PathPart[] = [];
-  const seenSlices: string[] = [];
-  const indexRegex = /^[0-9]+$/;
-  const splitPath = fshPath === '.' ? [fshPath] : splitOnPathPeriods(fshPath);
-  for (const pathPart of splitPath) {
-    const splitPathPart = pathPart.split('[');
-    if (splitPathPart.length === 1 || pathPart.endsWith('[x]')) {
-      // There are no brackets, or the brackets are for a choice, so just push on the name
-      pathParts.push({ base: pathPart });
-    } else {
-      // We have brackets, let's  save the bracket info
-      let fhirPathBase = splitPathPart[0];
-      // Get the bracket elements and slice off the trailing ']'
-      let brackets = splitPathPart.slice(1).map(s => s.slice(0, -1));
-      // Get rid of any remaining [x] elements in the brackets
-      if (brackets[0] === 'x') {
-        fhirPathBase += '[x]';
-        brackets = brackets.slice(1);
-      }
-      brackets.forEach(bracket => {
-        if (!indexRegex.test(bracket) && !(bracket === '+' || bracket === '=')) {
-          seenSlices.push(bracket);
-        }
-      });
-      if (seenSlices.length > 0) {
-        pathParts.push({
-          base: fhirPathBase,
-          brackets: brackets,
-          slices: [...seenSlices]
-        });
-      } else {
-        pathParts.push({ base: fhirPathBase, brackets: brackets });
-      }
-    }
-  }
-  return pathParts;
 }
 
 // Removes '[0]' and '[=]' indexing from elements with a single value in their array
