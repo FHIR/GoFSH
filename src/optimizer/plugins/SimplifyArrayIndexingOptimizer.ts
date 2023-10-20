@@ -26,20 +26,13 @@ export default {
       const caretPathMap: Map<string, Map<string, number>> = new Map();
       const ruleArr: fshrules.Rule[] = def.rules;
       const parsedPaths = ruleArr.map((rule: fshrules.Rule) => {
-        const parsedPath: {
-          path: fhirtypes.PathPart[];
-          caretPath?: fhirtypes.PathPart[];
-          codePath?: string;
-        } = {
+        const parsedPath: { path: fhirtypes.PathPart[]; caretPath?: fhirtypes.PathPart[] } = {
           path: utils.parseFSHPath(rule.path),
           caretPath: []
         };
         // If we have a CaretValueRule, we'll need a second round of parsing for the caret path
         if (rule instanceof ExportableCaretValueRule) {
           parsedPath.caretPath = utils.parseFSHPath(rule.caretPath);
-          if (rule.isCodeCaretRule) {
-            parsedPath.codePath = JSON.stringify(rule.pathArray);
-          }
         }
         return parsedPath;
       });
@@ -51,32 +44,26 @@ export default {
       });
 
       parsedPaths.forEach((parsedRule: any, ruleIndex: number) => {
-        if (parsedRule.codePath == null) {
-          const originalRule = def.rules[ruleIndex];
-          parsedRule.path.forEach((element: fhirtypes.PathPart) => {
-            applySoftIndexing(element, pathMap);
-          });
+        // First handle the rule path
+        const originalRule = def.rules[ruleIndex];
+        parsedRule.path.forEach((element: fhirtypes.PathPart) => {
+          applySoftIndexing(element, pathMap);
+        });
+        // Then handle the caret rule paths
+        const key =
+          originalRule instanceof ExportableCaretValueRule && originalRule.isCodeCaretRule
+            ? JSON.stringify(originalRule.pathArray)
+            : originalRule.path;
+        parsedRule.caretPath.forEach((element: fhirtypes.PathPart) => {
+          // Caret path indexes should only be resolved in the context of a specific path
+          // Each normal path has a separate map to keep track of the caret path indexes
+          if (!caretPathMap.has(key)) {
+            caretPathMap.set(key, new Map());
+          }
 
-          parsedRule.caretPath.forEach((element: fhirtypes.PathPart) => {
-            // Caret path indexes should only be resolved in the context of a specific path
-            // Each normal path has a separate map to keep track of the caret path indexes
-            if (!caretPathMap.has(originalRule.path)) {
-              caretPathMap.set(originalRule.path, new Map());
-            }
-
-            const elementCaretPathMap = caretPathMap.get(originalRule.path);
-            applySoftIndexing(element, elementCaretPathMap);
-          });
-        } else {
-          parsedRule.caretPath.forEach((element: fhirtypes.PathPart) => {
-            if (!caretPathMap.has(parsedRule.codePath)) {
-              caretPathMap.set(parsedRule.codePath, new Map());
-            }
-
-            const elementCaretPathMap = caretPathMap.get(parsedRule.codePath);
-            applySoftIndexing(element, elementCaretPathMap);
-          });
-        }
+          const elementCaretPathMap = caretPathMap.get(key);
+          applySoftIndexing(element, elementCaretPathMap);
+        });
       });
 
       removeZeroIndices(parsedPaths);
