@@ -243,7 +243,8 @@ export class CaretValueRuleExtractor {
   static processConcept(
     input: fhirtypes.CodeSystemConcept,
     conceptHierarchy: string[],
-    codeSystemName: string,
+    entityName: string,
+    entityType: 'CodeSystem' | 'ValueSet',
     fisher: utils.Fishable
   ): ExportableCaretValueRule[] {
     const caretValueRules: ExportableCaretValueRule[] = [];
@@ -261,7 +262,7 @@ export class CaretValueRuleExtractor {
       caretValueRule.pathArray = conceptHierarchy;
       if (isFSHValueEmpty(caretValueRule.value)) {
         logger.error(
-          `Value in CodeSytem ${codeSystemName} at concept ${conceptHierarchy.join(
+          `Value in ${entityType} ${entityName} at concept ${conceptHierarchy.join(
             '.'
           )} for element ${caretValueRule.caretPath} is empty. No caret value rule will be created.`
         );

@@ -13,8 +13,6 @@ const SUPPORTED_COMPONENT_PATHS = [
   'system',
   'version',
   'concept',
-  'concept.code',
-  'concept.display',
   'filter',
   'filter.property',
   'filter.op',
@@ -46,13 +44,35 @@ export class ValueSetProcessor {
       ...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType, config)
     );
     if (input.compose) {
-      input.compose.include?.forEach((vsComponent: any) => {
+      input.compose.include?.forEach((vsComponent: fhirtypes.ValueSetComposeIncludeOrExclude) => {
         newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, true));
         newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, true));
+        vsComponent.concept?.forEach(includedConcept => {
+          newRules.push(
+            ...CaretValueRuleExtractor.processConcept(
+              includedConcept,
+              [includedConcept.code],
+              target.name,
+              'ValueSet',
+              fisher
+            )
+          );
+        });
       });
-      input.compose.exclude?.forEach((vsComponent: any) => {
+      input.compose.exclude?.forEach((vsComponent: fhirtypes.ValueSetComposeIncludeOrExclude) => {
         newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, false));
         newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, false));
+        vsComponent.concept?.forEach(excludedConcept => {
+          newRules.push(
+            ...CaretValueRuleExtractor.processConcept(
+              excludedConcept,
+              [excludedConcept.code],
+              target.name,
+              'ValueSet',
+              fisher
+            )
+          );
+        });
       });
     }
     target.rules = compact(newRules);
@@ -100,6 +120,8 @@ export class ValueSetProcessor {
         .filter(k => isNaN(parseInt(k)))
         .join('.');
     });
+    // any path that starts with "concept." is okay, since those can use code caret rules
+    flatPaths = flatPaths.filter(p => !p.startsWith('concept.'));
     // Check if there are any paths that are not a supported path
     return difference(flatPaths, SUPPORTED_COMPONENT_PATHS).length === 0;
   }

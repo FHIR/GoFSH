@@ -4,11 +4,19 @@
   "id": "unsupported.valueset",
   "url": "http://example.org/tests/ValueSet/unsupported.valueset",
   "title": "Unsupported ValueSet",
-  "description": "This value set is not supported by ValueSet FSH syntax because it has a concept designation.",
+  "description": "This value set is not supported by ValueSet FSH syntax because it has a version extension.",
   "compose": {
     "include": [
       {
         "system": "http://example.org/zoo",
+        "_version": {
+          "extension": [
+            {
+              "url": "http://example.org/SomeExtension",
+              "valueString": "version things"
+            }
+          ]
+        },
         "concept": [
           {
             "code": "BEAR",

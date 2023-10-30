@@ -56,6 +56,7 @@ export class CodeSystemProcessor {
         concept,
         [...newConceptRule.hierarchy, concept.code],
         codeSystemName,
+        'CodeSystem',
         fisher
       )
     );
