@@ -28,6 +28,11 @@ import { getAncestorSliceDefinition, getPath, logger } from '../utils';
 import { fshifyString } from '../exportable/common';
 import { isUri } from 'valid-url';
 
+export const TYPE_CHARACTERISTICS_EXTENSION =
+  'http://hl7.org/fhir/StructureDefinition/structuredefinition-type-characteristics';
+export const LOGICAL_TARGET_EXTENSION =
+  'http://hl7.org/fhir/tools/StructureDefinition/logical-target';
+
 export class StructureDefinitionProcessor {
   static process(
     input: any,
@@ -142,6 +147,21 @@ export class StructureDefinitionProcessor {
           };
         }
       });
+    }
+    if (target instanceof ExportableLogical && input.extension) {
+      // most characteristics use TYPE_CHARACTERISTICS_EXTENSION,
+      // but there may also be LOGICAL_TARGET_EXTENSION with valueBoolean true for the can-be-target characteristic.
+      const characteristics: string[] = [];
+      input.extension.forEach(ext => {
+        if (ext.url === TYPE_CHARACTERISTICS_EXTENSION && ext.valueCode != null) {
+          characteristics.push(ext.valueCode);
+        } else if (ext.url === LOGICAL_TARGET_EXTENSION && ext.valueBoolean === true) {
+          characteristics.push('can-be-target');
+        }
+      });
+      if (characteristics.length) {
+        target.characteristics = characteristics;
+      }
     }
   }
 
@@ -276,6 +296,7 @@ export interface ProcessableStructureDefinition {
   derivation?: string;
   mapping?: fhirtypes.StructureDefinitionMapping[];
   context?: fhirtypes.StructureDefinitionContext[];
+  extension?: fhirtypes.Extension[];
   differential?: {
     element: any[];
   };

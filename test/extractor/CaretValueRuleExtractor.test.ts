@@ -16,6 +16,7 @@ describe('CaretValueRuleExtractor', () => {
   let looseBSSD: any;
   let looseTPESD: any;
   let looseExtSD: any;
+  let looseLogicalSD: any;
   let config: fshtypes.Configuration;
   let defs: FHIRDefinitions;
 
@@ -54,6 +55,14 @@ describe('CaretValueRuleExtractor', () => {
         .readFileSync(path.join(__dirname, 'fixtures', 'extension-with-context.json'), 'utf-8')
         .trim()
     );
+    looseLogicalSD = JSON.parse(
+      fs
+        .readFileSync(
+          path.join(__dirname, 'fixtures', 'logical-with-characteristics.json'),
+          'utf-8'
+        )
+        .trim()
+    );
   });
 
   beforeEach(() => {
@@ -73,6 +82,21 @@ describe('CaretValueRuleExtractor', () => {
         config
       );
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should not extract any SD caret rules for characteristics on a Logical', () => {
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(
+        looseLogicalSD,
+        defs,
+        config
+      );
+      // the rule on "kind" may be removed later by an optimizer,
+      // but there should not be any "extension" rules.
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          caretPath: expect.stringMatching(/^extension/)
+        })
+      );
     });
 
     it('should extract a url-setting caret rules when a non-standard url is included on a StructureDefinition', () => {

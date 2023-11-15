@@ -1,6 +1,11 @@
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { cloneDeep, isEqual, differenceWith, toPairs } from 'lodash';
-import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../processor';
+import {
+  LOGICAL_TARGET_EXTENSION,
+  ProcessableElementDefinition,
+  ProcessableStructureDefinition,
+  TYPE_CHARACTERISTICS_EXTENSION
+} from '../processor';
 import { ExportableCaretValueRule } from '../exportable';
 import { getFSHValue, getPath, getPathValuePairs, logger, isFSHValueEmpty } from '../utils';
 
@@ -123,6 +128,16 @@ export class CaretValueRuleExtractor {
     if (sd.derivation === 'constraint' && sd.type === 'Extension') {
       delete sd.context;
       delete parent.context;
+    }
+
+    // if this is a Logical, ignore characteristic-setting extensions, since those are covered by a keyword
+    if (sd.kind === 'logical' && sd.derivation === 'specialization') {
+      sd.extension = sd.extension?.filter((ext: fhirtypes.Extension) => {
+        return !(
+          ext.url === TYPE_CHARACTERISTICS_EXTENSION ||
+          (ext.url === LOGICAL_TARGET_EXTENSION && ext.valueBoolean === true)
+        );
+      });
     }
 
     // Remove properties that are covered by other extractors or keywords

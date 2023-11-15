@@ -354,6 +354,26 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingLogical.title).toBe('My Logical Model');
       expect(workingLogical.description).toBe('This is my fancy new logical model.');
     });
+
+    it('should get characteristics for a Logical with characteristics', () => {
+      const input = JSON.parse(
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'logical-with-characteristics.json'),
+          'utf-8'
+        )
+      );
+      const workingLogical = new ExportableLogical(input.name);
+      StructureDefinitionProcessor.extractKeywords(input, workingLogical);
+
+      expect(workingLogical.id).toBe('logical-with-characteristics');
+      expect(workingLogical.title).toBe('My Logical Model with Characteristics');
+      expect(workingLogical.description).toBe(
+        'This is my fancy new logical model that has several characteristics.'
+      );
+      expect(workingLogical.characteristics).toContain('can-be-target');
+      expect(workingLogical.characteristics).toContain('has-units');
+      expect(workingLogical.characteristics).toContain('has-length');
+    });
   });
 
   describe('#extractRules', () => {
