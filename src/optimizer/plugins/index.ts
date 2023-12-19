@@ -21,6 +21,7 @@ import ResolveOnlyRuleURLsOptimizer from './ResolveOnlyRuleURLsOptimizer';
 import ResolveParentURLsOptimizer from './ResolveParentURLsOptimizer';
 import ResolveReferenceAssignmentsOptimizer from './ResolveReferenceAssignmentsOptimizer';
 import ResolveValueRuleURLsOptimizer from './ResolveValueRuleURLsOptimizer';
+import ResolveValueSetCaretRuleURLsOptimizer from './ResolveValueSetCaretRuleURLsOptimizer';
 import ResolveValueSetComponentRuleURLsOptimizer from './ResolveValueSetComponentRuleURLsOptimizer';
 import SeparateConceptsWithCaretRulesOptimizer from './SeparateConceptsWithCaretRulesOptimizer';
 import SimplifyArrayIndexingOptimizer from './SimplifyArrayIndexingOptimizer';
@@ -53,6 +54,7 @@ export {
   ResolveParentURLsOptimizer,
   ResolveReferenceAssignmentsOptimizer,
   ResolveValueRuleURLsOptimizer,
+  ResolveValueSetCaretRuleURLsOptimizer,
   ResolveValueSetComponentRuleURLsOptimizer,
   SeparateConceptsWithCaretRulesOptimizer,
   SimplifyArrayIndexingOptimizer,

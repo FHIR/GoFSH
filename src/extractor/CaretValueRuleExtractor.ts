@@ -259,7 +259,7 @@ export class CaretValueRuleExtractor {
       caretValueRule.caretPath = key;
       caretValueRule.value = getFSHValue(i, flatArray, 'Concept', fisher);
       caretValueRule.isCodeCaretRule = true;
-      caretValueRule.pathArray = pathArray;
+      caretValueRule.pathArray = [...pathArray];
       if (isFSHValueEmpty(caretValueRule.value)) {
         logger.error(
           `Value in ${entityType} ${entityName} at concept ${pathArray.join('.')} for element ${
