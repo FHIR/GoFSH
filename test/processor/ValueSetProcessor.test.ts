@@ -255,28 +255,28 @@ describe('ValueSetProcessor', () => {
 
       const expectedIncludeDesignationValue = new ExportableCaretValueRule('');
       expectedIncludeDesignationValue.isCodeCaretRule = true;
-      expectedIncludeDesignationValue.pathArray = ['BEAR'];
+      expectedIncludeDesignationValue.pathArray = ['http://example.org/zoo#BEAR'];
       expectedIncludeDesignationValue.caretPath = 'designation.value';
       expectedIncludeDesignationValue.value = 'ourse';
       expect(rules).toContainEqual<ExportableCaretValueRule>(expectedIncludeDesignationValue);
 
       const expectedIncludeDesignationLanguage = new ExportableCaretValueRule('');
       expectedIncludeDesignationLanguage.isCodeCaretRule = true;
-      expectedIncludeDesignationLanguage.pathArray = ['BEAR'];
+      expectedIncludeDesignationLanguage.pathArray = ['http://example.org/zoo#BEAR'];
       expectedIncludeDesignationLanguage.caretPath = 'designation.language';
       expectedIncludeDesignationLanguage.value = new FshCode('fr');
       expect(rules).toContainEqual<ExportableCaretValueRule>(expectedIncludeDesignationLanguage);
 
       const expectedExcludeDesignationValue = new ExportableCaretValueRule('');
       expectedExcludeDesignationValue.isCodeCaretRule = true;
-      expectedExcludeDesignationValue.pathArray = ['CAT'];
+      expectedExcludeDesignationValue.pathArray = ['http://example.org/zoo#CAT'];
       expectedExcludeDesignationValue.caretPath = 'designation.value';
       expectedExcludeDesignationValue.value = 'chatte';
       expect(rules).toContainEqual<ExportableCaretValueRule>(expectedExcludeDesignationValue);
 
       const expectedExcludeDesignationLanguage = new ExportableCaretValueRule('');
       expectedExcludeDesignationLanguage.isCodeCaretRule = true;
-      expectedExcludeDesignationLanguage.pathArray = ['CAT'];
+      expectedExcludeDesignationLanguage.pathArray = ['http://example.org/zoo#CAT'];
       expectedExcludeDesignationLanguage.caretPath = 'designation.language';
       expectedExcludeDesignationLanguage.value = new FshCode('fr');
       expect(rules).toContainEqual<ExportableCaretValueRule>(expectedExcludeDesignationLanguage);
@@ -296,7 +296,7 @@ describe('ValueSetProcessor', () => {
       expect(rules).not.toContainEqual(expect.objectContaining({ pathArray: ['BEAR'] }));
 
       expect(loggerSpy.getLastMessage('error')).toEqual(
-        'Value in ValueSet ComposedValueSet at concept BEAR for element designation is empty. No caret value rule will be created.'
+        'Value in ValueSet ComposedValueSet at concept http://example.org/zoo#BEAR for element designation is empty. No caret value rule will be created.'
       );
     });
   });

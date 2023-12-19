@@ -48,30 +48,28 @@ export class ValueSetProcessor {
         newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, true));
         newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, true));
         vsComponent.concept?.forEach(includedConcept => {
-          newRules.push(
-            ...CaretValueRuleExtractor.processConcept(
-              includedConcept,
-              [includedConcept.code],
-              target.name,
-              'ValueSet',
-              fisher
-            )
+          const conceptCaretRules = CaretValueRuleExtractor.processConcept(
+            includedConcept,
+            [`${vsComponent.system ?? ''}#${includedConcept.code}`],
+            target.name,
+            'ValueSet',
+            fisher
           );
+          newRules.push(...conceptCaretRules);
         });
       });
       input.compose.exclude?.forEach((vsComponent: fhirtypes.ValueSetComposeIncludeOrExclude) => {
         newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, false));
         newRules.push(ValueSetConceptComponentRuleExtractor.process(vsComponent, false));
         vsComponent.concept?.forEach(excludedConcept => {
-          newRules.push(
-            ...CaretValueRuleExtractor.processConcept(
-              excludedConcept,
-              [excludedConcept.code],
-              target.name,
-              'ValueSet',
-              fisher
-            )
+          const conceptCaretRules = CaretValueRuleExtractor.processConcept(
+            excludedConcept,
+            [`${vsComponent.system ?? ''}#${excludedConcept.code}`],
+            target.name,
+            'ValueSet',
+            fisher
           );
+          newRules.push(...conceptCaretRules);
         });
       });
     }

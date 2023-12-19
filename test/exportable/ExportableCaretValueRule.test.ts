@@ -51,6 +51,31 @@ describe('ExportableCaretValueRule', () => {
     expect(rule.toFSH()).toBe('* . ^short = "Another important summary."');
   });
 
+  it('should export a code caret rule with a code path', () => {
+    // this type of rule appears on CodeSystems
+    const rule = new ExportableCaretValueRule('');
+    rule.isCodeCaretRule = true;
+    rule.caretPath = 'designation.value';
+    rule.pathArray = ['#bear', '#brown bear'];
+    rule.value = 'Brown Bear';
+
+    expect(rule.toFSH()).toBe('* #bear #"brown bear" ^designation.value = "Brown Bear"');
+  });
+
+  it('should export a code caret rule with a code and system path', () => {
+    // this type of rule appears on ValueSets
+    const rule = new ExportableCaretValueRule('');
+    rule.isCodeCaretRule = true;
+    rule.caretPath = 'designation.value';
+    rule.pathArray = ['http://example.org/zoo#brown bear'];
+    // rule.fromSystem = 'http://example.org/zoo';
+    rule.value = 'Brown Bear';
+
+    expect(rule.toFSH()).toBe(
+      '* http://example.org/zoo#"brown bear" ^designation.value = "Brown Bear"'
+    );
+  });
+
   it('should export a caret rule assigning a boolean', () => {
     const rule = new ExportableCaretValueRule('');
     rule.caretPath = 'abstract';
