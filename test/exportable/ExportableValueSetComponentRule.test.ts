@@ -271,31 +271,6 @@ describe('ExportableValueSetFilterComponentRule', () => {
     );
   });
 
-  // it('should format a long ValueSetConceptComponentRule to take up multiple lines', () => {
-  //   const rule = new ExportableValueSetConceptComponentRule(true);
-  //   rule.concepts = [
-  //     new FshCode('cookies', undefined, 'Cookies'),
-  //     new FshCode('candy', undefined, 'Candy'),
-  //     new FshCode('chips', undefined, 'Chips'),
-  //     new FshCode('cakes', undefined, 'Cakes'),
-  //     new FshCode('verylargecakes', undefined, 'Very Large Cakes')
-  //   ];
-  //   rule.from.system = 'http://fhir.food-pyramid.org/FoodPyramidGuide/CodeSystems/FoodGroupsCS';
-  //   rule.from.valueSets = ['http://fhir.food-pyramid.org/FoodPyramidGuide/ValueSets/DeliciousVS'];
-
-  //   const result = rule.toFSH();
-  //   const expectedResult = [
-  //     '* include #cookies "Cookies" and',
-  //     '    #candy "Candy" and',
-  //     '    #chips "Chips" and',
-  //     '    #cakes "Cakes" and',
-  //     '    #verylargecakes "Very Large Cakes"',
-  //     '    from system http://fhir.food-pyramid.org/FoodPyramidGuide/CodeSystems/FoodGroupsCS and',
-  //     '    valueset http://fhir.food-pyramid.org/FoodPyramidGuide/ValueSets/DeliciousVS'
-  //   ].join(EOL);
-  //   expect(result).toEqual(expectedResult);
-  // });
-
   it('should format a long ValueSetFilterComponentRule to take up multiple lines', () => {
     const rule = new ExportableValueSetFilterComponentRule(false);
     rule.from.system = 'http://fhir.example.org/myImplementationGuide/CodeSystem/AppleCS';

@@ -21,8 +21,11 @@ describe('optimizer', () => {
       const zooConcepts = new ExportableValueSetConceptComponentRule(true);
       zooConcepts.from.system = 'http://example.org/zoo';
       zooConcepts.concepts = [
+        new fshtypes.FshCode('tiger', 'http://example.org/zoo'),
         new fshtypes.FshCode('bear', 'http://example.org/zoo'),
-        new fshtypes.FshCode('pelican', 'http://example.org/zoo')
+        new fshtypes.FshCode('tarantula', 'http://example.org/zoo'),
+        new fshtypes.FshCode('pelican', 'http://example.org/zoo'),
+        new fshtypes.FshCode('hippo', 'http://example.org/zoo')
       ];
 
       const bearDesignationValue = new ExportableCaretValueRule('');
@@ -61,21 +64,38 @@ describe('optimizer', () => {
       myPackage.add(valueSet);
       optimizer.optimize(myPackage);
 
+      const expectedTigerConcept = new ExportableValueSetConceptComponentRule(true);
+      expectedTigerConcept.from.system = 'http://example.org/zoo';
+      expectedTigerConcept.concepts = [new fshtypes.FshCode('tiger', 'http://example.org/zoo')];
+
       const expectedBearConcept = new ExportableValueSetConceptComponentRule(true);
       expectedBearConcept.from.system = 'http://example.org/zoo';
       expectedBearConcept.concepts = [new fshtypes.FshCode('bear', 'http://example.org/zoo')];
+
+      const expectedTarantulaConcept = new ExportableValueSetConceptComponentRule(true);
+      expectedTarantulaConcept.from.system = 'http://example.org/zoo';
+      expectedTarantulaConcept.concepts = [
+        new fshtypes.FshCode('tarantula', 'http://example.org/zoo')
+      ];
 
       const expectedPelicanConcept = new ExportableValueSetConceptComponentRule(true);
       expectedPelicanConcept.from.system = 'http://example.org/zoo';
       expectedPelicanConcept.concepts = [new fshtypes.FshCode('pelican', 'http://example.org/zoo')];
 
+      const expectedHippoConcept = new ExportableValueSetConceptComponentRule(true);
+      expectedHippoConcept.from.system = 'http://example.org/zoo';
+      expectedHippoConcept.concepts = [new fshtypes.FshCode('hippo', 'http://example.org/zoo')];
+
       expect(valueSet.rules).toEqual([
+        expectedTigerConcept,
         expectedBearConcept,
         bearDesignationValue,
         bearDesignationLanguage,
+        expectedTarantulaConcept,
         expectedPelicanConcept,
         pelicanDesignationValue,
-        pelicanDesignationLanguage
+        pelicanDesignationLanguage,
+        expectedHippoConcept
       ]);
     });
   });
