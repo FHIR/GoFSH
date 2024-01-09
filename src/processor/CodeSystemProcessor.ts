@@ -54,8 +54,9 @@ export class CodeSystemProcessor {
       newConceptRule,
       ...CaretValueRuleExtractor.processConcept(
         concept,
-        [...newConceptRule.hierarchy, concept.code],
+        [...newConceptRule.hierarchy, concept.code].map(code => `#${code}`),
         codeSystemName,
+        'CodeSystem',
         fisher
       )
     );

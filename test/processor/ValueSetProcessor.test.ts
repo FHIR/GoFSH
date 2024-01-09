@@ -66,7 +66,7 @@ describe('ValueSetProcessor', () => {
       );
     });
 
-    it('should not convert a ValueSet with an included concept designation', () => {
+    it('should convert a ValueSet with an included concept designation', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
@@ -74,10 +74,10 @@ describe('ValueSetProcessor', () => {
         value: 'ourse'
       };
       const result = ValueSetProcessor.process(input, defs, config);
-      expect(result).toBeUndefined();
+      expect(result).toBeDefined();
     });
 
-    it('should not convert a ValueSet with an excluded concept designation', () => {
+    it('should convert a ValueSet with an excluded concept designation', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
@@ -85,7 +85,7 @@ describe('ValueSetProcessor', () => {
         value: 'chatte'
       };
       const result = ValueSetProcessor.process(input, defs, config);
-      expect(result).toBeUndefined();
+      expect(result).toBeDefined();
     });
 
     it('should not convert a ValueSet with a compose.include id', () => {
@@ -234,6 +234,70 @@ describe('ValueSetProcessor', () => {
       experimentalRule.value = true;
       expect(targetValueSet.rules).toHaveLength(4);
       expect(targetValueSet.rules).toContainEqual<ExportableCaretValueRule>(experimentalRule);
+    });
+
+    it('should add concept caret rules to a ValueSet', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
+      );
+      // add some designations
+      input.compose.include[0].concept[0].designation = {
+        value: 'ourse',
+        language: 'fr'
+      };
+      input.compose.exclude[0].concept[0].designation = {
+        value: 'chatte',
+        language: 'fr'
+      };
+      const workingValueSet = new ExportableValueSet('ComposedValueSet');
+      ValueSetProcessor.extractRules(input, workingValueSet, defs, config);
+      const rules = workingValueSet.rules;
+
+      const expectedIncludeDesignationValue = new ExportableCaretValueRule('');
+      expectedIncludeDesignationValue.isCodeCaretRule = true;
+      expectedIncludeDesignationValue.pathArray = ['http://example.org/zoo#BEAR'];
+      expectedIncludeDesignationValue.caretPath = 'designation.value';
+      expectedIncludeDesignationValue.value = 'ourse';
+      expect(rules).toContainEqual<ExportableCaretValueRule>(expectedIncludeDesignationValue);
+
+      const expectedIncludeDesignationLanguage = new ExportableCaretValueRule('');
+      expectedIncludeDesignationLanguage.isCodeCaretRule = true;
+      expectedIncludeDesignationLanguage.pathArray = ['http://example.org/zoo#BEAR'];
+      expectedIncludeDesignationLanguage.caretPath = 'designation.language';
+      expectedIncludeDesignationLanguage.value = new FshCode('fr');
+      expect(rules).toContainEqual<ExportableCaretValueRule>(expectedIncludeDesignationLanguage);
+
+      const expectedExcludeDesignationValue = new ExportableCaretValueRule('');
+      expectedExcludeDesignationValue.isCodeCaretRule = true;
+      expectedExcludeDesignationValue.pathArray = ['http://example.org/zoo#CAT'];
+      expectedExcludeDesignationValue.caretPath = 'designation.value';
+      expectedExcludeDesignationValue.value = 'chatte';
+      expect(rules).toContainEqual<ExportableCaretValueRule>(expectedExcludeDesignationValue);
+
+      const expectedExcludeDesignationLanguage = new ExportableCaretValueRule('');
+      expectedExcludeDesignationLanguage.isCodeCaretRule = true;
+      expectedExcludeDesignationLanguage.pathArray = ['http://example.org/zoo#CAT'];
+      expectedExcludeDesignationLanguage.caretPath = 'designation.language';
+      expectedExcludeDesignationLanguage.value = new FshCode('fr');
+      expect(rules).toContainEqual<ExportableCaretValueRule>(expectedExcludeDesignationLanguage);
+    });
+
+    it('should log an error and not add a concept caret rule when the rule value is missing', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
+      );
+      // add an empty designation
+      input.compose.include[0].concept[0].designation = {};
+
+      const workingValueSet = new ExportableValueSet('ComposedValueSet');
+      ValueSetProcessor.extractRules(input, workingValueSet, defs, config);
+      const rules = workingValueSet.rules;
+
+      expect(rules).not.toContainEqual(expect.objectContaining({ pathArray: ['BEAR'] }));
+
+      expect(loggerSpy.getLastMessage('error')).toEqual(
+        'Value in ValueSet ComposedValueSet at concept http://example.org/zoo#BEAR for element designation is empty. No caret value rule will be created.'
+      );
     });
   });
 });

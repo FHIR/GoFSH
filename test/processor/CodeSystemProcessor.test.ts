@@ -89,13 +89,13 @@ describe('CodeSystemProcessor', () => {
       const caretRule1 = new ExportableCaretValueRule('');
       caretRule1.caretPath = 'designation[0].language';
       caretRule1.isCodeCaretRule = true;
-      caretRule1.pathArray = ['dangerous-dinner'];
+      caretRule1.pathArray = ['#dangerous-dinner'];
       caretRule1.value = new FshCode('fr');
 
       const caretRule2 = new ExportableCaretValueRule('');
       caretRule2.caretPath = 'designation[0].value';
       caretRule2.isCodeCaretRule = true;
-      caretRule2.pathArray = ['dangerous-dinner'];
+      caretRule2.pathArray = ['#dangerous-dinner'];
       caretRule2.value = 'diner-dangereux';
 
       expect(result).toBeInstanceOf(ExportableCodeSystem);
@@ -114,13 +114,13 @@ describe('CodeSystemProcessor', () => {
       const caretRule1 = new ExportableCaretValueRule('');
       caretRule1.caretPath = 'property[0].code';
       caretRule1.isCodeCaretRule = true;
-      caretRule1.pathArray = ['breakfast'];
+      caretRule1.pathArray = ['#breakfast'];
       caretRule1.value = new FshCode('healthy');
 
       const caretRule2 = new ExportableCaretValueRule('');
       caretRule2.caretPath = 'property[0].valueCode';
       caretRule2.isCodeCaretRule = true;
-      caretRule2.pathArray = ['breakfast'];
+      caretRule2.pathArray = ['#breakfast'];
       caretRule2.value = new FshCode('sometimes');
 
       expect(result).toBeInstanceOf(ExportableCodeSystem);
