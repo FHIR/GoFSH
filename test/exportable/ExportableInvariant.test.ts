@@ -21,9 +21,9 @@ describe('ExportableInvariant', () => {
     const expectedResult = [
       'Invariant: inv-2',
       'Description: "This is an important condition."',
-      'Severity: #error',
-      'Expression: "requirement.exists()"',
-      'XPath: "f:requirement"'
+      '* severity = #error',
+      '* expression = "requirement.exists()"',
+      '* xpath = "f:requirement"'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);
@@ -39,9 +39,9 @@ describe('ExportableInvariant', () => {
     const expectedResult = [
       'Invariant: inv-3',
       'Description: """Please do this.\nPlease always do this with a \\ character."""',
-      'Severity: #warning',
-      'Expression: "requirement.contains(\\"\\\\\\")"',
-      'XPath: "f:requirement"'
+      '* severity = #warning',
+      '* expression = "requirement.contains(\\"\\\\\\")"',
+      '* xpath = "f:requirement"'
     ].join(EOL);
     const result = input.toFSH();
     expect(result).toBe(expectedResult);

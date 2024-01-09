@@ -10,7 +10,7 @@ import {
 
 export default {
   name: 'resolve_value_set_component_rule_urls',
-  description: 'Replace URLs in value set rules with their names or aliases',
+  description: 'Replace URLs in value set component rules with their names or aliases',
 
   optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
     pkg.valueSets.forEach(vs => {

@@ -63,7 +63,7 @@ describe('ExportableConceptRule', () => {
     rule.display = 'bar';
     rule.definition = 'baz';
 
-    const expectedResult = '* #"foo\twith\ta\ttab" "bar" "baz"';
+    const expectedResult = '* #"foo\\twith\\ta\\ttab" "bar" "baz"';
     const result = rule.toFSH();
     expect(result).toBe(expectedResult);
   });

@@ -194,7 +194,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should alias the filter rule system url when it is same as local code system name when alias is true', () => {
+    it('should alias the filter rule valueset url when it is same as local code system name when alias is true', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
@@ -215,7 +215,7 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should alias the filter rule system url when it is same as local code system name when alias is undefined', () => {
+    it('should alias the filter rule valueset url when it is same as local code system name when alias is undefined', () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };

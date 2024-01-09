@@ -667,6 +667,7 @@ describe('CaretValueRuleExtractor', () => {
         testConcept,
         ['testConcept'],
         'testCS',
+        'CodeSystem',
         defs
       );
       expect(caretRules).toContainEqual(
@@ -707,6 +708,7 @@ describe('CaretValueRuleExtractor', () => {
         testConcept,
         ['testConcept'],
         'testCS',
+        'CodeSystem',
         defs
       );
 
@@ -717,7 +719,7 @@ describe('CaretValueRuleExtractor', () => {
         })
       );
       expect(loggerSpy.getLastMessage('error')).toMatch(
-        'Value in CodeSytem testCS at concept testConcept for element property[0] is empty. No caret value rule will be created.'
+        'Value in CodeSystem testCS at concept testConcept for element property[0] is empty. No caret value rule will be created.'
       );
     });
   });
