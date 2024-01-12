@@ -2,14 +2,18 @@ import path from 'path';
 import fs from 'fs-extra';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 import { InvariantExtractor } from '../../src/extractor';
-import { ExportableInvariant } from '../../src/exportable';
+import { ExportableAssignmentRule, ExportableInvariant } from '../../src/exportable';
 import { fshtypes } from 'fsh-sushi';
+import { FHIRDefinitions } from '../../src/utils';
+import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 const { FshCode } = fshtypes;
 
 describe('InvariantExtractor', () => {
+  let defs: FHIRDefinitions;
   let looseSD: ProcessableStructureDefinition;
 
   beforeAll(() => {
+    defs = loadTestDefinitions();
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'obeys-profile.json'), 'utf-8').trim()
     );
@@ -17,7 +21,7 @@ describe('InvariantExtractor', () => {
 
   it('should extract invariants from an element with one constraint', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
-    const invariants = InvariantExtractor.process(element, looseSD, []);
+    const invariants = InvariantExtractor.process(element, looseSD, [], defs);
     const rootInvariant = new ExportableInvariant('zig-1');
     rootInvariant.severity = new FshCode('warning');
     rootInvariant.description = 'This is a constraint on the root element.';
@@ -32,7 +36,7 @@ describe('InvariantExtractor', () => {
 
   it('should extract invariants from an element with multiple constraints', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
-    const invariants = InvariantExtractor.process(element, looseSD, []);
+    const invariants = InvariantExtractor.process(element, looseSD, [], defs);
     const expressionInvariant = new ExportableInvariant('zig-2');
     expressionInvariant.severity = new FshCode('error');
     expressionInvariant.description = 'This constraint has an expression.';
@@ -46,11 +50,23 @@ describe('InvariantExtractor', () => {
     bothInvariant.description = 'This constraint has an expression and an xpath.';
     bothInvariant.expression = 'category.double.exists()';
     bothInvariant.xpath = 'f:category/double';
+    const complexInvariant = new ExportableInvariant('zig-5');
+    complexInvariant.severity = new FshCode('warning');
+    complexInvariant.description = 'This constraint has some extra rules.';
+    complexInvariant.expression = 'category.triple.exists()';
+    const invExtensionUrl = new ExportableAssignmentRule('human.extension[0].url');
+    invExtensionUrl.value = 'http://example.org/SomeExtension';
+    const invExtensionValue = new ExportableAssignmentRule('human.extension[0].valueString');
+    invExtensionValue.value = 'ExtensionValue';
+    const invRequirements = new ExportableAssignmentRule('requirements');
+    invRequirements.value = 'This is an additional requirement';
+    complexInvariant.rules.push(invExtensionUrl, invExtensionValue, invRequirements);
 
-    expect(invariants).toHaveLength(3);
+    expect(invariants).toHaveLength(4);
     expect(invariants).toContainEqual(expressionInvariant);
     expect(invariants).toContainEqual(xpathInvariant);
     expect(invariants).toContainEqual(bothInvariant);
+    expect(invariants).toContainEqual(complexInvariant);
     expect(element.processedPaths).toContain('constraint[0].key');
     expect(element.processedPaths).toContain('constraint[0].severity');
     expect(element.processedPaths).toContain('constraint[0].human');
@@ -67,11 +83,18 @@ describe('InvariantExtractor', () => {
     expect(element.processedPaths).toContain('constraint[2].expression');
     expect(element.processedPaths).toContain('constraint[2].xpath');
     expect(element.processedPaths).toContain('constraint[2].source');
+    expect(element.processedPaths).toContain('constraint[3].key');
+    expect(element.processedPaths).toContain('constraint[3].severity');
+    expect(element.processedPaths).toContain('constraint[3].human');
+    expect(element.processedPaths).toContain('constraint[3].human.extension[0].url');
+    expect(element.processedPaths).toContain('constraint[3].human.extension[0].valueString');
+    expect(element.processedPaths).toContain('constraint[3].expression');
+    expect(element.processedPaths).toContain('constraint[3].requirements');
   });
 
   it('should extract no invariants from an element with no constraints', () => {
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
-    const invariants = InvariantExtractor.process(element, looseSD, []);
+    const invariants = InvariantExtractor.process(element, looseSD, [], defs);
     expect(invariants).toHaveLength(0);
     expect(element.processedPaths).toHaveLength(0);
   });
@@ -81,7 +104,7 @@ describe('InvariantExtractor', () => {
     existingInvariant.severity = new FshCode('warning');
     existingInvariant.description = 'This is a constraint on the root element.';
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
-    const invariants = InvariantExtractor.process(element, looseSD, [existingInvariant]);
+    const invariants = InvariantExtractor.process(element, looseSD, [existingInvariant], defs);
     expect(invariants).toHaveLength(0);
     expect(element.processedPaths).toHaveLength(4);
     expect(element.processedPaths).toContainEqual('constraint[0].key');
@@ -93,7 +116,7 @@ describe('InvariantExtractor', () => {
   it('should not extract an invariant nor process paths if a non-equal invariant with a matching key already exists', () => {
     const existingInvariant = new ExportableInvariant('zig-1');
     const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
-    const invariants = InvariantExtractor.process(element, looseSD, [existingInvariant]);
+    const invariants = InvariantExtractor.process(element, looseSD, [existingInvariant], defs);
     expect(invariants).toHaveLength(0);
     expect(element.processedPaths).toHaveLength(0);
   });

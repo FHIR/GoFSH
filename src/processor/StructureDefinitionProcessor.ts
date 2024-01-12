@@ -78,7 +78,8 @@ export class StructureDefinitionProcessor {
       const invariants = StructureDefinitionProcessor.extractInvariants(
         input,
         elements,
-        existingInvariants
+        existingInvariants,
+        fisher
       );
       const mappings = StructureDefinitionProcessor.extractMappings(elements, input, fisher);
       StructureDefinitionProcessor.extractRules(input, elements, sd, fisher, config);
@@ -259,12 +260,18 @@ export class StructureDefinitionProcessor {
   static extractInvariants(
     input: ProcessableStructureDefinition,
     elements: ProcessableElementDefinition[],
-    existingInvariants: ExportableInvariant[]
+    existingInvariants: ExportableInvariant[],
+    fisher: utils.Fishable
   ): ExportableInvariant[] {
     const invariants: ExportableInvariant[] = [];
     elements.forEach(element => {
       invariants.push(
-        ...InvariantExtractor.process(element, input, [...existingInvariants, ...invariants])
+        ...InvariantExtractor.process(
+          element,
+          input,
+          [...existingInvariants, ...invariants],
+          fisher
+        )
       );
     });
     return invariants;

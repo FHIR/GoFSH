@@ -41,6 +41,21 @@
             "human": "This constraint has an expression and an xpath.",
             "expression": "category.double.exists()",
             "xpath": "f:category/double"
+          },
+          {
+            "key": "zig-5",
+            "severity": "warning",
+            "human": "This constraint has some extra rules.",
+            "_human": {
+              "extension": [
+                {
+                  "url": "http://example.org/SomeExtension",
+                  "valueString": "ExtensionValue"
+                }
+              ]
+            },
+            "expression": "category.triple.exists()",
+            "requirements": "This is an additional requirement"
           }
         ]
       },
