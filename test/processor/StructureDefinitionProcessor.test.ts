@@ -370,6 +370,7 @@ describe('StructureDefinitionProcessor', () => {
       expect(workingLogical.description).toBe(
         'This is my fancy new logical model that has several characteristics.'
       );
+      expect(workingLogical.characteristics).toHaveLength(3);
       expect(workingLogical.characteristics).toContain('can-be-target');
       expect(workingLogical.characteristics).toContain('has-units');
       expect(workingLogical.characteristics).toContain('has-length');

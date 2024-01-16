@@ -21,6 +21,10 @@
     {
       "url": "http://hl7.org/fhir/tools/StructureDefinition/logical-target",
       "valueBoolean": true
+    },
+    {
+      "url": "http://hl7.org/fhir/sushi-test/StructureDefinition/other-extension",
+      "valueString": "something else"
     }
   ]
 }

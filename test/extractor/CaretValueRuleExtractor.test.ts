@@ -90,11 +90,23 @@ describe('CaretValueRuleExtractor', () => {
         defs,
         config
       );
-      // the rule on "kind" may be removed later by an optimizer,
-      // but there should not be any "extension" rules.
+      // the only "extension" rules should be for the non-characteristic extension
+      expect(caretRules).toContainEqual(
+        expect.objectContaining({
+          caretPath: expect.stringMatching(/^extension\[\d+\]\.url/),
+          value: 'http://hl7.org/fhir/sushi-test/StructureDefinition/other-extension'
+        })
+      );
       expect(caretRules).not.toContainEqual(
         expect.objectContaining({
-          caretPath: expect.stringMatching(/^extension/)
+          caretPath: expect.stringMatching(/^extension\[\d+\]\.url/),
+          value: 'http://hl7.org/fhir/StructureDefinition/structuredefinition-type-characteristics'
+        })
+      );
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          caretPath: expect.stringMatching(/^extension\[\d+\]\.url/),
+          value: 'http://hl7.org/fhir/tools/StructureDefinition/logical-target'
         })
       );
     });
