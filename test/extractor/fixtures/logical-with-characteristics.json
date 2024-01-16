@@ -1,0 +1,30 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "logical-with-characteristics",
+  "url": "http://hl7.org/fhir/sushi-test/StructureDefinition/logical-with-characteristics",
+  "kind": "logical",
+  "derivation": "specialization",
+  "type": "Base",
+  "name": "LogicalWithCharacteristics",
+  "title": "My Logical Model with Characteristics",
+  "description": "This is my fancy new logical model that has several characteristics.",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Base",
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-type-characteristics",
+      "valueCode": "has-units"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-type-characteristics",
+      "valueCode": "has-length"
+    },
+    {
+      "url": "http://hl7.org/fhir/tools/StructureDefinition/logical-target",
+      "valueBoolean": true
+    },
+    {
+      "url": "http://hl7.org/fhir/sushi-test/StructureDefinition/other-extension",
+      "valueString": "something else"
+    }
+  ]
+}

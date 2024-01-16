@@ -16,6 +16,7 @@ describe('CaretValueRuleExtractor', () => {
   let looseBSSD: any;
   let looseTPESD: any;
   let looseExtSD: any;
+  let looseLogicalSD: any;
   let config: fshtypes.Configuration;
   let defs: FHIRDefinitions;
 
@@ -54,6 +55,14 @@ describe('CaretValueRuleExtractor', () => {
         .readFileSync(path.join(__dirname, 'fixtures', 'extension-with-context.json'), 'utf-8')
         .trim()
     );
+    looseLogicalSD = JSON.parse(
+      fs
+        .readFileSync(
+          path.join(__dirname, 'fixtures', 'logical-with-characteristics.json'),
+          'utf-8'
+        )
+        .trim()
+    );
   });
 
   beforeEach(() => {
@@ -73,6 +82,33 @@ describe('CaretValueRuleExtractor', () => {
         config
       );
       expect(caretRules).toEqual<ExportableCaretValueRule[]>([]);
+    });
+
+    it('should not extract any SD caret rules for characteristics on a Logical', () => {
+      const caretRules = CaretValueRuleExtractor.processStructureDefinition(
+        looseLogicalSD,
+        defs,
+        config
+      );
+      // the only "extension" rules should be for the non-characteristic extension
+      expect(caretRules).toContainEqual(
+        expect.objectContaining({
+          caretPath: expect.stringMatching(/^extension\[\d+\]\.url/),
+          value: 'http://hl7.org/fhir/sushi-test/StructureDefinition/other-extension'
+        })
+      );
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          caretPath: expect.stringMatching(/^extension\[\d+\]\.url/),
+          value: 'http://hl7.org/fhir/StructureDefinition/structuredefinition-type-characteristics'
+        })
+      );
+      expect(caretRules).not.toContainEqual(
+        expect.objectContaining({
+          caretPath: expect.stringMatching(/^extension\[\d+\]\.url/),
+          value: 'http://hl7.org/fhir/tools/StructureDefinition/logical-target'
+        })
+      );
     });
 
     it('should extract a url-setting caret rules when a non-standard url is included on a StructureDefinition', () => {
