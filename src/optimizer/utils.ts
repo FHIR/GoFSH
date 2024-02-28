@@ -11,6 +11,8 @@ import {
   ExportableAlias
 } from '../exportable';
 
+const unsupportedAliasCharRegex = /[^a-zA-z0-9_\-\.]/g;
+
 export function optimizeURL(
   url: string,
   aliases: ExportableAlias[],
@@ -101,6 +103,9 @@ export function resolveAliasFromURL(url: string, aliases: ExportableAlias[]): st
       counterPart += 1;
       alias = `${aliasPart}_${counterPart}`;
     }
+
+    // Replace unsupported characters, but allow $ at the start
+    alias = `$${alias.substring(1).replace(unsupportedAliasCharRegex, '-')}`;
 
     aliases.push(new ExportableAlias(alias, url));
     return alias;

@@ -88,11 +88,16 @@ describe('AliasProcessor', () => {
     it('should log errors for invalid aliases', () => {
       const aliasFile = path.join(__dirname, 'fixtures', 'invalid-alias.fsh');
       const result = AliasProcessor.process(aliasFile);
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(3);
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(2);
       expect(loggerSpy.getMessageAtIndex(0, 'error')).toMatch(
         /Alias \$not\|valid cannot include "\|"/s
       );
       expect(loggerSpy.getMessageAtIndex(1, 'error')).toMatch(/Alias \$valid cannot be redefined/s);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Alias \$valid~ish includes unsupported characters/
+      );
     });
   });
 });
