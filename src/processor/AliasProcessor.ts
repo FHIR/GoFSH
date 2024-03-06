@@ -8,7 +8,7 @@ import { InputStream, CommonTokenStream } from 'antlr4';
 import FSHLexer from 'fsh-sushi/dist/import/generated/FSHLexer';
 import FSHParser from 'fsh-sushi/dist/import/generated/FSHParser';
 
-const aliasRegex = /^\$?[a-zA-z0-9_\-\.]*$/;
+const aliasRegex = /^\$?[a-zA-z0-9_\-\.]+$/;
 
 export class AliasProcessor {
   static process(aliasFile: string): ExportableAlias[] {
