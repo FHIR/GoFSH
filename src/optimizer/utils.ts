@@ -94,8 +94,8 @@ export function resolveAliasFromURL(url: string, aliases: ExportableAlias[]): st
     if (rawAlias == null) {
       return;
     }
-    // Ensure the generated alias is unique
-    const aliasPart = `$${rawAlias}`;
+    // Ensure the generated alias contains only supported characters and is unique
+    const aliasPart = `$${rawAlias.replace(unsupportedAliasCharRegex, '-')}`;
     let counterPart = 0;
     let alias = aliasPart;
     const existingAliases = aliases.map(a => a.alias);
@@ -103,9 +103,6 @@ export function resolveAliasFromURL(url: string, aliases: ExportableAlias[]): st
       counterPart += 1;
       alias = `${aliasPart}_${counterPart}`;
     }
-
-    // Replace unsupported characters, but allow $ at the start
-    alias = `$${alias.substring(1).replace(unsupportedAliasCharRegex, '-')}`;
 
     aliases.push(new ExportableAlias(alias, url));
     return alias;
