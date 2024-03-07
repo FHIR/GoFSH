@@ -6,3 +6,5 @@ Alias: $not|valid = http://example.org/CodeSystem/not-valid
 Alias: somethingGood = http://example.org/ValueSet/something-good
 // this alias is invalid, since it is already defined
 Alias: $valid = http://example.org/already-defined
+// this alias is valid, but it has unsupported characters
+Alias: $valid~ish = http://example.org/sort-of-valid

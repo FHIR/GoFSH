@@ -8,6 +8,8 @@ import { InputStream, CommonTokenStream } from 'antlr4';
 import FSHLexer from 'fsh-sushi/dist/import/generated/FSHLexer';
 import FSHParser from 'fsh-sushi/dist/import/generated/FSHParser';
 
+const aliasRegex = /^\$?[a-zA-z0-9_\-\.]+$/;
+
 export class AliasProcessor {
   static process(aliasFile: string): ExportableAlias[] {
     // Load aliases from alias-file option.
@@ -61,6 +63,10 @@ export class AliasProcessor {
             `Alias ${name} cannot include "|" since the "|" character is reserved for indicating a version`
           );
           return;
+        } else if (!aliasRegex.test(name)) {
+          logger.warn(
+            `Alias ${name} includes unsupported characters. Alias names can only contain letters, numbers, underscores ("_"), hyphens ("-"), and dots (".").`
+          );
         }
         if (aliases.has(name) && aliases.get(name) !== value) {
           logger.error(

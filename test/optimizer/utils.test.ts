@@ -218,6 +218,18 @@ describe('optimizer', () => {
           url: 'http://example.org/bar/foo'
         });
       });
+
+      it('should ensure newly created aliases only use allowed characters', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org/foo-bar_3.1~te$t', aliases)).toBe(
+          '$foo-bar_3.1-te-t'
+        );
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$foo-bar_3.1-te-t',
+          url: 'http://example.org/foo-bar_3.1~te$t'
+        });
+      });
     });
   });
 });
