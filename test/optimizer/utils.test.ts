@@ -230,6 +230,16 @@ describe('optimizer', () => {
           url: 'http://example.org/foo-bar_3.1~te$t'
         });
       });
+
+      it('should ensure newly created aliases are not ONLY $', () => {
+        const originalLength = aliases.length;
+        expect(resolveAliasFromURL('http://example.org/foo-bar/', aliases)).toBe('$foo-bar');
+        expect(aliases).toHaveLength(originalLength + 1);
+        expect(aliases[aliases.length - 1]).toEqual({
+          alias: '$foo-bar',
+          url: 'http://example.org/foo-bar/'
+        });
+      });
     });
   });
 });
