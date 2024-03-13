@@ -4,8 +4,13 @@ import { fhirtypes, fshtypes } from 'fsh-sushi';
 import { AssignmentRuleExtractor } from '../../src/extractor';
 import { ExportableAssignmentRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
+import { loggerSpy } from '../helpers/loggerSpy';
 
 describe('AssignmentRuleExtractor', () => {
+  beforeEach(() => {
+    loggerSpy.reset();
+  });
+
   describe('#simple-values', () => {
     let looseSD: any;
 
@@ -116,6 +121,140 @@ describe('AssignmentRuleExtractor', () => {
       const assignmentRules = AssignmentRuleExtractor.process(element);
       expect(assignmentRules).toHaveLength(0);
       expect(element.processedPaths).toHaveLength(0);
+    });
+  });
+
+  describe('#simple-date-and-time-values', () => {
+    let looseSD: any;
+
+    beforeAll(() => {
+      looseSD = JSON.parse(
+        fs
+          .readFileSync(
+            path.join(__dirname, 'fixtures', 'temporal-assigned-value-profile.json'),
+            'utf-8'
+          )
+          .trim()
+      );
+    });
+
+    it('should extract an assigned value rule with an instant value', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('effectiveInstant');
+      expectedRule.value = '2020-07-24T09:31:23.745-04:00';
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('patternInstant');
+      expect(loggerSpy.getAllMessages()).toHaveLength(0);
+    });
+
+    it('should extract an assigned value with a dateTime value', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('valueDateTime');
+      expectedRule.value = '2013-01-01T00:00:00.000Z';
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('patternDateTime');
+      expect(loggerSpy.getAllMessages()).toHaveLength(0);
+    });
+
+    it('should extract an assigned value with a time value', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('valueTime');
+      expectedRule.value = '15:45:00';
+      expectedRule.exactly = true;
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('fixedTime');
+      expect(loggerSpy.getAllMessages()).toHaveLength(0);
+    });
+
+    it('should extract an assigned value with a date value', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('extension.valueDate');
+      expectedRule.value = '2023-09-21';
+      expectedRule.exactly = true;
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('fixedDate');
+      expect(loggerSpy.getAllMessages()).toHaveLength(0);
+    });
+  });
+
+  describe('#simple-date-and-time-warnings', () => {
+    let looseSD: any;
+
+    beforeAll(() => {
+      looseSD = JSON.parse(
+        fs
+          .readFileSync(
+            path.join(__dirname, 'fixtures', 'temporal-warning-value-profile.json'),
+            'utf-8'
+          )
+          .trim()
+      );
+    });
+
+    it('should extract an assigned value rule with an incorrectly formatted instant value and log a warning', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[0]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('effectiveInstant');
+      expectedRule.value = '2020-07-24 9:31:23.745-04:00';
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('patternInstant');
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 2020-07-24 9:31:23\.745-04:00 on element effectiveInstant is not a valid FHIR instant/s
+      );
+    });
+
+    it('should extract an assigned value with an incorrectly formatted dateTime value and log a warning', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[1]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('valueDateTime');
+      expectedRule.value = '2013-01-01 00:00:00.000';
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('patternDateTime');
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 2013-01-01 00:00:00\.000 on element valueDateTime is not a valid FHIR dateTime/s
+      );
+    });
+
+    it('should extract an assigned value with an incorrectly formatted time value and log a warning', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[2]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('valueTime');
+      expectedRule.value = '15:45';
+      expectedRule.exactly = true;
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('fixedTime');
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 15:45 on element valueTime is not a valid FHIR time/s
+      );
+    });
+
+    it('should extract an assigned value with an incorrectly formatted date value and log a warning', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
+      const assignmentRules = AssignmentRuleExtractor.process(element);
+      const expectedRule = new ExportableAssignmentRule('extension.valueDate');
+      expectedRule.value = '2023/09/21';
+      expectedRule.exactly = true;
+      expect(assignmentRules).toHaveLength(1);
+      expect(assignmentRules[0]).toEqual<ExportableAssignmentRule>(expectedRule);
+      expect(element.processedPaths).toContain('fixedDate');
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 2023\/09\/21 on element extension\.valueDate is not a valid FHIR date/s
+      );
     });
   });
 

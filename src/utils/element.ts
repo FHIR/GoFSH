@@ -2,6 +2,16 @@ import { flatten } from 'flat';
 import { flatMap, flatten as flat, isObject, isEmpty, isNil } from 'lodash';
 import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { ProcessableStructureDefinition, ProcessableElementDefinition } from '../processor';
+import { logger } from './GoFSHLogger';
+
+// See https://hl7.org/fhir/R5/datatypes.html#dateTime
+export const dateTimeRegex = /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$/;
+// See https://hl7.org/fhir/R5/datatypes.html#date
+export const dateRegex = /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$/;
+// See https://hl7.org/fhir/R5/datatypes.html#time
+export const timeRegex = /^([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]{1,9})?$/;
+// See https://hl7.org/fhir/R5/datatypes.html#instant
+export const instantRegex = /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]{1,9})?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))$/;
 
 // This function depends on the id of an element to construct the path.
 // Per the specification https://www.hl7.org/fhir/elementdefinition.html#id, we should
@@ -91,6 +101,27 @@ export function getFSHValue(
     return new fshtypes.FshCode(value.toString());
   } else if (type === 'integer64') {
     return BigInt(value);
+  } else if (type === 'dateTime') {
+    if (!dateTimeRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR dateTime`);
+    }
+    return value;
+  } else if (type === 'date') {
+    if (!dateRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR date`);
+    }
+    return value;
+  } else if (type === 'time') {
+    if (!timeRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR time`);
+    }
+    return value;
+  } else if (type === 'instant') {
+    typeCache.get(resourceType).set(pathWithoutIndex, 'instant');
+    if (!instantRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR instant`);
+    }
+    return value;
   } else if (type) {
     return value;
   }
@@ -136,9 +167,34 @@ export function getFSHValue(
   } else if (element?.type?.[0]?.code === 'integer64') {
     typeCache.get(resourceType).set(pathWithoutIndex, 'integer64');
     return BigInt(value);
+  } else if (element?.type?.[0]?.code === 'dateTime') {
+    typeCache.get(resourceType).set(pathWithoutIndex, 'dateTime');
+    if (!dateTimeRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR dateTime`);
+    }
+    return value;
+  } else if (element?.type?.[0]?.code === 'date') {
+    typeCache.get(resourceType).set(pathWithoutIndex, 'date');
+    if (!dateRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR date`);
+    }
+    return value;
+  } else if (element?.type?.[0]?.code === 'time') {
+    typeCache.get(resourceType).set(pathWithoutIndex, 'time');
+    if (!timeRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR time`);
+    }
+    return value;
+  } else if (element?.type?.[0]?.code === 'instant') {
+    typeCache.get(resourceType).set(pathWithoutIndex, 'instant');
+    if (!instantRegex.test(value.toString())) {
+      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR instant`);
+    }
+    return value;
+  } else {
+    typeCache.get(resourceType).set(pathWithoutIndex, typeof value);
+    return value;
   }
-  typeCache.get(resourceType).set(pathWithoutIndex, typeof value);
-  return value;
 }
 
 // Typical empty FSH values are: [], {}, null, undefined
