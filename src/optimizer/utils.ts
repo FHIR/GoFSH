@@ -88,7 +88,7 @@ export function resolveAliasFromURL(url: string, aliases: ExportableAlias[]): st
     const parsedURL = new URL(url);
     const rawAlias =
       parsedURL.pathname && parsedURL.pathname !== '/'
-        ? parsedURL.pathname?.split('/').slice(-1)[0]
+        ? parsedURL.pathname?.split('/').slice(parsedURL.pathname.endsWith('/') ? -2 : -1)[0]
         : parsedURL.hostname?.replace('www.', '').split('.')[0];
 
     if (rawAlias == null) {
