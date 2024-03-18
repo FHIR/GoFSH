@@ -143,11 +143,13 @@ describe('element', () => {
   });
 
   describe('#getFSHValue', () => {
+    const entityName = 'MyObservation';
     it('should convert a code value into a FSHCode', () => {
       const value = getFSHValue(
         0,
         [['type[0].aggregation[0]', 'contained']],
         'ElementDefinition',
+        entityName,
         defs
       );
       expect(value).toEqual(new fshtypes.FshCode('contained'));
@@ -158,6 +160,7 @@ describe('element', () => {
         0,
         [['type[0].profile[0]', 'http://foo.com/bar']],
         'ElementDefinition',
+        entityName,
         defs
       );
       expect(value).toEqual('http://foo.com/bar');
@@ -168,6 +171,7 @@ describe('element', () => {
         0,
         [['valueDateTime', '2013-01-01T00:00:00.000Z']],
         'Observation',
+        entityName,
         defs
       );
       expect(value).toEqual('2013-01-01T00:00:00.000Z');
@@ -179,42 +183,55 @@ describe('element', () => {
         0,
         [['valueDateTime', '2013-01-01 00:00:00.000']],
         'Observation',
+        entityName,
         defs
       );
       expect(value).toEqual('2013-01-01 00:00:00.000');
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /Value 2013-01-01 00:00:00\.000 on element valueDateTime is not a valid FHIR dateTime/s
+        /Value 2013-01-01 00:00:00\.000 on MyObservation element valueDateTime is not a valid FHIR dateTime/s
       );
     });
 
     it('should get a date value', () => {
-      const value = getFSHValue(0, [['extension.valueDate', '2023-09-21']], 'Observation', defs);
+      const value = getFSHValue(
+        0,
+        [['extension.valueDate', '2023-09-21']],
+        'Observation',
+        entityName,
+        defs
+      );
       expect(value).toEqual('2023-09-21');
       expect(loggerSpy.getAllMessages()).toHaveLength(0);
     });
 
     it('should emit a warning when it gets an incorrectly formatted date value', () => {
-      const value = getFSHValue(0, [['extension.valueDate', '2023/09/21']], 'Observation', defs);
+      const value = getFSHValue(
+        0,
+        [['extension.valueDate', '2023/09/21']],
+        'Observation',
+        entityName,
+        defs
+      );
       expect(value).toEqual('2023/09/21');
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /Value 2023\/09\/21 on element extension\.valueDate is not a valid FHIR date/s
+        /Value 2023\/09\/21 on MyObservation element extension\.valueDate is not a valid FHIR date/s
       );
     });
 
     it('should get a time value', () => {
-      const value = getFSHValue(0, [['valueTime', '15:45:00']], 'Observation', defs);
+      const value = getFSHValue(0, [['valueTime', '15:45:00']], 'Observation', entityName, defs);
       expect(value).toEqual('15:45:00');
       expect(loggerSpy.getAllMessages()).toHaveLength(0);
     });
 
     it('should emit a warning when it gets an incorrectly formatted time value', () => {
-      const value = getFSHValue(0, [['valueTime', '15:45']], 'Observation', defs);
+      const value = getFSHValue(0, [['valueTime', '15:45']], 'Observation', entityName, defs);
       expect(value).toEqual('15:45');
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /Value 15:45 on element valueTime is not a valid FHIR time/s
+        /Value 15:45 on MyObservation element valueTime is not a valid FHIR time/s
       );
     });
 
@@ -223,6 +240,7 @@ describe('element', () => {
         0,
         [['effectiveInstant', '2020-07-24T09:31:23.745-04:00']],
         'Observation',
+        entityName,
         defs
       );
       expect(value).toEqual('2020-07-24T09:31:23.745-04:00');
@@ -234,12 +252,31 @@ describe('element', () => {
         0,
         [['effectiveInstant', '2020-07-24 9:31:23.745-04:00']],
         'Observation',
+        entityName,
         defs
       );
       expect(value).toEqual('2020-07-24 9:31:23.745-04:00');
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /Value 2020-07-24 9:31:23\.745-04:00 on element effectiveInstant is not a valid FHIR instant/s
+        /Value 2020-07-24 9:31:23\.745-04:00 on MyObservation element effectiveInstant is not a valid FHIR instant/s
+      );
+    });
+
+    it('should emit a warning with the full path to the contained resource element when it gets an incorrectly formatted dateTime value', () => {
+      const value = getFSHValue(
+        0,
+        [
+          ['entry[0].resource.valueDateTime', '2013-01-01 00:00:00.000'],
+          ['entry[0].resource.resourceType', 'Observation']
+        ],
+        'Bundle',
+        'MyBundle',
+        defs
+      );
+      expect(value).toEqual('2013-01-01 00:00:00.000');
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 2013-01-01 00:00:00\.000 on MyBundle\.entry\[0\]\.resource element valueDateTime is not a valid FHIR dateTime/s
       );
     });
   });

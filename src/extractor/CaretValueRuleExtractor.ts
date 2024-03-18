@@ -24,10 +24,17 @@ export class CaretValueRuleExtractor {
     const remainingFlatElementArray = flatElementArray.filter(
       ([key]) => !input.processedPaths.includes(key)
     );
+    const entityPath = path === '' ? structDef.name : `${structDef.name}.${path}`;
     remainingFlatElementArray.forEach(([key], i) => {
       const caretValueRule = new ExportableCaretValueRule(path);
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(i, remainingFlatElementArray, 'ElementDefinition', fisher);
+      caretValueRule.value = getFSHValue(
+        i,
+        remainingFlatElementArray,
+        'ElementDefinition',
+        entityPath,
+        fisher
+      );
       // If the value is empty, we can't use it. Log an error and give up on trying to use this key.
       if (isFSHValueEmpty(caretValueRule.value)) {
         logger.error(
@@ -207,7 +214,7 @@ export class CaretValueRuleExtractor {
         }
         const caretValueRule = new ExportableCaretValueRule('');
         caretValueRule.caretPath = key;
-        caretValueRule.value = getFSHValue(i, flatArray, 'StructureDefinition', fisher);
+        caretValueRule.value = getFSHValue(i, flatArray, 'StructureDefinition', input.name, fisher);
         if (isFSHValueEmpty(caretValueRule.value)) {
           logger.error(
             `Value in StructureDefinition ${input.name} for element ${key} is empty. No caret value rule will be created.`
@@ -241,7 +248,13 @@ export class CaretValueRuleExtractor {
       }
       const caretValueRule = new ExportableCaretValueRule('');
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(i, flatArray, resourceType, fisher);
+      caretValueRule.value = getFSHValue(
+        i,
+        flatArray,
+        resourceType,
+        input.name ?? input.id,
+        fisher
+      );
       if (isFSHValueEmpty(caretValueRule.value)) {
         logger.error(
           `Value in ${resourceType} ${
@@ -272,7 +285,7 @@ export class CaretValueRuleExtractor {
     flatArray.forEach(([key], i) => {
       const caretValueRule = new ExportableCaretValueRule('');
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(i, flatArray, 'Concept', fisher);
+      caretValueRule.value = getFSHValue(i, flatArray, 'Concept', entityName, fisher);
       caretValueRule.isCodeCaretRule = true;
       caretValueRule.pathArray = [...pathArray];
       if (isFSHValueEmpty(caretValueRule.value)) {

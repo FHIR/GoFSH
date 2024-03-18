@@ -86,6 +86,7 @@ export function getFSHValue(
   index: number,
   flatArray: [string, string | number | boolean][],
   resourceType: string,
+  resourceName: string,
   fisher: utils.Fishable
 ): number | boolean | string | fshtypes.FshCode | bigint {
   const [key, value] = flatArray[index];
@@ -103,23 +104,31 @@ export function getFSHValue(
     return BigInt(value);
   } else if (type === 'dateTime') {
     if (!dateTimeRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR dateTime`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR dateTime`
+      );
     }
     return value;
   } else if (type === 'date') {
     if (!dateRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR date`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR date`
+      );
     }
     return value;
   } else if (type === 'time') {
     if (!timeRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR time`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR time`
+      );
     }
     return value;
   } else if (type === 'instant') {
     typeCache.get(resourceType).set(pathWithoutIndex, 'instant');
     if (!instantRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR instant`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR instant`
+      );
     }
     return value;
   } else if (type) {
@@ -150,9 +159,10 @@ export function getFSHValue(
       ]) as [string, string | number | boolean][];
     const containedResourceType = subArray.find(([key]) => key === 'resourceType')?.[1] as string;
     const newIndex = subArray.findIndex(([key]) => key === newKey);
+    const containedResourceName = `${resourceName}.${baseKey}`;
 
     // Get the FSH value based on the contained resource type. Use paths relative to the contained resource.
-    return getFSHValue(newIndex, subArray, containedResourceType, fisher);
+    return getFSHValue(newIndex, subArray, containedResourceType, containedResourceName, fisher);
   }
   if (!typeCache.has(resourceType)) {
     typeCache.set(resourceType, new Map());
@@ -170,25 +180,33 @@ export function getFSHValue(
   } else if (element?.type?.[0]?.code === 'dateTime') {
     typeCache.get(resourceType).set(pathWithoutIndex, 'dateTime');
     if (!dateTimeRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR dateTime`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR dateTime`
+      );
     }
     return value;
   } else if (element?.type?.[0]?.code === 'date') {
     typeCache.get(resourceType).set(pathWithoutIndex, 'date');
     if (!dateRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR date`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR date`
+      );
     }
     return value;
   } else if (element?.type?.[0]?.code === 'time') {
     typeCache.get(resourceType).set(pathWithoutIndex, 'time');
     if (!timeRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR time`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR time`
+      );
     }
     return value;
   } else if (element?.type?.[0]?.code === 'instant') {
     typeCache.get(resourceType).set(pathWithoutIndex, 'instant');
     if (!instantRegex.test(value.toString())) {
-      logger.warn(`Value ${value.toString()} on element ${key} is not a valid FHIR instant`);
+      logger.warn(
+        `Value ${value.toString()} on ${resourceName} element ${key} is not a valid FHIR instant`
+      );
     }
     return value;
   } else {

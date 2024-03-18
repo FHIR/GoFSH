@@ -5,7 +5,10 @@ import { dateRegex, dateTimeRegex, getPath, instantRegex, timeRegex, logger } fr
 import { fshifyString } from '../exportable/common';
 
 export class AssignmentRuleExtractor {
-  static process(input: ProcessableElementDefinition): ExportableAssignmentRule[] {
+  static process(
+    input: ProcessableElementDefinition,
+    entityName: string
+  ): ExportableAssignmentRule[] {
     // check for fixedSomething or patternSomething
     // pattern and fixed are mutually exclusive
     // these are on one-type elements, so if our SD has value[x],
@@ -31,25 +34,25 @@ export class AssignmentRuleExtractor {
             if (matchingKey.endsWith('DateTime')) {
               if (!dateTimeRegex.test(matchingValue)) {
                 logger.warn(
-                  `Value ${matchingValue} on element ${assignmentRule.path} is not a valid FHIR dateTime`
+                  `Value ${matchingValue} on ${entityName} element ${assignmentRule.path} is not a valid FHIR dateTime`
                 );
               }
             } else if (matchingKey.endsWith('Date')) {
               if (!dateRegex.test(matchingValue)) {
                 logger.warn(
-                  `Value ${matchingValue} on element ${assignmentRule.path} is not a valid FHIR date`
+                  `Value ${matchingValue} on ${entityName} element ${assignmentRule.path} is not a valid FHIR date`
                 );
               }
             } else if (matchingKey.endsWith('Time')) {
               if (!timeRegex.test(matchingValue)) {
                 logger.warn(
-                  `Value ${matchingValue} on element ${assignmentRule.path} is not a valid FHIR time`
+                  `Value ${matchingValue} on ${entityName} element ${assignmentRule.path} is not a valid FHIR time`
                 );
               }
             } else if (matchingKey.endsWith('Instant')) {
               if (!instantRegex.test(matchingValue)) {
                 logger.warn(
-                  `Value ${matchingValue} on element ${assignmentRule.path} is not a valid FHIR instant`
+                  `Value ${matchingValue} on ${entityName} element ${assignmentRule.path} is not a valid FHIR instant`
                 );
               }
             }
