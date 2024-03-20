@@ -481,6 +481,23 @@ describe('InstanceProcessor', () => {
       expect(result.rules).toContainEqual(edgesRule);
     });
 
+    it('should log a warning when a date value is not correctly formatted', () => {
+      const input = JSON.parse(
+        fs.readFileSync(path.join(__dirname, 'fixtures', 'invalid-date-patient.json'), 'utf-8')
+      );
+      const result = InstanceProcessor.process(input, simpleIg, defs);
+      expect(result).toBeInstanceOf(ExportableInstance);
+      expect(result.name).toBe('invalid-date-patient-of-Patient');
+      expect(result.id).toBe('invalid-date-patient');
+      const birthDateRule = new ExportableAssignmentRule('birthDate');
+      birthDateRule.value = '1985/07/12';
+      expect(result.rules).toContainEqual(birthDateRule);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 1985\/07\/12 on invalid-date-patient element birthDate is not a valid FHIR date/s
+      );
+    });
+
     it('should use entry resource type to determine assignment rule value types on bundle entry resources', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-bundle.json'), 'utf-8')

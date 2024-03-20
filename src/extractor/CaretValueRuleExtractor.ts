@@ -285,7 +285,13 @@ export class CaretValueRuleExtractor {
     flatArray.forEach(([key], i) => {
       const caretValueRule = new ExportableCaretValueRule('');
       caretValueRule.caretPath = key;
-      caretValueRule.value = getFSHValue(i, flatArray, 'Concept', entityName, fisher);
+      caretValueRule.value = getFSHValue(
+        i,
+        flatArray,
+        'Concept',
+        `${entityName} ${pathArray.join('.')}`,
+        fisher
+      );
       caretValueRule.isCodeCaretRule = true;
       caretValueRule.pathArray = [...pathArray];
       if (isFSHValueEmpty(caretValueRule.value)) {

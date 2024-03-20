@@ -114,7 +114,7 @@ export class InstanceProcessor {
         i,
         flatInstanceArray,
         instanceOfJSON.type,
-        target.name,
+        target.id,
         fisher
       );
       // if the value is empty, we can't use that
