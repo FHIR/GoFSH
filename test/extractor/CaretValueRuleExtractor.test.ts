@@ -1076,13 +1076,13 @@ describe('CaretValueRuleExtractor', () => {
       const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[12]);
       const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
       const expectedRule = new ExportableCaretValueRule('component.valueDateTime');
-      expectedRule.caretPath = 'patternDateTime';
+      expectedRule.caretPath = 'minValueDateTime';
       expectedRule.value = '2013-01-01 00:00:00.000';
       expect(caretRules).toHaveLength(1);
       expect(caretRules[0]).toEqual<ExportableCaretValueRule>(expectedRule);
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /Value 2013-01-01 00:00:00\.000 on ObservationWithCaret\.component\.valueDateTime element patternDateTime is not a valid FHIR dateTime/s
+        /Value 2013-01-01 00:00:00\.000 on ObservationWithCaret\.component\.valueDateTime element minValueDateTime is not a valid FHIR dateTime/s
       );
     });
   });

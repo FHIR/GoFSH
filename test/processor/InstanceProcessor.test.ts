@@ -494,7 +494,7 @@ describe('InstanceProcessor', () => {
       expect(result.rules).toContainEqual(birthDateRule);
       expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
       expect(loggerSpy.getLastMessage('warn')).toMatch(
-        /Value 1985\/07\/12 on invalid-date-patient element birthDate is not a valid FHIR date/s
+        /Value 1985\/07\/12 on Patient invalid-date-patient element birthDate is not a valid FHIR date/s
       );
     });
 

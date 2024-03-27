@@ -175,7 +175,7 @@
       {
         "id": "Observation.component.valueDateTime",
         "path": "Observation.component.valueDateTime",
-        "patternDateTime": "2013-01-01 00:00:00.000"
+        "minValueDateTime": "2013-01-01 00:00:00.000"
       }
     ]
   }
