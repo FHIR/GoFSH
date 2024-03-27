@@ -6,6 +6,7 @@ import { ExportableAssignmentRule, ExportableInvariant } from '../../src/exporta
 import { fshtypes } from 'fsh-sushi';
 import { FHIRDefinitions } from '../../src/utils';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { loggerSpy } from '../helpers/loggerSpy';
 const { FshCode } = fshtypes;
 
 describe('InvariantExtractor', () => {
@@ -17,6 +18,10 @@ describe('InvariantExtractor', () => {
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'obeys-profile.json'), 'utf-8').trim()
     );
+  });
+
+  beforeEach(() => {
+    loggerSpy.reset();
   });
 
   it('should extract invariants from an element with one constraint', () => {
@@ -97,6 +102,27 @@ describe('InvariantExtractor', () => {
     const invariants = InvariantExtractor.process(element, looseSD, [], defs);
     expect(invariants).toHaveLength(0);
     expect(element.processedPaths).toHaveLength(0);
+  });
+
+  it('should emit a warning when a rule value on an invariant is an incorrectly formatted date', () => {
+    const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[3]);
+    const invariants = InvariantExtractor.process(element, looseSD, [], defs);
+    const subjectInvariant = new ExportableInvariant('zig-6');
+    subjectInvariant.severity = new FshCode('warning');
+    subjectInvariant.description = 'This constraint has an incorrectly formatted date value.';
+    subjectInvariant.expression = 'subject.date.exists()';
+    const invExtensionUrl = new ExportableAssignmentRule('human.extension[0].url');
+    invExtensionUrl.value = 'http://example.org/SomeExtension';
+    const invExtensionValue = new ExportableAssignmentRule('human.extension[0].valueDate');
+    invExtensionValue.value = '2023/09/21';
+    subjectInvariant.rules.push(invExtensionUrl, invExtensionValue);
+
+    expect(invariants).toHaveLength(1);
+    expect(invariants).toContainEqual(subjectInvariant);
+    expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+    expect(loggerSpy.getLastMessage('warn')).toMatch(
+      /Value 2023\/09\/21 on ConstrainedObservation\.subject element constraint\[0\]\.human\.extension\[0\]\.valueDate is not a valid FHIR date/s
+    );
   });
 
   it('should not extract an invariant and should process paths if an equal invariant already exists', () => {

@@ -1,0 +1,26 @@
+{
+  "resourceType": "StructureDefinition",
+  "kind": "resource",
+  "type": "Observation",
+  "name": "TemporalAssignedValueObservation",
+  "differential": {
+    "element": [
+      {
+        "id": "Observation.effectiveInstant",
+        "patternInstant": "2020-07-24T09:31:23.745-04:00"
+      },
+      {
+        "id": "Observation.valueDateTime",
+        "patternDateTime": "2013-01-01T00:00:00.000Z"
+      },
+      {
+        "id": "Observation.valueTime",
+        "fixedTime": "15:45:00"
+      },
+      {
+        "id": "Observation.extension.valueDate",
+        "fixedDate": "2023-09-21"
+      }
+    ]
+  }
+}

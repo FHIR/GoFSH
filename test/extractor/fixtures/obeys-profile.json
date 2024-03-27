@@ -63,6 +63,26 @@
         "id": "Observation.issued",
         "path": "Observation.issued",
         "min": 1
+      },
+      {
+        "id": "Observation.subject",
+        "path": "Observation.subject",
+        "constraint": [
+          {
+            "key": "zig-6",
+            "severity": "warning",
+            "human": "This constraint has an incorrectly formatted date value.",
+            "_human": {
+              "extension": [
+                {
+                  "url": "http://example.org/SomeExtension",
+                  "valueDate": "2023/09/21"
+                }
+              ]
+            },
+            "expression": "subject.date.exists()"
+          }
+        ]
       }
     ]
   }

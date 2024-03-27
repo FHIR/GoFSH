@@ -225,13 +225,13 @@ export class StructureDefinitionProcessor {
         newRules.push(
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element),
-          ...AssignmentRuleExtractor.process(element)
+          ...AssignmentRuleExtractor.process(element, target.name)
         );
       } else if (isNewSlice) {
         newRules.push(
           ContainsRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
-          ...AssignmentRuleExtractor.process(element),
+          ...AssignmentRuleExtractor.process(element, target.name),
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
         );
@@ -239,7 +239,7 @@ export class StructureDefinitionProcessor {
         newRules.push(
           CardRuleExtractor.process(element, input, fisher),
           OnlyRuleExtractor.process(element),
-          ...AssignmentRuleExtractor.process(element),
+          ...AssignmentRuleExtractor.process(element, target.name),
           FlagRuleExtractor.process(element),
           BindingRuleExtractor.process(element),
           ObeysRuleExtractor.process(element)
