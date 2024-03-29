@@ -110,7 +110,13 @@ export class InstanceProcessor {
     const flatInstanceArray = toPairs(getPathValuePairs(inputJSON));
     flatInstanceArray.forEach(([path], i) => {
       const assignmentRule = new ExportableAssignmentRule(path);
-      assignmentRule.value = getFSHValue(i, flatInstanceArray, instanceOfJSON.type, fisher);
+      assignmentRule.value = getFSHValue(
+        i,
+        flatInstanceArray,
+        instanceOfJSON.type,
+        `${target.instanceOf} ${target.id}`,
+        fisher
+      );
       // if the value is empty, we can't use that
       if (isFSHValueEmpty(assignmentRule.value)) {
         logger.error(

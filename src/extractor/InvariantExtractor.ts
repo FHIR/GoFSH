@@ -6,7 +6,7 @@ import {
   ProcessableStructureDefinition,
   switchQuantityRules
 } from '../processor';
-import { getFSHValue, getPathValuePairs, isFSHValueEmpty } from '../utils';
+import { getFSHValue, getPath, getPathValuePairs, isFSHValueEmpty } from '../utils';
 import { ExportableAssignmentRule } from '../exportable';
 
 export class InvariantExtractor {
@@ -55,21 +55,25 @@ export class InvariantExtractor {
         // so that we can get the FSH value correctly.
         // but, we want the original path for the rule itself.
         const flatPropertyArray = toPairs(
-          getPathValuePairs(workingConstraint, x => `constraint.${x}`)
+          getPathValuePairs(workingConstraint, x => `constraint[${i}].${x}`)
         );
+        const elementPath = getPath(input);
+        const entityPath =
+          elementPath === '.' ? structDef.name : `${structDef.name}.${elementPath}`;
         flatPropertyArray.forEach(([path], propertyIdx) => {
-          const originalPath = path.replace('constraint.', '');
+          const originalPath = path.replace(`constraint[${i}].`, '');
           const assignmentRule = new ExportableAssignmentRule(originalPath);
           assignmentRule.value = getFSHValue(
             propertyIdx,
             flatPropertyArray,
             'ElementDefinition',
+            entityPath,
             fisher
           );
           if (!isFSHValueEmpty(assignmentRule.value)) {
             invariant.rules.push(assignmentRule);
           }
-          constraintPaths.push(`constraint[${i}].${originalPath}`);
+          constraintPaths.push(path);
         });
         switchQuantityRules(invariant.rules);
 

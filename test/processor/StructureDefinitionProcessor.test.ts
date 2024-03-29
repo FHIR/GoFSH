@@ -766,7 +766,7 @@ describe('StructureDefinitionProcessor', () => {
         }) ?? [];
       const result = StructureDefinitionProcessor.extractInvariants(input, elements, [], defs);
 
-      expect(result).toHaveLength(5);
+      expect(result).toHaveLength(6);
     });
   });
 

@@ -89,10 +89,7 @@
       {
         "id": "Observation.category",
         "path": "Observation.category",
-        "alias": [
-          "foo",
-          "bar"
-        ]
+        "alias": ["foo", "bar"]
       },
       {
         "id": "Observation.code",
@@ -121,10 +118,7 @@
           },
           {
             "code": "baz",
-            "targetProfile": [
-              "profile1",
-              "profile2"
-            ],
+            "targetProfile": ["profile1", "profile2"],
             "versioning": "specific"
           }
         ]
@@ -177,6 +171,11 @@
             "human": "It must choose to foo"
           }
         ]
+      },
+      {
+        "id": "Observation.component.valueDateTime",
+        "path": "Observation.component.valueDateTime",
+        "minValueDateTime": "2013-01-01 00:00:00.000"
       }
     ]
   }

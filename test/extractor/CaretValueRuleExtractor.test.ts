@@ -677,7 +677,7 @@ describe('CaretValueRuleExtractor', () => {
 
       const caretRules = CaretValueRuleExtractor.processConcept(
         testConcept,
-        ['testConcept'],
+        ['#testConcept'],
         'testCS',
         'CodeSystem',
         defs
@@ -685,6 +685,7 @@ describe('CaretValueRuleExtractor', () => {
       expect(caretRules).toContainEqual(
         expect.objectContaining({
           path: '',
+          pathArray: ['#testConcept'],
           caretPath: 'property[0].valueString'
         })
       );
@@ -705,6 +706,34 @@ describe('CaretValueRuleExtractor', () => {
           path: '',
           caretPath: 'definition'
         })
+      );
+    });
+
+    it('should log a warning with a concept path when a dateTime value is not correctly formatted', () => {
+      const testConcept = {
+        code: 'testConcept',
+        display: 'Test Concept',
+        definition: 'A concept, just for tests though',
+        property: [{ code: 'test', valueDateTime: '2013-01-01 00:00:00.000' }]
+      };
+      const caretRules = CaretValueRuleExtractor.processConcept(
+        testConcept,
+        ['#bigConcept', '#testConcept'],
+        'testCS',
+        'CodeSystem',
+        defs
+      );
+      expect(caretRules).toContainEqual(
+        expect.objectContaining({
+          path: '',
+          pathArray: ['#bigConcept', '#testConcept'],
+          caretPath: 'property[0].valueDateTime',
+          value: '2013-01-01 00:00:00.000'
+        })
+      );
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 2013-01-01 00:00:00\.000 on testCS #bigConcept\.#testConcept element property\[0\]\.valueDateTime is not a valid FHIR dateTime/s
       );
     });
 
@@ -1040,6 +1069,20 @@ describe('CaretValueRuleExtractor', () => {
       );
       expect(loggerSpy.getLastMessage('error')).toMatch(
         'Value in StructureDefinition ObservationWithCaret for element partOf.base is empty.'
+      );
+    });
+
+    it('should log a warning with element paths when a dateTime value is not correctly formatted', () => {
+      const element = ProcessableElementDefinition.fromJSON(looseSD.differential.element[12]);
+      const caretRules = CaretValueRuleExtractor.process(element, looseSD, defs);
+      const expectedRule = new ExportableCaretValueRule('component.valueDateTime');
+      expectedRule.caretPath = 'minValueDateTime';
+      expectedRule.value = '2013-01-01 00:00:00.000';
+      expect(caretRules).toHaveLength(1);
+      expect(caretRules[0]).toEqual<ExportableCaretValueRule>(expectedRule);
+      expect(loggerSpy.getAllMessages('warn')).toHaveLength(1);
+      expect(loggerSpy.getLastMessage('warn')).toMatch(
+        /Value 2013-01-01 00:00:00\.000 on ObservationWithCaret\.component\.valueDateTime element minValueDateTime is not a valid FHIR dateTime/s
       );
     });
   });
