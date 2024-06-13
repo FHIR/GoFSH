@@ -6,6 +6,35 @@ FHIR Shorthand (FSH) is a specially-designed language for defining the content o
 
 For more information about the evolving FSH syntax see the [FHIR Shorthand Reference Manual](https://build.fhir.org/ig/HL7/fhir-shorthand/).
 
+## FHIR Foundation Project Statement
+
+### Maintainers
+
+This project is maintained by The MITRE Corporation.
+
+### Issues / Discussion
+
+For GoFSH issues, such as bug reports, comments, suggestions, questions, and feature requests, visit [GoFSH Github Issues](https://github.com/FHIR/GoFSH/issues).
+
+For discussion of FHIR Shorthand and its associated projects, visit the FHIR Community Chat @ https://chat.fhir.org. The [#shorthand stream](https://chat.fhir.org/#narrow/stream/215610-shorthand) is used for all FHIR Shorthand questions and discussion.
+
+### License
+
+All contributions to this project will be released under the Apache 2.0 License, and a copy of this license can be found [here](LICENSE).
+
+### Contribution Policy
+
+The GoFSH Contribution Policy can be found [here]().
+
+### Security Information
+
+The GoFSH Security Information can be found [here]().
+
+### Compliance Information
+
+GoFSH supports importing FHIR R4, FHIR R4B, and FHIR R5 artifacts. GoFSH assumes valid FHIR inputs. If invalid FHIR artifacts are provided as input, GoFSH may report errors and/or create invalid FSH. The GoFSH source code includes a comprehensive suite of unit tests to test GoFSH's own behavior and compliance with FHIR.
+
+
 # Installation for GoFSH Users
 
 GoFSH requires [Node.js](https://nodejs.org/) to be installed on the user's system. Users should install Node.js 18. Although previous versions of Node.js may work, they are not officially supported.
