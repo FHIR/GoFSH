@@ -24,11 +24,11 @@ All contributions to this project will be released under the Apache 2.0 License,
 
 ### Contribution Policy
 
-The GoFSH Contribution Policy can be found [here]().
+The GoFSH Contribution Policy can be found [here](CONTRIBUTING.md).
 
 ### Security Information
 
-The GoFSH Security Information can be found [here]().
+The GoFSH Security Information can be found [here](SECURITY.md).
 
 ### Compliance Information
 
