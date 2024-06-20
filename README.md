@@ -8,31 +8,17 @@ For more information about the evolving FSH syntax see the [FHIR Shorthand Refer
 
 ## FHIR Foundation Project Statement
 
-### Maintainers
+  * Maintainers: This project is maintained by The MITRE Corporation.
 
-This project is maintained by The MITRE Corporation.
+  * Issues / Discussion: For GoFSH issues, such as bug reports, comments, suggestions, questions, and feature requests, visit [GoFSH Github Issues](https://github.com/FHIR/GoFSH/issues). For discussion of FHIR Shorthand and its associated projects, visit the FHIR Community Chat @ https://chat.fhir.org. The [#shorthand stream](https://chat.fhir.org/#narrow/stream/215610-shorthand) is used for all FHIR Shorthand questions and discussion.
 
-### Issues / Discussion
+  * License: All contributions to this project will be released under the Apache 2.0 License, and a copy of this license can be found in [LICENSE](LICENSE).
 
-For GoFSH issues, such as bug reports, comments, suggestions, questions, and feature requests, visit [GoFSH Github Issues](https://github.com/FHIR/GoFSH/issues).
+  * Contribution Policy: The GoFSH Contribution Policy can be found in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-For discussion of FHIR Shorthand and its associated projects, visit the FHIR Community Chat @ https://chat.fhir.org. The [#shorthand stream](https://chat.fhir.org/#narrow/stream/215610-shorthand) is used for all FHIR Shorthand questions and discussion.
+  * Security Information: The GoFSH Security Information can be found in [SECURITY.md](SECURITY.md).
 
-### License
-
-All contributions to this project will be released under the Apache 2.0 License, and a copy of this license can be found [here](LICENSE).
-
-### Contribution Policy
-
-The GoFSH Contribution Policy can be found [here](CONTRIBUTING.md).
-
-### Security Information
-
-The GoFSH Security Information can be found [here](SECURITY.md).
-
-### Compliance Information
-
-GoFSH supports importing FHIR R4, FHIR R4B, and FHIR R5 artifacts. GoFSH assumes valid FHIR inputs. If invalid FHIR artifacts are provided as input, GoFSH may report errors and/or create invalid FSH. The GoFSH source code includes a comprehensive suite of unit tests to test GoFSH's own behavior and compliance with FHIR.
+  * Compliance Information: GoFSH supports importing FHIR R4, FHIR R4B, and FHIR R5 artifacts. GoFSH assumes valid FHIR inputs. If invalid FHIR artifacts are provided as input, GoFSH may report errors and/or create invalid FSH. The GoFSH source code includes a comprehensive suite of unit tests to test GoFSH's own behavior and compliance with FHIR, which can be found in the [test](test) directory.
 
 
 # Installation for GoFSH Users
