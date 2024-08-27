@@ -27,10 +27,11 @@ export class InstanceProcessor {
         input.meta?.profile?.length === 1 ? input.meta.profile[0] : input.resourceType;
     }
 
-    const resource: fhirtypes.ImplementationGuideDefinitionResource = implementationGuide?.definition?.resource?.find(
-      (resource: fhirtypes.ImplementationGuideDefinitionResource) =>
-        resource.reference?.reference === `${input.resourceType}/${input.id}`
-    );
+    const resource: fhirtypes.ImplementationGuideDefinitionResource =
+      implementationGuide?.definition?.resource?.find(
+        (resource: fhirtypes.ImplementationGuideDefinitionResource) =>
+          resource.reference?.reference === `${input.resourceType}/${input.id}`
+      );
     target.name = `${target.name}-of-${target.instanceOf}`;
     if (resource) {
       if (resource.name) {
