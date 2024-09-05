@@ -8,7 +8,7 @@ export class ExportableConfiguration implements Exportable {
   toFSH(): string {
     // canonical, fhirVersion, and FSHOnly are always present
     const yaml = new YAML.Document();
-    yaml.contents = YAML.createNode({
+    yaml.contents = yaml.createNode({
       canonical: this.config.canonical,
       fhirVersion: this.config.fhirVersion[0],
       FSHOnly: this.config.FSHOnly,

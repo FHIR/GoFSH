@@ -39,9 +39,9 @@ export default {
                 .findIndex(otherRule => otherRule.path === `${parentPath}.display`);
               if (matchingDisplayRuleIndex >= 0) {
                 rulesToRemove.push(matchingDisplayRuleIndex);
-                reference.display = (instance.rules[
-                  matchingDisplayRuleIndex
-                ] as ExportableAssignmentRule).value as string;
+                reference.display = (
+                  instance.rules[matchingDisplayRuleIndex] as ExportableAssignmentRule
+                ).value as string;
               }
               const newReferenceRule = new ExportableAssignmentRule(parentPath);
               newReferenceRule.value = reference;
