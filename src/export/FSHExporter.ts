@@ -261,9 +261,11 @@ export class FSHExporter {
     // in one spot. Otherwise they go to instances.fsh
     inlineInstances.forEach(instance => {
       const usedIn = this.inlineInstanceUsedIn(instance, files);
-      usedIn.length === 1
-        ? files.get(usedIn[0]).push(instance)
-        : files.get('instances.fsh').push(instance);
+      if (usedIn.length === 1) {
+        files.get(usedIn[0]).push(instance);
+      } else {
+        files.get('instances.fsh').push(instance);
+      }
     });
 
     // Invariants are written to the same file as the file they are used in, if they
@@ -271,9 +273,11 @@ export class FSHExporter {
     files.set('invariants.fsh', []);
     this.fshPackage.invariants.forEach(invariant => {
       const usedIn = this.invariantUsedIn(invariant, files);
-      usedIn.length === 1
-        ? files.get(usedIn[0]).push(invariant)
-        : files.get('invariants.fsh').push(invariant);
+      if (usedIn.length === 1) {
+        files.get(usedIn[0]).push(invariant);
+      } else {
+        files.get('invariants.fsh').push(invariant);
+      }
     });
 
     // All other artifacts are grouped by category

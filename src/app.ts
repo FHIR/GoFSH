@@ -2,7 +2,7 @@
 
 import path from 'path';
 import fs from 'fs-extra';
-import program from 'commander';
+import { Command } from 'commander';
 import chalk from 'chalk';
 import { pad, padStart, padEnd } from 'lodash';
 import { utils } from 'fsh-sushi';
@@ -33,7 +33,7 @@ app().catch(e => {
 
 async function app() {
   let inDir: string;
-  program
+  const program = new Command()
     .name('goFSH')
     .usage('[path-to-fhir-resources] [options]')
     .storeOptionsAsProperties(false)

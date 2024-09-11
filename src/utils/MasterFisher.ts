@@ -8,7 +8,10 @@ import { FHIRDefinitions } from '../utils';
  * definitions first (when there are naming clashes) - matching the SUSHI MasterFisher behavior.
  */
 export class MasterFisher implements utils.Fishable {
-  constructor(public lakeOfFHIR = new LakeOfFHIR([]), public external = new FHIRDefinitions()) {}
+  constructor(
+    public lakeOfFHIR = new LakeOfFHIR([]),
+    public external = new FHIRDefinitions()
+  ) {}
 
   fishForStructureDefinition(item: string) {
     const json = this.fishForFHIR(
