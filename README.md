@@ -15,7 +15,9 @@ For more information about the evolving FSH syntax see the [FHIR Shorthand Refer
 * Security Information: The GoFSH Security Information can be found in [SECURITY.md](SECURITY.md).
 * Compliance Information: GoFSH supports importing FHIR R4, FHIR R4B, and FHIR R5 artifacts. GoFSH assumes valid FHIR inputs. If invalid FHIR artifacts are provided as input, GoFSH may report errors and/or create invalid FSH. The GoFSH source code includes a comprehensive suite of unit tests to test GoFSH's own behavior and compliance with FHIR, which can be found in the [test](test) directory.
 
-# Installation for GoFSH Users
+# GoFSH User Instructions
+
+## Installation for GoFSH Users
 
 GoFSH requires [Node.js](https://nodejs.org/) to be installed on the user's system. Users should install Node.js 18. Although previous versions of Node.js may work, they are not officially supported.
 
@@ -49,7 +51,14 @@ Options:
   -h, --help                         display help for command
 ```
 
-# Installation for Developers
+# GoFSH Developer Instructions
+
+## Intro to GoFSH Development
+
+To learn more about GoFSH, watch the Knowledge Sharing Sessions for [Developing FSH Tools](https://vimeo.com/990594107/c35c3f5e43) (view the slides [here](https://confluence.hl7.org/display/FHIR/FSH+Knowledge+Sharing+Sessions?preview=/256509612/256514908/KSS%203%20-%20Developing%20FSH%20Tools.pdf)) and [Developing GoFSH](https://vimeo.com/1001309480/f2b262aee7) (view the slides [here](https://confluence.hl7.org/display/FHIR/FSH+Knowledge+Sharing+Sessions?preview=/256509612/265487253/KSS%205%20-%20Developing%20GoFSH.pdf)).
+These sessions provide a technical overview of the codebase and summarize key concepts for developers.
+
+## Installation for Developers
 
 GoFSH is a [TypeScript](https://www.typescriptlang.org/) project. At a minimum, GoFSH requires [Node.js](https://nodejs.org/) to build, test, and run the CLI. Developers should install Node.js 18. Although previous versions of Node.js may work, they are not officially supported.
 
@@ -59,7 +68,7 @@ Once Node.js is installed, run the following command from this project's root fo
 $ npm install
 ```
 
-# NPM tasks
+## NPM tasks
 
 The following NPM tasks are useful in development:
 
@@ -83,7 +92,7 @@ To run any of these tasks, use `npm run`. For example:
 $ npm run check
 ```
 
-# Recommended Development Environment
+## Recommended Development Environment
 
 For the best experience, developers should use [Visual Studio Code](https://code.visualstudio.com/) with the following plugins:
 
