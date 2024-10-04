@@ -5,9 +5,13 @@ import { Package } from '../../../src/processor';
 import {
   ExportableAssignmentRule,
   ExportableCaretValueRule,
+  ExportableCodeSystem,
   ExportableExtension,
   ExportableInstance,
-  ExportableProfile
+  ExportableLogical,
+  ExportableProfile,
+  ExportableResource,
+  ExportableValueSet
 } from '../../../src/exportable';
 import optimizer from '../../../src/optimizer/plugins/ConstructInlineInstanceOptimizer';
 import {
@@ -451,6 +455,8 @@ describe('optimizer', () => {
       let containedId2: ExportableCaretValueRule;
       let profile: ExportableProfile;
       let extension: ExportableExtension;
+      let logical: ExportableLogical;
+      let resource: ExportableResource;
 
       beforeEach(() => {
         containedResourceType1 = new ExportableCaretValueRule('');
@@ -471,6 +477,10 @@ describe('optimizer', () => {
         profile.parent = 'Patient';
 
         extension = new ExportableExtension('FooExtension');
+
+        logical = new ExportableLogical('Pretzel');
+
+        resource = new ExportableResource('Toast');
       });
 
       it('should create inline instances from contained resources on a profile', () => {
@@ -555,6 +565,90 @@ describe('optimizer', () => {
         inlineInstanceRule2.value = 'Baz';
         inlineInstanceRule2.isInstance = true;
         expect(extension.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
+      });
+
+      it('should create inline instances from contained resources on a logical', () => {
+        logical.rules = [
+          containedResourceType1,
+          containedId1,
+          containedResourceType2,
+          containedId2
+        ];
+        const myPackage = new Package();
+        myPackage.add(logical);
+        optimizer.optimize(myPackage, fisher);
+
+        expect(myPackage.instances).toHaveLength(2);
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+        assertExportableInstance(
+          myPackage.instances[1],
+          'Baz',
+          'ValueSet',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        const inlineInstanceRule2 = new ExportableCaretValueRule('');
+        inlineInstanceRule2.caretPath = 'contained[1]';
+        inlineInstanceRule2.value = 'Baz';
+        inlineInstanceRule2.isInstance = true;
+        expect(logical.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
+      });
+
+      it('should create inline instances from contained resources on a resource', () => {
+        resource.rules = [
+          containedResourceType1,
+          containedId1,
+          containedResourceType2,
+          containedId2
+        ];
+        const myPackage = new Package();
+        myPackage.add(resource);
+        optimizer.optimize(myPackage, fisher);
+
+        expect(myPackage.instances).toHaveLength(2);
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+        assertExportableInstance(
+          myPackage.instances[1],
+          'Baz',
+          'ValueSet',
+          'Inline',
+          undefined,
+          undefined,
+          []
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        const inlineInstanceRule2 = new ExportableCaretValueRule('');
+        inlineInstanceRule2.caretPath = 'contained[1]';
+        inlineInstanceRule2.value = 'Baz';
+        inlineInstanceRule2.isInstance = true;
+        expect(resource.rules).toEqual([inlineInstanceRule1, inlineInstanceRule2]);
       });
 
       it('should create an inline instance from a contained resource with non-numeric paths', () => {
@@ -1116,6 +1210,184 @@ describe('optimizer', () => {
         inlineInstanceRule1.value = 'Bar';
         inlineInstanceRule1.isInstance = true;
         expect(profile.rules).toEqual([inlineInstanceRule1]);
+      });
+    });
+
+    describe('ValueSets', () => {
+      // All FSH types that use Caret rules work the same in this optimizer,
+      // so a limited subset of the tests from StructureDefinitions are used here.
+      let containedResourceType1: ExportableCaretValueRule;
+      let containedId1: ExportableCaretValueRule;
+      let valueSet: ExportableValueSet;
+
+      beforeEach(() => {
+        containedResourceType1 = new ExportableCaretValueRule('');
+        containedResourceType1.caretPath = 'contained[0].resourceType';
+        containedResourceType1.value = 'Observation';
+        containedId1 = new ExportableCaretValueRule('');
+        containedId1.caretPath = 'contained[0].id';
+        containedId1.value = 'Bar';
+
+        valueSet = new ExportableValueSet('MyValueSet');
+      });
+
+      it('should create an inline instance from a contained resource with additional rules', () => {
+        const containedString = new ExportableCaretValueRule('');
+        containedString.caretPath = 'contained[0].valueString';
+        containedString.value = 'string value';
+        valueSet.rules = [containedResourceType1, containedId1, containedString];
+        const myPackage = new Package();
+        myPackage.add(valueSet);
+        optimizer.optimize(myPackage, fisher);
+
+        expect(myPackage.instances).toHaveLength(1);
+        const expectedRule = new ExportableAssignmentRule('valueString');
+        expectedRule.value = 'string value';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [expectedRule]
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(valueSet.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create a profiled inline instance from a contained resource with multiple profiles when the metaProfile option is first', () => {
+        const containedProfile1 = new ExportableCaretValueRule('');
+        containedProfile1.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const containedProfile2 = new ExportableCaretValueRule('');
+        containedProfile2.caretPath = 'contained[0].meta.profile[1]';
+        containedProfile2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        valueSet.rules = [
+          containedResourceType1,
+          containedId1,
+          containedProfile1,
+          containedProfile2
+        ];
+        const myPackage = new Package();
+        myPackage.add(valueSet);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'first' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule1 = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule1.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule1]
+        );
+        // Even though the second entry in meta.profile won't resolve, we don't try to resolve them when there is more than one.
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(valueSet.rules).toEqual([inlineInstanceRule1]);
+      });
+    });
+
+    describe('CodeSystems', () => {
+      // All FSH types that use Caret rules work the same in this optimizer,
+      // so a limited subset of the tests from StructureDefinitions are used here.
+      let containedResourceType1: ExportableCaretValueRule;
+      let containedId1: ExportableCaretValueRule;
+      let codeSystem: ExportableCodeSystem;
+
+      beforeEach(() => {
+        containedResourceType1 = new ExportableCaretValueRule('');
+        containedResourceType1.caretPath = 'contained[0].resourceType';
+        containedResourceType1.value = 'Observation';
+        containedId1 = new ExportableCaretValueRule('');
+        containedId1.caretPath = 'contained[0].id';
+        containedId1.value = 'Bar';
+
+        codeSystem = new ExportableCodeSystem('MyCodeSystem');
+      });
+
+      it('should create an inline instance from a contained resource with additional rules', () => {
+        const containedString = new ExportableCaretValueRule('');
+        containedString.caretPath = 'contained[0].valueString';
+        containedString.value = 'string value';
+        codeSystem.rules = [containedResourceType1, containedId1, containedString];
+        const myPackage = new Package();
+        myPackage.add(codeSystem);
+        optimizer.optimize(myPackage, fisher);
+
+        expect(myPackage.instances).toHaveLength(1);
+        const expectedRule = new ExportableAssignmentRule('valueString');
+        expectedRule.value = 'string value';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'Observation',
+          'Inline',
+          undefined,
+          undefined,
+          [expectedRule]
+        );
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(codeSystem.rules).toEqual([inlineInstanceRule1]);
+      });
+
+      it('should create a profiled inline instance from a contained resource with multiple profiles when the metaProfile option is first', () => {
+        const containedProfile1 = new ExportableCaretValueRule('');
+        containedProfile1.caretPath = 'contained[0].meta.profile[0]';
+        containedProfile1.value = 'http://hl7.org/fhir/StructureDefinition/vitalsigns';
+        const containedProfile2 = new ExportableCaretValueRule('');
+        containedProfile2.caretPath = 'contained[0].meta.profile[1]';
+        containedProfile2.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        codeSystem.rules = [
+          containedResourceType1,
+          containedId1,
+          containedProfile1,
+          containedProfile2
+        ];
+        const myPackage = new Package();
+        myPackage.add(codeSystem);
+        optimizer.optimize(myPackage, fisher, { metaProfile: 'first' });
+
+        expect(myPackage.instances).toHaveLength(1);
+        const profileRule1 = new ExportableAssignmentRule('meta.profile[0]');
+        profileRule1.value =
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab';
+        assertExportableInstance(
+          myPackage.instances[0],
+          'Bar',
+          'http://hl7.org/fhir/StructureDefinition/vitalsigns',
+          'Inline',
+          undefined,
+          undefined,
+          [profileRule1]
+        );
+        // Even though the second entry in meta.profile won't resolve, we don't try to resolve them when there is more than one.
+        expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
+
+        const inlineInstanceRule1 = new ExportableCaretValueRule('');
+        inlineInstanceRule1.caretPath = 'contained[0]';
+        inlineInstanceRule1.value = 'Bar';
+        inlineInstanceRule1.isInstance = true;
+        expect(codeSystem.rules).toEqual([inlineInstanceRule1]);
       });
     });
   });
