@@ -157,6 +157,35 @@ describe('ConfigurationExtractor', () => {
         expect(loggerSpy.getAllMessages('warn')).toHaveLength(0);
       });
 
+      it('should create a Configuration from an ImplementationGuide with supported fhirVersions', () => {
+        const ig = JSON.parse(
+          fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
+        );
+        let result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.fhirVersion).toEqual(['4.5.0']); // From IG
+
+        ig.fhirVersion = ['4.0.1'];
+        result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.fhirVersion).toEqual(['4.0.1']); // From IG
+
+        ig.fhirVersion = ['5.0.0'];
+        result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.fhirVersion).toEqual(['5.0.0']); // From IG
+
+        ig.fhirVersion = ['6.0.0-ballot2'];
+        result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.fhirVersion).toEqual(['6.0.0-ballot2']); // From IG
+
+        ig.fhirVersion = ['6.0.0'];
+        result = ConfigurationExtractor.process([ig, ...resources]);
+        expect(result).toBeInstanceOf(ExportableConfiguration);
+        expect(result.config.fhirVersion).toEqual(['6.0.0']); // From IG
+      });
+
       it('should create a Configuration with an inferred url form an ImplementationGuide missing a url', () => {
         const ig = JSON.parse(
           fs.readFileSync(path.join(__dirname, 'fixtures', 'missing-url-ig.json'), 'utf-8')
