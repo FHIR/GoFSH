@@ -31,9 +31,16 @@ export default {
 
   optimize(pkg: Package, fisher: MasterFisher, options: ProcessingOptions = {}): void {
     const inlineInstances: ExportableInstance[] = [];
-    // Only construct inline instances in instances, profiles, and extensions.
     // If we add support for other types, update SimplifyInstanceNameOptimizer as well.
-    [...pkg.instances, ...pkg.profiles, ...pkg.extensions].forEach(resource => {
+    [
+      ...pkg.instances,
+      ...pkg.profiles,
+      ...pkg.extensions,
+      ...pkg.logicals,
+      ...pkg.resources,
+      ...pkg.codeSystems,
+      ...pkg.valueSets
+    ].forEach(resource => {
       const ruleType =
         resource instanceof ExportableInstance
           ? ExportableAssignmentRule
