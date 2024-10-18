@@ -35,7 +35,15 @@ export default {
     });
 
     // Fix up inline assignments in types that may have them (see: ConstructInlineInstanceOptimizer)
-    [...pkg.instances, ...pkg.profiles, ...pkg.extensions].forEach(resource => {
+    [
+      ...pkg.instances,
+      ...pkg.profiles,
+      ...pkg.extensions,
+      ...pkg.logicals,
+      ...pkg.resources,
+      ...pkg.codeSystems,
+      ...pkg.valueSets
+    ].forEach(resource => {
       const inlineAssignmentRules = resource.rules.filter(
         rule =>
           (rule instanceof ExportableAssignmentRule || rule instanceof ExportableCaretValueRule) &&
