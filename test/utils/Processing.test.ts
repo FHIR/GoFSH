@@ -5,7 +5,6 @@ import { Fhir } from 'fhir/fhir';
 import readlineSync from 'readline-sync';
 import { loggerSpy } from '../helpers/loggerSpy';
 import {
-  determineCorePackageId,
   ensureOutputDir,
   getInputDir,
   getResources,
@@ -40,7 +39,8 @@ jest.mock('fhir-package-loader', () => {
       if (
         packageName === 'hl7.fhir.r4.core' ||
         packageName === 'hl7.fhir.us.core' ||
-        packageName === 'hl7.fhir.r4b.core'
+        packageName === 'hl7.fhir.r4b.core' ||
+        packageName === 'hl7.fhir.r6.core'
       ) {
         loadedPackages.push(`${packageName}#${version}`);
         return Promise.resolve(FHIRDefs);
@@ -59,7 +59,7 @@ jest.mock('fsh-sushi', () => {
     utils: {
       ...original.utils,
       loadAutomaticDependencies: jest.fn(async () => {
-        // this is just one of the usual automatic depencies, as an example
+        // this is just one of the usual automatic dependencies, as an example
         loadedPackages.push('hl7.terminology.r4#1.0.0');
         return Promise.resolve();
       })
@@ -611,6 +611,44 @@ describe('Processing', () => {
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
 
+    it('should load FHIR R6 prerelease when specified in config fhirVersion', async () => {
+      const config = new ExportableConfiguration({
+        FSHOnly: true,
+        canonical: 'http://example.org',
+        fhirVersion: ['6.0.0-ballot2'],
+        id: 'example',
+        name: 'Example',
+        applyExtensionMetadataToRoot: false,
+        dependencies: [{ packageId: 'hl7.fhir.us.core', version: '3.1.0' }]
+      });
+      const defs = new FHIRDefinitions();
+      await loadExternalDependencies(defs, config);
+      expect(loadedPackages).toHaveLength(3);
+      expect(loadedPackages).toContain('hl7.fhir.r6.core#6.0.0-ballot2');
+      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
+      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+    });
+
+    it('should load FHIR R6 official release when specified in config fhirVersion', async () => {
+      const config = new ExportableConfiguration({
+        FSHOnly: true,
+        canonical: 'http://example.org',
+        fhirVersion: ['6.0.0'],
+        id: 'example',
+        name: 'Example',
+        applyExtensionMetadataToRoot: false,
+        dependencies: [{ packageId: 'hl7.fhir.us.core', version: '3.1.0' }]
+      });
+      const defs = new FHIRDefinitions();
+      await loadExternalDependencies(defs, config);
+      expect(loadedPackages).toHaveLength(3);
+      expect(loadedPackages).toContain('hl7.fhir.r6.core#6.0.0');
+      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
+      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+    });
+
     it('should not add the identified FHIR core package to the list of dependencies when it is already there', async () => {
       const config = new ExportableConfiguration({
         FSHOnly: true,
@@ -702,6 +740,28 @@ describe('Processing', () => {
         expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
       });
     });
+
+    it('should load FHIR R6 prerelease if specified', () => {
+      const defs = new FHIRDefinitions();
+      const dependencies = ['hl7.fhir.r6.core@6.0.0-ballot2'];
+      const dependencyDefs = loadConfiguredDependencies(defs, dependencies);
+      return Promise.all(dependencyDefs).then(() => {
+        expect(loadedPackages).toHaveLength(1);
+        expect(loadedPackages).toContain('hl7.fhir.r6.core#6.0.0-ballot2'); // Only contains r6, doesn't load r4
+        expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      });
+    });
+
+    it('should load FHIR R6 if specified', () => {
+      const defs = new FHIRDefinitions();
+      const dependencies = ['hl7.fhir.r6.core@6.0.0'];
+      const dependencyDefs = loadConfiguredDependencies(defs, dependencies);
+      return Promise.all(dependencyDefs).then(() => {
+        expect(loadedPackages).toHaveLength(1);
+        expect(loadedPackages).toContain('hl7.fhir.r6.core#6.0.0'); // Only contains r6, doesn't load r4
+        expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
+      });
+    });
   });
 
   describe('getIgPathFromIgIni', () => {
@@ -734,28 +794,6 @@ describe('Processing', () => {
     it('should return nothing if no ig.ini file present', () => {
       const ig = getIgPathFromIgIni(path.join(__dirname, 'fixtures', 'all-good'));
       expect(ig).toBeUndefined();
-    });
-  });
-
-  describe('determineCorePackageId', () => {
-    it('should get R4 package id with R4 version', () => {
-      expect(determineCorePackageId('4.0.1')).toEqual('hl7.fhir.r4.core');
-    });
-
-    it('should get R4B package id with R4B versions', () => {
-      expect(determineCorePackageId('4.1.0')).toEqual('hl7.fhir.r4b.core');
-      expect(determineCorePackageId('4.3.0')).toEqual('hl7.fhir.r4b.core');
-      expect(determineCorePackageId('4.3.0-snapshot1')).toEqual('hl7.fhir.r4b.core');
-    });
-
-    it('should get R5 package id with R5 version', () => {
-      expect(determineCorePackageId('4.6.0')).toEqual('hl7.fhir.r5.core');
-      expect(determineCorePackageId('5.0.0')).toEqual('hl7.fhir.r5.core');
-      expect(determineCorePackageId('5.0.0-snapshot1')).toEqual('hl7.fhir.r5.core');
-    });
-
-    it('should default to R5 package id when version is unrecognized', () => {
-      expect(determineCorePackageId('6.0.0')).toEqual('hl7.fhir.r5.core');
     });
   });
 
