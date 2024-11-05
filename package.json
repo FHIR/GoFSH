@@ -19,7 +19,7 @@
   "bin": {
     "gofsh": "dist/app.js"
   },
-  "types": "dist/app.d.ts",
+  "types": "dist/index.d.ts",
   "files": [
     "dist/**/*.{js,json,d.ts}",
     "dist/utils/template.html"
