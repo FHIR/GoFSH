@@ -1,0 +1,65 @@
+{
+  "resourceType": "ValueSet",
+  "id": "example-valueset",
+  "name": "ValueSetWithContainedSystem",
+  "contained": [
+    {
+      "resourceType": "CodeSystem",
+      "id": "example-codesystem",
+      "url": "http://example.org/codesystem",
+      "version": "1.0.0",
+      "content": "complete",
+      "status": "active",
+      "concept": [
+        {
+          "code": "example-code-1",
+          "display": "Example Code 1"
+        },
+        {
+          "code": "example-code-2",
+          "display": "Example Code 2"
+        },
+        {
+          "code": "example-code-3",
+          "display": "Example Code 3"
+        }
+      ]
+    }
+  ],
+  "url": "http://example.org/valueset",
+  "version": "1.0.0",
+  "status": "active",
+  "compose": {
+    "include": [
+      {
+        "system": "http://example.org/codesystem",
+        "_system": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/valueset-system",
+              "valueCanonical": "#example-codesystem"
+            }
+          ]
+        }
+      }
+    ],
+    "exclude": [
+      {
+        "system": "http://example.org/codesystem",
+        "_system": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/valueset-system",
+              "valueCanonical": "#example-codesystem"
+            }
+          ]
+        },
+        "concept": [
+          {
+            "code": "example-code-2"
+          }
+        ]
+      }
+    ]
+  }
+}

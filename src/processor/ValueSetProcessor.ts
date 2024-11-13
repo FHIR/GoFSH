@@ -1,5 +1,5 @@
 import { utils, fhirtypes, fshtypes } from 'fsh-sushi';
-import { capitalize, compact, difference } from 'lodash';
+import { capitalize, compact, difference, isEmpty } from 'lodash';
 import { flatten } from 'flat';
 import { ExportableValueSet } from '../exportable';
 import {
@@ -19,6 +19,8 @@ const SUPPORTED_COMPONENT_PATHS = [
   'filter.value',
   'valueSet'
 ];
+
+const VALUESET_SYSTEM_EXTENSION = 'http://hl7.org/fhir/StructureDefinition/valueset-system';
 
 export class ValueSetProcessor {
   static extractKeywords(input: ProcessableValueSet, target: ExportableValueSet): void {
@@ -97,6 +99,10 @@ export class ValueSetProcessor {
   // For example, if there is no name or id we cannot process it.  In addition, if compose.include
   // or compose.exclude have extensions, or concepts have designations, etc., then we can't
   // represent it in FSH ValueSet syntax.  It must be represented using Instance instead.
+  // One extension is allowed, though: the valueset-system extension, which may be present on
+  // component.include.system or component.exclude.system. This extension is present when the system
+  // refers to a contained CodeSystem. SUSHI adds it automatically, so we can safely ignore it here
+  // and SUSHI will handle it correctly.
   // NOTE: by FHIR spec, if the include list exists, it must contain at least one element
   // but we can still do some processing without that as long as other criteria holds.
   // See http://hl7.org/fhir/r4/valueset-definitions.html#ValueSet.compose.include
@@ -107,7 +113,24 @@ export class ValueSetProcessor {
     // We support all higher-level paths via caret rules.  We only need to worry about the
     // input.compose.include and input.compose.exclude components because there is no easy way
     // to associate caret rules with them when the special FSH include/exclude syntax is used.
-    // First get the flat paths of input.compose.include and input.compose.exclude
+    // First thing to do is to remove the VALUESET_SYSTEM_EXTENSION. If it's the only extension,
+    // we can remove the extension array, and if _system has no properties left, we can remove it, too.
+    [...(input.compose?.include ?? []), ...(input.compose?.exclude ?? [])].forEach(
+      (component: any) => {
+        if (component._system?.extension) {
+          component._system.extension = component._system.extension.filter(
+            (ext: any) => ext.url !== VALUESET_SYSTEM_EXTENSION
+          );
+          if (component._system.extension.length === 0) {
+            delete component._system.extension;
+          }
+          if (isEmpty(component._system)) {
+            delete component._system;
+          }
+        }
+      }
+    );
+    // Second, get the flat paths of input.compose.include and input.compose.exclude
     let flatPaths = Object.keys(
       flatten([...(input.compose?.include ?? []), ...(input.compose?.exclude ?? [])])
     );

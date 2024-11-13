@@ -97,12 +97,17 @@ describe('ValueSetProcessor', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should not convert a ValueSet with a compose.include.system extension', () => {
+    it('should not convert a ValueSet with an arbitrary compose.include.system extension', () => {
       const input = JSON.parse(
         fs.readFileSync(path.join(__dirname, 'fixtures', 'composed-valueset.json'), 'utf-8')
       );
       input.compose.include[0]._system = {
-        extension: {}
+        extension: [
+          {
+            url: 'http://example.org/SomeExtension',
+            valueString: 'arbitrary'
+          }
+        ]
       };
       const result = ValueSetProcessor.process(input, defs, config);
       expect(result).toBeUndefined();
@@ -124,6 +129,27 @@ describe('ValueSetProcessor', () => {
       );
       const result = ValueSetProcessor.process(input, defs, config);
       expect(result.rules.length).toBeGreaterThan(0);
+    });
+
+    it('should process a valueset with components from a contained code system and using the valueset-system extension', () => {
+      const input = JSON.parse(
+        fs.readFileSync(
+          path.join(__dirname, 'fixtures', 'valueset-with-contained-codesystem.json'),
+          'utf-8'
+        )
+      );
+      const workingValueSet = ValueSetProcessor.process(input, defs, config);
+
+      const rules = workingValueSet.rules;
+      const expectedInclusion = new ExportableValueSetFilterComponentRule(true);
+      expectedInclusion.from = { system: 'http://example.org/codesystem' };
+      const expectedExclusion = new ExportableValueSetConceptComponentRule(false);
+      expectedExclusion.from = { system: 'http://example.org/codesystem' };
+      expectedExclusion.concepts.push(
+        new FshCode('example-code-2', 'http://example.org/codesystem')
+      );
+      expect(rules).toContainEqual(expectedInclusion);
+      expect(rules).toContainEqual(expectedExclusion);
     });
   });
 
