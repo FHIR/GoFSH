@@ -1,9 +1,20 @@
 import path from 'path';
-import { loadFromPath } from 'fhir-package-loader';
-import { FHIRDefinitions } from '../../src/utils';
+import { DiskBasedVirtualPackage } from 'fhir-package-loader';
+import { FHIRDefinitions, logMessage } from '../../src/utils';
 
-export function loadTestDefinitions(): FHIRDefinitions {
+export async function loadTestDefinitions(): Promise<FHIRDefinitions> {
   const defs = new FHIRDefinitions();
-  loadFromPath(path.join(__dirname), 'testdefs', defs);
+  await defs.initialize();
+  await defs.loadVirtualPackage(
+    new DiskBasedVirtualPackage(
+      { name: 'gofsh-test-defs', version: '1.0.0' },
+      [path.join(__dirname, 'testdefs')],
+      {
+        log: logMessage,
+        allowNonResources: true, // support for logical instances
+        recursive: true
+      }
+    )
+  );
   return defs;
 }

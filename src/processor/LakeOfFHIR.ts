@@ -5,11 +5,16 @@ import { CONFORMANCE_AND_TERMINOLOGY_RESOURCES } from './InstanceProcessor';
 import { StructureDefinitionProcessor } from './StructureDefinitionProcessor';
 import { ValueSetProcessor } from './ValueSetProcessor';
 import { WildFHIR } from './WildFHIR';
-import { FHIRDefinitions, logger } from '../utils';
+import { FHIRDefinitions, logger, logMessage } from '../utils';
+import { InMemoryVirtualPackage } from 'fhir-package-loader';
 
 // Like FSHTank in SUSHI, but it doesn't contain FSH, it contains FHIR.  And who ever heard of a tank of FHIR?  But a lake of FHIR...
 export class LakeOfFHIR implements utils.Fishable {
-  constructor(public docs: WildFHIR[]) {}
+  readonly defs: FHIRDefinitions;
+
+  constructor(public docs: WildFHIR[]) {
+    this.defs = new FHIRDefinitions();
+  }
 
   /**
    * Gets all non-instance structure definitions (profiles, extensions, logicals, and resources) in the lake
@@ -111,14 +116,33 @@ export class LakeOfFHIR implements utils.Fishable {
     }
   }
 
+  async prepareDefs() {
+    // In theory, this.docs can be modified at any time. In practice, GoFSH only modifies it with calls to
+    // removeDuplicateDefinitions and assignMissingIds, which are called before the lake is ever used.
+    // So, it's reasonably safe to provide this function to be called right after those modification functions.
+    await this.defs.initialize();
+    const lakeMap = new Map<string, any>();
+    this.docs.forEach(wildFHIR => {
+      lakeMap.set(wildFHIR.path, wildFHIR.content);
+    });
+    const lakePackage = new InMemoryVirtualPackage(
+      { name: 'wild-fhir', version: '1.0.0' },
+      lakeMap,
+      {
+        log: (level: string, message: string) => {
+          logMessage(level, message);
+        }
+      }
+    );
+    return this.defs.loadVirtualPackage(lakePackage);
+  }
+
   fishForFHIR(item: string, ...types: utils.Type[]) {
     // The simplest approach is just to re-use the FHIRDefinitions fisher.  But since this.docs can be modified by anyone at any time
     // the only safe way to do this is by rebuilding a FHIRDefinitions object each time we need it.  If this becomes a performance
     // concern, we can optimize it later -- but performance isn't a huge concern in GoFSH. Note also that this approach may need to be
     // updated if we ever need to support fishing for Instances.
-    const defs = new FHIRDefinitions();
-    this.docs.forEach(d => defs.add(d.content));
-    return defs.fishForFHIR(item, ...types);
+    return this.defs.fishForFHIR(item, ...types);
   }
 
   fishForMetadata(item: string, ...types: utils.Type[]): utils.Metadata {
@@ -126,9 +150,7 @@ export class LakeOfFHIR implements utils.Fishable {
     // the only safe way to do this is by rebuilding a FHIRDefinitions object each time we need it.  If this becomes a performance
     // concern, we can optimize it later -- but performance isn't a huge concern in GoFSH. Note also that this approach may need to be
     // updated if we ever need to support fishing for Instances.
-    const defs = new FHIRDefinitions();
-    this.docs.forEach(d => defs.add(d.content));
-    return defs.fishForMetadata(item, ...types);
+    return this.defs.fishForMetadata(item, ...types);
   }
 
   /**

@@ -7,7 +7,7 @@ import { loggerSpy } from '../helpers/loggerSpy';
 describe('LakeOfHIR', () => {
   let lake: LakeOfFHIR;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     lake = new LakeOfFHIR(
       getWildFHIRs(
         'logical-profile.json',
@@ -24,6 +24,7 @@ describe('LakeOfHIR', () => {
         'my-string-profile.json'
       )
     );
+    await lake.prepareDefs();
   });
 
   beforeEach(() => {

@@ -1,7 +1,13 @@
 import { createLogger, format, transports } from 'winston';
+import { TransformableInfo } from 'logform';
 import chalk from 'chalk';
 
 const { combine, printf } = format;
+
+interface LoggerInfo extends TransformableInfo {
+  file?: string;
+  location?: string;
+}
 
 const incrementCounts = format(info => {
   switch (info.level) {
@@ -24,19 +30,19 @@ const incrementCounts = format(info => {
   return info;
 });
 
-const trackErrorsAndWarnings = format(info => {
+const trackErrorsAndWarnings = format((info: LoggerInfo) => {
   if (!errorsAndWarnings.shouldTrack) {
     return info;
   }
   if (info.level === 'error') {
     errorsAndWarnings.errors.push({
-      message: info.message,
+      message: info.message as string,
       location: info.location,
       input: info.file
     });
   } else if (info.level === 'warn') {
     errorsAndWarnings.warnings.push({
-      message: info.message,
+      message: info.message as string,
       location: info.location,
       input: info.file
     });

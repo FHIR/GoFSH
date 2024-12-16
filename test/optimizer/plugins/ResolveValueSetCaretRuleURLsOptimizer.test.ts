@@ -12,9 +12,9 @@ describe('optimizer', () => {
     let lake: LakeOfFHIR;
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      defs = loadTestDefinitions();
-      lake = stockLake(path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
+    beforeAll(async () => {
+      defs = await loadTestDefinitions();
+      lake = await stockLake(path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
       fisher = new MasterFisher(lake, defs);
     });
 

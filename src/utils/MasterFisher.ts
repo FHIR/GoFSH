@@ -9,8 +9,8 @@ import { FHIRDefinitions } from '../utils';
  */
 export class MasterFisher implements utils.Fishable {
   constructor(
-    public lakeOfFHIR = new LakeOfFHIR([]),
-    public external = new FHIRDefinitions()
+    public lakeOfFHIR: LakeOfFHIR,
+    public external: FHIRDefinitions
   ) {}
 
   fishForStructureDefinition(item: string) {
@@ -31,13 +31,15 @@ export class MasterFisher implements utils.Fishable {
   }
 
   fishForFHIR(item: string, ...types: utils.Type[]) {
-    return this.lakeOfFHIR.fishForFHIR(item, ...types) ?? this.external.fishForFHIR(item, ...types);
+    return (
+      this.lakeOfFHIR.fishForFHIR(item, ...types) ?? this.external?.fishForFHIR(item, ...types)
+    );
   }
 
   fishForMetadata(item: string, ...types: utils.Type[]): utils.Metadata {
     return (
       this.lakeOfFHIR.fishForMetadata(item, ...types) ??
-      this.external.fishForMetadata(item, ...types)
+      this.external?.fishForMetadata(item, ...types)
     );
   }
 }

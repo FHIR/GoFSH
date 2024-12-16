@@ -2,8 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import ini from 'ini';
 import readlineSync from 'readline-sync';
-import { mergeDependency } from 'fhir-package-loader';
-import { logger, logMessage } from './GoFSHLogger';
+import { logger } from './GoFSHLogger';
 import { fhirtypes, utils } from 'fsh-sushi';
 import {
   Package,
@@ -58,14 +57,19 @@ export function ensureOutputDir(output = path.join('.', 'gofsh')): string {
   return output;
 }
 
-export function getFhirProcessor(inDir: string, defs: FHIRDefinitions, fileType: string) {
+export async function getFhirProcessor(inDir: string, defs: FHIRDefinitions, fileType: string) {
   const lake = getLakeOfFHIR(inDir, fileType);
 
   // Assign any missing ids where we can before filtering out duplicates so that all
   // the definitions with the same resourceType without an id don't get filtered out.
   lake.assignMissingIds();
   lake.removeDuplicateDefinitions();
+  await lake.prepareDefs();
 
+  if (defs == null) {
+    defs = new FHIRDefinitions();
+  }
+  await defs.initialize();
   const igIniIgPath = getIgPathFromIgIni(inDir);
   const fisher = new MasterFisher(lake, defs);
   return new FHIRProcessor(lake, fisher, igIniIgPath);
@@ -131,20 +135,19 @@ export async function loadExternalDependencies(
     // @ts-ignore TODO: this can be removed once SUSHI changes the type signature for this function to use FPL's FHIRDefinitions type
     defs
   );
-  await Promise.all(loadConfiguredDependencies(defs, allDependencies));
+  await loadConfiguredDependencies(defs, allDependencies);
 }
 
-export function loadConfiguredDependencies(
+export async function loadConfiguredDependencies(
   defs: FHIRDefinitions,
   dependencies: string[] = []
-): Promise<FHIRDefinitions | void>[] {
+): Promise<FHIRDefinitions | void> {
   // Automatically include FHIR R4 if no other versions of FHIR are already included
   if (!dependencies.some(dep => /hl7\.fhir\.r(4|5|4b|6)\.core/.test(dep))) {
     dependencies.push('hl7.fhir.r4.core@4.0.1');
   }
 
   // Load dependencies
-  const dependencyDefs: Promise<FHIRDefinitions | void>[] = [];
   for (const dep of dependencies) {
     const [packageId, version] = dep.split('@');
     if (version == null) {
@@ -154,17 +157,14 @@ export function loadConfiguredDependencies(
       );
       continue;
     }
-    dependencyDefs.push(
-      mergeDependency(packageId, version, defs, undefined, logMessage)
-        .then((def: FHIRDefinitions) => {
-          return def;
-        })
-        .catch(e => {
-          logger.error(`Failed to load ${dep}: ${e.message}`);
-        })
-    );
+    await defs.loadPackage(packageId, version).catch(e => {
+      logger.error(`Failed to load ${packageId}#${version}: ${e.message}`);
+      if (e.stack) {
+        logger.debug(e.stack);
+      }
+    });
   }
-  return dependencyDefs;
+  return defs;
 }
 
 export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {

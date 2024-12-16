@@ -70,7 +70,9 @@ export async function fhirToFsh(
 
   // Set up the FHIRProcessor
   const lake = new LakeOfFHIR(docs);
+  await lake.prepareDefs();
   const defs = new FHIRDefinitions();
+  await defs.initialize();
   const fisher = new MasterFisher(lake, defs);
   const processor = new FHIRProcessor(lake, fisher);
 

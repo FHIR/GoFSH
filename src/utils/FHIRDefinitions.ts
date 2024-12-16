@@ -1,8 +1,7 @@
-import { FHIRDefinitions as BaseFHIRDefinitions, Type } from 'fhir-package-loader';
-import { utils } from 'fsh-sushi';
+import { utils, fhirdefs } from 'fsh-sushi';
 
-export class FHIRDefinitions extends BaseFHIRDefinitions implements utils.Fishable {
-  fishForMetadata(item: string, ...types: Type[]): utils.Metadata | undefined {
+export class FHIRDefinitions extends fhirdefs.FHIRDefinitions implements utils.Fishable {
+  fishForMetadata(item: string, ...types: utils.Type[]): utils.Metadata | undefined {
     const result = this.fishForFHIR(item, ...types);
     if (result) {
       return {

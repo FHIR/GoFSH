@@ -9,18 +9,20 @@ import {
   getPathValuePairs,
   getCardinality,
   getAncestorElement,
-  getAncestorSliceDefinition
+  getAncestorSliceDefinition,
+  logMessage
 } from '../../src/utils';
 import { ProcessableElementDefinition, ProcessableStructureDefinition } from '../../src/processor';
 import { loggerSpy } from '../helpers/loggerSpy';
 
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
+import { DiskBasedVirtualPackage } from 'fhir-package-loader';
 
 describe('element', () => {
   let defs: FHIRDefinitions;
 
-  beforeAll(() => {
-    defs = loadTestDefinitions();
+  beforeAll(async () => {
+    defs = await loadTestDefinitions();
   });
 
   beforeEach(() => {
@@ -381,8 +383,8 @@ describe('element', () => {
     let parentJson: any;
     let childJson: any;
 
-    beforeAll(() => {
-      defs = loadTestDefinitions();
+    beforeAll(async () => {
+      defs = await loadTestDefinitions();
       parentJson = JSON.parse(
         fs.readFileSync(
           path.join(__dirname, '..', 'processor', 'fixtures', 'parent-observation.json'),
@@ -395,8 +397,19 @@ describe('element', () => {
           'utf-8'
         )
       );
-      defs.add(parentJson);
-      defs.add(childJson);
+      const extraResources = new DiskBasedVirtualPackage(
+        { name: 'element-extra-defs', version: '1.0.0' },
+        [
+          path.join(__dirname, '..', 'processor', 'fixtures', 'parent-observation.json'),
+          path.join(__dirname, '..', 'processor', 'fixtures', 'child-observation.json')
+        ],
+        {
+          log: logMessage,
+          allowNonResources: true,
+          recursive: false
+        }
+      );
+      await defs.loadVirtualPackage(extraResources);
     });
 
     it('should find a slice defined directly on an ancestor', () => {

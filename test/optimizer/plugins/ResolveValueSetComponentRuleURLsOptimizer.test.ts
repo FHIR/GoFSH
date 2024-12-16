@@ -7,9 +7,8 @@ import {
   ExportableValueSetFilterComponentRule
 } from '../../../src/exportable';
 import { FHIRDefinitions, MasterFisher } from '../../../src/utils';
-import { loadTestDefinitions, stockLake } from '../../helpers';
+import { loadTestDefinitions, restockLake } from '../../helpers';
 import optimizer from '../../../src/optimizer/plugins/ResolveValueSetComponentRuleURLsOptimizer';
-import { cloneDeep } from 'lodash';
 import { FshCode } from 'fsh-sushi/dist/fshtypes';
 
 describe('optimizer', () => {
@@ -18,15 +17,13 @@ describe('optimizer', () => {
     let lake: LakeOfFHIR;
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      defs = loadTestDefinitions();
-      lake = stockLake(
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
-      );
-      fisher = new MasterFisher(lake, defs);
+    beforeAll(async () => {
+      defs = await loadTestDefinitions();
+      defs.initialize();
+    });
+
+    beforeEach(async () => {
+      lake = new LakeOfFHIR([]);
     });
 
     it('should have appropriate metadata', () => {
@@ -36,13 +33,21 @@ describe('optimizer', () => {
       expect(optimizer.runAfter).toBeUndefined();
     });
 
-    it('should replace filter rule system url with the name of a local CodeSystem', () => {
+    it('should replace filter rule system url with the name of a local CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://example.org/tests/CodeSystem/simple.codesystem' };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -50,13 +55,21 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should replace concept rule system url with the name of a local CodeSystem', () => {
+    it('should replace concept rule system url with the name of a local CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetConceptComponentRule(true);
       rule.from = { system: 'http://example.org/tests/CodeSystem/simple.codesystem' };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -64,13 +77,21 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should replace filter rule system url with the name of a core FHIR CodeSystem', () => {
+    it('should replace filter rule system url with the name of a core FHIR CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://hl7.org/fhir/observation-status' };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -78,7 +99,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should alias filter rule system url when it is same as local code system name when alias is true', () => {
+    it('should alias filter rule system url when it is same as local code system name when alias is true', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://hl7.org/fhir/observation-status' };
@@ -87,9 +108,15 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      const modLake = cloneDeep(lake);
-      modLake.docs[0].content.name = 'ObservationStatus';
-      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: true });
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: true });
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { system: '$observation-status' };
@@ -99,7 +126,7 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should alias filter rule system url when it is same as local code system name when alias is undefined', () => {
+    it('should alias filter rule system url when it is same as local code system name when alias is undefined', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://hl7.org/fhir/observation-status' };
@@ -108,9 +135,15 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      const modLake = cloneDeep(lake);
-      modLake.docs[0].content.name = 'ObservationStatus';
-      optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+      optimizer.optimize(myPackage, new MasterFisher(lake, defs));
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { system: '$observation-status' };
@@ -120,7 +153,7 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should not alias filter rule system url when it is same as local code system name when alias is false', () => {
+    it('should not alias filter rule system url when it is same as local code system name when alias is false', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://hl7.org/fhir/observation-status' };
@@ -129,22 +162,36 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      const modLake = cloneDeep(lake);
-      modLake.docs[0].content.name = 'ObservationStatus';
-      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: false });
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: false });
 
       expect(valueset.rules).toContainEqual(rule);
       expect(myPackage.aliases).toHaveLength(0);
     });
 
     // TODO: Revisit this when SUSHI supports fishing for Instance CodeSystems by name/id
-    it('should not replace filter rule system url with the name of a local unsupported CodeSystem', () => {
+    it('should not replace filter rule system url with the name of a local unsupported CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { system: 'http://example.org/tests/CodeSystem/unsupported.codesystem' };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -152,13 +199,21 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should replace filter rule valueset url with the name of a local ValueSet', () => {
+    it('should replace filter rule valueset url with the name of a local ValueSet', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://example.org/tests/ValueSet/simple.valueset'] };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -166,13 +221,21 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should replace concept rule valueset url with the name of a local ValueSet', () => {
+    it('should replace concept rule valueset url with the name of a local ValueSet', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetConceptComponentRule(true);
       rule.from = { valueSets: ['http://example.org/tests/ValueSet/simple.valueset'] };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -180,13 +243,21 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should replace filter rule valueset url with the name of a core FHIR CodeSystem', () => {
+    it('should replace filter rule valueset url with the name of a core FHIR CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -194,7 +265,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should alias the filter rule valueset url when it is same as local code system name when alias is true', () => {
+    it('should alias the filter rule valueset url when it is same as local code system name when alias is true', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
@@ -203,9 +274,15 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      const modLake = cloneDeep(lake);
-      modLake.docs[2].content.name = 'ObservationStatus';
-      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: true });
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'observation-status-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: true });
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { valueSets: ['$observation-status'] };
@@ -215,7 +292,7 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should alias the filter rule valueset url when it is same as local code system name when alias is undefined', () => {
+    it('should alias the filter rule valueset url when it is same as local code system name when alias is undefined', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
@@ -224,9 +301,15 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      const modLake = cloneDeep(lake);
-      modLake.docs[2].content.name = 'ObservationStatus';
-      optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'observation-status-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+      optimizer.optimize(myPackage, new MasterFisher(lake, defs));
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { valueSets: ['$observation-status'] };
@@ -236,7 +319,7 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should not alias the filter rule system url when it is same as local code system name when alias is false', () => {
+    it('should not alias the filter rule system url when it is same as local code system name when alias is false', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://hl7.org/fhir/ValueSet/observation-status'] };
@@ -245,22 +328,36 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      const modLake = cloneDeep(lake);
-      modLake.docs[2].content.name = 'ObservationStatus';
-      optimizer.optimize(myPackage, new MasterFisher(modLake, defs), { alias: false });
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'observation-status-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: false });
 
       expect(valueset.rules[0]).toEqual(rule);
       expect(myPackage.aliases).toHaveLength(0);
     });
 
     // TODO: Revisit this when SUSHI supports fishing for Instance ValueSets by name/id
-    it('should not replace filter rule valueset url with the name of a local unsupported ValueSet', () => {
+    it('should not replace filter rule valueset url with the name of a local unsupported ValueSet', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetFilterComponentRule(true);
       rule.from = { valueSets: ['http://example.org/tests/ValueSet/unsupported.valueset'] };
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -268,7 +365,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should replace concept rule concept system url with the name of a local CodeSystem', () => {
+    it('should replace concept rule concept system url with the name of a local CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetConceptComponentRule(true);
       rule.concepts = [
@@ -277,6 +374,14 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -284,13 +389,21 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should replace concept rule concept system url with the name of a core FHIR CodeSystem', () => {
+    it('should replace concept rule concept system url with the name of a core FHIR CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetConceptComponentRule(true);
       rule.concepts = [new FshCode('final', 'http://hl7.org/fhir/observation-status', 'Final')];
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -298,7 +411,7 @@ describe('optimizer', () => {
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should not replace concept rule concept system url with the name of a core FHIR CodeSystem when it is same as local code system name', () => {
+    it('should not replace concept rule concept system url with the name of a core FHIR CodeSystem when it is same as local code system name', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetConceptComponentRule(true);
       rule.concepts = [new FshCode('final', 'http://hl7.org/fhir/observation-status', 'Final')];
@@ -308,16 +421,22 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage, fisher);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      const modLake = cloneDeep(lake);
-      modLake.docs[0].content.name = 'ObservationStatus';
-      optimizer.optimize(myPackage, new MasterFisher(modLake, defs));
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
+      optimizer.optimize(myPackage, new MasterFisher(lake, defs));
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
       expectedRule.concepts = [new FshCode('final', 'ObservationStatus', 'Final')];
       expect(valueset.rules).toContainEqual(expectedRule);
     });
 
-    it('should not replace concept rule concept system url with the name of a local unsupported CodeSystem', () => {
+    it('should not replace concept rule concept system url with the name of a local unsupported CodeSystem', async () => {
       const valueset = new ExportableValueSet('MyValueSet');
       const rule = new ExportableValueSetConceptComponentRule(true);
       rule.concepts = [
@@ -326,6 +445,14 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
+      await restockLake(
+        lake,
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
+      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);

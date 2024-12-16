@@ -11,11 +11,11 @@ describe('InstanceProcessor', () => {
   let simpleIg: any;
   let defs: FHIRDefinitions;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     simpleIg = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'simple-ig.json'), 'utf-8')
     );
-    defs = loadTestDefinitions();
+    defs = await loadTestDefinitions();
     loggerSpy.reset();
   });
 

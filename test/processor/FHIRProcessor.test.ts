@@ -12,10 +12,13 @@ import {
 } from '../../src/processor';
 import { ConfigurationExtractor } from '../../src/extractor';
 import { restockLake, loggerSpy } from '../helpers';
+import { FHIRDefinitions, MasterFisher } from '../../src/utils';
 
 describe('FHIRProcessor', () => {
   let processor: FHIRProcessor;
   let lake: LakeOfFHIR;
+  let defs: FHIRDefinitions;
+  let fisher: MasterFisher;
   let configurationSpy: jest.SpyInstance;
   let structureDefinitionSpy: jest.SpyInstance;
   let codeSystemSpy: jest.SpyInstance;
@@ -30,9 +33,12 @@ describe('FHIRProcessor', () => {
     instanceSpy = jest.spyOn(InstanceProcessor, 'process');
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     lake = new LakeOfFHIR([]);
-    processor = new FHIRProcessor(lake);
+    defs = new FHIRDefinitions();
+    await defs.initialize();
+    fisher = new MasterFisher(lake, defs);
+    processor = new FHIRProcessor(lake, fisher);
     configurationSpy.mockClear();
     structureDefinitionSpy.mockClear();
     codeSystemSpy.mockClear();

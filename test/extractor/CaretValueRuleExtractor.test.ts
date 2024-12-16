@@ -20,8 +20,8 @@ describe('CaretValueRuleExtractor', () => {
   let config: fshtypes.Configuration;
   let defs: FHIRDefinitions;
 
-  beforeAll(() => {
-    defs = loadTestDefinitions();
+  beforeAll(async () => {
+    defs = await loadTestDefinitions();
     config = {
       canonical: 'http://hl7.org/fhir/sushi-test',
       fhirVersion: ['4.0.1']

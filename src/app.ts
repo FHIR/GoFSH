@@ -155,6 +155,7 @@ async function app() {
 
   // Load dependencies
   const defs = new FHIRDefinitions();
+  await defs.initialize();
 
   // Trim empty spaces from command line dependencies
   const dependencies = programOptions.dependency?.map((dep: string) => dep.trim());
@@ -197,7 +198,7 @@ async function app() {
     alias: programOptions.alias
   } as ProcessingOptions;
 
-  const processor = getFhirProcessor(inDir, defs, fileType);
+  const processor = await getFhirProcessor(inDir, defs, fileType);
   const config = processor.processConfig(dependencies, specifiedFHIRVersion);
 
   // Load dependencies from config for GoFSH processing
