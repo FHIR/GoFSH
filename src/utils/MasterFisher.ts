@@ -10,7 +10,7 @@ import { FHIRDefinitions } from '../utils';
 export class MasterFisher implements utils.Fishable {
   constructor(
     public lakeOfFHIR: LakeOfFHIR,
-    public external: FHIRDefinitions
+    public external?: FHIRDefinitions
   ) {}
 
   fishForStructureDefinition(item: string) {

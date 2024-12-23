@@ -117,9 +117,8 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   async prepareDefs() {
-    // In theory, this.docs can be modified at any time. In practice, GoFSH only modifies it with calls to
-    // removeDuplicateDefinitions and assignMissingIds, which are called before the lake is ever used.
-    // So, it's reasonably safe to provide this function to be called right after those modification functions.
+    this.assignMissingIds();
+    this.removeDuplicateDefinitions();
     await this.defs.initialize();
     const lakeMap = new Map<string, any>();
     this.docs.forEach(wildFHIR => {
@@ -158,7 +157,7 @@ export class LakeOfFHIR implements utils.Fishable {
    * a previous definition, as long as there is a defined id.
    * Logs an error when it finds a duplicate
    */
-  removeDuplicateDefinitions() {
+  private removeDuplicateDefinitions() {
     const dupPaths: string[] = [];
     this.docs = uniqWith(this.docs, (a, b) => {
       const isDuplicate =
@@ -187,7 +186,7 @@ export class LakeOfFHIR implements utils.Fishable {
    * If there is no name or if it is any other type of resource, we add a clearly generated id with a counter.
    * Log a warning if it finds any definitions without an id
    */
-  assignMissingIds() {
+  private assignMissingIds() {
     const createdIdPaths: string[] = [];
     let generatedId = 0;
     this.docs.forEach((d, index) => {

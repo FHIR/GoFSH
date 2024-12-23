@@ -756,7 +756,6 @@ describe('Processing', () => {
 
     it('should load FHIR R6 prerelease if specified', () => {
       const defs = new FHIRDefinitions();
-      // jest.spyOn(defs, 'loadPackage').mockImplementation(replacementLoadPackage);
       const dependencies = ['hl7.fhir.r6.core@6.0.0-ballot2'];
       const dependencyDefs = loadConfiguredDependencies(defs, dependencies);
       return dependencyDefs.then(() => {

@@ -7,7 +7,7 @@ import { loggerSpy } from '../helpers/loggerSpy';
 describe('LakeOfHIR', () => {
   let lake: LakeOfFHIR;
 
-  beforeAll(async () => {
+  beforeEach(() => {
     lake = new LakeOfFHIR(
       getWildFHIRs(
         'logical-profile.json',
@@ -20,14 +20,10 @@ describe('LakeOfHIR', () => {
         'simple-ig.json',
         'rocky-balboa.json',
         'unsupported-valueset.json',
-        'unsupported-codesystem.json',
+        'concept-designation-codesystem.json',
         'my-string-profile.json'
       )
     );
-    await lake.prepareDefs();
-  });
-
-  beforeEach(() => {
     loggerSpy.reset();
   });
 
@@ -137,6 +133,10 @@ describe('LakeOfHIR', () => {
   });
 
   describe('#fishForFHIR', () => {
+    beforeEach(async () => {
+      await lake.prepareDefs();
+    });
+
     it('should fish by name', () => {
       expect(lake.fishForFHIR('SimpleProfile').id).toBe('simple.profile');
       expect(lake.fishForFHIR('SimpleExtension').id).toBe('simple.extension');
@@ -286,6 +286,10 @@ describe('LakeOfHIR', () => {
   });
 
   describe('#fishForMetadata', () => {
+    beforeEach(async () => {
+      await lake.prepareDefs();
+    });
+
     it('should fish by name', () => {
       expect(lake.fishForMetadata('SimpleProfile').id).toBe('simple.profile');
       expect(lake.fishForMetadata('SimpleExtension').id).toBe('simple.extension');
@@ -445,7 +449,7 @@ describe('LakeOfHIR', () => {
     });
   });
 
-  describe('#removeDuplicateDefinitions', () => {
+  describe('#prepareDefs', () => {
     it('should log an error and remove definitions with the same resourceType and id as a previous definition', () => {
       lake = new LakeOfFHIR(
         getWildFHIRs('simple-profile.json', 'simple-profile.json', 'simple-extension.json')
@@ -457,7 +461,7 @@ describe('LakeOfHIR', () => {
       expect(results[1].content.id).toBe('simple.profile');
       expect(results[2].content.id).toBe('simple.extension');
 
-      lake.removeDuplicateDefinitions();
+      lake.prepareDefs();
       const noDupResults = lake.getAllStructureDefinitions();
       expect(noDupResults).toHaveLength(2);
       expect(noDupResults[0].content.id).toBe('simple.profile');
@@ -468,9 +472,7 @@ describe('LakeOfHIR', () => {
         /Encountered 1 definition\(s\) with the same resourceType and id as a previous definition./
       );
     });
-  });
 
-  describe('#assignMissingIds', () => {
     it('should log a warning and set a missing id based on name for Conformance and Terminology instances', () => {
       lake = new LakeOfFHIR(
         getWildFHIRs(
@@ -484,8 +486,7 @@ describe('LakeOfHIR', () => {
       expect(results[0].content.id).toBeUndefined();
       expect(results[1].content.id).toBeUndefined();
 
-      lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      lake.prepareDefs(); // Run to ensure we no longer remove these as duplicates
       const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
       expect(noDupResults[0].content.id).toBe('Example-Message-Definition');
@@ -511,8 +512,7 @@ describe('LakeOfHIR', () => {
       expect(results[0].content.id).toBeUndefined();
       expect(results[1].content.id).toBeUndefined();
 
-      lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      lake.prepareDefs(); // Run to ensure we no longer remove these as duplicates
       const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
       expect(noDupResults[0].content.id).toBe('GOFSH-GENERATED-ID-0');
@@ -532,8 +532,7 @@ describe('LakeOfHIR', () => {
       expect(results).toHaveLength(1);
       expect(results[0].content.id).toBeUndefined();
 
-      lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      lake.prepareDefs(); // Run to ensure we no longer remove these as duplicates
       const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(1);
       expect(noDupResults[0].content.id).toBe('GOFSH-GENERATED-ID-0'); // Generates an id, does not use the name of the definition
@@ -565,8 +564,7 @@ describe('LakeOfHIR', () => {
       expect(results[2].content.id).toBeUndefined();
       expect(results[3].content.id).toBeUndefined();
 
-      lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      lake.prepareDefs(); // Run to ensure we no longer remove these as duplicates
       const noDupResultsSDs = lake.getAllStructureDefinitions();
       const noDupResultsCSs = lake.getAllCodeSystems();
       const noDupResultsVSs = lake.getAllValueSets();
@@ -585,7 +583,7 @@ describe('LakeOfHIR', () => {
 
     it('should log a warning and set a missing id on CodeSystem and ValueSet definitions that will be treated as instances', () => {
       lake = new LakeOfFHIR(
-        getWildFHIRs('unsupported-codesystem.json', 'unsupported-valueset-missing-id.json')
+        getWildFHIRs('concept-designation-codesystem.json', 'unsupported-valueset-missing-id.json')
       );
 
       const resultsCSs = lake.getAllCodeSystems();
@@ -595,8 +593,7 @@ describe('LakeOfHIR', () => {
       expect(results[0].content.id).toBeUndefined();
       expect(results[1].content.id).toBeUndefined();
 
-      lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we no longer remove these as duplicates
+      lake.prepareDefs(); // Run to ensure we no longer remove these as duplicates
       const noDupResultsCSs = lake.getAllCodeSystems();
       const noDupResultsVSs = lake.getAllValueSets();
       const noDupResults = [...noDupResultsCSs, ...noDupResultsVSs];
@@ -627,8 +624,7 @@ describe('LakeOfHIR', () => {
       expect(results[1].content.id).toBeUndefined();
       expect(results[2].content.id).toBeUndefined();
 
-      lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we only remove true duplicates
+      lake.prepareDefs(); // Run to ensure we only remove true duplicates
       const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
       expect(noDupResults[0].content.id).toBe('Example-Message-Definition');
@@ -654,8 +650,7 @@ describe('LakeOfHIR', () => {
       expect(results[0].content.id).toBe('GOFSH-GENERATED-ID-0');
       expect(results[1].content.id).toBeUndefined();
 
-      lake.assignMissingIds();
-      lake.removeDuplicateDefinitions(); // Run to ensure we don't remove these as duplicates
+      lake.prepareDefs(); // Run to ensure we don't remove these as duplicates
       const noDupResults = lake.getAllInstances();
       expect(noDupResults).toHaveLength(2);
       expect(noDupResults[0].content.id).toBe('GOFSH-GENERATED-ID-0');

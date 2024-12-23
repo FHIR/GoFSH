@@ -16,10 +16,38 @@ describe('optimizer', () => {
     let defs: FHIRDefinitions;
     let lake: LakeOfFHIR;
     let fisher: MasterFisher;
+    const fixturePaths: Map<string, string> = new Map();
+
+    async function getRestockedFisher(...items: string[]) {
+      const itemPaths = items.map(item => fixturePaths.get(item));
+      await restockLake(lake, ...itemPaths);
+      return new MasterFisher(lake, defs);
+    }
 
     beforeAll(async () => {
       defs = await loadTestDefinitions();
       defs.initialize();
+      fixturePaths.set(
+        'observation-status-codesystem',
+        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json')
+      );
+      fixturePaths.set(
+        'observation-status-valueset',
+        path.join(__dirname, 'fixtures', 'observation-status-valueset.json')
+      );
+      fixturePaths.set(
+        'simple-codesystem',
+        path.join(__dirname, 'fixtures', 'simple-codesystem.json')
+      );
+      fixturePaths.set('simple-valueset', path.join(__dirname, 'fixtures', 'simple-valueset.json'));
+      fixturePaths.set(
+        'concept-designation-codesystem',
+        path.join(__dirname, 'fixtures', 'concept-designation-codesystem.json')
+      );
+      fixturePaths.set(
+        'unsupported-valueset',
+        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      );
     });
 
     beforeEach(async () => {
@@ -40,14 +68,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -62,14 +88,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -84,14 +108,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -108,15 +130,13 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'observation-status-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
-      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: true });
+      optimizer.optimize(myPackage, fisher, { alias: true });
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { system: '$observation-status' };
@@ -135,15 +155,13 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'observation-status-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
-      optimizer.optimize(myPackage, new MasterFisher(lake, defs));
+      optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { system: '$observation-status' };
@@ -162,15 +180,13 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'observation-status-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
-      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: false });
+      optimizer.optimize(myPackage, fisher, { alias: false });
 
       expect(valueset.rules).toContainEqual(rule);
       expect(myPackage.aliases).toHaveLength(0);
@@ -184,14 +200,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -206,14 +220,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -228,14 +240,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -250,14 +260,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -274,15 +282,13 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'observation-status-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'observation-status-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
-      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: true });
+      optimizer.optimize(myPackage, fisher, { alias: true });
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { valueSets: ['$observation-status'] };
@@ -301,15 +307,13 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'observation-status-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'observation-status-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
-      optimizer.optimize(myPackage, new MasterFisher(lake, defs));
+      optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
       expectedRule.from = { valueSets: ['$observation-status'] };
@@ -328,15 +332,13 @@ describe('optimizer', () => {
       myPackage.add(valueset);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'observation-status-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'observation-status-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
-      optimizer.optimize(myPackage, new MasterFisher(lake, defs), { alias: false });
+      optimizer.optimize(myPackage, fisher, { alias: false });
 
       expect(valueset.rules[0]).toEqual(rule);
       expect(myPackage.aliases).toHaveLength(0);
@@ -350,14 +352,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetFilterComponentRule(true);
@@ -374,14 +374,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -396,14 +394,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
@@ -421,15 +417,13 @@ describe('optimizer', () => {
       optimizer.optimize(myPackage, fisher);
 
       // Use a modified lake and fisher to force the local CS to have the same name
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'observation-status-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'observation-status-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
-      optimizer.optimize(myPackage, new MasterFisher(lake, defs));
+      optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);
       expectedRule.concepts = [new FshCode('final', 'ObservationStatus', 'Final')];
@@ -445,14 +439,12 @@ describe('optimizer', () => {
       valueset.rules.push(rule);
       const myPackage = new Package();
       myPackage.add(valueset);
-      await restockLake(
-        lake,
-        path.join(__dirname, 'fixtures', 'simple-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'),
-        path.join(__dirname, 'fixtures', 'simple-valueset.json'),
-        path.join(__dirname, 'fixtures', 'unsupported-valueset.json')
+      fisher = await getRestockedFisher(
+        'simple-codesystem',
+        'concept-designation-codesystem',
+        'simple-valueset',
+        'unsupported-valueset'
       );
-      fisher = new MasterFisher(lake, defs);
       optimizer.optimize(myPackage, fisher);
 
       const expectedRule = new ExportableValueSetConceptComponentRule(true);

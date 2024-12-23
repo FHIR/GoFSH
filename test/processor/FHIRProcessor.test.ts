@@ -47,16 +47,16 @@ describe('FHIRProcessor', () => {
     loggerSpy.reset();
   });
 
-  it('should try to extract configuration from an ImplementationGuide with the ConfigurationExtractor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'simple-ig.json'));
+  it('should try to extract configuration from an ImplementationGuide with the ConfigurationExtractor', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'simple-ig.json'));
     processor.processConfig();
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const simpleIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'simple-ig.json'));
     expect(configurationSpy).toHaveBeenCalledWith([simpleIgContent], undefined); // Uses first and only IG in lake if no path provided
   });
 
-  it('should resolve version numbers between command lines deps and ImplementationGuide deps', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+  it('should resolve version numbers between command lines deps and ImplementationGuide deps', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
     const config = processor.processConfig(['hl7.fhir.us.core@2.1.0']);
     expect(configurationSpy).toHaveBeenCalledTimes(1);
     const biggerIgContent = fs.readJsonSync(path.join(__dirname, 'fixtures', 'bigger-ig.json'));
@@ -64,14 +64,14 @@ describe('FHIRProcessor', () => {
     expect(config.config.dependencies[0].version).toEqual('3.1.0');
   });
 
-  it('should export a config file with command line dependencies', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+  it('should export a config file with command line dependencies', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
     const config = processor.processConfig(['hl7.fhir.ha.haha@2.1.0']);
     expect(config.config.dependencies[2].packageId).toEqual('hl7.fhir.ha.haha');
   });
 
-  it('should try to extract a provided ImplementationGuide with the ConfigurationExtractor', () => {
-    restockLake(
+  it('should try to extract a provided ImplementationGuide with the ConfigurationExtractor', async () => {
+    await restockLake(
       lake,
       path.join(__dirname, 'fixtures', 'simple-ig.json'),
       path.join(__dirname, 'fixtures', 'bigger-ig.json')
@@ -87,37 +87,37 @@ describe('FHIRProcessor', () => {
     expect(configurationSpy).toHaveBeenCalledWith([biggerIgContent], undefined); // Uses path provided instead of first IG in lake
   });
 
-  it('should try to process a Profile with the StructureDefinitionProcessor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'simple-profile.json'));
+  it('should try to process a Profile with the StructureDefinitionProcessor', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'simple-profile.json'));
     const config = processor.processConfig();
     processor.process(config);
     expect(structureDefinitionSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should try to process an Extension with the StructureDefinitionProcessor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'simple-extension.json'));
+  it('should try to process an Extension with the StructureDefinitionProcessor', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'simple-extension.json'));
     const config = processor.processConfig();
     processor.process(config);
     expect(structureDefinitionSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should try to process a supported CodeSystem with the CodeSystemProcessor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
+  it('should try to process a supported CodeSystem with the CodeSystemProcessor', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
     const config = processor.processConfig();
     processor.process(config);
     expect(codeSystemSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should try to process a supported ValueSet with the ValueSetProcessor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'simple-valueset.json'));
+  it('should try to process a supported ValueSet with the ValueSetProcessor', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'simple-valueset.json'));
     const config = processor.processConfig();
     processor.process(config);
     expect(valueSetSpy).toHaveBeenCalledTimes(1);
     expect(instanceSpy).not.toHaveBeenCalled();
   });
 
-  it('should try to process a non-IG/SD/VS/CS Instance with the InstanceProcessor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'simple-patient.json'));
+  it('should try to process a non-IG/SD/VS/CS Instance with the InstanceProcessor', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'simple-patient.json'));
     const config = processor.processConfig();
     processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
@@ -125,20 +125,12 @@ describe('FHIRProcessor', () => {
     expect(codeSystemSpy).not.toHaveBeenCalled();
   });
 
-  it('should try to process an unsupported ValueSet with the InstanceProcessor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'unsupported-valueset.json'));
+  it('should try to process an unsupported ValueSet with the InstanceProcessor', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'unsupported-valueset.json'));
     const config = processor.processConfig();
     processor.process(config);
     expect(instanceSpy).toHaveBeenCalledTimes(1);
     expect(valueSetSpy).not.toHaveBeenCalled();
-  });
-
-  it('should try to process an unsupported CodeSystem with the InstanceProcessor', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'unsupported-codesystem.json'));
-    const config = processor.processConfig();
-    processor.process(config);
-    expect(instanceSpy).toHaveBeenCalledTimes(1);
-    expect(codeSystemSpy).not.toHaveBeenCalled();
   });
 
   it('should log an info message when processing an instance doc with the "large" property', () => {
@@ -154,8 +146,8 @@ describe('FHIRProcessor', () => {
     );
   });
 
-  it('should be able to handle a specified FHIR version when extracting ImplementationGuide from ConfigurationGenerator', () => {
-    restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
+  it('should be able to handle a specified FHIR version when extracting ImplementationGuide from ConfigurationGenerator', async () => {
+    await restockLake(lake, path.join(__dirname, 'fixtures', 'bigger-ig.json'));
     const config = processor.processConfig(['hl7.fhir.us.core@2.1.0'], '5.0.0');
     expect(config.config.fhirVersion).toEqual(['5.0.0']);
   });
