@@ -137,18 +137,10 @@ export class LakeOfFHIR implements utils.Fishable {
   }
 
   fishForFHIR(item: string, ...types: utils.Type[]) {
-    // The simplest approach is just to re-use the FHIRDefinitions fisher.  But since this.docs can be modified by anyone at any time
-    // the only safe way to do this is by rebuilding a FHIRDefinitions object each time we need it.  If this becomes a performance
-    // concern, we can optimize it later -- but performance isn't a huge concern in GoFSH. Note also that this approach may need to be
-    // updated if we ever need to support fishing for Instances.
     return this.defs.fishForFHIR(item, ...types);
   }
 
   fishForMetadata(item: string, ...types: utils.Type[]): utils.Metadata {
-    // The simplest approach is just to re-use the FHIRDefinitions fisher.  But since this.docs can be modified by anyone at any time
-    // the only safe way to do this is by rebuilding a FHIRDefinitions object each time we need it.  If this becomes a performance
-    // concern, we can optimize it later -- but performance isn't a huge concern in GoFSH. Note also that this approach may need to be
-    // updated if we ever need to support fishing for Instances.
     return this.defs.fishForMetadata(item, ...types);
   }
 
