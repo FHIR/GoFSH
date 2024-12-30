@@ -6,6 +6,7 @@ import { ExportableCardRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { FHIRDefinitions } from '../../src/utils';
+import '../helpers/loggerSpy'; // suppresses logs in test output
 
 describe('CardRuleExtractor', () => {
   let looseSD: any;
