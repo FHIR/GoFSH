@@ -10,9 +10,11 @@ describe('optimizer', () => {
   describe('#optimizeURL', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake(path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json'));
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake(
+        path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json')
+      );
       fisher = new MasterFisher(lake, defs);
     });
 
@@ -69,12 +71,12 @@ describe('optimizer', () => {
   describe('#resolveURL', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake(
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake(
         path.join(__dirname, 'plugins', 'fixtures', 'small-profile.json'),
         path.join(__dirname, 'plugins', 'fixtures', 'patient-profile.json'),
-        path.join(__dirname, 'plugins', 'fixtures', 'unsupported-codesystem.json'),
+        path.join(__dirname, 'plugins', 'fixtures', 'concept-designation-codesystem.json'),
         path.join(__dirname, 'plugins', 'fixtures', 'unsupported-valueset.json')
       );
       fisher = new MasterFisher(lake, defs);

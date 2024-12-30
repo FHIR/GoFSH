@@ -16,8 +16,8 @@ describe('CodeSystemProcessor', () => {
   let defs: FHIRDefinitions;
   let config: fshtypes.Configuration;
 
-  beforeAll(() => {
-    defs = loadTestDefinitions();
+  beforeAll(async () => {
+    defs = await loadTestDefinitions();
     config = {
       canonical: 'http://example.org/tests',
       fhirVersion: ['4.0.1']

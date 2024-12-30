@@ -10,9 +10,9 @@ describe('optimizer', () => {
   describe('#resolve_parent_urls', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
       fisher = new MasterFisher(lake, defs);
     });
 

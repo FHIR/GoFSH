@@ -11,9 +11,9 @@ describe('optimizer', () => {
   describe('#resolve_binding_rule_urls', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake(path.join(__dirname, 'fixtures', 'simple-valueset.json'));
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake(path.join(__dirname, 'fixtures', 'simple-valueset.json'));
       fisher = new MasterFisher(lake, defs);
     });
 

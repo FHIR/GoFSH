@@ -10,9 +10,9 @@ describe('optimizer', () => {
   describe('#resolve_only_rule_urls', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake(
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake(
         path.join(__dirname, 'fixtures', 'small-profile.json'),
         path.join(__dirname, 'fixtures', 'patient-profile.json')
       );

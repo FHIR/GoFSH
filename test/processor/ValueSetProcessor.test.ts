@@ -17,8 +17,8 @@ describe('ValueSetProcessor', () => {
   let defs: FHIRDefinitions;
   let config: fshtypes.Configuration;
 
-  beforeAll(() => {
-    defs = loadTestDefinitions();
+  beforeAll(async () => {
+    defs = await loadTestDefinitions();
     config = {
       canonical: 'http://hl7.org/fhir/sushi-test',
       fhirVersion: ['4.0.1']

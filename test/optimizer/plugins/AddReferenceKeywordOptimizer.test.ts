@@ -11,9 +11,9 @@ describe('optimizer', () => {
   describe('#add_reference_keyword_optimizer', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake();
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake();
       fisher = new MasterFisher(lake, defs);
     });
 

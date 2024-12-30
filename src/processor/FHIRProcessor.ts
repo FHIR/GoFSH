@@ -16,14 +16,9 @@ import { InstanceProcessor } from './InstanceProcessor';
 export class FHIRProcessor {
   constructor(
     private readonly lake: LakeOfFHIR,
-    private readonly fisher?: MasterFisher,
+    private readonly fisher: MasterFisher,
     private readonly igPath: string = null
-  ) {
-    // If no fisher was passed in, just use the built-in lake fisher (usually for testing only)
-    if (fisher == null) {
-      fisher = new MasterFisher(lake);
-    }
-  }
+  ) {}
 
   getFisher(): MasterFisher {
     return this.fisher;

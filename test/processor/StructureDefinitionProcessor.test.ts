@@ -20,25 +20,31 @@ import {
   ExportableInvariant,
   ExportableBindingRule
 } from '../../src/exportable';
-import { FHIRDefinitions } from '../../src/utils';
+import { FHIRDefinitions, logMessage } from '../../src/utils';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { ContainsRuleExtractor } from '../../src/extractor';
+import { DiskBasedVirtualPackage } from 'fhir-package-loader';
 
 describe('StructureDefinitionProcessor', () => {
   let defs: FHIRDefinitions;
   let config: fshtypes.Configuration;
 
-  beforeAll(() => {
-    defs = loadTestDefinitions();
-    defs.add(
-      JSON.parse(
-        fs.readFileSync(path.join(__dirname, 'fixtures', 'parent-observation.json'), 'utf-8')
-      )
+  beforeAll(async () => {
+    defs = await loadTestDefinitions();
+    const extraResources = new DiskBasedVirtualPackage(
+      { name: 'sd-processor-defs', version: '1.0.0' },
+      [
+        path.join(__dirname, 'fixtures', 'parent-observation.json'),
+        path.join(__dirname, 'fixtures', 'parent-logical.json')
+      ],
+      {
+        log: logMessage,
+        allowNonResources: true,
+        recursive: false
+      }
     );
-    defs.add(
-      JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'parent-logical.json'), 'utf-8'))
-    );
+    await defs.loadVirtualPackage(extraResources);
     config = {
       canonical: 'http://hl7.org/fhir/sushi-test',
       fhirVersion: ['4.0.1']

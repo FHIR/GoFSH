@@ -13,8 +13,8 @@ describe('InvariantExtractor', () => {
   let defs: FHIRDefinitions;
   let looseSD: ProcessableStructureDefinition;
 
-  beforeAll(() => {
-    defs = loadTestDefinitions();
+  beforeAll(async () => {
+    defs = await loadTestDefinitions();
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'obeys-profile.json'), 'utf-8').trim()
     );

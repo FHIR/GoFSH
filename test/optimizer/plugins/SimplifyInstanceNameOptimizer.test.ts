@@ -86,9 +86,9 @@ describe('optimizer', () => {
       ]);
     });
 
-    it('should simplify names with aliased InstanceOf and add id rule to retain original id', () => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
+    it('should simplify names with aliased InstanceOf and add id rule to retain original id', async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake(path.join(__dirname, 'fixtures', 'small-profile.json'));
       const fisher = new MasterFisher(lake, defs);
 
       const instance1 = new ExportableInstance('MyExample');

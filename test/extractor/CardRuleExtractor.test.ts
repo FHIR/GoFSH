@@ -6,6 +6,7 @@ import { ExportableCardRule } from '../../src/exportable';
 import { ProcessableElementDefinition } from '../../src/processor';
 import { loadTestDefinitions } from '../helpers/loadTestDefinitions';
 import { FHIRDefinitions } from '../../src/utils';
+import '../helpers/loggerSpy'; // suppresses logs in test output
 
 describe('CardRuleExtractor', () => {
   let looseSD: any;
@@ -13,7 +14,7 @@ describe('CardRuleExtractor', () => {
   let looseSDWithInheritedSlices: any;
   let defs: FHIRDefinitions;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'card-profile.json'), 'utf-8').trim()
     );
@@ -30,7 +31,7 @@ describe('CardRuleExtractor', () => {
         )
         .trim()
     );
-    defs = loadTestDefinitions();
+    defs = await loadTestDefinitions();
   });
   describe('#process', () => {
     it('should extract a card rule with a min and a max', () => {

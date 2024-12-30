@@ -15,11 +15,11 @@ describe('ContainsRuleExtractor', () => {
   let looseSD: any;
   let defs: FHIRDefinitions;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'contains-profile.json'), 'utf-8').trim()
     );
-    defs = loadTestDefinitions();
+    defs = await loadTestDefinitions();
   });
 
   it('should extract a ContainsRule with cardinality', () => {

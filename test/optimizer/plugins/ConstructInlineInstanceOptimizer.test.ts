@@ -30,9 +30,9 @@ describe('optimizer', () => {
   describe('#construct_inline_instance', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake();
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake();
       fisher = new MasterFisher(lake, defs);
     });
 

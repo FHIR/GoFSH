@@ -6,6 +6,7 @@ import { FHIRDefinitions, logger } from '../../src/utils';
 import { fhirToFsh, ResourceMap } from '../../src/api';
 import { loggerSpy } from '../helpers/loggerSpy';
 import { EOL } from 'os';
+import { InMemoryVirtualPackage } from 'fhir-package-loader';
 describe('fhirToFsh', () => {
   let loadSpy: jest.SpyInstance;
   let defaultConfig: fshtypes.Configuration;
@@ -37,9 +38,19 @@ describe('fhirToFsh', () => {
         'utf-8'
       )
     );
-    loadSpy = jest.spyOn(processing, 'loadExternalDependencies').mockImplementation(defs => {
-      defs.add(sd);
-      defs.add(patient);
+
+    loadSpy = jest.spyOn(processing, 'loadExternalDependencies').mockImplementation(async defs => {
+      const resourceMap: Map<string, any> = new Map();
+      resourceMap.set('StructureDefinition', sd);
+      resourceMap.set('Patient', patient);
+      const testPackage = new InMemoryVirtualPackage(
+        {
+          name: 'fhir-to-fsh-test',
+          version: '1.0.0'
+        },
+        resourceMap
+      );
+      await defs.loadVirtualPackage(testPackage);
       return Promise.resolve();
     });
     defaultConfig = {

@@ -14,8 +14,8 @@ describe('MappingExtractor', () => {
   let defs: FHIRDefinitions;
   let elements: ProcessableElementDefinition[];
 
-  beforeAll(() => {
-    defs = loadTestDefinitions();
+  beforeAll(async () => {
+    defs = await loadTestDefinitions();
     looseSD = JSON.parse(
       fs.readFileSync(path.join(__dirname, 'fixtures', 'mapping-profile.json'), 'utf-8').trim()
     );

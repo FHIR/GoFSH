@@ -17,9 +17,9 @@ import { loadTestDefinitions, stockLake } from '../../helpers';
 describe('optimizer', () => {
   describe('#resolve_value_rule_system_urls_for_codes', () => {
     let fisher: MasterFisher;
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake(path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake(path.join(__dirname, 'fixtures', 'simple-codesystem.json'));
       fisher = new MasterFisher(lake, defs);
     });
 

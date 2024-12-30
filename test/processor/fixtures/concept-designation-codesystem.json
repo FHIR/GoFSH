@@ -1,7 +1,7 @@
 {
   "resourceType": "CodeSystem",
-  "title": "Unsupported CodeSystem",
-  "description": "This code system is not supported by CodeSystem FSH syntax because it has a concept designation.",
+  "title": "Concept Designation CodeSystem",
+  "description": "This code system has a concept designation, which is supported by a FSH concept caret rule.",
   "concept": [
     {
       "code": "breakfast"

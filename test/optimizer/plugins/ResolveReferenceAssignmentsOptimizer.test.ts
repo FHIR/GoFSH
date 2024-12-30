@@ -11,9 +11,9 @@ describe('optimizer', () => {
   describe('#resolve_reference_assignments_optimizer', () => {
     let fisher: MasterFisher;
 
-    beforeAll(() => {
-      const defs = loadTestDefinitions();
-      const lake = stockLake();
+    beforeAll(async () => {
+      const defs = await loadTestDefinitions();
+      const lake = await stockLake();
       fisher = new MasterFisher(lake, defs);
     });
 
