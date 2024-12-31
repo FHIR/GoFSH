@@ -42,4 +42,11 @@ export class MasterFisher implements utils.Fishable {
       this.external?.fishForMetadata(item, ...types)
     );
   }
+
+  fishForMetadatas(item: string, ...types: utils.Type[]): utils.Metadata[] {
+    return [
+      ...this.lakeOfFHIR.fishForMetadatas(item, ...types),
+      ...(this.external?.fishForMetadatas(item, ...types) ?? [])
+    ];
+  }
 }
