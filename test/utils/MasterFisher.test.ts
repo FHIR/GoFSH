@@ -90,6 +90,27 @@ describe('MasterFisher', () => {
     });
   });
 
+  describe('#fishForMetadatas', () => {
+    let lakeSpy: jest.SpyInstance;
+    let fhirSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      lakeSpy = jest.spyOn(lake, 'fishForMetadatas');
+      fhirSpy = jest.spyOn(fhir, 'fishForMetadatas');
+    });
+
+    afterEach(() => jest.clearAllMocks());
+
+    it('should return all matches from the lake and the FHIR defs', () => {
+      lakeSpy.mockReturnValue([RESOURCE_A_METADATA]);
+      fhirSpy.mockReturnValue([RESOURCE_B_METADATA]);
+      expect(fisher.fishForMetadatas('Foo', utils.Type.Resource)).toEqual([
+        RESOURCE_A_METADATA,
+        RESOURCE_B_METADATA
+      ]);
+    });
+  });
+
   describe('#lakeOfFHIR', () => {
     afterEach(() => jest.clearAllMocks());
 

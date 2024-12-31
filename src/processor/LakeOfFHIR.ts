@@ -144,6 +144,10 @@ export class LakeOfFHIR implements utils.Fishable {
     return this.defs.fishForMetadata(item, ...types);
   }
 
+  fishForMetadatas(item: string, ...types: utils.Type[]): utils.Metadata[] {
+    return this.defs.fishForMetadatas(item, ...types);
+  }
+
   /**
    * Removes any definitions from this.docs that have the same resourceType and id as
    * a previous definition, as long as there is a defined id.
