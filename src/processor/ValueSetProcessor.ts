@@ -41,10 +41,9 @@ export class ValueSetProcessor {
     fisher: utils.Fishable,
     config: fshtypes.Configuration
   ): void {
-    const newRules: ExportableValueSet['rules'] = [];
-    newRules.push(
+    const newRules: ExportableValueSet['rules'] = [
       ...CaretValueRuleExtractor.processResource(input, fisher, input.resourceType, config)
-    );
+    ];
     if (input.compose) {
       input.compose.include?.forEach((vsComponent: fhirtypes.ValueSetComposeIncludeOrExclude) => {
         newRules.push(ValueSetFilterComponentRuleExtractor.process(vsComponent, input, true));
