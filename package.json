@@ -6,8 +6,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc && copyfiles -u 2 \"src/utils/template.html\" dist/utils",
     "check": "npm run test && npm run lint && npm run prettier",
-    "test": "jest --coverage",
-    "test:watch": "npm run test -- --watchAll",
+    "test": "jest",
+    "test:watch": "jest --watchAll",
     "coverage": "opener coverage/lcov-report/index.html",
     "lint": "tsc && eslint \"**/*.{js,ts}\"",
     "lint:fix": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix",
