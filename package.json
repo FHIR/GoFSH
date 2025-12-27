@@ -39,7 +39,6 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/antlr4": "^4.12.0",
-    "@types/diff": "^5.2.3",
     "@types/flat": "^5.0.5",
     "@types/fs-extra": "^11.0.4",
     "@types/hogan.js": "^3.0.5",
@@ -70,24 +69,24 @@
     "antlr4": "^4.13.2",
     "chalk": "^4.1.2",
     "commander": "^13.1.0",
-    "diff": "^7.0.0",
-    "diff2html": "^3.4.51",
+    "diff": "^8.0.2",
+    "diff2html": "^3.4.52",
     "fhir": "^4.12.0",
     "fhir-package-loader": "^2.2.2",
     "flat": "^5.0.2",
-    "fs-extra": "^11.3.0",
+    "fs-extra": "^11.3.3",
     "fsh-sushi": "^3.16.5",
     "ini": "^5.0.0",
     "lodash": "^4.17.21",
     "readline-sync": "^1.4.10",
     "sanitize-filename": "^1.6.3",
-    "semver": "^7.7.1",
+    "semver": "^7.7.3",
     "temp": "^0.9.4",
     "text-table": "^0.2.0",
     "toposort": "^2.0.2",
     "valid-url": "^1.0.9",
-    "winston": "^3.15.0",
-    "yaml": "^2.7.0"
+    "winston": "^3.19.0",
+    "yaml": "^2.8.2"
   },
   "overrides": {
     "semver": "$semver"
