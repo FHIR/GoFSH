@@ -26,7 +26,7 @@ import {
 } from '../../src/exportable';
 import { FHIRDefinitions, loadExternalDependencies } from '../../src/utils';
 import * as loadOptimizers from '../../src/optimizer/loadOptimizers';
-import { FshCode } from 'fsh-sushi/dist/fshtypes';
+import { fhirtypes, fshtypes, utils } from 'fsh-sushi';
 import { LoadStatus } from 'fhir-package-loader';
 
 let loadedPackages: string[] = [];
@@ -51,11 +51,22 @@ jest.mock('fsh-sushi', () => {
     ...original,
     utils: {
       ...original.utils,
-      loadAutomaticDependencies: jest.fn(async () => {
-        // this is just one of the usual automatic dependencies, as an example
-        loadedPackages.push('hl7.terminology.r4#1.0.0');
-        return Promise.resolve();
-      })
+      loadAutomaticDependencies: jest.fn(
+        async (
+          fv: string,
+          cd: fhirtypes.ImplementationGuideDependsOn[],
+          def: FHIRDefinitions,
+          priority: utils.AutomaticDependencyPriority
+        ) => {
+          // this is just some of the usual automatic dependencies, as an example
+          if (priority === utils.AutomaticDependencyPriority.Low) {
+            loadedPackages.push('hl7.terminology.r4#1.0.0');
+          } else if (priority === utils.AutomaticDependencyPriority.High) {
+            loadedPackages.push('hl7.fhir.uv.extensions.r4#1.0.0');
+          }
+          return Promise.resolve();
+        }
+      )
     }
   };
   return newStyle;
@@ -413,15 +424,15 @@ describe('Processing', () => {
       // * compose.include.concept[+].code = #456
       // * compose.include.concept[=].display = "four five six"
       const statusRule = new ExportableAssignmentRule('status');
-      statusRule.value = new FshCode('active');
+      statusRule.value = new fshtypes.FshCode('active');
       const systemRule = new ExportableAssignmentRule('compose.include.system');
       systemRule.value = 'http://example.org';
       const code0 = new ExportableAssignmentRule('compose.include.concept[0].code');
-      code0.value = new FshCode('123');
+      code0.value = new fshtypes.FshCode('123');
       const display0 = new ExportableAssignmentRule('compose.include.concept[=].display');
       display0.value = 'one two three';
       const code1 = new ExportableAssignmentRule('compose.include.concept[+].code');
-      code1.value = new FshCode('456');
+      code1.value = new fshtypes.FshCode('456');
       const display1 = new ExportableAssignmentRule('compose.include.concept[=].display');
       display1.value = 'four five six';
       expect(inlineVS.rules).toEqual([statusRule, systemRule, code0, display0, code1, display1]);
@@ -598,10 +609,12 @@ describe('Processing', () => {
       });
       const defs = new FHIRDefinitions();
       await loadExternalDependencies(defs, config);
-      expect(loadedPackages).toHaveLength(3);
-      expect(loadedPackages).toContain('hl7.fhir.r4.core#4.0.1');
-      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
-      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loadedPackages).toEqual([
+        'hl7.terminology.r4#1.0.0',
+        'hl7.fhir.us.core#3.1.0',
+        'hl7.fhir.r4.core#4.0.1',
+        'hl7.fhir.uv.extensions.r4#1.0.0'
+      ]);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
 
@@ -617,10 +630,12 @@ describe('Processing', () => {
       });
       const defs = new FHIRDefinitions();
       await loadExternalDependencies(defs, config);
-      expect(loadedPackages).toHaveLength(3);
-      expect(loadedPackages).toContain('hl7.fhir.r4b.core#4.3.0');
-      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
-      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loadedPackages).toEqual([
+        'hl7.terminology.r4#1.0.0',
+        'hl7.fhir.us.core#3.1.0',
+        'hl7.fhir.r4b.core#4.3.0',
+        'hl7.fhir.uv.extensions.r4#1.0.0'
+      ]);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
 
@@ -636,10 +651,12 @@ describe('Processing', () => {
       });
       const defs = new FHIRDefinitions();
       await loadExternalDependencies(defs, config);
-      expect(loadedPackages).toHaveLength(3);
-      expect(loadedPackages).toContain('hl7.fhir.r6.core#6.0.0-ballot2');
-      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
-      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loadedPackages).toEqual([
+        'hl7.terminology.r4#1.0.0',
+        'hl7.fhir.us.core#3.1.0',
+        'hl7.fhir.r6.core#6.0.0-ballot2',
+        'hl7.fhir.uv.extensions.r4#1.0.0'
+      ]);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
 
@@ -655,10 +672,12 @@ describe('Processing', () => {
       });
       const defs = new FHIRDefinitions();
       await loadExternalDependencies(defs, config);
-      expect(loadedPackages).toHaveLength(3);
-      expect(loadedPackages).toContain('hl7.fhir.r6.core#6.0.0');
-      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
-      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loadedPackages).toEqual([
+        'hl7.terminology.r4#1.0.0',
+        'hl7.fhir.us.core#3.1.0',
+        'hl7.fhir.r6.core#6.0.0',
+        'hl7.fhir.uv.extensions.r4#1.0.0'
+      ]);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
 
@@ -678,10 +697,12 @@ describe('Processing', () => {
       const defs = new FHIRDefinitions();
       await loadExternalDependencies(defs, config);
       // the core FHIR package is only present once in the list
-      expect(loadedPackages).toHaveLength(3);
-      expect(loadedPackages).toContain('hl7.fhir.r4.core#4.0.1');
-      expect(loadedPackages).toContain('hl7.fhir.us.core#3.1.0');
-      expect(loadedPackages).toContain('hl7.terminology.r4#1.0.0');
+      expect(loadedPackages).toEqual([
+        'hl7.terminology.r4#1.0.0',
+        'hl7.fhir.us.core#3.1.0',
+        'hl7.fhir.r4.core#4.0.1',
+        'hl7.fhir.uv.extensions.r4#1.0.0'
+      ]);
       expect(loggerSpy.getAllMessages('error')).toHaveLength(0);
     });
   });
