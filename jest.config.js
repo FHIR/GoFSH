@@ -1,3 +1,5 @@
+const isCI = process.env.CI === 'true';
+
 module.exports = {
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': [
@@ -11,6 +13,7 @@ module.exports = {
   testMatch: ['**/test/**/*.test.(ts|js)'],
   testEnvironment: 'node',
   setupFilesAfterEnv: ['jest-extended/all'],
+  collectCoverage: !isCI,
   collectCoverageFrom: ['src/**/*.ts'],
   preset: 'ts-jest'
 };

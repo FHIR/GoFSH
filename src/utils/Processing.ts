@@ -124,13 +124,26 @@ export async function loadExternalDependencies(
   if (!allDependencies.includes(`${fhirPackageId}@${config.config.fhirVersion[0]}`)) {
     allDependencies.push(`${fhirPackageId}@${config.config.fhirVersion[0]}`);
   }
+
+  // First load automatic dependencies with the lowest priority (before configured dependencies and FHIR core)
   await utils.loadAutomaticDependencies(
     config.config.fhirVersion[0],
     config.config.dependencies ?? [],
-    // @ts-ignore TODO: this can be removed once SUSHI changes the type signature for this function to use FPL's FHIRDefinitions type
-    defs
+    defs,
+    utils.AutomaticDependencyPriority.Low
   );
+
+  // Then load configured dependencies and FHIR core (FHIR core is last so it has higher priority in resolution)
   await loadConfiguredDependencies(defs, allDependencies);
+
+  // Then load automatic dependencies with highest priority (taking precedence over even FHIR core)
+  // See: https://chat.fhir.org/#narrow/channel/179239-tooling/topic/New.20Implicit.20Package/near/562477575
+  await utils.loadAutomaticDependencies(
+    config.config.fhirVersion[0],
+    config.config.dependencies ?? [],
+    defs,
+    utils.AutomaticDependencyPriority.High
+  );
 }
 
 export async function loadConfiguredDependencies(
@@ -150,6 +163,13 @@ export async function loadConfiguredDependencies(
         `Failed to load ${packageId}: No version specified. To specify the version use ` +
           `the format ${packageId}@current`
       );
+      continue;
+    } else if (
+      utils.AUTOMATIC_DEPENDENCIES.some(ad =>
+        configuredDependencyMatchesAutomaticDependency(packageId, ad.packageId)
+      )
+    ) {
+      // skip configured dependencies that override automatic dependencies; they will be loaded with auto dependencies
       continue;
     }
     await defs.loadPackage(packageId, version).catch(e => {
@@ -211,6 +231,19 @@ export function getLakeOfFHIR(inDir: string, fileType: string): LakeOfFHIR {
   }
 
   return new LakeOfFHIR(docs);
+}
+
+function configuredDependencyMatchesAutomaticDependency(
+  configPackageId: string,
+  autoPackageId: string
+) {
+  // hl7.some.package, hl7.some.package.r4, and hl7.some.package.r5 all represent the same content,
+  // so they are essentially interchangeable and we should allow for any of them in the config.
+  // See: https://chat.fhir.org/#narrow/stream/179239-tooling/topic/New.20Implicit.20Package/near/325488084
+  const [configRootId, packageRootId] = [configPackageId, autoPackageId].map(id =>
+    /\.r[4-9]$/.test(id) ? id.slice(0, -3) : id
+  );
+  return configRootId === packageRootId;
 }
 
 function loadPrimaryFiles(files: string[], docs: WildFHIR[]) {
