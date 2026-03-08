@@ -56,7 +56,7 @@ describe('ExportableMappingRule', () => {
     rule.comment = 'This has a \n newline, which is pretty \\wild.';
 
     expect(rule.toFSH()).toBe(
-      '* identifier -> "Patient.otherIdentifier" "This has a \\n newline, which is pretty \\\\wild."'
+      '* identifier -> "Patient.otherIdentifier" """This has a \n newline, which is pretty \\wild."""'
     );
   });
 
