@@ -17,7 +17,7 @@ import { loadOptimizers } from '../optimizer';
 import { FHIRDefinitions, MasterFisher } from '../utils';
 import { ExportableAlias } from '../exportable';
 import { ExportableConfiguration } from '../exportable';
-import { Fhir as FHIR } from 'fhir/fhir';
+import { Fhir as FHIR } from 'fhir-tool';
 
 const FHIRConverter = new FHIR();
 

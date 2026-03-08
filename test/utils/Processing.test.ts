@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import temp from 'temp';
-import { Fhir } from 'fhir/fhir';
+import { Fhir } from 'fhir-tool';
 import readlineSync from 'readline-sync';
 import { loggerSpy } from '../helpers/loggerSpy';
 import {
