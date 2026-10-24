@@ -1,0 +1,9 @@
+{
+  "resourceType": "Location",
+  "id": "orgloc",
+  "name": "Org Location",
+  "position": {
+    "longitude": -97.7047386,
+    "latitude": 30.4159542
+  }
+}

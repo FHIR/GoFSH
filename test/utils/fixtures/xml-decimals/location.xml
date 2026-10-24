@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Location xmlns="http://hl7.org/fhir">
+  <id value="orgloc"/>
+  <name value="Org Location"/>
+  <position>
+    <longitude value="-97.7047386"/>
+    <latitude value="30.4159542"/>
+  </position>
+</Location>

@@ -295,7 +295,11 @@ export function readJSONorXML(file: string): FileImport {
     return importedFile;
   } else if (file.endsWith('.xml')) {
     const buffer = fs.readFileSync(file);
-    const importedFile: FileImport = { content: FHIRConverter.xmlToObj(buffer.toString()) };
+    // xmlToObj keeps decimal values as strings, so convert to JSON text first.
+    // xmlToJson writes decimals as JSON numbers, which gives the same result as reading
+    // the equivalent JSON file.
+    const json = FHIRConverter.xmlToJson(buffer.toString());
+    const importedFile: FileImport = { content: json != null ? JSON.parse(json) : undefined };
     if (buffer.length > LARGE_FILE_BUFFER_LENGTH) {
       importedFile.large = true;
     }

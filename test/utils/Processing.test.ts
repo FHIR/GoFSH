@@ -566,6 +566,17 @@ describe('Processing', () => {
       );
     });
 
+    it('should read decimal values in xml files as numbers', () => {
+      const XMLFilePath = path.join(__dirname, 'fixtures', 'xml-decimals', 'location.xml');
+      const JSONFilePath = path.join(__dirname, 'fixtures', 'xml-decimals', 'location.json');
+
+      const xmlFileImport = readJSONorXML(XMLFilePath);
+
+      expect(xmlFileImport.content.position.longitude).toBe(-97.7047386);
+      expect(xmlFileImport.content.position.latitude).toBe(30.4159542);
+      expect(xmlFileImport.content).toEqual(fs.readJSONSync(JSONFilePath));
+    });
+
     it('should not log an error when JSON files begin with a Byte Order Mark', () => {
       const JSONFilePath = path.join(__dirname, 'fixtures', 'with-BOM', 'badBOM.json');
 
